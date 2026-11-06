@@ -1,0 +1,113 @@
+{
+  "candidates": [
+    {
+      "id": "cand-001",
+      "name": "Lucas Ferreira Mendes",
+      "email": "lucas.mendes@exemplo.com.br",
+      "whatsapp": "(11) 98765-4321",
+      "city": "São Paulo",
+      "state": "SP",
+      "pixType": "cpf",
+      "pixKey": "123.456.789-00",
+      "resumeUrl": "https://linkedin.com/in/lucas-mendes-comercial",
+      "experience": "2 anos como SDR B2B em agência de marketing digital.",
+      "status": "PENDENTE",
+      "createdAt": "2026-11-06T04:32:21.275Z"
+    }
+  ],
+  "operators": [
+    {
+      "id": "OP-1001",
+      "name": "Carlos Eduardo Silva",
+      "email": "carlos.operador@billysuite.com.br",
+      "passwordHash": "$2a$10$wK1.V/Uo.Xj.9882/3...",
+      "whatsapp": "(11) 97123-4567",
+      "pixType": "email",
+      "pixKey": "carlos.pix@gmail.com",
+      "serialToken": "BILLY-OP-DEMO-9988-2026",
+      "status": "ATIVO",
+      "machineId": "BILLY-PC-77DB98136F355744",
+      "osInfo": "Windows_NT 10.0.26200 (x64) - Guilherme",
+      "lastSync": "2026-11-06T13:23:13.449Z",
+      "dailyLimit": 50,
+      "todayGenerations": 14,
+      "createdAt": "2026-11-06T04:32:21.337Z"
+    },
+    {
+      "id": "OP-0001",
+      "name": "Administrador Master Billy",
+      "email": "admin@billysuite.com.br",
+      "passwordHash": "$2a$10$wK1.V/Uo.Xj.9882/3...",
+      "whatsapp": "(11) 99999-9999",
+      "pixType": "cpf",
+      "pixKey": "000.000.000-00",
+      "serialToken": "BILLY-OP-ADMIN-MASTER-2026",
+      "status": "ATIVO",
+      "machineId": null,
+      "osInfo": null,
+      "lastSync": null,
+      "dailyLimit": 999,
+      "todayGenerations": 0,
+      "createdAt": "2026-11-06T04:32:21.337Z"
+    }
+  ],
+  "licenses": [
+    {
+      "serialToken": "BILLY-OP-DEMO-9988-2026",
+      "operatorId": "OP-1001",
+      "operatorName": "Carlos Eduardo Silva",
+      "status": "EM_USO",
+      "machineId": "BILLY-PC-77DB98136F355744",
+      "osInfo": "Windows_NT 10.0.26200 (x64) - Guilherme",
+      "lastSync": "2026-11-06T13:23:13.449Z",
+      "createdAt": "2026-11-06T04:32:21.337Z"
+    },
+    {
+      "serialToken": "BILLY-OP-ADMIN-MASTER-2026",
+      "operatorId": "OP-0001",
+      "operatorName": "Administrador Master Billy",
+      "status": "ATIVO",
+      "machineId": null,
+      "osInfo": null,
+      "lastSync": null,
+      "createdAt": "2026-11-06T04:32:21.337Z"
+    }
+  ],
+  "sales": [
+    {
+      "id": "SALE-201",
+      "operatorId": "OP-1001",
+      "operatorName": "Carlos Eduardo Silva",
+      "clientName": "Barbearia Don Corleone",
+      "clientWhatsapp": "(11) 99111-2233",
+      "siteUrl": "https://barbearia-don-corleone.billy.app",
+      "niche": "Barbearia & Estética",
+      "saleValue": 600,
+      "commissionValue": 200,
+      "pixStatus": "PAGO",
+      "pixPaidAt": "2026-11-06T04:32:21.337Z",
+      "pixProof": "E2E-PIX-98827361726354",
+      "createdAt": "2026-11-06T04:32:21.337Z"
+    }
+  ],
+  "adminSettings": {
+    "geminiApiKey": "",
+    "geminiModel": "gemini-3.8-flash",
+    "cloudflareAccountId": "cf_acc_demo_772183",
+    "cloudflareApiToken": "cf_tok_live_883920194827",
+    "vercelToken": "verc_tok_9981203847",
+    "pixGateway": "mercadopago",
+    "pixGatewayKey": "APP_USR-7826315273-091823-DEMO-KEY",
+    "defaultDailyLimit": 50,
+    "commissionPerSale": 200
+  },
+  "adminUsers": [
+    {
+      "id": "ADMIN-001",
+      "email": "admin@billysuite.com.br",
+      "name": "Administrador Master Billy",
+      "passwordHash": "$2a$10$demo.hash.admin",
+      "role": "MASTER"
+    }
+  ]
+}
