@@ -24,7 +24,13 @@ import {
   ChevronRight,
   ExternalLink,
   HelpCircle,
-  X
+  X,
+  Terminal,
+  Activity,
+  Check,
+  Smartphone,
+  Layers,
+  ArrowUpRight
 } from 'lucide-react';
 
 export default function LandingPage() {
@@ -127,160 +133,290 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-zinc-100 selection:bg-indigo-600 selection:text-white">
-      {/* Top Banner de Recrutamento */}
-      <div className="bg-gradient-to-r from-indigo-900/60 via-purple-900/40 to-indigo-900/60 border-b border-indigo-500/20 py-2.5 px-4 text-center text-xs sm:text-sm text-indigo-200 flex items-center justify-center gap-2">
-        <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span className="font-semibold text-white">Vagas Abertas para Operadores Comerciais 2026:</span>
-        <span>Atue 100% Home Office comissionado a R$ 200 por venda via Pix.</span>
+    <div className="min-h-screen bg-[#0a0c10] text-slate-200 selection:bg-violet-600 selection:text-white font-sans antialiased">
+      {/* Top Banner Sóbrio de Status */}
+      <div className="bg-[#0e1217] border-b border-white/[0.06] py-2 px-4 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+        <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span className="font-mono uppercase tracking-wider text-[11px] text-slate-300 font-semibold">
+          Operação Comercial 2026:
+        </span>
+        <span className="text-slate-400">
+          Vagas abertas para operadores autônomos. Repasse fixo de <strong className="text-emerald-400 font-semibold">R$ 200 líquidos</strong> por cliente ativado via Pix.
+        </span>
       </div>
 
-      {/* Header / Navegação */}
-      <header className="sticky top-0 z-40 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      {/* Header / Navegação Executiva */}
+      <header className="sticky top-0 z-40 border-b border-white/[0.06] bg-[#0a0c10]/80 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 p-0.5 shadow-lg shadow-indigo-500/25 flex items-center justify-center font-black text-xl text-white">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-700 border border-violet-400/30 flex items-center justify-center font-mono font-bold text-base text-white shadow-sm">
               B
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-extrabold text-xl tracking-tight text-white">Billy Suite</span>
-                <span className="text-[10px] font-mono uppercase bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-1.5 py-0.5 rounded font-bold">
-                  WebBilly Oficial
+                <span className="font-semibold text-sm tracking-tight text-white">Billy Suite</span>
+                <span className="font-mono text-[10px] uppercase bg-violet-500/10 text-violet-400 border border-violet-500/20 px-1.5 py-0.5 rounded font-medium">
+                  WebBilly
                 </span>
               </div>
-              <p className="text-xs text-zinc-400">Rede Nacional de Operadores Comerciais</p>
             </div>
           </div>
 
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-zinc-300">
+          <nav className="hidden md:flex items-center gap-7 text-xs font-medium text-slate-400">
+            <a href="#como-funciona" className="hover:text-white transition">Como Funciona</a>
             <a href="#calculadora" className="hover:text-white transition">Calculadora de Ganhos</a>
-            <a href="#tecnologia" className="hover:text-white transition">Como Funciona</a>
-            <a href="#diferenciais" className="hover:text-white transition">Vantagens</a>
-            <a href="#candidatura" className="hover:text-white transition">Inscrição</a>
+            <a href="#candidatura" className="hover:text-white transition">Critérios & Inscrição</a>
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <Link
               href="/operador/login"
-              className="px-4 py-2 text-xs font-semibold text-zinc-200 hover:text-white border border-zinc-700 hover:border-zinc-500 rounded-xl transition"
+              className="px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] rounded-lg transition"
             >
               Área do Operador
             </Link>
             <Link
               href="/admin/login"
-              className="px-4 py-2 text-xs font-semibold text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 rounded-xl transition"
+              className="hidden sm:inline-flex px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-300 transition"
             >
-              Admin Master
+              Admin
             </Link>
             <a
               href="#candidatura"
-              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-lg shadow-indigo-600/30 transition transform hover:-translate-y-0.5"
+              className="inline-flex items-center gap-1 px-3.5 py-1.5 text-xs font-semibold text-white bg-violet-600 hover:bg-violet-500 rounded-lg shadow-sm transition"
             >
-              Quero ser Operador
-              <ChevronRight className="w-4 h-4" />
+              Ser Operador
+              <ChevronRight className="w-3.5 h-3.5" />
             </a>
           </div>
         </div>
       </header>
 
       {/* HERO SECTION */}
-      <section className="relative pt-12 pb-20 overflow-hidden">
-        {/* Glow de fundo */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-b from-indigo-600/15 via-purple-600/10 to-transparent blur-3xl pointer-events-none"></div>
+      <section className="relative pt-16 pb-20 overflow-hidden border-b border-white/[0.06]">
+        {/* Subtle grid pattern background */}
+        <div className="absolute inset-0 bg-[radial-gradient(#1e2433_1px,transparent_1px)] [background-size:24px_24px] opacity-40 pointer-events-none"></div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold mb-6">
-              <Sparkles className="w-4 h-4 text-indigo-400" />
-              Recrutamento Ativo de SDRs & Closers Remotos
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-300 text-xs font-mono mb-8">
+            <span className="w-1.5 h-1.5 rounded-full bg-violet-400"></span>
+            AUTOMAÇÃO COMERCIAL B2B
+          </div>
+
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.15]">
+            Venda sites para quem realmente precisa.{' '}
+            <span className="text-slate-400 block font-normal text-3xl sm:text-4xl lg:text-5xl mt-2">
+              Sem reunião inútil de alinhamento.
+            </span>
+          </h1>
+
+          <p className="mt-6 text-base sm:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
+            Enquanto o seu concorrente demora duas semanas para orçar um site em WordPress, o Billy Suite encontra comércios locais sem página no Google Maps e gera uma demonstração pronta em segundos.
+          </p>
+
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <a
+              href="#candidatura"
+              className="px-6 py-3 rounded-xl font-semibold text-sm text-white bg-violet-600 hover:bg-violet-500 shadow-md shadow-violet-600/20 transition flex items-center gap-2 cursor-pointer"
+            >
+              Submeter Candidatura
+              <ArrowRight className="w-4 h-4" />
+            </a>
+            <a
+              href="#calculadora"
+              className="px-5 py-3 rounded-xl font-medium text-sm text-slate-300 hover:text-white bg-[#131720] hover:bg-[#1a202c] border border-white/[0.08] transition flex items-center gap-2"
+            >
+              Simular Ganhos Reais
+              <TrendingUp className="w-4 h-4 text-emerald-400" />
+            </a>
+          </div>
+
+          {/* DOCK HORIZONTAL DE MÉTRICAS SÓLIDAS */}
+          <div className="mt-14 max-w-4xl mx-auto bg-[#131720] border border-white/[0.08] rounded-2xl p-4 sm:p-5 shadow-xl grid grid-cols-2 md:grid-cols-4 gap-4 divide-y md:divide-y-0 md:divide-x divide-white/[0.06] text-left">
+            <div className="pt-2 md:pt-0">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500 block">Comissão Direta</span>
+              <div className="text-lg font-bold text-emerald-400 font-mono mt-0.5">R$ 200 líquidos</div>
+              <p className="text-[11px] text-slate-400 mt-0.5">Por cada fecho ativo</p>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight">
-              Ganhe <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-400">R$ 200 por venda</span> prospectando e fechando sites com IA.
-            </h1>
+            <div className="pt-2 md:pt-0 md:pl-4">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500 block">Autonomia Real</span>
+              <div className="text-lg font-bold text-white mt-0.5">Zero burocracia</div>
+              <p className="text-[11px] text-slate-400 mt-0.5">Sem chefe a pedir relatórios</p>
+            </div>
 
-            <p className="mt-6 text-lg sm:text-xl text-zinc-300 font-normal leading-relaxed">
-              O ecossistema <strong>Billy Suite Desktop</strong> encontra comércios locais sem site no Google Maps e cria landing pages prontas em segundos. Sua missão é apenas enviar a demonstração no WhatsApp e receber a comissão no Pix.
+            <div className="pt-2 md:pt-0 md:pl-4">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500 block">Software Nativo</span>
+              <div className="text-lg font-bold text-white mt-0.5">App Windows</div>
+              <p className="text-[11px] text-slate-400 mt-0.5">Com Scraper e IA integrados</p>
+            </div>
+
+            <div className="pt-2 md:pt-0 md:pl-4">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500 block">Liquidação</span>
+              <div className="text-lg font-bold text-emerald-400 font-mono mt-0.5">Instantânea</div>
+              <p className="text-[11px] text-slate-400 mt-0.5">Via Pix direto na sua chave</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* "COMO FUNCIONA" — BENTO GRID TÉCNICO */}
+      <section id="como-funciona" className="py-20 bg-[#0e1217] border-b border-white/[0.06]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mb-14">
+            <span className="font-mono text-xs uppercase tracking-wider text-violet-400 font-semibold block">
+              MÉTODO BILLY SUITE
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-2">
+              Como o robô faz o trabalho pesado enquanto você fica com o lucro.
+            </h2>
+            <p className="text-slate-400 text-sm sm:text-base mt-2">
+              Chega de ligar a frio para levar corte de recepcionista. O processo é cirúrgico: identificamos quem tem dinheiro, montamos a página antes de falar com ele e entregamos valor de choque.
             </p>
+          </div>
 
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-              <a
-                href="#candidatura"
-                className="px-7 py-3.5 rounded-xl font-bold text-base text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-xl shadow-indigo-600/30 transition transform hover:-translate-y-0.5 flex items-center gap-2"
-              >
-                Candidatar-se à Vaga
-                <ArrowRight className="w-5 h-5" />
-              </a>
-              <a
-                href="#calculadora"
-                className="px-6 py-3.5 rounded-xl font-semibold text-base text-zinc-300 hover:text-white bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700/80 transition flex items-center gap-2"
-              >
-                Simular Meus Ganhos
-                <TrendingUp className="w-5 h-5 text-emerald-400" />
-              </a>
+          {/* Grid Assimétrico Bento */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {/* Bento Card 1 - Scraper Maps (Col span 2) */}
+            <div className="md:col-span-2 bg-[#131720] border border-white/[0.08] rounded-2xl p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden group hover:border-white/[0.14] transition">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-mono text-[11px] text-violet-400 uppercase tracking-wider font-semibold">
+                    01 / GARIMPO NO GOOGLE MAPS
+                  </span>
+                  <span className="text-[10px] font-mono bg-white/[0.04] text-slate-400 border border-white/[0.08] px-2 py-0.5 rounded">
+                    Scraper Nativo
+                  </span>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">
+                  Garimpo impiedoso: encontramos estabelecimentos que faturam alto mas ainda vivem na era analógica.
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed mb-6">
+                  O Billy varre o Google Maps cidade por cidade. Em minutos, lista clínicas, barbearias, mecânicas e restaurantes sem site oficial. Sem planilha manual, sem perder tempo no Instagram.
+                </p>
+              </div>
+
+              {/* Terminal Mockup */}
+              <div className="bg-[#0a0c10] border border-white/[0.08] rounded-xl p-4 font-mono text-xs text-slate-300 space-y-1.5 shadow-inner">
+                <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-white/[0.06] text-slate-500 text-[10px]">
+                  <span className="w-2 h-2 rounded-full bg-rose-500/80"></span>
+                  <span className="w-2 h-2 rounded-full bg-amber-500/80"></span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500/80"></span>
+                  <span className="ml-2 text-slate-400">billy-engine/scanner.exe --query="odontologia campinas"</span>
+                </div>
+                <div className="text-slate-400">&gt; Conectando à API de geolocalização...</div>
+                <div className="text-slate-400">&gt; 52 estabelecimentos locais analisados</div>
+                <div className="text-emerald-400 font-semibold">&gt; 34 sem site oficial verificado (65% de taxa de oportunidade)</div>
+                <div className="text-violet-400">&gt; Dados de contato e WhatsApp salvos no banco local.</div>
+              </div>
             </div>
 
-            {/* Badges de destaque */}
-            <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-3 text-left">
-              <div className="glass-card p-3.5 rounded-xl">
-                <div className="flex items-center gap-2 text-emerald-400 font-bold text-sm">
-                  <CheckCircle2 className="w-4 h-4" />
-                  R$ 200 Líquidos
+            {/* Bento Card 2 - IA Gemini (Col span 1) */}
+            <div className="bg-[#131720] border border-white/[0.08] rounded-2xl p-6 sm:p-8 flex flex-col justify-between group hover:border-white/[0.14] transition">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-mono text-[11px] text-violet-400 uppercase tracking-wider font-semibold">
+                    02 / GERAÇÃO AUTOMÁTICA
+                  </span>
+                  <Cpu className="w-4 h-4 text-violet-400" />
                 </div>
-                <p className="text-xs text-zinc-400 mt-1">Comissão direta por cada site ativado</p>
+                <h3 className="text-lg font-bold text-white mb-2">
+                  Design pronto antes do dono da empresa terminar o café.
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                  A IA analisa o nicho, seleciona imagens de alta resolução, redige a copy persuasiva e gera uma landing page moderna em menos de 1 minuto. Zero código exigido.
+                </p>
               </div>
-              <div className="glass-card p-3.5 rounded-xl">
-                <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
-                  <Laptop className="w-4 h-4" />
-                  100% Home Office
-                </div>
-                <p className="text-xs text-zinc-400 mt-1">Trabalhe de qualquer lugar do Brasil</p>
+
+              <div className="mt-6 p-3 rounded-xl bg-[#0a0c10] border border-white/[0.06] flex items-center justify-between text-xs font-mono">
+                <span className="text-slate-400">Tempo médio de build:</span>
+                <span className="text-emerald-400 font-bold">42 segundos</span>
               </div>
-              <div className="glass-card p-3.5 rounded-xl">
-                <div className="flex items-center gap-2 text-purple-400 font-bold text-sm">
-                  <Cpu className="w-4 h-4" />
-                  App Licenciado
+            </div>
+
+            {/* Bento Card 3 - Abordagem de Choque (Col span 1) */}
+            <div className="bg-[#131720] border border-white/[0.08] rounded-2xl p-6 sm:p-8 flex flex-col justify-between group hover:border-white/[0.14] transition">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-mono text-[11px] text-violet-400 uppercase tracking-wider font-semibold">
+                    03 / CONTATO DE IMPACTO
+                  </span>
+                  <Smartphone className="w-4 h-4 text-violet-400" />
                 </div>
-                <p className="text-xs text-zinc-400 mt-1">Token Serial oficial do Billy Suite</p>
+                <h3 className="text-lg font-bold text-white mb-2">
+                  Abordagem certeira: você não envia um PDF chato. Você envia o site já no ar.
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                  O cliente abre o link no celular e vê o próprio negócio profissionalizado com fotos reais e botão para o WhatsApp dele. A resposta é imediata porque você já entregou o valor antes de cobrar.
+                </p>
               </div>
-              <div className="glass-card p-3.5 rounded-xl">
-                <div className="flex items-center gap-2 text-pink-400 font-bold text-sm">
-                  <Zap className="w-4 h-4" />
-                  IA Faz o Trabalho
+
+              <div className="mt-6 p-3 rounded-xl bg-violet-500/10 border border-violet-500/20 text-xs text-violet-300">
+                💡 <em>"O Billy faz o trabalho sujo de montar; a sua única função é enviar o link e não estragar tudo no WhatsApp."</em>
+              </div>
+            </div>
+
+            {/* Bento Card 4 - Pix na Carteira (Col span 2) */}
+            <div className="md:col-span-2 bg-[#131720] border border-white/[0.08] rounded-2xl p-6 sm:p-8 flex flex-col justify-between group hover:border-white/[0.14] transition">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="font-mono text-[11px] text-emerald-400 uppercase tracking-wider font-semibold">
+                    04 / LIQUIDAÇÃO DIRETA
+                  </span>
+                  <DollarSign className="w-4 h-4 text-emerald-400" />
                 </div>
-                <p className="text-xs text-zinc-400 mt-1">Zero conhecimento de código exigido</p>
+                <h3 className="text-xl font-bold text-white mb-2">
+                  Sem esperar 30 dias para receber salário. Cliente pagou a ativação, a sua metade cai direto.
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                  Sem metas inatingíveis de RH nem burocracia corporativa. Fechou a ativação de R$ 600, o cliente passa a régua e R$ 200 líquidos vão direto para a sua chave Pix cadastrada.
+                </p>
+              </div>
+
+              <div className="mt-6 grid grid-cols-3 gap-3 text-center font-mono">
+                <div className="bg-[#0a0c10] p-3 rounded-xl border border-white/[0.06]">
+                  <span className="text-[10px] text-slate-500 uppercase block">Valor Venda</span>
+                  <span className="text-white font-bold text-sm">R$ 600</span>
+                </div>
+                <div className="bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/20">
+                  <span className="text-[10px] text-emerald-400 uppercase block">Sua Comissão</span>
+                  <span className="text-emerald-400 font-bold text-sm">R$ 200 Pix</span>
+                </div>
+                <div className="bg-[#0a0c10] p-3 rounded-xl border border-white/[0.06]">
+                  <span className="text-[10px] text-slate-500 uppercase block">Infra Central</span>
+                  <span className="text-slate-400 font-bold text-sm">R$ 400</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CALCULADORA DE COMISSÕES INTERATIVA */}
-      <section id="calculadora" className="py-20 border-t border-zinc-800/80 bg-zinc-950/40 relative">
+      {/* CALCULADORA DE COMISSÕES (CONSOLE EXECUTIVO / COCKPIT) */}
+      <section id="calculadora" className="py-20 border-b border-white/[0.06] relative">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <span className="text-xs font-bold text-emerald-400 tracking-wider uppercase bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-              Potencial de Ganhos Imediatos
+          <div className="max-w-2xl mb-12">
+            <span className="font-mono text-xs uppercase tracking-wider text-emerald-400 font-semibold block">
+              CONSOLE DE SIMULAÇÃO
             </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-3">
-              Calculadora de Comissões do Operador
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-2">
+              Calculadora de Faturamento do Operador
             </h2>
-            <p className="text-zinc-400 text-sm sm:text-base mt-2">
-              Você recebe <strong>R$ 200,00</strong> a cada cliente que aceita o site gerado pela inteligência artificial. Ajuste os controles e veja a projeção do seu faturamento:
+            <p className="text-slate-400 text-sm mt-2">
+              Ajuste as métricas de esforço diário e veja a projeção matemática de comissões líquidas:
             </p>
           </div>
 
-          <div className="glass-panel rounded-2xl p-6 sm:p-8 border border-zinc-800 shadow-2xl">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-              {/* Controles */}
-              <div className="space-y-6">
+          <div className="bg-[#12161f] border border-white/10 rounded-2xl p-6 sm:p-10 shadow-2xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+              {/* Controles do Cockpit */}
+              <div className="space-y-7">
                 <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-sm font-semibold text-zinc-300">
-                      Sites fechados por dia:
+                  <div className="flex justify-between items-center mb-2.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono">
+                      Sites fechados por dia
                     </label>
-                    <span className="text-lg font-black text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-0.5 rounded-lg">
+                    <span className="font-mono text-sm font-bold text-violet-400 bg-violet-500/10 border border-violet-500/20 px-2.5 py-0.5 rounded">
                       {salesPerDay} {salesPerDay === 1 ? 'venda/dia' : 'vendas/dia'}
                     </span>
                   </div>
@@ -291,22 +427,22 @@ export default function LandingPage() {
                     step="1"
                     value={salesPerDay}
                     onChange={(e) => setSalesPerDay(Number(e.target.value))}
-                    className="w-full accent-indigo-500 cursor-pointer h-2 bg-zinc-800 rounded-lg appearance-none"
+                    className="w-full accent-violet-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg appearance-none"
                   />
-                  <div className="flex justify-between text-[11px] text-zinc-500 mt-1">
-                    <span>1 venda</span>
-                    <span>4 vendas</span>
-                    <span>8 vendas</span>
+                  <div className="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
+                    <span>1 fecho</span>
+                    <span>4 fechos</span>
+                    <span>8 fechos</span>
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="text-sm font-semibold text-zinc-300">
-                      Dias trabalhados por semana:
+                  <div className="flex justify-between items-center mb-2.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono">
+                      Dias trabalhados por semana
                     </label>
-                    <span className="text-lg font-black text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-0.5 rounded-lg">
-                      {daysPerWeek} dias/sem
+                    <span className="font-mono text-sm font-bold text-violet-400 bg-violet-500/10 border border-violet-500/20 px-2.5 py-0.5 rounded">
+                      {daysPerWeek} dias/semana
                     </span>
                   </div>
                   <input
@@ -316,58 +452,61 @@ export default function LandingPage() {
                     step="1"
                     value={daysPerWeek}
                     onChange={(e) => setDaysPerWeek(Number(e.target.value))}
-                    className="w-full accent-purple-500 cursor-pointer h-2 bg-zinc-800 rounded-lg appearance-none"
+                    className="w-full accent-violet-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg appearance-none"
                   />
-                  <div className="flex justify-between text-[11px] text-zinc-500 mt-1">
+                  <div className="flex justify-between text-[10px] font-mono text-slate-500 mt-1">
                     <span>3 dias</span>
-                    <span>5 dias (comum)</span>
+                    <span>5 dias (padrão)</span>
                     <span>6 dias</span>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 text-xs text-zinc-400 space-y-1.5">
-                  <div className="flex items-center gap-2 text-zinc-300 font-semibold">
-                    <Flame className="w-4 h-4 text-amber-400" />
-                    Como fechar 2 vendas por dia?
+                {/* Nota Sarcástica do Billy */}
+                <div className="p-4 rounded-xl bg-[#0a0c10] border border-white/[0.06] text-xs text-slate-400 space-y-1.5 leading-relaxed">
+                  <div className="text-slate-300 font-semibold font-mono text-[11px] flex items-center gap-1.5">
+                    <Flame className="w-3.5 h-3.5 text-amber-400" />
+                    REALIDADE COMERCIAL BILLY SUITE
                   </div>
                   <p>
-                    Com o robô Billy Maps Scraper você prospecta 30 empresas em 15 minutos e envia a demonstração pronta no WhatsApp. Nossa taxa média de fechamento é de <strong>6% a 10%</strong>.
+                    Simulação baseada em fechar negócios reais, não em ver vídeos de motivação. Se você enviar 20 demonstrações por dia no WhatsApp e fechar duas, a matemática cuida do resto.
                   </p>
                 </div>
               </div>
 
-              {/* Cards de Resultados */}
-              <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 p-6 rounded-2xl border border-zinc-800 space-y-4">
-                <div className="border-b border-zinc-800 pb-4">
-                  <span className="text-xs uppercase tracking-wider text-zinc-400 font-medium">Sua Renda Semanal</span>
-                  <div className="text-3xl font-extrabold text-white mt-1">
+              {/* Painel de Resultados Estilo Trading / Cockpit */}
+              <div className="bg-[#0a0c10] p-6 sm:p-7 rounded-xl border border-white/[0.08] space-y-5">
+                <div className="border-b border-white/[0.06] pb-4">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500">Rendimento Semanal</span>
+                  <div className="text-2xl font-bold font-mono text-white mt-1">
                     R$ {weeklyIncome.toLocaleString('pt-BR')},00
                   </div>
-                  <span className="text-xs text-zinc-500 font-mono">{weeklySales} vendas na semana</span>
+                  <span className="text-[11px] font-mono text-slate-500">{weeklySales} contratos na semana</span>
                 </div>
 
-                <div className="border-b border-zinc-800 pb-4">
-                  <span className="text-xs uppercase tracking-wider text-emerald-400 font-bold flex items-center gap-1.5">
-                    <Award className="w-4 h-4" /> Sua Renda Mensal Estimada
+                <div className="border-b border-white/[0.06] pb-4">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-emerald-400 font-semibold flex items-center gap-1">
+                    <Activity className="w-3.5 h-3.5" /> Faturamento Mensal Estimado
                   </span>
-                  <div className="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300 mt-1">
+                  <div className="text-4xl sm:text-5xl font-black font-mono text-emerald-400 mt-1 tracking-tight">
                     R$ {monthlyIncome.toLocaleString('pt-BR')},00
                   </div>
-                  <span className="text-xs text-zinc-400">Total de {monthlySales} vendas no mês via Pix</span>
+                  <span className="text-xs text-slate-400 font-mono mt-1 block">
+                    {monthlySales} vendas no mês • Repasses diretos via Pix
+                  </span>
                 </div>
 
                 <div>
-                  <span className="text-xs uppercase tracking-wider text-zinc-400 font-medium">Projeção Anual</span>
-                  <div className="text-2xl font-bold text-indigo-300 mt-1">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500">Acumulado Anual Projetado</span>
+                  <div className="text-xl font-bold font-mono text-violet-300 mt-1">
                     R$ {annualIncome.toLocaleString('pt-BR')},00 / ano
                   </div>
                 </div>
 
                 <a
                   href="#candidatura"
-                  className="w-full mt-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-center text-sm transition shadow-lg shadow-emerald-600/20 block"
+                  className="w-full mt-3 py-3 bg-violet-600 hover:bg-violet-500 text-white font-semibold rounded-xl text-center text-xs uppercase tracking-wider font-mono transition shadow-md shadow-violet-600/20 block cursor-pointer"
                 >
-                  Quero Garantir Minha Vaga
+                  Solicitar Licença de Operador
                 </a>
               </div>
             </div>
@@ -375,286 +514,282 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* SEÇÃO COMO FUNCIONA A TECNOLOGIA BILLY SUITE */}
-      <section id="tecnologia" className="py-20 border-t border-zinc-800/80">
+      {/* FORMULÁRIO DE CANDIDATURA EM SPLIT VIEW (2 COLUNAS) */}
+      <section id="candidatura" className="py-20 bg-[#0e1217] relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <span className="text-xs font-bold text-indigo-400 tracking-wider uppercase bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20">
-              Tecnologia Proprietária
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-3">
-              Como o Billy Suite Multiplica Suas Vendas
-            </h2>
-            <p className="text-zinc-400 text-base mt-2">
-              Você não precisa saber programação nem design. O app desktop faz toda a engenharia pesada para você.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Passo 1 */}
-            <div className="glass-card p-6 rounded-2xl glass-card-hover transition relative group">
-              <div className="w-12 h-12 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-black text-xl mb-4 group-hover:scale-110 transition">
-                1
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">Garimpo Automático no Maps</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                Digite uma cidade e nicho (ex: 'Dentistas em Campinas'). O Billy Suite encontra dezenas de estabelecimentos sem site oficial e extrai WhatsApp e telefone.
-              </p>
-            </div>
-
-            {/* Passo 2 */}
-            <div className="glass-card p-6 rounded-2xl glass-card-hover transition relative group">
-              <div className="w-12 h-12 rounded-xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-purple-400 font-black text-xl mb-4 group-hover:scale-110 transition">
-                2
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">Geração com IA Gemini</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                Nossa IA analisa o negócio, seleciona imagens de alta resolução do portfólio, escreve o copywriting persuasivo e constrói o site em menos de 1 minuto.
-              </p>
-            </div>
-
-            {/* Passo 3 */}
-            <div className="glass-card p-6 rounded-2xl glass-card-hover transition relative group">
-              <div className="w-12 h-12 rounded-xl bg-pink-600/20 border border-pink-500/30 flex items-center justify-center text-pink-400 font-black text-xl mb-4 group-hover:scale-110 transition">
-                3
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">Abordagem de Alto Impacto</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                Você envia o link da demonstração já pronta para o WhatsApp do proprietário. Ele vê o próprio site funcionando com seu logotipo e fotos, gerando desejo imediato.
-              </p>
-            </div>
-
-            {/* Passo 4 */}
-            <div className="glass-card p-6 rounded-2xl glass-card-hover transition relative group">
-              <div className="w-12 h-12 rounded-xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-black text-xl mb-4 group-hover:scale-110 transition">
-                4
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">Pix Direto na Conta</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                Ao fechar, o cliente paga R$ 600 pela ativação e domínio. R$ 200 de comissão líquida são creditados para você via Pix, com controle em tempo real no seu painel.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FORMULÁRIO DE INSCRIÇÃO DE OPERADOR */}
-      <section id="candidatura" className="py-20 border-t border-zinc-800/80 bg-zinc-950/60 relative">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <span className="text-xs font-bold text-indigo-400 tracking-wider uppercase bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20">
-              Inscrição Oficial
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-white mt-3">
-              Formulário de Candidatura do Operador
-            </h2>
-            <p className="text-zinc-400 text-sm mt-2">
-              Preencha os dados abaixo. Após a análise do perfil, você receberá seu <strong>Token Serial Único de Ativação</strong> e acesso ao painel do operador.
-            </p>
-          </div>
-
-          <div className="glass-panel rounded-2xl p-6 sm:p-10 border border-zinc-800 shadow-2xl">
-            {successMessage && (
-              <div className="mb-6 p-4 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-sm flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="block font-bold">Parabéns!</strong>
-                  {successMessage}
-                </div>
-              </div>
-            )}
-
-            {errorMessage && (
-              <div className="mb-6 p-4 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-sm flex items-start gap-3">
-                <X className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="block font-bold">Atenção:</strong>
-                  {errorMessage}
-                </div>
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+            {/* COLUNA ESQUERDA: CRITÉRIOS & REALIDADE DO BILLY */}
+            <div className="lg:col-span-5 space-y-6">
               <div>
-                <label className="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
-                  Nome Completo *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ex: Carlos Eduardo de Oliveira"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                />
+                <span className="font-mono text-xs uppercase tracking-wider text-violet-400 font-semibold block">
+                  PROCESSO SELETIVO
+                </span>
+                <h2 className="text-3xl font-extrabold text-white mt-2">
+                  Critérios de Seleção para Operadores
+                </h2>
+                <p className="text-slate-400 text-sm mt-2 leading-relaxed">
+                  Se você procura um emprego para fingir que trabalha no Teams entre as 9h e as 18h, esta vaga não é para você. Buscamos operadores comerciais focados em fechamento e volume diário.
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
-                    E-mail Principal *
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="carlos.comercial@gmail.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
-                    WhatsApp (com DDD) *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="(11) 98765-4321"
-                    value={formData.whatsapp}
-                    onChange={handleWhatsAppChange}
-                    className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-mono"
-                  />
-                </div>
+              {/* Status de Vagas */}
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                Vagas ativas para operadores com foco em execução
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-2">
-                  <label className="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
-                    Cidade *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="São Paulo"
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
-                    UF *
-                  </label>
-                  <select
-                    value={formData.state}
-                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-semibold"
-                  >
-                    {['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].map((uf) => (
-                      <option key={uf} value={uf}>{uf}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Dados do Pix para Pagamento de Comissões */}
-              <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-3">
-                <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">
-                  <DollarSign className="w-4 h-4" />
-                  Chave Pix para Recebimento de Comissões
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Lista de Critérios Sem Rodeios */}
+              <div className="space-y-4 pt-2">
+                <div className="flex items-start gap-3 bg-[#131720] p-4 rounded-xl border border-white/[0.08]">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                   <div>
-                    <label className="block text-[11px] text-zinc-400 mb-1">Tipo de Chave *</label>
-                    <select
-                      value={formData.pixType}
-                      onChange={(e) => setFormData({ ...formData, pixType: e.target.value as any })}
-                      className="w-full px-3 py-2.5 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-xs focus:outline-none focus:border-emerald-500"
-                    >
-                      <option value="cpf">CPF</option>
-                      <option value="cnpj">CNPJ</option>
-                      <option value="phone">Telefone</option>
-                      <option value="email">E-mail</option>
-                      <option value="random">Chave Aleatória</option>
-                    </select>
+                    <strong className="text-white text-xs block font-semibold">Perfil autônomo e sangue frio:</strong>
+                    <span className="text-xs text-slate-400">Capacidade de lidar com volume diário de conversas no WhatsApp sem desanimar no primeiro "não".</span>
                   </div>
+                </div>
 
-                  <div className="sm:col-span-2">
-                    <label className="block text-[11px] text-zinc-400 mb-1">Chave Pix *</label>
+                <div className="flex items-start gap-3 bg-[#131720] p-4 rounded-xl border border-white/[0.08]">
+                  <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="text-white text-xs block font-semibold">Computador próprio com Windows:</strong>
+                    <span className="text-xs text-slate-400">O Billy Suite é um aplicativo desktop nativo robusto. Não dá para ser operador profissional em tablet antigo ou smartphone.</span>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 bg-[#131720] p-4 rounded-xl border border-white/[0.08]">
+                  <Check className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="text-white text-xs block font-semibold">Proibido enrolação corporativa:</strong>
+                    <span className="text-xs text-slate-400">Desculpas de falta de tempo, reuniões desnecessárias e jargões vazios não pagam boletos. O foco é demonstração pronta e Pix no bolso.</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card de Realidade Billy */}
+              <div className="p-4 rounded-xl bg-violet-950/20 border border-violet-500/20 text-xs text-violet-300 space-y-1">
+                <div className="font-semibold text-white flex items-center gap-1.5 font-mono text-[11px]">
+                  <ShieldCheck className="w-3.5 h-3.5 text-violet-400" />
+                  RESPONSABILIDADE CLARA
+                </div>
+                <p className="text-slate-400 leading-relaxed">
+                  O Billy faz o trabalho sujo de garimpar os dados e montar a página em segundos; a sua única função é enviar o link e não estragar tudo na hora de negociar no WhatsApp.
+                </p>
+              </div>
+            </div>
+
+            {/* COLUNA DIREITA: FORMULÁRIO INTEGRADO */}
+            <div className="lg:col-span-7">
+              <div className="bg-[#131720] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-2xl">
+                <div className="mb-6 pb-4 border-b border-white/[0.06]">
+                  <h3 className="text-lg font-bold text-white">Formulário de Candidatura</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Preencha os dados reais para emissão do seu Token Serial oficial e chave Pix de pagamento.
+                  </p>
+                </div>
+
+                {successMessage && (
+                  <div className="mb-6 p-4 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-start gap-3">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="block font-bold">Candidatura Registrada!</strong>
+                      {successMessage}
+                    </div>
+                  </div>
+                )}
+
+                {errorMessage && (
+                  <div className="mb-6 p-4 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-start gap-3">
+                    <X className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="block font-bold">Atenção aos dados:</strong>
+                      {errorMessage}
+                    </div>
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-[11px] font-mono font-medium text-slate-400 uppercase tracking-wider mb-1">
+                      Nome Completo *
+                    </label>
                     <input
                       type="text"
                       required
-                      placeholder="Informe sua chave Pix"
-                      value={formData.pixKey}
-                      onChange={(e) => setFormData({ ...formData, pixKey: e.target.value })}
-                      className="w-full px-3 py-2.5 rounded-lg bg-zinc-900 border border-zinc-700 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-emerald-500 font-mono"
+                      placeholder="Ex: Carlos Eduardo de Oliveira"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-white placeholder-slate-600 text-xs focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
                     />
                   </div>
-                </div>
-              </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
-                  Link do LinkedIn ou Currículo Online (Opcional)
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://linkedin.com/in/seu-perfil"
-                  value={formData.resumeUrl}
-                  onChange={(e) => setFormData({ ...formData, resumeUrl: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                />
-              </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-mono font-medium text-slate-400 uppercase tracking-wider mb-1">
+                        E-mail Principal *
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="carlos.comercial@gmail.com"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-white placeholder-slate-600 text-xs focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                      />
+                    </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1.5">
-                  Experiência Comercial / Vendas (Opcional)
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Conte brevemente se já atuou com vendas, SDR, telemarketing ou abordagem via WhatsApp..."
-                  value={formData.experience}
-                  onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
-                  className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 text-white placeholder-zinc-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                ></textarea>
-              </div>
+                    <div>
+                      <label className="block text-[11px] font-mono font-medium text-slate-400 uppercase tracking-wider mb-1">
+                        WhatsApp com DDD *
+                      </label>
+                      <input
+                        type="tel"
+                        required
+                        placeholder="(11) 98765-4321"
+                        value={formData.whatsapp}
+                        onChange={handleWhatsAppChange}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-white placeholder-slate-600 text-xs focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 font-mono transition"
+                      />
+                    </div>
+                  </div>
 
-              {/* Checkbox Termos de Adesão */}
-              <div className="pt-2">
-                <label className="flex items-start gap-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    required
-                    checked={formData.termsAccepted}
-                    onChange={(e) => setFormData({ ...formData, termsAccepted: e.target.checked })}
-                    className="mt-1 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-zinc-900 border-zinc-700 cursor-pointer"
-                  />
-                  <span className="text-xs text-zinc-300 leading-relaxed">
-                    Declaro que li e aceito integralmente o{' '}
-                    <button
-                      type="button"
-                      onClick={() => setShowContractModal(true)}
-                      className="text-indigo-400 hover:text-indigo-300 underline font-semibold inline"
-                    >
-                      Contrato de Parceria Autônoma e Termo de Confidencialidade Billy Suite
-                    </button>
-                    , ciente de que a atividade é independente comissionada.
-                  </span>
-                </label>
-              </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="col-span-2">
+                      <label className="block text-[11px] font-mono font-medium text-slate-400 uppercase tracking-wider mb-1">
+                        Cidade *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Campinas"
+                        value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-white placeholder-slate-600 text-xs focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                      />
+                    </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-4 rounded-xl font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 transition shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-base cursor-pointer"
-              >
-                {loading ? (
-                  <>
-                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                    Enviando Inscrição...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-5 h-5" />
-                    Enviar Candidatura de Operador
-                  </>
-                )}
-              </button>
-            </form>
+                    <div>
+                      <label className="block text-[11px] font-mono font-medium text-slate-400 uppercase tracking-wider mb-1">
+                        UF *
+                      </label>
+                      <select
+                        value={formData.state}
+                        onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#0a0c10] border border-white/10 text-white text-xs focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 font-mono"
+                      >
+                        {['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'].map((uf) => (
+                          <option key={uf} value={uf}>{uf}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Dados do Pix para Pagamento de Comissões */}
+                  <div className="p-3.5 rounded-xl bg-[#0a0c10] border border-white/[0.08] space-y-2.5">
+                    <div className="flex items-center gap-1.5 text-xs font-mono font-semibold text-emerald-400 uppercase tracking-wider">
+                      <DollarSign className="w-3.5 h-3.5" />
+                      Chave Pix para Repasse das Comissões
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      <div>
+                        <label className="block text-[10px] font-mono text-slate-500 mb-1">Tipo de Chave *</label>
+                        <select
+                          value={formData.pixType}
+                          onChange={(e) => setFormData({ ...formData, pixType: e.target.value as any })}
+                          className="w-full px-2.5 py-2 rounded-lg bg-[#131720] border border-white/10 text-white text-xs focus:outline-none focus:border-emerald-500 font-mono"
+                        >
+                          <option value="cpf">CPF</option>
+                          <option value="cnpj">CNPJ</option>
+                          <option value="phone">Telefone</option>
+                          <option value="email">E-mail</option>
+                          <option value="random">Chave Aleatória</option>
+                        </select>
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-[10px] font-mono text-slate-500 mb-1">Chave Pix *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Informe sua chave Pix"
+                          value={formData.pixKey}
+                          onChange={(e) => setFormData({ ...formData, pixKey: e.target.value })}
+                          className="w-full px-3 py-2 rounded-lg bg-[#131720] border border-white/10 text-white text-xs placeholder-slate-600 focus:outline-none focus:border-emerald-500 font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-mono font-medium text-slate-400 uppercase tracking-wider mb-1">
+                      LinkedIn ou Portfólio Online (Opcional)
+                    </label>
+                    <input
+                      type="url"
+                      placeholder="https://linkedin.com/in/seu-perfil"
+                      value={formData.resumeUrl}
+                      onChange={(e) => setFormData({ ...formData, resumeUrl: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-white placeholder-slate-600 text-xs focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-mono font-medium text-slate-400 uppercase tracking-wider mb-1">
+                      Experiência Comercial / Vendas
+                    </label>
+                    <textarea
+                      rows={2}
+                      placeholder="Já vendeu algo na vida ou pelo menos sabe responder uma mensagem no WhatsApp sem parecer um robô do suporte?"
+                      value={formData.experience}
+                      onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.03] border border-white/10 text-white placeholder-slate-600 text-xs focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-none"
+                    ></textarea>
+                  </div>
+
+                  {/* Checkbox Termos de Adesão */}
+                  <div className="pt-1">
+                    <label className="flex items-start gap-2.5 cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        required
+                        checked={formData.termsAccepted}
+                        onChange={(e) => setFormData({ ...formData, termsAccepted: e.target.checked })}
+                        className="mt-0.5 w-4 h-4 rounded text-violet-600 focus:ring-violet-500 bg-[#0a0c10] border-white/20 cursor-pointer"
+                      />
+                      <span className="text-[11px] text-slate-400 leading-relaxed">
+                        Declaro que li e aceito integralmente o{' '}
+                        <button
+                          type="button"
+                          onClick={() => setShowContractModal(true)}
+                          className="text-violet-400 hover:text-violet-300 underline font-medium inline"
+                        >
+                          Contrato de Parceria Autônoma e Termo de Confidencialidade Billy Suite
+                        </button>
+                        , ciente de que a atividade é 100% autônoma e comissionada.
+                      </span>
+                    </label>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3.5 rounded-xl font-semibold text-white bg-violet-600 hover:bg-violet-500 transition shadow-md shadow-violet-600/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-xs font-mono uppercase tracking-wider cursor-pointer"
+                  >
+                    {loading ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                        Processando Candidatura...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        Submeter Candidatura e Solicitar Licença
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -662,21 +797,21 @@ export default function LandingPage() {
       {/* MODAL DO CONTRATO DE PARCERIA E CONFIDENCIALIDADE */}
       {showContractModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl">
-            <div className="p-6 border-b border-zinc-800 flex items-center justify-between">
+          <div className="bg-[#131720] border border-white/10 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+            <div className="p-5 border-b border-white/[0.08] flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-indigo-400" />
-                <h3 className="text-lg font-bold text-white">Contrato de Parceria Autônoma e Confidencialidade</h3>
+                <FileText className="w-4 h-4 text-violet-400" />
+                <h3 className="text-sm font-bold text-white font-mono">Contrato de Parceria Autônoma e Confidencialidade</h3>
               </div>
               <button
                 onClick={() => setShowContractModal(false)}
-                className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-zinc-800"
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/[0.04]"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto text-xs text-zinc-300 space-y-4 leading-relaxed font-sans">
+            <div className="p-6 overflow-y-auto text-xs text-slate-300 space-y-4 leading-relaxed font-sans">
               <p className="font-semibold text-white">
                 INSTRUMENTO PARTICULAR DE PARCERIA COMERCIAL AUTÔNOMA E TERMO DE CONFIDENCIALIDADE (BILLY SUITE)
               </p>
@@ -697,13 +832,13 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="p-4 border-t border-zinc-800 bg-zinc-950/60 flex justify-end gap-3">
+            <div className="p-4 border-t border-white/[0.08] bg-[#0a0c10] flex justify-end gap-3">
               <button
                 onClick={() => {
                   setFormData({ ...formData, termsAccepted: true });
                   setShowContractModal(false);
                 }}
-                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition"
+                className="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-semibold text-xs transition"
               >
                 Li e Aceito os Termos
               </button>
@@ -712,23 +847,25 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* FOOTER */}
-      <footer className="border-t border-zinc-800/80 bg-zinc-950 py-12 text-zinc-400 text-xs">
+      {/* FOOTER EXECUTIVO */}
+      <footer className="border-t border-white/[0.06] bg-[#0a0c10] py-10 text-slate-500 text-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center font-bold text-white">
+            <div className="w-7 h-7 rounded-lg bg-violet-600/30 border border-violet-500/30 flex items-center justify-center font-bold font-mono text-xs text-white">
               B
             </div>
             <div>
-              <p className="font-bold text-white">WebBilly • www.webbilly.com.br</p>
-              <p className="text-[11px] text-zinc-500">Ecossistema Billy Suite v2.0 AI • 2026</p>
+              <p className="font-semibold text-slate-300">WebBilly • webbilly.com.br</p>
+              <p className="text-[11px] text-slate-500 font-mono">Rede Oficial de Operadores Comerciais • Billy Suite v2.0</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            <Link href="/operador/login" className="hover:text-white transition">Painel do Operador</Link>
-            <Link href="/admin/login" className="hover:text-white transition">Painel Administrativo</Link>
-            <button onClick={() => setShowContractModal(true)} className="hover:text-white transition">Termos & Contrato</button>
+          <div className="flex items-center gap-6 text-xs text-slate-400">
+            <Link href="/operador/login" className="hover:text-white transition">Área do Operador</Link>
+            <Link href="/admin/login" className="hover:text-white transition">Master Admin</Link>
+            <button onClick={() => setShowContractModal(true)} className="hover:text-white transition cursor-pointer">
+              Termos & Contrato
+            </button>
           </div>
         </div>
       </footer>
