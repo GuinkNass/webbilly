@@ -3,7 +3,28 @@ import path from 'path';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 
-const DB_PATH = path.join(process.cwd(), 'src', 'data', 'db.json');
+const IS_VERCEL = !!process.env.VERCEL;
+const BUNDLED_DB_PATH = path.join(process.cwd(), 'src', 'data', 'db.json');
+const RUNTIME_DB_PATH = IS_VERCEL ? path.join('/tmp', 'webbilly_db.json') : BUNDLED_DB_PATH;
+
+function getDbPath(): string {
+  if (IS_VERCEL) {
+    if (!fs.existsSync(RUNTIME_DB_PATH)) {
+      try {
+        if (fs.existsSync(BUNDLED_DB_PATH)) {
+          fs.copySync(BUNDLED_DB_PATH, RUNTIME_DB_PATH);
+        } else {
+          fs.writeJsonSync(RUNTIME_DB_PATH, getDefaultDatabase());
+        }
+      } catch (e) {
+        console.error('Erro ao inicializar DB no /tmp da Vercel:', e);
+        return BUNDLED_DB_PATH;
+      }
+    }
+    return RUNTIME_DB_PATH;
+  }
+  return BUNDLED_DB_PATH;
+}
 
 export interface Candidate {
   id: string;
@@ -236,29 +257,38 @@ function getDefaultDatabase(): DatabaseSchema {
 
 export function readDb(): DatabaseSchema {
   try {
-    if (!fs.existsSync(DB_PATH)) {
+    const activePath = getDbPath();
+    if (!fs.existsSync(activePath)) {
       const initial = getDefaultDatabase();
-      fs.ensureDirSync(path.dirname(DB_PATH));
-      fs.writeJsonSync(DB_PATH, initial, { spaces: 2 });
+      try {
+        fs.ensureDirSync(path.dirname(activePath));
+        fs.writeJsonSync(activePath, initial, { spaces: 2 });
+      } catch {}
       return initial;
     }
-    const data = fs.readJsonSync(DB_PATH);
+    const data = fs.readJsonSync(activePath);
     return data;
   } catch (err) {
     console.error('Erro ao ler DB:', err);
+    try {
+      if (fs.existsSync(BUNDLED_DB_PATH)) {
+        return fs.readJsonSync(BUNDLED_DB_PATH);
+      }
+    } catch {}
     return getDefaultDatabase();
   }
 }
 
 export function writeDb(data: DatabaseSchema): void {
   try {
-    fs.ensureDirSync(path.dirname(DB_PATH));
-    const tmpPath = `${DB_PATH}.tmp.${Date.now()}`;
+    const activePath = getDbPath();
+    fs.ensureDirSync(path.dirname(activePath));
+    const tmpPath = `${activePath}.tmp.${Date.now()}`;
     fs.writeJsonSync(tmpPath, data, { spaces: 2 });
-    fs.moveSync(tmpPath, DB_PATH, { overwrite: true });
+    fs.moveSync(tmpPath, activePath, { overwrite: true });
   } catch (err) {
     console.error('Erro ao salvar DB:', err);
-    throw err;
+    // Em ambiente serverless estrito, loga sem travar o endpoint de validação
   }
 }
 

@@ -60,7 +60,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Validação de vinculação de máquina (Hardware Lock)
-    if (license.machineId && license.machineId !== machineId) {
+    // O serial Master possui passe-livre para reativação em qualquer máquina
+    const isAdminMaster = license.serialToken === 'BILLY-OP-ADMIN-MASTER-2026' || operator.id === 'OP-0001';
+    if (!isAdminMaster && license.machineId && license.machineId !== machineId) {
       return NextResponse.json(
         {
           valid: false,
