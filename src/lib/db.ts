@@ -35,6 +35,7 @@ export interface Operator {
   status: 'ATIVO' | 'BLOQUEADO';
   machineId?: string | null;
   osInfo?: string | null;
+  operatorIp?: string | null;
   lastSync?: string | null;
   dailyLimit: number;
   todayGenerations: number;
@@ -48,6 +49,7 @@ export interface LicenseRecord {
   status: 'ATIVO' | 'EM_USO' | 'BLOQUEADO';
   machineId?: string | null;
   osInfo?: string | null;
+  operatorIp?: string | null;
   lastSync?: string | null;
   createdAt: string;
 }
@@ -65,6 +67,8 @@ export interface Sale {
   pixStatus: 'PENDENTE' | 'PAGO';
   pixPaidAt?: string | null;
   pixProof?: string | null;
+  domainRegistered?: string | null;
+  resellerClubOrderId?: string | null;
   createdAt: string;
 }
 
@@ -74,6 +78,9 @@ export interface AdminSettings {
   cloudflareAccountId: string;
   cloudflareApiToken: string;
   vercelToken: string;
+  resellerClubUserId?: string;
+  resellerClubApiKey?: string;
+  resellerClubApiUrl?: string;
   pixGateway: 'mercadopago' | 'asaas' | 'manual';
   pixGatewayKey: string;
   defaultDailyLimit: number;
@@ -207,6 +214,9 @@ function getDefaultDatabase(): DatabaseSchema {
       cloudflareAccountId: 'cf_acc_demo_772183',
       cloudflareApiToken: 'cf_tok_live_883920194827',
       vercelToken: 'verc_tok_9981203847',
+      resellerClubUserId: '1354859',
+      resellerClubApiKey: '2IQ6a2S6wRyMqdUbFF9344vPxqprjCae',
+      resellerClubApiUrl: 'https://httpapi.com/api',
       pixGateway: 'mercadopago',
       pixGatewayKey: 'APP_USR-7826315273-091823-DEMO-KEY',
       defaultDailyLimit: 50,

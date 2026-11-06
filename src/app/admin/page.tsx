@@ -293,6 +293,49 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
+        {/* ALERTA DE WHITELIST RESELLERCLUB */}
+        {data?.operators?.some((o: any) => o.operatorIp) && (
+          <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-950/40 via-zinc-900 border border-amber-500/40 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-bold text-amber-300">
+                  Atenção: Whitelist de IPs na ResellerClub Requerida
+                </h4>
+                <p className="text-xs text-zinc-300 mt-0.5">
+                  Operadores ativos informaram seus IPs de máquina. Certifique-se de adicioná-los no painel de segurança da ResellerClub para que o registro autônomo de domínios .com.br não seja bloqueado.
+                </p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {data.operators
+                    .filter((o: any) => o.operatorIp)
+                    .map((o: any) => (
+                      <span key={o.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-950 border border-amber-500/30 text-[11px] font-mono text-amber-200">
+                        <strong>{o.name}:</strong> {o.operatorIp}
+                        <button
+                          onClick={() => copyToClipboard(o.operatorIp)}
+                          className="text-zinc-400 hover:text-white"
+                          title="Copiar IP"
+                        >
+                          <Copy className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                </div>
+              </div>
+            </div>
+
+            <a
+              href="https://rclubbr.webpropanel.com/settings/pro-suite/api-settings"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs transition flex items-center gap-2 shrink-0 shadow-lg shadow-amber-600/20"
+            >
+              <span>Configurar IPs na ResellerClub</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          </div>
+        )}
+
         {/* Abas de Navegação */}
         <div className="flex border-b border-zinc-800 mb-6 space-x-2">
           <button
@@ -520,6 +563,7 @@ export default function AdminDashboardPage() {
                       <th className="py-3 px-4">Operador Vinculado</th>
                       <th className="py-3 px-4">Status</th>
                       <th className="py-3 px-4">Machine ID Registrado</th>
+                      <th className="py-3 px-4">IP Máquina (Reseller)</th>
                       <th className="py-3 px-4">Último Heartbeat</th>
                       <th className="py-3 px-4 text-right">Ações de Segurança</th>
                     </tr>
@@ -566,6 +610,24 @@ export default function AdminDashboardPage() {
                             <span className="text-zinc-500 italic">Aguardando 1ª ativação</span>
                           )}
                           {l.osInfo && <div className="text-[10px] text-zinc-500">{l.osInfo}</div>}
+                        </td>
+                        <td className="py-3.5 px-4 font-mono text-[11px]">
+                          {l.operatorIp ? (
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-amber-300 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+                                {l.operatorIp}
+                              </span>
+                              <button
+                                onClick={() => copyToClipboard(l.operatorIp)}
+                                className="text-zinc-500 hover:text-white"
+                                title="Copiar IP"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-zinc-600 italic">Pendente</span>
+                          )}
                         </td>
                         <td className="py-3.5 px-4 font-mono text-[11px] text-zinc-400">
                           {l.lastSync ? new Date(l.lastSync).toLocaleString('pt-BR') : 'Nunca sincronizou'}
@@ -801,6 +863,55 @@ export default function AdminDashboardPage() {
                       value={apiSettings.vercelToken || ''}
                       onChange={(e) => setApiSettings({ ...apiSettings, vercelToken: e.target.value })}
                       className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white text-xs font-mono focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="border-t border-zinc-800 pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">
+                      API ResellerClub (Registro Automático de Domínios .com.br)
+                    </h4>
+                    <a
+                      href="https://rclubbr.webpropanel.com/settings/pro-suite/api-settings"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] text-amber-400 hover:text-amber-300 flex items-center gap-1 font-semibold"
+                    >
+                      <span>Painel ResellerClub</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] text-zinc-400 mb-1">Reseller User ID</label>
+                      <input
+                        type="text"
+                        value={apiSettings.resellerClubUserId || '1354859'}
+                        onChange={(e) => setApiSettings({ ...apiSettings, resellerClubUserId: e.target.value })}
+                        className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white text-xs font-mono focus:outline-none focus:border-amber-500"
+                        placeholder="1354859"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] text-zinc-400 mb-1">API Key</label>
+                      <input
+                        type="password"
+                        value={apiSettings.resellerClubApiKey || ''}
+                        onChange={(e) => setApiSettings({ ...apiSettings, resellerClubApiKey: e.target.value })}
+                        className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white text-xs font-mono focus:outline-none focus:border-amber-500"
+                        placeholder="2IQ6a2S6wRyMqdUbFF9344vPxqprjCae"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <label className="block text-[11px] text-zinc-400 mb-1">HTTP API URL</label>
+                    <input
+                      type="text"
+                      value={apiSettings.resellerClubApiUrl || 'https://httpapi.com/api'}
+                      onChange={(e) => setApiSettings({ ...apiSettings, resellerClubApiUrl: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white text-xs font-mono focus:outline-none focus:border-amber-500"
+                      placeholder="https://httpapi.com/api"
                     />
                   </div>
                 </div>

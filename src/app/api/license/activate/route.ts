@@ -5,7 +5,25 @@ import crypto from 'crypto';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { serialToken, machineId, osInfo } = body;
+    const { serialToken, machineId, osInfo, operatorIp: clientProvidedIp } = body;
+
+    // Detecta o IP público via headers caso não tenha sido explicitamente enviado
+    const forwardedFor = req.headers.get('x-forwarded-for');
+    const realIp = req.headers.get('x-real-ip');
+    const cfIp = req.headers.get('cf-connecting-ip');
+    let detectedIp = clientProvidedIp;
+    if (!detectedIp) {
+      if (forwardedFor) {
+        detectedIp = forwardedFor.split(',')[0].trim();
+      } else if (realIp) {
+        detectedIp = realIp.trim();
+      } else if (cfIp) {
+        detectedIp = cfIp.trim();
+      }
+    }
+    if (detectedIp === '::1' || detectedIp === '::ffff:127.0.0.1') {
+      detectedIp = '127.0.0.1';
+    }
 
     if (!serialToken || typeof serialToken !== 'string') {
       return NextResponse.json(
@@ -58,11 +76,13 @@ export async function POST(req: NextRequest) {
 
     license.machineId = machineId;
     license.osInfo = osInfo || license.osInfo || 'Windows PC';
+    license.operatorIp = detectedIp || license.operatorIp || null;
     license.status = 'EM_USO';
     license.lastSync = nowIso;
 
     operator.machineId = machineId;
     operator.osInfo = osInfo || operator.osInfo || 'Windows PC';
+    operator.operatorIp = detectedIp || operator.operatorIp || null;
     operator.lastSync = nowIso;
 
     // Gera um sessionToken assinado para controle de requisições do desktop
@@ -89,6 +109,8 @@ export async function POST(req: NextRequest) {
       permissions: ['OPERATOR'],
       sessionToken,
       machineId,
+      operatorIp: detectedIp || null,
+      resellerWhitelistUrl: 'https://rclubbr.webpropanel.com/settings/pro-suite/api-settings',
       isFirstActivation,
       activatedAt: nowIso,
       apiConfig

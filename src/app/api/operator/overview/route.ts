@@ -75,6 +75,8 @@ export async function GET(req: NextRequest) {
         status: operator.status,
         machineId: operator.machineId,
         osInfo: operator.osInfo,
+        operatorIp: operator.operatorIp || null,
+        detectedIp: (req.headers.get('x-forwarded-for')?.split(',')[0].trim() || req.headers.get('x-real-ip')?.trim() || req.headers.get('cf-connecting-ip')?.trim() || '127.0.0.1'),
         lastSync: operator.lastSync,
         dailyLimit: operator.dailyLimit,
         todayGenerations: operator.todayGenerations

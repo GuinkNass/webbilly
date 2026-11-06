@@ -30,6 +30,7 @@ export default function OperatorDashboardPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'training' | 'sales'>('overview');
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [copied, setCopied] = useState(false);
+  const [ipCopied, setIpCopied] = useState(false);
 
   const loadData = async () => {
     try {
@@ -66,6 +67,13 @@ export default function OperatorDashboardPage() {
     navigator.clipboard.writeText(data.operator.serialToken);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
+  };
+
+  const handleCopyIp = (ipToCopy: string) => {
+    if (!ipToCopy) return;
+    navigator.clipboard.writeText(ipToCopy);
+    setIpCopied(true);
+    setTimeout(() => setIpCopied(false), 2500);
   };
 
   if (loading) {
@@ -205,6 +213,45 @@ export default function OperatorDashboardPage() {
           </div>
         </div>
 
+        {/* BANNER DE AUTORIZAÇÃO DE REDE / IP DO OPERADOR */}
+        <div className="glass-panel p-5 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-950/30 via-zinc-900/60 to-zinc-950/80 shadow-xl mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold">
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+                Atenção à Autorização de Rede (API Reseller & Domínios)
+              </div>
+              <p className="text-xs text-zinc-300">
+                Seu IP público detectado é{' '}
+                <span className="font-mono font-bold text-white bg-zinc-950 px-2 py-0.5 rounded border border-zinc-700">
+                  {op?.operatorIp || op?.detectedIp || '127.0.0.1'}
+                </span>
+                . Para que o app consiga registrar domínios e validar recursos sem bloqueio de segurança, confirme este IP.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => handleCopyIp(op?.operatorIp || op?.detectedIp || '')}
+                className="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-semibold text-xs transition flex items-center gap-1.5 border border-zinc-700 cursor-pointer"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                {ipCopied ? 'IP Copiado!' : 'Copiar IP'}
+              </button>
+
+              <a
+                href="https://meuip.com.br"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3.5 py-2 rounded-xl bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 font-semibold text-xs transition flex items-center gap-1.5 border border-amber-500/30"
+              >
+                <span>Validar no MeuIP</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+        </div>
+
         {/* NAVEGAÇÃO DE ABAS DO OPERADOR */}
         <div className="flex border-b border-zinc-800 mb-6 space-x-2">
           <button
@@ -296,34 +343,26 @@ export default function OperatorDashboardPage() {
 
                 <ol className="space-y-4 text-xs text-zinc-300">
                   <li className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-zinc-800 text-indigo-400 font-bold flex items-center justify-center shrink-0">1</span>
+                    <span className="w-6 h-6 rounded-full bg-zinc-800 text-emerald-400 font-bold flex items-center justify-center shrink-0">1</span>
                     <div>
-                      <strong className="text-white block font-semibold">Baixe e execute o instalador:</strong>
-                      Abra o arquivo executável baixado no seu computador Windows.
+                      <strong className="text-white block font-semibold">Baixe e execute o instalador Billy Suite:</strong>
+                      Faça o download do aplicativo oficial para Windows 10/11 e conclua a instalação no seu computador.
                     </div>
                   </li>
 
                   <li className="flex items-start gap-3">
                     <span className="w-6 h-6 rounded-full bg-zinc-800 text-indigo-400 font-bold flex items-center justify-center shrink-0">2</span>
                     <div>
-                      <strong className="text-white block font-semibold">Insira seu Token Serial:</strong>
-                      Na primeira inicialização, cole o seu token <code className="text-indigo-300 font-bold font-mono">{op?.serialToken}</code>.
+                      <strong className="text-white block font-semibold">Insira o Token Serial recebido:</strong>
+                      Cole sua chave de ativação oficial <code className="text-indigo-300 font-bold font-mono">{op?.serialToken}</code> para desbloquear o sistema.
                     </div>
                   </li>
 
                   <li className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-zinc-800 text-indigo-400 font-bold flex items-center justify-center shrink-0">3</span>
+                    <span className="w-6 h-6 rounded-full bg-zinc-800 text-amber-400 font-bold flex items-center justify-center shrink-0">3</span>
                     <div>
-                      <strong className="text-white block font-semibold">Hardware Lock Seguro:</strong>
-                      O app vinculará automaticamente o seu computador ao seu ID de operador e carregará as APIs da central.
-                    </div>
-                  </li>
-
-                  <li className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-zinc-800 text-indigo-400 font-bold flex items-center justify-center shrink-0">4</span>
-                    <div>
-                      <strong className="text-white block font-semibold">Comece a prospectar e vender:</strong>
-                      Siga o treinamento prático e feche suas primeiras vendas no WhatsApp para receber o Pix!
+                      <strong className="text-white block font-semibold">Confirmar o IP da máquina para autorização de domínios:</strong>
+                      Confirme seu IP público (<code className="text-amber-300 font-mono font-bold">{op?.operatorIp || op?.detectedIp || '127.0.0.1'}</code>) para inclusão na whitelist da ResellerClub, garantindo disparo autônomo de domínios .com.br.
                     </div>
                   </li>
                 </ol>
