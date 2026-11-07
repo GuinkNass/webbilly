@@ -29,7 +29,7 @@ export default function OperatorLoginPage() {
         throw new Error(data.error || 'Credenciais inválidas.');
       }
 
-      router.push('/operador');
+      router.push(data.redirectUrl || '/operador');
     } catch (err: any) {
       setError(err.message || 'Falha ao autenticar.');
     } finally {

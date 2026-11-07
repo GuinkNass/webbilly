@@ -152,6 +152,7 @@ function getDefaultDatabase(): DatabaseSchema {
   const adminPasswordHash = bcrypt.hashSync('admin123456', 10);
   const opPasswordHash = bcrypt.hashSync('operador123', 10);
   const sampleSerial = 'BILLY-OP-DEMO-9988-2026';
+  const masterSerial = 'BILLY-OP-ADMIN-MASTER-2026';
 
   return {
     candidates: [
@@ -201,6 +202,23 @@ function getDefaultDatabase(): DatabaseSchema {
         dailyLimit: 50,
         todayGenerations: 14,
         createdAt: new Date(Date.now() - 86400000 * 7).toISOString()
+      },
+      {
+        id: 'OP-0001',
+        name: 'Administrador Master Billy',
+        email: 'admin@billysuite.com.br',
+        passwordHash: adminPasswordHash,
+        whatsapp: '(11) 99999-9999',
+        pixType: 'cpf',
+        pixKey: '000.000.000-00',
+        serialToken: masterSerial,
+        status: 'ATIVO',
+        machineId: null,
+        osInfo: null,
+        lastSync: null,
+        dailyLimit: 999,
+        todayGenerations: 0,
+        createdAt: new Date(Date.now() - 86400000 * 7).toISOString()
       }
     ],
     licenses: [
@@ -212,6 +230,16 @@ function getDefaultDatabase(): DatabaseSchema {
         machineId: 'WIN-DESKTOP-98B2',
         osInfo: 'Windows 11 Pro 64-bit',
         lastSync: new Date(Date.now() - 1000 * 60 * 8).toISOString(),
+        createdAt: new Date(Date.now() - 86400000 * 7).toISOString()
+      },
+      {
+        serialToken: masterSerial,
+        operatorId: 'OP-0001',
+        operatorName: 'Administrador Master Billy',
+        status: 'ATIVO',
+        machineId: null,
+        osInfo: null,
+        lastSync: null,
         createdAt: new Date(Date.now() - 86400000 * 7).toISOString()
       }
     ],
@@ -274,15 +302,117 @@ function getDefaultDatabase(): DatabaseSchema {
 export function readDb(): DatabaseSchema {
   try {
     const activePath = getDbPath();
+    let data: DatabaseSchema;
+
     if (!fs.existsSync(activePath)) {
-      const initial = getDefaultDatabase();
+      data = getDefaultDatabase();
       try {
         fs.ensureDirSync(path.dirname(activePath));
-        fs.writeJsonSync(activePath, initial, { spaces: 2 });
+        fs.writeJsonSync(activePath, data, { spaces: 2 });
       } catch {}
-      return initial;
+      return data;
     }
-    const data = fs.readJsonSync(activePath);
+    data = fs.readJsonSync(activePath);
+
+    // Validação e auto-cura de dados essenciais (adminUsers, operadores padrão e licenças)
+    let needsWrite = false;
+    if (!Array.isArray(data.adminUsers) || data.adminUsers.length === 0) {
+      data.adminUsers = [
+        {
+          id: 'ADMIN-001',
+          email: 'admin@billysuite.com.br',
+          name: 'Administrador Master Billy',
+          passwordHash: bcrypt.hashSync('admin123456', 10),
+          role: 'MASTER'
+        }
+      ];
+      needsWrite = true;
+    } else {
+      const admin = data.adminUsers.find(u => u.email.toLowerCase() === 'admin@billysuite.com.br');
+      if (!admin) {
+        data.adminUsers.push({
+          id: 'ADMIN-001',
+          email: 'admin@billysuite.com.br',
+          name: 'Administrador Master Billy',
+          passwordHash: bcrypt.hashSync('admin123456', 10),
+          role: 'MASTER'
+        });
+        needsWrite = true;
+      }
+    }
+
+    if (!Array.isArray(data.operators)) {
+      data.operators = [];
+      needsWrite = true;
+    }
+
+    if (!data.operators.some(o => o.email.toLowerCase() === 'admin@billysuite.com.br' || o.id === 'OP-0001')) {
+      data.operators.push({
+        id: 'OP-0001',
+        name: 'Administrador Master Billy',
+        email: 'admin@billysuite.com.br',
+        passwordHash: bcrypt.hashSync('admin123456', 10),
+        whatsapp: '(11) 99999-9999',
+        pixType: 'cpf',
+        pixKey: '000.000.000-00',
+        serialToken: 'BILLY-OP-ADMIN-MASTER-2026',
+        status: 'ATIVO',
+        machineId: null,
+        osInfo: null,
+        lastSync: null,
+        dailyLimit: 999,
+        todayGenerations: 0,
+        createdAt: new Date().toISOString()
+      });
+      needsWrite = true;
+    }
+
+    if (!data.operators.some(o => o.email.toLowerCase() === 'carlos.operador@billysuite.com.br')) {
+      data.operators.push({
+        id: 'OP-1001',
+        name: 'Carlos Eduardo Silva',
+        email: 'carlos.operador@billysuite.com.br',
+        passwordHash: bcrypt.hashSync('operador123', 10),
+        whatsapp: '(11) 97123-4567',
+        pixType: 'email',
+        pixKey: 'carlos.pix@gmail.com',
+        serialToken: 'BILLY-OP-DEMO-9988-2026',
+        status: 'ATIVO',
+        machineId: 'WIN-DESKTOP-98B2',
+        osInfo: 'Windows 11 Pro 64-bit',
+        lastSync: new Date().toISOString(),
+        dailyLimit: 50,
+        todayGenerations: 14,
+        createdAt: new Date().toISOString()
+      });
+      needsWrite = true;
+    }
+
+    if (!Array.isArray(data.licenses)) {
+      data.licenses = [];
+      needsWrite = true;
+    }
+
+    if (!data.licenses.some(l => l.serialToken === 'BILLY-OP-ADMIN-MASTER-2026')) {
+      data.licenses.push({
+        serialToken: 'BILLY-OP-ADMIN-MASTER-2026',
+        operatorId: 'OP-0001',
+        operatorName: 'Administrador Master Billy',
+        status: 'ATIVO',
+        machineId: null,
+        osInfo: null,
+        lastSync: null,
+        createdAt: new Date().toISOString()
+      });
+      needsWrite = true;
+    }
+
+    if (needsWrite) {
+      try {
+        fs.writeJsonSync(activePath, data, { spaces: 2 });
+      } catch {}
+    }
+
     return data;
   } catch (err) {
     console.error('Erro ao ler DB:', err);

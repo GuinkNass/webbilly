@@ -111,7 +111,16 @@ export default function OperatorDashboardPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {(data?.isMaster || op?.email === 'admin@billysuite.com.br' || op?.id === 'OP-0001') && (
+              <Link
+                href="/admin"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:brightness-110 shadow-lg shadow-indigo-600/20 transition"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Painel Master Admin
+              </Link>
+            )}
             <button
               onClick={loadData}
               className="p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition"

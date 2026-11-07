@@ -228,7 +228,14 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/operador"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 transition"
+            >
+              <Laptop className="w-3.5 h-3.5 text-emerald-400" />
+              Área do Operador
+            </Link>
             <button
               onClick={loadData}
               className="p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition"

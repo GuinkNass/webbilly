@@ -5,12 +5,16 @@ import { getUserFromRequest } from '@/lib/auth';
 export async function GET(req: NextRequest) {
   try {
     const user = await getUserFromRequest(req);
-    if (!user || user.role !== 'OPERATOR') {
+    if (!user || (user.role !== 'OPERATOR' && user.role !== 'MASTER')) {
       return NextResponse.json({ error: 'Acesso restrito ao Operador.' }, { status: 403 });
     }
 
     const db = readDb();
-    const operator = db.operators.find(o => o.id === user.userId);
+    let operator = db.operators.find(o => o.id === user.userId || o.email.toLowerCase() === user.email.toLowerCase());
+
+    if (!operator && user.role === 'MASTER') {
+      operator = db.operators.find(o => o.id === 'OP-0001') || db.operators[0];
+    }
 
     if (!operator) {
       return NextResponse.json({ error: 'Operador não encontrado.' }, { status: 404 });
@@ -81,6 +85,7 @@ export async function GET(req: NextRequest) {
         dailyLimit: operator.dailyLimit,
         todayGenerations: operator.todayGenerations
       },
+      isMaster: user.role === 'MASTER' || operator.email.toLowerCase() === 'admin@billysuite.com.br',
       license: license || null,
       stats: {
         salesCount: mySales.length,
