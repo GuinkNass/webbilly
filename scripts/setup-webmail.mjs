@@ -9,16 +9,44 @@
 import fs from 'fs';
 import path from 'path';
 import dns from 'dns';
+import readline from 'readline';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Carregamento de arquivo .env local se existir
-function loadDotEnv() {
+// Cores para formatação de terminal
+const c = {
+  reset: '\x1b[0m',
+  bright: '\x1b[1m',
+  cyan: '\x1b[36m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  red: '\x1b[31m',
+  magenta: '\x1b[35m',
+  gray: '\x1b[90m'
+};
+
+// Função para prompt interativo no terminal
+function askQuestion(query) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+  return new Promise((resolve) => {
+    rl.question(query, (answer) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
+}
+
+// Carregamento de arquivo .env e configurações locais
+function loadConfigurations() {
   const candidates = [
     path.join(process.cwd(), '.env'),
     path.join(__dirname, '..', '.env'),
+    path.join(__dirname, '..', '..', 'webbilly', '.env'),
     path.join(__dirname, '..', '..', 'BILLY', '.env')
   ];
 
@@ -40,76 +68,111 @@ function loadDotEnv() {
         });
         console.log(`[Config] Variáveis carregadas de: ${envPath}`);
         break;
-      } catch (err) {
-        // ignora
-      }
+      } catch (err) {}
     }
+  }
+
+  // Fallback: Recupera token da Vercel configurado no Billy Suite (settings.json)
+  const appDataSettings = path.join(process.env.APPDATA || '', 'billy', 'config', 'settings.json');
+  if (fs.existsSync(appDataSettings)) {
+    try {
+      const st = JSON.parse(fs.readFileSync(appDataSettings, 'utf8'));
+      if (!process.env.VERCEL_TOKEN && st.vercelToken) {
+        process.env.VERCEL_TOKEN = st.vercelToken;
+      }
+      if (!process.env.RENDER_API_KEY && st.renderApiKey) {
+        process.env.RENDER_API_KEY = st.renderApiKey;
+      }
+    } catch {}
   }
 }
 
-loadDotEnv();
+loadConfigurations();
 
-// Cores para formatação de terminal
-const c = {
-  reset: '\x1b[0m',
-  bright: '\x1b[1m',
-  cyan: '\x1b[36m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  red: '\x1b[31m',
-  magenta: '\x1b[35m',
-  gray: '\x1b[90m'
-};
+// -------------------------------------------------------------
+// Validação e Prompt Interativo
+// -------------------------------------------------------------
 
-// Configurações
-const RENDER_API_KEY = process.env.RENDER_API_KEY;
-const VERCEL_TOKEN = process.env.VERCEL_TOKEN;
-const VERCEL_TEAM_ID = process.env.VERCEL_TEAM_ID || 'team_mmHCe2NQjdDPafKUDlE9FYXQ';
-const DOMAIN = process.env.DOMAIN || 'webbilly.com.br';
-const SUBDOMAIN = process.env.SUBDOMAIN || 'webmail';
-const FULL_SUBDOMAIN = `${SUBDOMAIN}.${DOMAIN}`;
-const SERVICE_NAME = process.env.RENDER_SERVICE_NAME || 'billy-webmail';
-const DOCKER_IMAGE = process.env.DOCKER_IMAGE || 'snappymail/snappymail:latest';
+async function ensureCredentials() {
+  let renderKey = process.env.RENDER_API_KEY;
 
-console.log(`
-${c.cyan}${c.bright}=============================================================
-  BILLY SUITE - AUTOMAÇÃO DE WEBMAIL (RENDER + VERCEL DNS)
-=============================================================${c.reset}
-  - Alvo:           ${c.bright}${FULL_SUBDOMAIN}${c.reset}
-  - Imagem Docker:  ${c.magenta}${DOCKER_IMAGE}${c.reset}
-  - Serviço Render: ${c.yellow}${SERVICE_NAME}${c.reset}
-  - Domínio DNS:    ${c.green}${DOMAIN}${c.reset} (Vercel)
--------------------------------------------------------------
-`);
+  if (!renderKey) {
+    console.log(`
+${c.yellow}⚠️  A chave RENDER_API_KEY não foi encontrada nas variáveis de ambiente.${c.reset}
 
-// Validação de Pré-requisitos
-if (!RENDER_API_KEY) {
-  console.error(`${c.red}✖ ERRO CRÍTICO: RENDER_API_KEY não foi encontrada!${c.reset}`);
-  console.log(`
 Para obter sua chave da Render API:
 1. Acesse: ${c.cyan}https://dashboard.render.com/u/settings#api-keys${c.reset}
-2. Clique em "Create API Key"
-3. Copie o token e defina no terminal ou arquivo .env:
-   ${c.yellow}export RENDER_API_KEY="rnd_xxxxxxxxxxxxxxxxxxxxxxxx"${c.reset}
+2. Clique no botão ${c.bright}"Create API Key"${c.reset}
+3. Copie o token gerado (começa com "rnd_")
 `);
-  process.exit(1);
-}
 
-if (!VERCEL_TOKEN) {
-  console.error(`${c.red}✖ ERRO: VERCEL_TOKEN não configurado!${c.reset}`);
-  process.exit(1);
+    const input = await askQuestion(`${c.bright}👉 Cole a sua RENDER_API_KEY aqui e pressione Enter:${c.reset} `);
+
+    if (input && input.startsWith('rnd_')) {
+      renderKey = input;
+      process.env.RENDER_API_KEY = renderKey;
+
+      // Salva no .env local para execuções futuras
+      try {
+        const envPath = path.join(process.cwd(), '.env');
+        const appendText = `\nRENDER_API_KEY=${renderKey}\n`;
+        fs.appendFileSync(envPath, appendText, 'utf8');
+        console.log(`  ${c.green}✔ Chave salva no arquivo local: ${envPath}${c.reset}`);
+      } catch (e) {}
+
+      // Salva também no settings.json do Billy Desktop
+      try {
+        const appDataSettings = path.join(process.env.APPDATA || '', 'billy', 'config', 'settings.json');
+        if (fs.existsSync(appDataSettings)) {
+          const st = JSON.parse(fs.readFileSync(appDataSettings, 'utf8'));
+          st.renderApiKey = renderKey;
+          fs.writeFileSync(appDataSettings, JSON.stringify(st, null, 2), 'utf8');
+        }
+      } catch (e) {}
+
+    } else {
+      console.error(`\n${c.red}✖ Nenhuma chave válida foi informada.${c.reset}`);
+      console.log(`
+No ${c.bright}Windows PowerShell${c.reset}, você pode definir a chave temporariamente com:
+   ${c.yellow}$env:RENDER_API_KEY="rnd_sua_chave_aqui"${c.reset}
+   ${c.yellow}node scripts/setup-webmail.mjs${c.reset}
+
+Ou salvar permanentemente no arquivo .env:
+   ${c.yellow}Add-Content .env "RENDER_API_KEY=rnd_sua_chave_aqui"${c.reset}
+`);
+      process.exit(1);
+    }
+  }
+
+  let vercelToken = process.env.VERCEL_TOKEN;
+  if (!vercelToken) {
+    console.log(`\n${c.yellow}⚠️  VERCEL_TOKEN não encontrado.${c.reset}`);
+    const inputToken = await askQuestion(`${c.bright}👉 Cole o seu VERCEL_TOKEN (https://vercel.com/account/tokens):${c.reset} `);
+    if (inputToken) {
+      vercelToken = inputToken;
+      process.env.VERCEL_TOKEN = vercelToken;
+    } else {
+      console.error(`${c.red}✖ VERCEL_TOKEN obrigatório para configurar o DNS.${c.reset}`);
+      process.exit(1);
+    }
+  }
+
+  return {
+    renderKey,
+    vercelToken
+  };
 }
 
 // -------------------------------------------------------------
 // Funções Utilitárias de API
 // -------------------------------------------------------------
 
-async function renderFetch(endpoint, options = {}) {
+async function renderFetch(endpoint, apiKey, options = {}) {
   const url = `https://api.render.com/v1${endpoint}`;
   const res = await fetch(url, {
     ...options,
     headers: {
-      'Authorization': `Bearer ${RENDER_API_KEY}`,
+      'Authorization': `Bearer ${apiKey}`,
       'Accept': 'application/json',
       'Content-Type': 'application/json',
       ...options.headers
@@ -132,13 +195,13 @@ async function renderFetch(endpoint, options = {}) {
   return json;
 }
 
-async function vercelFetch(endpoint, options = {}) {
+async function vercelFetch(endpoint, vercelToken, teamId, options = {}) {
   const sep = endpoint.includes('?') ? '&' : '?';
-  const url = `https://api.vercel.com${endpoint}${VERCEL_TEAM_ID ? `${sep}teamId=${VERCEL_TEAM_ID}` : ''}`;
+  const url = `https://api.vercel.com${endpoint}${teamId ? `${sep}teamId=${teamId}` : ''}`;
   const res = await fetch(url, {
     ...options,
     headers: {
-      'Authorization': `Bearer ${VERCEL_TOKEN}`,
+      'Authorization': `Bearer ${vercelToken}`,
       'Content-Type': 'application/json',
       ...options.headers
     }
@@ -161,14 +224,34 @@ async function vercelFetch(endpoint, options = {}) {
 }
 
 // -------------------------------------------------------------
-// FLUXO DE ORQUESTRAÇÃO
+// FLUXO PRINCIPAL
 // -------------------------------------------------------------
 
 async function main() {
+  const DOMAIN = process.env.DOMAIN || 'webbilly.com.br';
+  const SUBDOMAIN = process.env.SUBDOMAIN || 'webmail';
+  const FULL_SUBDOMAIN = `${SUBDOMAIN}.${DOMAIN}`;
+  const SERVICE_NAME = process.env.RENDER_SERVICE_NAME || 'billy-webmail';
+  const DOCKER_IMAGE = process.env.DOCKER_IMAGE || 'djmaze/snappymail:latest';
+  const VERCEL_TEAM_ID = process.env.VERCEL_TEAM_ID || 'team_mmHCe2NQjdDPafKUDlE9FYXQ';
+
+  console.log(`
+${c.cyan}${c.bright}=============================================================
+  BILLY SUITE - AUTOMAÇÃO DE WEBMAIL (RENDER + VERCEL DNS)
+=============================================================${c.reset}
+  - Alvo:           ${c.bright}${FULL_SUBDOMAIN}${c.reset}
+  - Imagem Docker:  ${c.magenta}${DOCKER_IMAGE}${c.reset}
+  - Serviço Render: ${c.yellow}${SERVICE_NAME}${c.reset}
+  - Domínio DNS:    ${c.green}${DOMAIN}${c.reset} (Vercel)
+-------------------------------------------------------------
+`);
+
+  const { renderKey, vercelToken } = await ensureCredentials();
+
   try {
     // 1. Obter Owner ID na Render
-    console.log(`${c.bright}[1/5] Identificando conta/workspace na Render API...${c.reset}`);
-    const owners = await renderFetch('/owners');
+    console.log(`\n${c.bright}[1/5] Identificando conta/workspace na Render API...${c.reset}`);
+    const owners = await renderFetch('/owners', renderKey);
     if (!Array.isArray(owners) || owners.length === 0) {
       throw new Error('Nenhum proprietário/workspace associado à sua chave da Render API.');
     }
@@ -178,7 +261,7 @@ async function main() {
 
     // 2. Verificar se o serviço billy-webmail já existe ou criá-lo
     console.log(`\n${c.bright}[2/5] Provisionando Web Service Docker no Render...${c.reset}`);
-    const servicesList = await renderFetch(`/services?name=${encodeURIComponent(SERVICE_NAME)}&limit=10`);
+    const servicesList = await renderFetch(`/services?name=${encodeURIComponent(SERVICE_NAME)}&limit=10`, renderKey);
     let service = null;
 
     if (Array.isArray(servicesList) && servicesList.length > 0) {
@@ -195,11 +278,12 @@ async function main() {
         type: 'web_service',
         name: SERVICE_NAME,
         ownerId: ownerId,
+        image: {
+          ownerId: ownerId,
+          imagePath: DOCKER_IMAGE
+        },
         serviceDetails: {
           env: 'image',
-          image: {
-            imagePath: DOCKER_IMAGE
-          },
           plan: 'free',
           region: 'oregon',
           envVars: [
@@ -209,10 +293,11 @@ async function main() {
         }
       };
 
-      service = await renderFetch('/services', {
+      const serviceRes = await renderFetch('/services', renderKey, {
         method: 'POST',
         body: JSON.stringify(payload)
       });
+      service = serviceRes.service || serviceRes;
       console.log(`  ${c.green}✔ Web Service criado com sucesso!${c.reset} (ID: ${service.id})`);
     }
 
@@ -223,7 +308,7 @@ async function main() {
 
     // 3. Vincular Custom Domain no Render
     console.log(`\n${c.bright}[3/5] Configurando Custom Domain (${FULL_SUBDOMAIN}) no Render...${c.reset}`);
-    const customDomains = await renderFetch(`/services/${service.id}/custom-domains`);
+    const customDomains = await renderFetch(`/services/${service.id}/custom-domains`, renderKey);
     let existingDomain = null;
 
     if (Array.isArray(customDomains)) {
@@ -237,7 +322,7 @@ async function main() {
       console.log(`  ${c.green}✔ Custom domain já registrado no Render:${c.reset} ${domObj.name} (Status: ${domObj.verificationStatus})`);
     } else {
       console.log(`  Adicionando ${FULL_SUBDOMAIN} ao serviço...`);
-      const newDomainRes = await renderFetch(`/services/${service.id}/custom-domains`, {
+      const newDomainRes = await renderFetch(`/services/${service.id}/custom-domains`, renderKey, {
         method: 'POST',
         body: JSON.stringify({ name: FULL_SUBDOMAIN })
       });
@@ -248,7 +333,7 @@ async function main() {
 
     // 4. Configurar DNS CNAME na Vercel
     console.log(`\n${c.bright}[4/5] Configurando Apontamento DNS CNAME na Vercel...${c.reset}`);
-    const dnsRecordsRes = await vercelFetch(`/v2/domains/${DOMAIN}/records`);
+    const dnsRecordsRes = await vercelFetch(`/v2/domains/${DOMAIN}/records`, vercelToken, VERCEL_TEAM_ID);
     const records = dnsRecordsRes.records || [];
 
     // Localiza registro CNAME do webmail se já existir
@@ -259,8 +344,8 @@ async function main() {
         console.log(`  ${c.green}✔ Registro DNS CNAME já aponta corretamente para:${c.reset} ${renderHost}`);
       } else {
         console.log(`  Atualizando CNAME existente (${existingCname.value} -> ${renderHost})...`);
-        await vercelFetch(`/v2/domains/${DOMAIN}/records/${existingCname.id}`, { method: 'DELETE' });
-        await vercelFetch(`/v2/domains/${DOMAIN}/records`, {
+        await vercelFetch(`/v2/domains/${DOMAIN}/records/${existingCname.id}`, vercelToken, VERCEL_TEAM_ID, { method: 'DELETE' });
+        await vercelFetch(`/v2/domains/${DOMAIN}/records`, vercelToken, VERCEL_TEAM_ID, {
           method: 'POST',
           body: JSON.stringify({
             name: SUBDOMAIN,
@@ -273,7 +358,7 @@ async function main() {
       }
     } else {
       console.log(`  Criando novo registro CNAME: ${c.yellow}${SUBDOMAIN}${c.reset} -> ${c.cyan}${renderHost}.${c.reset}...`);
-      await vercelFetch(`/v2/domains/${DOMAIN}/records`, {
+      await vercelFetch(`/v2/domains/${DOMAIN}/records`, vercelToken, VERCEL_TEAM_ID, {
         method: 'POST',
         body: JSON.stringify({
           name: SUBDOMAIN,
@@ -311,11 +396,9 @@ async function main() {
     // Solicitar re-verificação de certificado no Render
     if (customDomainId) {
       try {
-        await renderFetch(`/services/${service.id}/custom-domains/${customDomainId}/verify`, { method: 'POST' });
+        await renderFetch(`/services/${service.id}/custom-domains/${customDomainId}/verify`, renderKey, { method: 'POST' });
         console.log(`  ${c.green}✔ Solicitação de verificação de SSL disparada no Render.${c.reset}`);
-      } catch (e) {
-        // silencioso
-      }
+      } catch (e) {}
     }
 
     console.log(`
