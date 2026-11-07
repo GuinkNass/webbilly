@@ -129,6 +129,18 @@ export interface BriefingRecord {
   photos: string[];
   submittedAt: string;
   status: 'PENDENTE' | 'PROCESSADO';
+  deployedUrl?: string;
+  demoUrl?: string;
+}
+
+export interface DemoRecord {
+  leadToken: string;
+  title: string;
+  category?: string;
+  deployedUrl: string;
+  instagram?: string;
+  phone?: string;
+  updatedAt: string;
 }
 
 export interface DatabaseSchema {
@@ -139,6 +151,7 @@ export interface DatabaseSchema {
   adminSettings: AdminSettings;
   adminUsers: AdminUser[];
   briefings?: Record<string, BriefingRecord>;
+  demos?: Record<string, DemoRecord>;
 }
 
 function generateSerial(): string {

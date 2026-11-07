@@ -109,5 +109,14 @@
       "passwordHash": "$2a$10$QK0t7Xx1/kp9Aeq7gZDIcOgWiv67Ql8zUA9je.iLBdcvKqaizufSS",
       "role": "MASTER"
     }
-  ]
+  ],
+  "demos": {
+    "brf_8cf2jt1mw600z3g": {
+      "leadToken": "brf_8cf2jt1mw600z3g",
+      "title": "CAO Q' RI PET SHOP COMERCIO DE ALIMENTOS E ACESSORIOS PARA ANIMAIS LTDA",
+      "category": "Pet Shop, Banho e Tosa",
+      "deployedUrl": "https://caoqripetshop-guilhermernascimento-9353s-projects.vercel.app",
+      "updatedAt": "2026-11-07T06:06:19.061Z"
+    }
+  }
 }
