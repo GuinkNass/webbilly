@@ -20,7 +20,7 @@
       "id": "OP-1001",
       "name": "Carlos Eduardo Silva",
       "email": "carlos.operador@billysuite.com.br",
-      "passwordHash": "$2a$10$vCaf7PKaugIvtPCAnJeoqOMM.ZeRhi7a0zbaDLJ8ZGvRlyh7kqFUq",
+      "passwordHash": "$2a$10$Cy9BANMjfjFjVAuMd0oCY.qOh41GRa5LQt6Pf47rPMmZFzg0OphX2",
       "whatsapp": "(11) 97123-4567",
       "pixType": "email",
       "pixKey": "carlos.pix@gmail.com",
@@ -37,7 +37,7 @@
       "id": "OP-0001",
       "name": "Administrador Master Billy",
       "email": "admin@billysuite.com.br",
-      "passwordHash": "$2a$10$RqtNLXV39Rt7CM/8C6YjwOpTGhWT8aw9jJrmPOt1HO1sJIUtKC422",
+      "passwordHash": "$2a$10$QK0t7Xx1/kp9Aeq7gZDIcOgWiv67Ql8zUA9je.iLBdcvKqaizufSS",
       "whatsapp": "(11) 99999-9999",
       "pixType": "cpf",
       "pixKey": "000.000.000-00",
@@ -106,7 +106,7 @@
       "id": "ADMIN-001",
       "email": "admin@billysuite.com.br",
       "name": "Administrador Master Billy",
-      "passwordHash": "$2a$10$RqtNLXV39Rt7CM/8C6YjwOpTGhWT8aw9jJrmPOt1HO1sJIUtKC422",
+      "passwordHash": "$2a$10$QK0t7Xx1/kp9Aeq7gZDIcOgWiv67Ql8zUA9je.iLBdcvKqaizufSS",
       "role": "MASTER"
     }
   ]

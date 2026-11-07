@@ -116,6 +116,21 @@ export interface AdminUser {
   role: 'MASTER';
 }
 
+export interface BriefingRecord {
+  leadToken: string;
+  title: string;
+  phone: string;
+  category: string;
+  address: string;
+  instagram: string;
+  bio: string;
+  services: Array<{ name: string; price: string; description?: string }>;
+  domainIdeas: string[];
+  photos: string[];
+  submittedAt: string;
+  status: 'PENDENTE' | 'PROCESSADO';
+}
+
 export interface DatabaseSchema {
   candidates: Candidate[];
   operators: Operator[];
@@ -123,6 +138,7 @@ export interface DatabaseSchema {
   sales: Sale[];
   adminSettings: AdminSettings;
   adminUsers: AdminUser[];
+  briefings?: Record<string, BriefingRecord>;
 }
 
 function generateSerial(): string {
