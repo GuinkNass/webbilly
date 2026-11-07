@@ -99,10 +99,10 @@ export async function GET(req: NextRequest) {
       trainingModules,
       installer: {
         version: '2.0.4',
-        releaseDate: '2026-11-05',
-        fileName: 'Billy-Suite-Setup-2.0.4.exe',
-        fileSize: '346 MB',
-        downloadUrl: '/downloads/Billy-Suite-Setup-2.0.4.exe'
+        releaseDate: '2026-11-07',
+        fileName: 'Billy-Suite-Setup.exe',
+        fileSize: '348 MB',
+        downloadUrl: '/downloads/Billy-Suite-Setup.exe'
       }
     });
   } catch (err: any) {
