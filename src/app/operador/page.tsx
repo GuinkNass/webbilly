@@ -19,7 +19,8 @@ import {
   ShieldCheck,
   FileText,
   Video,
-  Award
+  Award,
+  Globe
 } from 'lucide-react';
 
 export default function OperatorDashboardPage() {
@@ -27,10 +28,9 @@ export default function OperatorDashboardPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'training' | 'sales'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'subscriptions' | 'training' | 'sales'>('overview');
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [copied, setCopied] = useState(false);
-  const [ipCopied, setIpCopied] = useState(false);
 
   const loadData = async () => {
     try {
@@ -67,13 +67,6 @@ export default function OperatorDashboardPage() {
     navigator.clipboard.writeText(data.operator.serialToken);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
-  };
-
-  const handleCopyIp = (ipToCopy: string) => {
-    if (!ipToCopy) return;
-    navigator.clipboard.writeText(ipToCopy);
-    setIpCopied(true);
-    setTimeout(() => setIpCopied(false), 2500);
   };
 
   if (loading) {
@@ -189,75 +182,38 @@ export default function OperatorDashboardPage() {
           </div>
         </div>
 
-        {/* CARDS DE RESUMO FINANCEIRO PESSOAL */}
+        {/* CARDS DE RESUMO FINANCEIRO E RECORRÊNCIA SAAS */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="glass-panel p-4 rounded-xl border border-zinc-800">
-            <span className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold">Total de Vendas</span>
-            <div className="text-2xl font-black text-white mt-1">{stats?.salesCount || 0} sites</div>
-            <span className="text-[10px] text-zinc-500 font-mono">fechados pelo seu ID</span>
+            <span className="text-[11px] uppercase tracking-wider text-sky-400 font-semibold">Sites Ativos (SaaS)</span>
+            <div className="text-2xl font-black text-white mt-1">
+              {stats?.activeSubscriptionsCount ?? stats?.salesCount ?? 0} sites
+            </div>
+            <span className="text-[10px] text-zinc-500 font-mono">no ar via subdomínio</span>
           </div>
 
           <div className="glass-panel p-4 rounded-xl border border-zinc-800">
-            <span className="text-[11px] uppercase tracking-wider text-emerald-400 font-semibold">Comissões Acumuladas</span>
+            <span className="text-[11px] uppercase tracking-wider text-emerald-400 font-semibold">Comissão Mensal (MRR)</span>
             <div className="text-2xl font-black text-emerald-400 mt-1">
+              R$ {(stats?.monthlyCommissionMRR ?? ((stats?.activeSubscriptionsCount ?? 0) * 10)).toLocaleString('pt-BR')},00
+            </div>
+            <span className="text-[10px] text-zinc-500">R$ 10,00/mês por cliente ativo</span>
+          </div>
+
+          <div className="glass-panel p-4 rounded-xl border border-zinc-800">
+            <span className="text-[11px] uppercase tracking-wider text-teal-400 font-semibold">Comissões Acumuladas</span>
+            <div className="text-2xl font-black text-teal-400 mt-1">
               R$ {stats?.totalCommissions?.toLocaleString('pt-BR') || 0},00
             </div>
-            <span className="text-[10px] text-zinc-500">R$ {stats?.commissionPerSale},00 por venda</span>
+            <span className="text-[10px] text-zinc-500">Total histórico registrado</span>
           </div>
 
           <div className="glass-panel p-4 rounded-xl border border-zinc-800">
-            <span className="text-[11px] uppercase tracking-wider text-teal-400 font-semibold">Comissões Pagas (Pix)</span>
-            <div className="text-2xl font-black text-teal-400 mt-1">
-              R$ {stats?.paidCommissions?.toLocaleString('pt-BR') || 0},00
+            <span className="text-[11px] uppercase tracking-wider text-amber-400 font-semibold">Chave Pix de Repasse</span>
+            <div className="text-sm font-black text-white mt-2 truncate">
+              {op?.pixKey || 'Não cadastrada'}
             </div>
-            <span className="text-[10px] text-zinc-500">Repassadas na sua chave</span>
-          </div>
-
-          <div className="glass-panel p-4 rounded-xl border border-zinc-800">
-            <span className="text-[11px] uppercase tracking-wider text-amber-400 font-semibold">Comissão a Receber</span>
-            <div className="text-2xl font-black text-amber-400 mt-1">
-              R$ {stats?.pendingCommissions?.toLocaleString('pt-BR') || 0},00
-            </div>
-            <span className="text-[10px] text-zinc-500">Aguardando liquidação</span>
-          </div>
-        </div>
-
-        {/* BANNER DE AUTORIZAÇÃO DE REDE / IP DO OPERADOR */}
-        <div className="glass-panel p-5 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-950/30 via-zinc-900/60 to-zinc-950/80 shadow-xl mb-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs font-bold">
-                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                Atenção à Autorização de Rede (API Reseller & Domínios)
-              </div>
-              <p className="text-xs text-zinc-300">
-                Seu IP público detectado é{' '}
-                <span className="font-mono font-bold text-white bg-zinc-950 px-2 py-0.5 rounded border border-zinc-700">
-                  {op?.operatorIp || op?.detectedIp || '127.0.0.1'}
-                </span>
-                . Para que o app consiga registrar domínios e validar recursos sem bloqueio de segurança, confirme este IP.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                onClick={() => handleCopyIp(op?.operatorIp || op?.detectedIp || '')}
-                className="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-semibold text-xs transition flex items-center gap-1.5 border border-zinc-700 cursor-pointer"
-              >
-                <Copy className="w-3.5 h-3.5" />
-                {ipCopied ? 'IP Copiado!' : 'Copiar IP'}
-              </button>
-
-              <a
-                href="https://meuip.com.br"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3.5 py-2 rounded-xl bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 font-semibold text-xs transition flex items-center gap-1.5 border border-amber-500/30"
-              >
-                <span>Validar no MeuIP</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            </div>
+            <span className="text-[10px] text-zinc-500 uppercase">{op?.pixType || 'Pix'} cadastrado</span>
           </div>
         </div>
 
@@ -273,6 +229,21 @@ export default function OperatorDashboardPage() {
           >
             <Download className="w-4 h-4" />
             Download do App & Guia
+          </button>
+
+          <button
+            onClick={() => setActiveTab('subscriptions')}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition ${
+              activeTab === 'subscriptions'
+                ? 'border-sky-500 text-white bg-sky-500/10 rounded-t-lg'
+                : 'border-transparent text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            <Globe className="w-4 h-4 text-sky-400" />
+            Sites Ativos (SaaS)
+            <span className="ml-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/20 text-sky-300">
+              {stats?.activeSubscriptionsCount || 0}
+            </span>
           </button>
 
           <button
@@ -368,10 +339,10 @@ export default function OperatorDashboardPage() {
                   </li>
 
                   <li className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-zinc-800 text-amber-400 font-bold flex items-center justify-center shrink-0">3</span>
+                    <span className="w-6 h-6 rounded-full bg-zinc-800 text-sky-400 font-bold flex items-center justify-center shrink-0">3</span>
                     <div>
-                      <strong className="text-white block font-semibold">Confirmar o IP da máquina para autorização de domínios:</strong>
-                      Confirme seu IP público (<code className="text-amber-300 font-mono font-bold">{op?.operatorIp || op?.detectedIp || '127.0.0.1'}</code>) para inclusão na whitelist da ResellerClub, garantindo disparo autônomo de domínios .com.br.
+                      <strong className="text-white block font-semibold">Gere e publique o site instantaneamente:</strong>
+                      Cada site do cliente fica online no subdomínio oficial <code className="text-sky-300 font-mono font-bold">slug.webbilly.com.br</code> com assinatura de R$ 29,90/mês e comissão recorrente de R$ 10,00/mês para você.
                     </div>
                   </li>
                 </ol>
@@ -380,6 +351,114 @@ export default function OperatorDashboardPage() {
                   <Award className="w-4 h-4 text-indigo-400 shrink-0" />
                   <span>Dúvidas técnicas? Acesse a aba de <strong>Treinamento</strong> para assistir à aula em vídeo.</span>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CONTEÚDO: ASSINATURAS RECORRENTES SAAS (SITES ATIVOS) */}
+        {activeTab === 'subscriptions' && (
+          <div className="space-y-6">
+            <div className="glass-panel p-5 rounded-xl border border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <span className="text-xs font-bold text-sky-400 uppercase tracking-wider block">
+                  Seus Clientes no Modelo SaaS Recorrente
+                </span>
+                <p className="text-xs text-zinc-300 mt-1">
+                  Cada cliente ativo gera <strong>R$ 10,00/mês</strong> de comissão recorrente repassada para sua chave Pix.
+                </p>
+              </div>
+              <div className="text-xs text-zinc-400 font-mono">
+                MRR Atual: <strong className="text-emerald-400 font-bold">R$ {(stats?.monthlyCommissionMRR ?? ((stats?.activeSubscriptionsCount ?? 0) * 10)).toLocaleString('pt-BR')},00 / mês</strong>
+              </div>
+            </div>
+
+            <div className="glass-panel rounded-xl border border-zinc-800 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-zinc-900/80 text-zinc-400 uppercase font-mono border-b border-zinc-800">
+                    <tr>
+                      <th className="py-3 px-4">Subdomínio Oficial</th>
+                      <th className="py-3 px-4">Cliente / Estabelecimento</th>
+                      <th className="py-3 px-4">WhatsApp</th>
+                      <th className="py-3 px-4">Mensalidade</th>
+                      <th className="py-3 px-4">Status</th>
+                      <th className="py-3 px-4 text-right">Ações Rápidas</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800/60">
+                    {(data?.subscriptions || []).length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-zinc-500 text-xs">
+                          Nenhum cliente ativo no momento. Dispare demonstrações no Billy Desktop com o link de checkout!
+                        </td>
+                      </tr>
+                    ) : (
+                      (data?.subscriptions || []).map((sub: any) => (
+                        <tr key={sub.id} className="hover:bg-zinc-800/40 transition">
+                          <td className="py-3.5 px-4 font-mono">
+                            <a
+                              href={`https://${sub.slug}.webbilly.com.br`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="font-bold text-sky-400 hover:underline flex items-center gap-1.5"
+                            >
+                              <span>{sub.slug}.webbilly.com.br</span>
+                              <ExternalLink className="w-3 h-3 text-sky-400" />
+                            </a>
+                            <span className="text-[10px] text-zinc-500">ID: {sub.id}</span>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span className="font-semibold text-white block">{sub.clientName}</span>
+                            <span className="text-[11px] text-zinc-400">{sub.planName || 'Assinatura Mensal'}</span>
+                          </td>
+                          <td className="py-3.5 px-4 font-mono text-zinc-300">
+                            {sub.clientPhone || '—'}
+                          </td>
+                          <td className="py-3.5 px-4 font-mono">
+                            <span className="text-white font-bold">R$ {sub.monthlyPrice?.toFixed(2)}/mês</span>
+                            <span className="text-[10px] text-emerald-400 block font-semibold">+R$ {sub.operatorCommissionMonthly?.toFixed(2)} repasse</span>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span
+                              className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+                                sub.status === 'active'
+                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                  : sub.status === 'suspended'
+                                  ? 'bg-red-500/10 text-red-400 border-red-500/30'
+                                  : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                              }`}
+                            >
+                              {sub.status === 'active' ? '● No Ar (Ativo)' : sub.status === 'suspended' ? '● Suspenso (Inadimplente)' : '● Pendente'}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <a
+                                href={`https://webbilly.com.br/api/subscription/create-checkout?slug=${sub.slug}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white font-medium text-[11px] transition"
+                                title="Link de Pagamento / Assinatura"
+                              >
+                                Link Checkout
+                              </a>
+                              <a
+                                href={`https://${sub.slug}.webbilly.com.br`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="p-1.5 rounded-lg bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 border border-sky-500/30"
+                                title="Ver Site Online"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

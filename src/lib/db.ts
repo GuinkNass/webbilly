@@ -99,6 +99,10 @@ export interface AdminSettings {
   cloudflareAccountId: string;
   cloudflareApiToken: string;
   vercelToken: string;
+  mercadopagoAccessToken?: string;
+  mercadopagoPublicKey?: string;
+  monthlySubscriptionPrice?: number;
+  operatorCommissionMonthly?: number;
   resellerClubUserId?: string;
   resellerClubApiKey?: string;
   resellerClubApiUrl?: string;
@@ -143,6 +147,30 @@ export interface DemoRecord {
   updatedAt: string;
 }
 
+export interface SubscriptionRecord {
+  id: string;
+  leadToken?: string;
+  siteSlug: string;
+  clientName: string;
+  clientPhone: string;
+  clientEmail?: string;
+  operatorId?: string;
+  operatorName?: string;
+  operatorToken?: string;
+  monthlyPrice: number;
+  commissionMonthly?: number;
+  status: 'active' | 'pending' | 'suspended' | 'cancelled';
+  deployedUrl?: string;
+  mpPreferenceId?: string;
+  mpPreapprovalId?: string;
+  mpPaymentId?: string;
+  checkoutUrl: string;
+  lastPaymentDate?: string;
+  nextRenewalDate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface DatabaseSchema {
   candidates: Candidate[];
   operators: Operator[];
@@ -152,6 +180,72 @@ export interface DatabaseSchema {
   adminUsers: AdminUser[];
   briefings?: Record<string, BriefingRecord>;
   demos?: Record<string, DemoRecord>;
+  subscriptions: SubscriptionRecord[];
+}
+
+export function getDefaultSubscriptions(): SubscriptionRecord[] {
+  return [
+    {
+      id: 'sub_caoqripetshop',
+      leadToken: 'brf_8cf2jt1mw600z3g',
+      siteSlug: 'caoqripetshop',
+      clientName: "CAO Q' RI PET SHOP",
+      clientPhone: '(11) 98452-1920',
+      clientEmail: 'contato@caoqripetshop.com.br',
+      operatorId: 'OP-1001',
+      operatorName: 'Carlos Eduardo Silva',
+      operatorToken: 'BILLY-OP-DEMO-9988-2026',
+      monthlyPrice: 29.90,
+      commissionMonthly: 10.00,
+      status: 'active',
+      deployedUrl: 'https://caoqripetshop-guilhermernascimento-9353s-projects.vercel.app',
+      checkoutUrl: 'https://webbilly.com.br/api/subscription/create-checkout?slug=caoqripetshop',
+      lastPaymentDate: new Date().toISOString(),
+      nextRenewalDate: new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(),
+      createdAt: new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'sub_barbeariavintage',
+      leadToken: 'brf_barbeariavintage',
+      siteSlug: 'barbearia-vintage',
+      clientName: 'Barbearia Vintage Imperial',
+      clientPhone: '(11) 97722-1100',
+      clientEmail: 'marcos@barbeariavintage.com.br',
+      operatorId: 'OP-1001',
+      operatorName: 'Carlos Eduardo Silva',
+      operatorToken: 'BILLY-OP-DEMO-9988-2026',
+      monthlyPrice: 29.90,
+      commissionMonthly: 10.00,
+      status: 'active',
+      deployedUrl: 'https://barbeariavintage.vercel.app',
+      checkoutUrl: 'https://webbilly.com.br/api/subscription/create-checkout?slug=barbearia-vintage',
+      lastPaymentDate: new Date(Date.now() - 15 * 24 * 3600 * 1000).toISOString(),
+      nextRenewalDate: new Date(Date.now() + 15 * 24 * 3600 * 1000).toISOString(),
+      createdAt: new Date(Date.now() - 45 * 24 * 3600 * 1000).toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'sub_autoescoladrivepro',
+      leadToken: 'brf_autoescoladrivepro',
+      siteSlug: 'autoescola-drivepro',
+      clientName: 'Autoescola DrivePro',
+      clientPhone: '(11) 96633-8899',
+      clientEmail: 'contato@drivepro.com.br',
+      operatorId: 'OP-0001',
+      operatorName: 'Administrador Master Billy',
+      operatorToken: 'BILLY-OP-ADMIN-MASTER-2026',
+      monthlyPrice: 29.90,
+      commissionMonthly: 10.00,
+      status: 'suspended',
+      deployedUrl: 'https://autoescola-drivepro.vercel.app',
+      checkoutUrl: 'https://webbilly.com.br/api/subscription/create-checkout?slug=autoescola-drivepro',
+      lastPaymentDate: new Date(Date.now() - 40 * 24 * 3600 * 1000).toISOString(),
+      nextRenewalDate: new Date(Date.now() - 10 * 24 * 3600 * 1000).toISOString(),
+      createdAt: new Date(Date.now() - 60 * 24 * 3600 * 1000).toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ];
 }
 
 function generateSerial(): string {
@@ -308,7 +402,8 @@ function getDefaultDatabase(): DatabaseSchema {
         passwordHash: adminPasswordHash,
         role: 'MASTER'
       }
-    ]
+    ],
+    subscriptions: getDefaultSubscriptions()
   };
 }
 
@@ -403,6 +498,11 @@ export function readDb(): DatabaseSchema {
 
     if (!Array.isArray(data.licenses)) {
       data.licenses = [];
+      needsWrite = true;
+    }
+
+    if (!Array.isArray(data.subscriptions) || data.subscriptions.length === 0) {
+      data.subscriptions = getDefaultSubscriptions();
       needsWrite = true;
     }
 

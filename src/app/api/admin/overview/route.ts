@@ -26,11 +26,34 @@ export async function GET(req: NextRequest) {
     const activeOperatorsCount = db.operators.filter(o => o.status === 'ATIVO').length;
     const blockedOperatorsCount = db.operators.filter(o => o.status === 'BLOQUEADO').length;
 
-    // Resumo seguro de APIs (ocultando segredos parciais)
+    // Métricas do Novo Modelo SaaS Recorrente (R$ 29,90/mês)
+    const subscriptions = Array.isArray(db.subscriptions) ? db.subscriptions : [];
+    const activeSubs = subscriptions.filter(s => s.status === 'active');
+    const suspendedSubs = subscriptions.filter(s => s.status === 'suspended');
+    const pendingSubs = subscriptions.filter(s => s.status === 'pending');
+
+    const totalActiveSites = activeSubs.length;
+    const currentMRR = activeSubs.reduce((acc, s) => acc + (s.monthlyPrice || 29.90), 0);
+    const totalSuspendedSites = suspendedSubs.length;
+    const totalPendingSites = pendingSubs.length;
+    const delinquencyRate = subscriptions.length > 0 
+      ? Math.round((totalSuspendedSites / subscriptions.length) * 100) 
+      : 0;
+
+    const monthlyOperatorCommission = activeSubs.reduce((acc, s) => acc + (s.commissionMonthly || 10.00), 0);
+
+    // Resumo seguro de APIs
     const settings = db.adminSettings;
 
     return NextResponse.json({
       metrics: {
+        totalActiveSites,
+        currentMRR,
+        totalSuspendedSites,
+        totalPendingSites,
+        delinquencyRate,
+        monthlyOperatorCommission,
+        totalSubscriptionsCount: subscriptions.length,
         totalSold,
         totalCommissions,
         paidCommissions,
@@ -41,6 +64,7 @@ export async function GET(req: NextRequest) {
         activeOperatorsCount,
         blockedOperatorsCount
       },
+      subscriptions,
       candidates: db.candidates,
       operators: db.operators.map(op => ({
         id: op.id,
@@ -53,7 +77,6 @@ export async function GET(req: NextRequest) {
         status: op.status,
         machineId: op.machineId,
         osInfo: op.osInfo,
-        operatorIp: op.operatorIp || null,
         lastSync: op.lastSync,
         dailyLimit: op.dailyLimit,
         todayGenerations: op.todayGenerations,
@@ -67,9 +90,10 @@ export async function GET(req: NextRequest) {
         cloudflareAccountId: settings.cloudflareAccountId,
         cloudflareApiToken: settings.cloudflareApiToken,
         vercelToken: settings.vercelToken,
-        resellerClubUserId: settings.resellerClubUserId || '1354859',
-        resellerClubApiKey: settings.resellerClubApiKey || '2IQ6a2S6wRyMqdUbFF9344vPxqprjCae',
-        resellerClubApiUrl: settings.resellerClubApiUrl || 'https://httpapi.com/api',
+        mercadopagoAccessToken: settings.mercadopagoAccessToken || '',
+        mercadopagoPublicKey: settings.mercadopagoPublicKey || '',
+        monthlySubscriptionPrice: settings.monthlySubscriptionPrice || 29.90,
+        operatorCommissionMonthly: settings.operatorCommissionMonthly || 10.00,
         pixGateway: settings.pixGateway,
         pixGatewayKey: settings.pixGatewayKey,
         defaultDailyLimit: settings.defaultDailyLimit,

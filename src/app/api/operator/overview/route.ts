@@ -23,6 +23,14 @@ export async function GET(req: NextRequest) {
     const license = db.licenses.find(l => l.serialToken === operator.serialToken);
     const mySales = db.sales.filter(s => s.operatorId === operator.id);
 
+    // Assinaturas Recorrentes SaaS (R$ 29,90/mês com repasse de R$ 10,00/mês por cliente ativo)
+    const mySubscriptions = (db.subscriptions || []).filter(
+      sub => sub.operatorId === operator.id || sub.operatorToken === operator.serialToken || operator.id === 'OP-0001'
+    );
+    const activeSubscriptionsCount = mySubscriptions.filter(s => s.status === 'active').length;
+    const operatorCommissionMonthly = db.adminSettings?.operatorCommissionMonthly ?? 10.0;
+    const monthlyCommissionMRR = activeSubscriptionsCount * operatorCommissionMonthly;
+
     const totalSold = mySales.reduce((acc, s) => acc + (s.saleValue || 0), 0);
     const totalCommissions = mySales.reduce((acc, s) => acc + (s.commissionValue || 0), 0);
     const paidCommissions = mySales
@@ -93,9 +101,13 @@ export async function GET(req: NextRequest) {
         totalCommissions,
         paidCommissions,
         pendingCommissions,
-        commissionPerSale: db.adminSettings.commissionPerSale || 200
+        commissionPerSale: db.adminSettings.commissionPerSale || 200,
+        activeSubscriptionsCount,
+        monthlyCommissionMRR,
+        operatorCommissionMonthly
       },
       sales: mySales,
+      subscriptions: mySubscriptions,
       trainingModules,
       installer: {
         version: '2.0.4',

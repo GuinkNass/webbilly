@@ -327,13 +327,13 @@ export default function LandingPage() {
 
             <div className="pt-3 lg:pt-0 lg:pl-6">
               <span className="font-mono text-[10px] uppercase tracking-wider text-slate-400 block font-semibold">
-                Registro Automático
+                Publicação Imediata
               </span>
               <div className="text-2xl font-black text-blue-400 font-mono mt-1">
-                Domínio .com.br
+                Subdomínio Oficial
               </div>
               <p className="text-xs text-slate-400 mt-1">
-                Integração nativa com ResellerClub e Vercel DNS.
+                Subdomínio instantâneo *.webbilly.com.br com SSL ativo.
               </p>
             </div>
 
@@ -447,10 +447,10 @@ export default function LandingPage() {
                   Pilar 04
                 </span>
                 <h3 className="text-lg font-bold text-white mt-1 mb-2 group-hover:text-sky-400 transition">
-                  Registro Automatizado & Vercel DNS
+                  Subdomínio Instantâneo & Assinatura SaaS
                 </h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Assim que o Pix é compensado, nosso webhook aciona a API da ResellerClub, cadastra o titular com documento brasileiro e aponta os DNS na Vercel com SSL ativado sem intervenção humana.
+                  Sites publicados instantaneamente na nuvem em subdomínio próprio, com modelo de assinatura recorrente de R$ 29,90/mês, checkout seguro Mercado Pago e gestão automatizada de inadimplência.
                 </p>
               </div>
               <div className="mt-6 pt-4 border-t border-white/[0.06] flex items-center justify-between text-[11px] font-mono text-slate-400">
