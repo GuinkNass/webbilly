@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Billy Suite • Rede Oficial de Operadores Comerciais B2B | webbilly.com.br",
-  description: "Infraestrutura de Elite para Prospecção e Venda Automatizada de Sites e Portfólios para Negócios Locais com IA.",
+  title: "Webbilly • Sites Profissionais para Negócios Locais | R$ 29,90/mês",
+  description: "Criamos e mantemos sua landing page profissional adaptada para celular no subdomínio da Webbilly por apenas R$ 29,90/mês. Sem taxa de adesão, sem burocracia e pronto em minutos.",
   icons: {
     icon: "/billy-logo.png",
     shortcut: "/billy-logo.png",
