@@ -91,7 +91,8 @@ export async function GET(req: NextRequest) {
         detectedIp: (req.headers.get('x-forwarded-for')?.split(',')[0].trim() || req.headers.get('x-real-ip')?.trim() || req.headers.get('cf-connecting-ip')?.trim() || '127.0.0.1'),
         lastSync: operator.lastSync,
         dailyLimit: operator.dailyLimit,
-        todayGenerations: operator.todayGenerations
+        todayGenerations: operator.todayGenerations,
+        mustChangePassword: operator.mustChangePassword ?? false
       },
       isMaster: user.role === 'MASTER' || operator.email.toLowerCase() === 'admin@billysuite.com.br',
       license: license || null,

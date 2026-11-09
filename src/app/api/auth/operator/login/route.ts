@@ -101,8 +101,10 @@ export async function POST(req: NextRequest) {
         email: operator.email,
         name: operator.name,
         role: 'OPERATOR',
-        serialToken: operator.serialToken
+        serialToken: operator.serialToken,
+        mustChangePassword: operator.mustChangePassword ?? false
       },
+      mustChangePassword: operator.mustChangePassword ?? false,
       redirectUrl: '/operador',
       token
     });

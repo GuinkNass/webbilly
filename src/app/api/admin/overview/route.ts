@@ -69,6 +69,7 @@ export async function GET(req: NextRequest) {
       operators: db.operators.map(op => ({
         id: op.id,
         name: op.name,
+        cpf: op.cpf || null,
         email: op.email,
         whatsapp: op.whatsapp,
         pixType: op.pixType,
@@ -77,12 +78,27 @@ export async function GET(req: NextRequest) {
         status: op.status,
         machineId: op.machineId,
         osInfo: op.osInfo,
+        tempPasswordPlain: op.tempPasswordPlain || null,
+        mustChangePassword: op.mustChangePassword ?? false,
         lastSync: op.lastSync,
         dailyLimit: op.dailyLimit,
         todayGenerations: op.todayGenerations,
         createdAt: op.createdAt
       })),
-      licenses: db.licenses,
+      licenses: db.licenses.map(lic => {
+        const op = db.operators.find(o => o.serialToken.toUpperCase() === lic.serialToken.toUpperCase() || o.id === lic.operatorId);
+        return {
+          ...lic,
+          cpf: op?.cpf || null,
+          email: op?.email || null,
+          whatsapp: op?.whatsapp || null,
+          pixType: op?.pixType || null,
+          pixKey: op?.pixKey || null,
+          tempPasswordPlain: op?.tempPasswordPlain || null,
+          mustChangePassword: op?.mustChangePassword ?? false,
+          operatorName: op?.name || lic.operatorName || (lic.status === 'pending_activation' ? 'Aguardando Onboarding' : 'Não vinculado')
+        };
+      }),
       sales: db.sales,
       settings: {
         geminiApiKey: settings.geminiApiKey,

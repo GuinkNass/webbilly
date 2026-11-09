@@ -24,7 +24,10 @@ import {
   Search,
   Eye,
   Globe,
-  CreditCard
+  CreditCard,
+  Plus,
+  KeyRound,
+  RotateCcw
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
@@ -168,6 +171,43 @@ export default function AdminDashboardPage() {
       await loadData();
     } catch (err: any) {
       alert(err.message || 'Erro ao liberar máquina.');
+    }
+  };
+
+  // Gerar Nova Chave Serial Virgem
+  const handleGenerateSerial = async () => {
+    try {
+      const res = await fetch('/api/admin/license/generate', { method: 'POST' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+
+      setActionSuccess(`Chave serial virgem gerada: ${json.serialToken} (Copiada para a área de transferência!)`);
+      copyToClipboard(json.serialToken);
+      setTimeout(() => setActionSuccess(null), 6000);
+      await loadData();
+    } catch (err: any) {
+      alert(err.message || 'Erro ao gerar chave serial.');
+    }
+  };
+
+  // Resetar Senha Web do Operador
+  const handleResetOperatorPassword = async (serialToken: string, operatorId?: string) => {
+    if (!confirm('Deseja gerar uma nova senha provisória para este operador? Ele terá que trocá-la no próximo acesso.')) return;
+    try {
+      const res = await fetch('/api/admin/operator/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ serialToken, operatorId })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+
+      setActionSuccess(`Nova senha provisória de ${json.operatorName}: ${json.tempPassword} (Copiada!)`);
+      copyToClipboard(json.tempPassword);
+      setTimeout(() => setActionSuccess(null), 6000);
+      await loadData();
+    } catch (err: any) {
+      alert(err.message || 'Erro ao resetar senha provisória.');
     }
   };
 
@@ -763,20 +803,27 @@ export default function AdminDashboardPage() {
         {/* CONTEÚDO DA ABA 2: GESTOR DE LICENÇAS E SERIAIS */}
         {activeTab === 'licenses' && (
           <div className="space-y-4">
-            <div className="glass-panel p-4 rounded-xl border border-zinc-800 flex items-center justify-between">
+            <div className="glass-panel p-4 rounded-xl border border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <h3 className="text-sm font-bold text-white">Licenças & Seriais Emitidos</h3>
-                <p className="text-xs text-zinc-400">
-                  Formato padrão: <code className="text-indigo-400 font-bold font-mono">BILLY-OP-XXXX-XXXX-2026</code>. O bloqueio tem efeito instantâneo no desktop.
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <span>Licenças & Operadores Provisionados</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                    Auto-Onboarding Ativo
+                  </span>
+                </h3>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Gere chaves virgens para novos parceiros. O operador preenche o onboarding no primeiro uso do app desktop.
                 </p>
               </div>
-              <div className="flex items-center gap-2 text-xs">
-                <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span> Em Uso / Ativos: {data?.licenses?.filter((l: any) => l.status !== 'BLOQUEADO').length}
-                </span>
-                <span className="flex items-center gap-1 text-rose-400 font-semibold ml-3">
-                  <span className="w-2 h-2 rounded-full bg-rose-400"></span> Bloqueados: {data?.licenses?.filter((l: any) => l.status === 'BLOQUEADO').length}
-                </span>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleGenerateSerial}
+                  className="px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-violet-600/30 transition cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Gerar Nova Chave Serial</span>
+                </button>
               </div>
             </div>
 
@@ -786,111 +833,184 @@ export default function AdminDashboardPage() {
                   <thead className="bg-zinc-900/80 text-zinc-400 uppercase font-mono border-b border-zinc-800">
                     <tr>
                       <th className="py-3 px-4">Token Serial</th>
-                      <th className="py-3 px-4">Operador Vinculado</th>
                       <th className="py-3 px-4">Status</th>
-                      <th className="py-3 px-4">Machine ID Registrado</th>
-                      <th className="py-3 px-4">IP Máquina</th>
-                      <th className="py-3 px-4">Último Heartbeat</th>
-                      <th className="py-3 px-4 text-right">Ações de Segurança</th>
+                      <th className="py-3 px-4">Operador</th>
+                      <th className="py-3 px-4">CPF</th>
+                      <th className="py-3 px-4">WhatsApp</th>
+                      <th className="py-3 px-4">E-mail</th>
+                      <th className="py-3 px-4">Dados Pix</th>
+                      <th className="py-3 px-4">Data Ativação</th>
+                      <th className="py-3 px-4">Senha Provisória</th>
+                      <th className="py-3 px-4 text-right">Ações</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-800/60">
-                    {(data?.licenses || []).map((l: any) => (
-                      <tr key={l.serialToken} className="hover:bg-zinc-800/40 transition">
-                        <td className="py-3.5 px-4 font-mono font-bold text-indigo-300">
-                          <div className="flex items-center gap-2">
-                            <span>{l.serialToken}</span>
-                            <button
-                              onClick={() => copyToClipboard(l.serialToken)}
-                              className="text-zinc-500 hover:text-white"
-                              title="Copiar serial"
-                            >
-                              <Copy className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span className="font-semibold text-white block">{l.operatorName}</span>
-                          <span className="text-[11px] text-zinc-500 font-mono">{l.operatorId}</span>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                              l.status === 'EM_USO'
-                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                                : l.status === 'ATIVO'
-                                ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
-                                : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                            }`}
-                          >
-                            {l.status}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 font-mono">
-                          {l.machineId ? (
-                            <div className="flex items-center gap-1.5 text-zinc-300">
-                              <Laptop className="w-3.5 h-3.5 text-zinc-500" />
-                              <span>{l.machineId}</span>
-                            </div>
-                          ) : (
-                            <span className="text-zinc-500 italic">Aguardando 1ª ativação</span>
-                          )}
-                          {l.osInfo && <div className="text-[10px] text-zinc-500">{l.osInfo}</div>}
-                        </td>
-                        <td className="py-3.5 px-4 font-mono text-[11px]">
-                          {l.operatorIp ? (
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-amber-300 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
-                                {l.operatorIp}
-                              </span>
+                    {(data?.licenses || []).map((l: any) => {
+                      const isVirgin = l.status === 'pending_activation' || !l.operatorId;
+                      const isBlocked = l.status === 'BLOQUEADO' || l.status === 'revoked';
+
+                      return (
+                        <tr key={l.serialToken} className="hover:bg-zinc-800/40 transition">
+                          {/* Serial */}
+                          <td className="py-3.5 px-4 font-mono font-bold text-indigo-300">
+                            <div className="flex items-center gap-2">
+                              <span>{l.serialToken}</span>
                               <button
-                                onClick={() => copyToClipboard(l.operatorIp)}
+                                onClick={() => copyToClipboard(l.serialToken)}
                                 className="text-zinc-500 hover:text-white"
-                                title="Copiar IP"
+                                title="Copiar chave serial"
                               >
                                 <Copy className="w-3.5 h-3.5" />
                               </button>
                             </div>
-                          ) : (
-                            <span className="text-zinc-600 italic">Pendente</span>
-                          )}
-                        </td>
-                        <td className="py-3.5 px-4 font-mono text-[11px] text-zinc-400">
-                          {l.lastSync ? new Date(l.lastSync).toLocaleString('pt-BR') : 'Nunca sincronizou'}
-                        </td>
-                        <td className="py-3.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
                             {l.machineId && (
-                              <button
-                                onClick={() => handleResetMachine(l.serialToken)}
-                                className="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] border border-zinc-700 transition"
-                                title="Desvincula a máquina para permitir novo PC"
-                              >
-                                Liberar PC
-                              </button>
+                              <div className="text-[10px] text-zinc-500 flex items-center gap-1 mt-0.5">
+                                <Laptop className="w-3 h-3" />
+                                <span className="truncate max-w-[120px]">{l.machineId}</span>
+                              </div>
                             )}
-                            <button
-                              onClick={() => handleToggleLicense(l.serialToken, l.status)}
-                              className={`px-3 py-1 rounded text-xs font-bold transition flex items-center gap-1 ${
-                                l.status === 'BLOQUEADO'
-                                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                                  : 'bg-rose-600 hover:bg-rose-500 text-white'
+                          </td>
+
+                          {/* Status */}
+                          <td className="py-3.5 px-4">
+                            <span
+                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                                isVirgin
+                                  ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                                  : isBlocked
+                                  ? 'bg-rose-500/10 text-rose-300 border-rose-500/30'
+                                  : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
                               }`}
                             >
-                              {l.status === 'BLOQUEADO' ? (
-                                <>
-                                  <Unlock className="w-3 h-3" /> Desbloquear
-                                </>
-                              ) : (
-                                <>
-                                  <Lock className="w-3 h-3" /> Bloquear
-                                </>
+                              {isVirgin
+                                ? '● Pendente (Virgem)'
+                                : isBlocked
+                                ? '● Bloqueado / Revogado'
+                                : '● Ativo'}
+                            </span>
+                          </td>
+
+                          {/* Operador */}
+                          <td className="py-3.5 px-4">
+                            <span className="font-semibold text-white block">
+                              {l.operatorName || (isVirgin ? 'Aguardando Onboarding' : '—')}
+                            </span>
+                            {l.operatorId && (
+                              <span className="text-[10px] text-zinc-500 font-mono">{l.operatorId}</span>
+                            )}
+                          </td>
+
+                          {/* CPF */}
+                          <td className="py-3.5 px-4 font-mono text-zinc-300">
+                            {l.cpf ? (
+                              <span>{l.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}</span>
+                            ) : (
+                              <span className="text-zinc-600 italic">Pendente</span>
+                            )}
+                          </td>
+
+                          {/* WhatsApp */}
+                          <td className="py-3.5 px-4 font-mono text-zinc-300">
+                            {l.whatsapp || <span className="text-zinc-600 italic">Pendente</span>}
+                          </td>
+
+                          {/* E-mail */}
+                          <td className="py-3.5 px-4 text-zinc-300">
+                            {l.email || <span className="text-zinc-600 italic">Pendente</span>}
+                          </td>
+
+                          {/* Dados Pix */}
+                          <td className="py-3.5 px-4 font-mono text-[11px]">
+                            {l.pixKey ? (
+                              <div>
+                                <span className="text-emerald-400 font-bold block">{l.pixKey}</span>
+                                <span className="text-[10px] text-zinc-500 uppercase">{l.pixType || 'PIX'}</span>
+                              </div>
+                            ) : (
+                              <span className="text-zinc-600 italic">Pendente</span>
+                            )}
+                          </td>
+
+                          {/* Data de Ativação / Criação */}
+                          <td className="py-3.5 px-4 font-mono text-[11px] text-zinc-400">
+                            {l.activatedAt
+                              ? new Date(l.activatedAt).toLocaleDateString('pt-BR')
+                              : l.createdAt
+                              ? `${new Date(l.createdAt).toLocaleDateString('pt-BR')} (Criado)`
+                              : '—'}
+                          </td>
+
+                          {/* Senha Provisória Web */}
+                          <td className="py-3.5 px-4 font-mono text-[11px]">
+                            {l.tempPasswordPlain ? (
+                              <div className="flex items-center gap-1.5">
+                                <span className="bg-amber-500/10 text-amber-300 px-2 py-0.5 rounded border border-amber-500/30 font-bold">
+                                  {l.tempPasswordPlain}
+                                </span>
+                                <button
+                                  onClick={() => copyToClipboard(l.tempPasswordPlain)}
+                                  className="text-zinc-500 hover:text-white"
+                                  title="Copiar senha provisória"
+                                >
+                                  <Copy className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ) : l.operatorId ? (
+                              <span className="text-emerald-400 text-[10px] font-semibold">
+                                Senha Pessoal Definida
+                              </span>
+                            ) : (
+                              <span className="text-zinc-600 italic">Aguardando Onboarding</span>
+                            )}
+                          </td>
+
+                          {/* Ações */}
+                          <td className="py-3.5 px-4 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {l.machineId && (
+                                <button
+                                  onClick={() => handleResetMachine(l.serialToken)}
+                                  className="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] border border-zinc-700 transition"
+                                  title="Desvincula a máquina (permite ativar em outro PC)"
+                                >
+                                  Liberar PC
+                                </button>
                               )}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+
+                              {l.operatorId && (
+                                <button
+                                  onClick={() => handleResetOperatorPassword(l.serialToken, l.operatorId)}
+                                  className="px-2 py-1 rounded bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[11px] transition flex items-center gap-1"
+                                  title="Gera nova senha provisória e força troca no login web"
+                                >
+                                  <KeyRound className="w-3 h-3" />
+                                  <span>Reset Senha</span>
+                                </button>
+                              )}
+
+                              <button
+                                onClick={() => handleToggleLicense(l.serialToken, l.status)}
+                                className={`px-2.5 py-1 rounded text-[11px] font-bold transition flex items-center gap-1 ${
+                                  isBlocked
+                                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                                    : 'bg-rose-600/80 hover:bg-rose-500 text-white'
+                                }`}
+                              >
+                                {isBlocked ? (
+                                  <>
+                                    <Unlock className="w-3 h-3" /> Reativar
+                                  </>
+                                ) : (
+                                  <>
+                                    <Lock className="w-3 h-3" /> Revogar
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

@@ -36,7 +36,8 @@ export async function GET(req: NextRequest) {
           serialToken: operator.serialToken,
           status: operator.status,
           pixKey: operator.pixKey,
-          pixType: operator.pixType
+          pixType: operator.pixType,
+          mustChangePassword: operator.mustChangePassword ?? false
         }
       });
     }

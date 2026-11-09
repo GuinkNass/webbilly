@@ -20,7 +20,10 @@ import {
   FileText,
   Video,
   Award,
-  Globe
+  Globe,
+  Lock,
+  KeyRound,
+  AlertTriangle
 } from 'lucide-react';
 
 export default function OperatorDashboardPage() {
@@ -31,6 +34,55 @@ export default function OperatorDashboardPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'subscriptions' | 'training' | 'sales'>('overview');
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [copied, setCopied] = useState(false);
+
+  // Troca Obrigatória de Senha
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError(null);
+
+    if (!newPassword || newPassword.length < 6) {
+      setPasswordError('A nova senha deve ter no mínimo 6 caracteres.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('A confirmação de senha não confere.');
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      const res = await fetch('/api/auth/operator/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newPassword, confirmPassword })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+
+      setPasswordSuccess(true);
+      setTimeout(() => {
+        setShowPasswordModal(false);
+        if (data && data.operator) {
+          setData({
+            ...data,
+            operator: { ...data.operator, mustChangePassword: false }
+          });
+        }
+      }, 1500);
+    } catch (err: any) {
+      setPasswordError(err.message || 'Erro ao atualizar senha.');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -43,6 +95,9 @@ export default function OperatorDashboardPage() {
       if (!res.ok) throw new Error(json.error);
 
       setData(json);
+      if (json.operator?.mustChangePassword) {
+        setShowPasswordModal(true);
+      }
       if (json.trainingModules?.length > 0) {
         setSelectedVideo(json.trainingModules[0]);
       }
@@ -648,6 +703,95 @@ export default function OperatorDashboardPage() {
           </div>
         )}
       </main>
+
+      {/* MODAL BLOQUEANTE DE TROCA OBRIGATÓRIA DE SENHA */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-zinc-900 border border-violet-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl relative">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto mb-4">
+              <KeyRound className="w-6 h-6" />
+            </div>
+
+            <div className="text-center mb-6">
+              <h3 className="text-lg font-black text-white">
+                Troca Obrigatória de Senha
+              </h3>
+              <p className="text-xs text-zinc-400 mt-1">
+                Olá, <strong>{data?.operator?.name}</strong>! Por questões de segurança no primeiro acesso com senha provisória, defina sua senha definitiva.
+              </p>
+            </div>
+
+            {passwordError && (
+              <div className="mb-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>{passwordError}</span>
+              </div>
+            )}
+
+            {passwordSuccess ? (
+              <div className="text-center py-4 space-y-2">
+                <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
+                  <CheckCircle2 className="w-6 h-6" />
+                </div>
+                <div className="text-sm font-bold text-white">Senha Definida com Sucesso!</div>
+                <p className="text-xs text-zinc-400">Acessando painel...</p>
+              </div>
+            ) : (
+              <form onSubmit={handleChangePassword} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Nova Senha Pessoal *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Mínimo 6 caracteres"
+                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-white text-xs focus:outline-none focus:border-violet-500 font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Confirmar Nova Senha *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Repita a nova senha"
+                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-white text-xs focus:outline-none focus:border-violet-500 font-mono"
+                  />
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={passwordLoading}
+                    className="w-full py-3 rounded-xl font-bold text-xs text-white bg-violet-600 hover:bg-violet-500 transition shadow-lg shadow-violet-600/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    {passwordLoading ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-4 h-4" />
+                        Definir Senha Definitiva
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

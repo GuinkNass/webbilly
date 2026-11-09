@@ -47,8 +47,11 @@ export interface Operator {
   id: string;
   candidateId?: string;
   name: string;
+  cpf?: string;
   email: string;
   passwordHash: string;
+  tempPasswordPlain?: string;
+  mustChangePassword?: boolean;
   whatsapp: string;
   pixType: string;
   pixKey: string;
@@ -64,15 +67,17 @@ export interface Operator {
 }
 
 export interface LicenseRecord {
+  id?: string;
   serialToken: string;
-  operatorId: string;
-  operatorName: string;
-  status: 'ATIVO' | 'EM_USO' | 'BLOQUEADO';
+  operatorId?: string | null;
+  operatorName?: string | null;
+  status: 'pending_activation' | 'active' | 'revoked' | 'ATIVO' | 'EM_USO' | 'BLOQUEADO';
   machineId?: string | null;
   osInfo?: string | null;
   operatorIp?: string | null;
   lastSync?: string | null;
   createdAt: string;
+  activatedAt?: string | null;
 }
 
 export interface Sale {
