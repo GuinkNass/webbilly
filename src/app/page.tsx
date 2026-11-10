@@ -218,8 +218,12 @@ export default function WebbillyHomePage() {
           {/* Logo da Marca */}
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#7abf18] to-[#20ce6d] p-0.5 shadow-lg shadow-[#7abf18]/25 group-hover:scale-105 transition-transform">
-              <div className="w-full h-full bg-[#0e121a] rounded-[10px] flex items-center justify-center">
-                <Globe className="w-5 h-5 text-[#7abf18]" />
+              <div className="w-full h-full bg-[#0e121a] rounded-[10px] flex items-center justify-center overflow-hidden">
+                <img
+                  src="/billy-logo.png"
+                  alt="Webbilly"
+                  className="w-full h-full object-contain p-1"
+                />
               </div>
             </div>
             <div>
@@ -1115,8 +1119,12 @@ export default function WebbillyHomePage() {
           <div className="space-y-3">
             <Link href="/" className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#7abf18] to-[#20ce6d] p-0.5">
-                <div className="w-full h-full bg-[#090c12] rounded-[6px] flex items-center justify-center">
-                  <Globe className="w-4 h-4 text-[#7abf18]" />
+                <div className="w-full h-full bg-[#090c12] rounded-[6px] flex items-center justify-center overflow-hidden">
+                  <img
+                    src="/billy-logo.png"
+                    alt="Webbilly"
+                    className="w-full h-full object-contain p-0.5"
+                  />
                 </div>
               </div>
               <span className="text-lg font-black text-white font-heading">
