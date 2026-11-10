@@ -159,6 +159,7 @@ export interface SubscriptionRecord {
   clientName: string;
   clientPhone: string;
   clientEmail?: string;
+  clientCpfCnpj?: string;
   operatorId?: string;
   operatorName?: string;
   operatorToken?: string;
@@ -166,6 +167,9 @@ export interface SubscriptionRecord {
   commissionMonthly?: number;
   status: 'active' | 'pending' | 'suspended' | 'cancelled';
   deployedUrl?: string;
+  asaasCustomerId?: string;
+  asaasSubscriptionId?: string;
+  asaasInvoiceUrl?: string;
   mpPreferenceId?: string;
   mpPreapprovalId?: string;
   mpPaymentId?: string;

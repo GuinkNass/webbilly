@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDb, writeDb, SubscriptionRecord } from '@/lib/db';
+import { findOrCreateCustomer, createSubscription } from '@/services/asaas';
 
 export async function POST(req: NextRequest) {
   try {
@@ -7,7 +8,10 @@ export async function POST(req: NextRequest) {
     return await handleCreateCheckout(body);
   } catch (err: any) {
     console.error('[create-checkout error]:', err);
-    return NextResponse.json({ error: err.message || 'Erro ao gerar checkout de assinatura.' }, { status: 500 });
+    return NextResponse.json(
+      { error: err.message || 'Erro ao gerar checkout de assinatura via Asaas.' },
+      { status: 500 }
+    );
   }
 }
 
@@ -16,15 +20,24 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const body = {
       leadId: searchParams.get('leadId') || '',
-      siteSlug: searchParams.get('slug') || searchParams.get('siteSlug') || '',
+      slug: searchParams.get('slug') || searchParams.get('siteSlug') || '',
       clientName: searchParams.get('clientName') || '',
       clientPhone: searchParams.get('clientPhone') || '',
-      operatorToken: searchParams.get('operatorToken') || ''
+      clientEmail: searchParams.get('clientEmail') || '',
+      clientCpfCnpj: searchParams.get('clientCpfCnpj') || searchParams.get('cpf') || '',
+      operatorSerial:
+        searchParams.get('operatorSerial') ||
+        searchParams.get('operatorToken') ||
+        searchParams.get('token') ||
+        ''
     };
     return await handleCreateCheckout(body);
   } catch (err: any) {
     console.error('[create-checkout GET error]:', err);
-    return NextResponse.json({ error: err.message || 'Erro ao gerar checkout de assinatura.' }, { status: 500 });
+    return NextResponse.json(
+      { error: err.message || 'Erro ao gerar checkout de assinatura via Asaas.' },
+      { status: 500 }
+    );
   }
 }
 
@@ -34,104 +47,96 @@ async function handleCreateCheckout(body: any) {
     db.subscriptions = [];
   }
 
-  const rawSlug = body.siteSlug || body.slug || body.leadId || '';
-  const siteSlug = rawSlug
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9_-]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '') || 'site-cliente';
+  const rawSlug = body.slug || body.siteSlug || body.leadId || '';
+  const siteSlug =
+    rawSlug
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9_-]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '') || 'site-cliente';
 
   const clientName = body.clientName || body.name || `Comércio ${siteSlug}`;
   const clientPhone = body.clientPhone || body.phone || '';
   const clientEmail = body.clientEmail || body.email || `contato@${siteSlug}.webbilly.com.br`;
-  const operatorToken = body.operatorToken || '';
+  const clientCpfCnpj = body.clientCpfCnpj || body.cpfCnpj || '';
+  const operatorSerial =
+    body.operatorSerial || body.operatorToken || body.serialToken || 'BILLY-OP-ADMIN-MASTER-2026';
 
-  // Procura operador correspondente
-  const operator = db.operators.find(o => o.serialToken === operatorToken) || db.operators[0];
-  const operatorId = operator?.id || 'OP-1001';
-  const operatorName = operator?.name || 'Operador Parceiro';
+  // Localiza operador pelo serialToken
+  const operator =
+    db.operators.find(
+      o => (o.serialToken || '').trim().toUpperCase() === operatorSerial.trim().toUpperCase()
+    ) || db.operators[0];
 
-  // Verifica se já existe assinatura para esse slug
-  let sub = db.subscriptions.find(s => s.siteSlug === siteSlug);
-  const monthlyPrice = 29.90;
-  const commissionMonthly = db.adminSettings.operatorCommissionMonthly || 10.00;
+  const operatorId = operator?.id || 'OP-0001';
+  const operatorName = operator?.name || 'Administrador Master Billy';
+
+  const monthlyPrice = 29.9;
+  const commissionMonthly = db.adminSettings?.operatorCommissionMonthly || 10.0;
 
   // Busca se há demo prévia para puxar a URL do site gerado
-  const existingDemo = db.demos ? Object.values(db.demos).find(d => 
-    (d.leadToken && (d.leadToken === body.leadId || d.leadToken.includes(siteSlug))) ||
-    (d.deployedUrl && d.deployedUrl.includes(siteSlug))
-  ) : null;
+  const existingDemo = db.demos
+    ? Object.values(db.demos).find(
+        d =>
+          (d.leadToken && (d.leadToken === body.leadId || d.leadToken.includes(siteSlug))) ||
+          (d.deployedUrl && d.deployedUrl.includes(siteSlug))
+      )
+    : null;
 
-  const deployedUrl = body.deployedUrl || existingDemo?.deployedUrl || `https://${siteSlug}.webbilly.com.br`;
+  const deployedUrl =
+    body.deployedUrl || existingDemo?.deployedUrl || `https://${siteSlug}.webbilly.com.br`;
 
-  const mpToken = process.env.MERCADOPAGO_ACCESS_TOKEN || db.adminSettings.mercadopagoAccessToken;
+  let sub = db.subscriptions.find(s => s.siteSlug === siteSlug);
 
-  let checkoutUrl = '';
-  let mpPreferenceId = '';
+  let asaasCustomerId = sub?.asaasCustomerId || '';
+  let asaasSubscriptionId = sub?.asaasSubscriptionId || '';
+  let checkoutUrl = sub?.asaasInvoiceUrl || sub?.checkoutUrl || '';
 
-  if (mpToken && mpToken.trim() !== '') {
-    try {
-      // Cria preferência de checkout no Mercado Pago com suporte a Cartão de Crédito e Pix
-      const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${mpToken.trim()}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          items: [
-            {
-              id: `sub_${siteSlug}`,
-              title: `Assinatura Mensal Site Oficial - ${clientName}`,
-              description: `Hospedagem, manutenção e site ativo no subdomínio ${siteSlug}.webbilly.com.br`,
-              quantity: 1,
-              currency_id: 'BRL',
-              unit_price: monthlyPrice
-            }
-          ],
-          payer: {
-            name: clientName,
-            email: clientEmail,
-            phone: {
-              number: clientPhone.replace(/\D/g, '')
-            }
-          },
-          external_reference: sub?.id || `sub_${siteSlug}_${Date.now()}`,
-          back_urls: {
-            success: `https://webbilly.com.br/site/${siteSlug}?status=active`,
-            pending: `https://webbilly.com.br/site/${siteSlug}?status=pending`,
-            failure: `https://webbilly.com.br/site/${siteSlug}?status=suspended`
-          },
-          auto_return: 'approved',
-          notification_url: 'https://webbilly.com.br/api/webhooks/mercadopago'
-        })
+  // Integração com Asaas API v3
+  try {
+    // 1. Localiza ou cria o cliente no Asaas
+    asaasCustomerId = await findOrCreateCustomer({
+      name: clientName,
+      cpfCnpj: clientCpfCnpj,
+      email: clientEmail,
+      phone: clientPhone
+    });
+
+    // 2. Se ainda não possui assinatura criada no Asaas ou se solicitada nova
+    if (!asaasSubscriptionId) {
+      const asaasSub = await createSubscription({
+        customerId: asaasCustomerId,
+        siteSlug,
+        operatorSerial: operator?.serialToken || operatorSerial,
+        value: monthlyPrice
       });
-
-      if (mpResponse.ok) {
-        const mpData = await mpResponse.json();
-        checkoutUrl = mpData.init_point || mpData.sandbox_init_point || '';
-        mpPreferenceId = mpData.id || '';
-      }
-    } catch (mpErr) {
-      console.warn('[MercadoPago API Warning]:', mpErr);
+      asaasSubscriptionId = asaasSub.subscriptionId;
+      checkoutUrl = asaasSub.invoiceUrl;
+    }
+  } catch (asaasErr: any) {
+    console.error('[Asaas API Warning]:', asaasErr);
+    // Se der erro na chamada do Asaas (ex: sem conexão), gera link com fallback
+    if (!checkoutUrl) {
+      checkoutUrl = `https://www.asaas.com/c/cobranca?slug=${siteSlug}&valor=29.90`;
     }
   }
 
-  // Fallback transparente e confiável caso as credenciais não estejam configuradas em dev/staging
-  if (!checkoutUrl) {
-    checkoutUrl = `https://webbilly.com.br/site/${siteSlug}?checkout=mercadopago&price=29.90&sub=${sub?.id || 'new'}`;
-  }
+  const nowIso = new Date().toISOString();
+  const renewalIso = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString();
 
   if (sub) {
     sub.clientName = clientName;
     sub.clientPhone = clientPhone || sub.clientPhone;
     sub.clientEmail = clientEmail || sub.clientEmail;
+    if (clientCpfCnpj) sub.clientCpfCnpj = clientCpfCnpj;
     sub.deployedUrl = deployedUrl || sub.deployedUrl;
     sub.checkoutUrl = checkoutUrl;
-    if (mpPreferenceId) sub.mpPreferenceId = mpPreferenceId;
-    sub.updatedAt = new Date().toISOString();
+    sub.asaasInvoiceUrl = checkoutUrl;
+    if (asaasCustomerId) sub.asaasCustomerId = asaasCustomerId;
+    if (asaasSubscriptionId) sub.asaasSubscriptionId = asaasSubscriptionId;
+    sub.updatedAt = nowIso;
   } else {
     sub = {
       id: `sub_${siteSlug}_${Date.now().toString(36)}`,
@@ -140,19 +145,22 @@ async function handleCreateCheckout(body: any) {
       clientName,
       clientPhone,
       clientEmail,
+      clientCpfCnpj,
       operatorId,
       operatorName,
-      operatorToken: operator?.serialToken,
+      operatorToken: operator?.serialToken || operatorSerial,
       monthlyPrice,
       commissionMonthly,
-      status: 'active', // inicia ativo para demonstração imediata do cliente
+      status: 'pending', // aguardando pagamento para liberação
       deployedUrl,
-      mpPreferenceId,
+      asaasCustomerId,
+      asaasSubscriptionId,
+      asaasInvoiceUrl: checkoutUrl,
       checkoutUrl,
-      lastPaymentDate: new Date().toISOString(),
-      nextRenewalDate: new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      lastPaymentDate: undefined,
+      nextRenewalDate: renewalIso,
+      createdAt: nowIso,
+      updatedAt: nowIso
     };
     db.subscriptions.unshift(sub);
   }
@@ -161,11 +169,11 @@ async function handleCreateCheckout(body: any) {
 
   return NextResponse.json({
     success: true,
-    subscriptionId: sub.id,
+    checkoutUrl: sub.checkoutUrl,
+    subscriptionId: sub.asaasSubscriptionId || sub.id,
     siteSlug: sub.siteSlug,
     subdomainUrl: `https://${sub.siteSlug}.webbilly.com.br`,
     siteUrl: `https://webbilly.com.br/site/${sub.siteSlug}`,
-    checkoutUrl: sub.checkoutUrl,
     monthlyPrice: sub.monthlyPrice,
     status: sub.status,
     subscription: sub

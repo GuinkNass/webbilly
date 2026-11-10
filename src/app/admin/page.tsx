@@ -565,9 +565,9 @@ export default function AdminDashboardPage() {
                     }`}
                   >
                     {st === 'TODOS' && 'Todos'}
-                    {st === 'ACTIVE' && 'Ativos (Online)'}
-                    {st === 'SUSPENDED' && 'Suspensos (Inadimplentes)'}
-                    {st === 'PENDING' && 'Pendentes'}
+                    {st === 'ACTIVE' && 'Ativos (Em dia)'}
+                    {st === 'SUSPENDED' && 'Inadimplentes (Suspensos)'}
+                    {st === 'PENDING' && 'Aguardando Pagamento'}
                   </button>
                 ))}
               </div>
@@ -675,7 +675,7 @@ export default function AdminDashboardPage() {
                             <div className="font-bold text-white font-mono">
                               R$ {sub.monthlyPrice ? sub.monthlyPrice.toFixed(2).replace('.', ',') : '29,90'}/mês
                             </div>
-                            <span className="text-[10px] text-zinc-500">Recorrente Mercado Pago</span>
+                            <span className="text-[10px] text-zinc-500">Recorrente Asaas</span>
                           </td>
 
                           <td className="py-3 px-4">
@@ -721,14 +721,14 @@ export default function AdminDashboardPage() {
                                 )}
                               </button>
 
-                              {/* Botão Copiar Link de Cobrança */}
+                              {/* Botão Copiar Link da Fatura Asaas */}
                               <button
-                                onClick={() => copyToClipboard(sub.checkoutUrl || `https://webbilly.com.br/site/${sub.siteSlug}?checkout=open`)}
+                                onClick={() => copyToClipboard(sub.asaasInvoiceUrl || sub.checkoutUrl || `https://webbilly.com.br/site/${sub.siteSlug}`)}
                                 className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-200 transition flex items-center gap-1 border border-zinc-700"
-                                title="Copiar link de checkout do Mercado Pago"
+                                title="Copiar link da fatura Asaas (Pix / Cartão)"
                               >
                                 <Copy className="w-3 h-3 text-emerald-400" />
-                                <span>Cobrança</span>
+                                <span>Fatura Asaas</span>
                               </button>
 
                               {/* Botão Visualizar Site */}

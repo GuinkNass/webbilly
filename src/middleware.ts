@@ -34,8 +34,8 @@ export default function middleware(req: NextRequest) {
 
   // Se a requisição veio através de um subdomínio (ex: caoqripetshop.webbilly.com.br)
   if (subdomain) {
-    // Se a rota for a raiz '/', reescreve para a página do site
-    if (url.pathname === '/') {
+    // Reescreve todas as rotas do subdomínio para a visualização controlada do site
+    if (!url.pathname.startsWith('/api') && !url.pathname.startsWith('/site')) {
       return NextResponse.rewrite(new URL(`/site/${subdomain}`, req.url));
     }
   }
