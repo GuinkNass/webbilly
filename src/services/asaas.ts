@@ -145,49 +145,86 @@ export async function createSubscription(params: SubscriptionParams): Promise<{
     externalReference
   };
 
-  const subRes = await fetch(`${getApiUrl()}/subscriptions`, {
+  let subRes: Response;
+  let subData: any;
+
+  try {
+    subRes = await fetch(`${getApiUrl()}/subscriptions`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(payload)
+    });
+    subData = await subRes.json();
+  } catch (err) {
+    subData = null;
+  }
+
+  // Se a criação direta da assinatura no Asaas for bem sucedida (quando CPF/CNPJ já está cadastrado)
+  if (subData && subData.id) {
+    const subscriptionId = subData.id;
+    let invoiceUrl = '';
+
+    try {
+      const paymentsRes = await fetch(
+        `${getApiUrl()}/subscriptions/${subscriptionId}/payments?limit=1`,
+        { method: 'GET', headers: getHeaders() }
+      );
+      if (paymentsRes.ok) {
+        const paymentsData = await paymentsRes.json();
+        const firstPayment = paymentsData.data?.[0];
+        if (firstPayment) {
+          invoiceUrl = firstPayment.invoiceUrl || firstPayment.bankSlipUrl || '';
+        }
+      }
+    } catch (paymentErr) {
+      console.warn('[Asaas] Falha ao consultar fatura da assinatura:', paymentErr);
+    }
+
+    if (!invoiceUrl) {
+      invoiceUrl = `https://www.asaas.com/i/${subscriptionId}`;
+    }
+
+    return {
+      subscriptionId,
+      invoiceUrl,
+      nextDueDate
+    };
+  }
+
+  // Caso o cliente ainda não tenha informado CPF/CNPJ (prospecção fria),
+  // cria um Link de Pagamento Recorrente oficial no Asaas (POST /v3/paymentLinks).
+  // O cliente preenche seu CPF/CNPJ diretamente no checkout oficial do Asaas com suporte a Pix e Cartão.
+  const linkPayload = {
+    name: `Presença Digital Oficial - ${params.siteSlug}.webbilly.com.br`,
+    description: 'Assinatura Mensal R$ 29,90 - Webbilly',
+    billingType: 'UNDEFINED',
+    chargeType: 'RECURRENT',
+    value: params.value || 29.9,
+    dueDateLimitDays: 3,
+    subscriptionCycle: 'MONTHLY',
+    maxInstallmentCount: 1,
+    notificationEnabled: true,
+    externalReference
+  };
+
+  const linkRes = await fetch(`${getApiUrl()}/paymentLinks`, {
     method: 'POST',
     headers: getHeaders(),
-    body: JSON.stringify(payload)
+    body: JSON.stringify(linkPayload)
   });
 
-  const subData = await subRes.json();
-  if (!subRes.ok || !subData.id) {
-    const errorMsg =
-      subData?.errors?.[0]?.description ||
-      subData?.message ||
-      'Erro ao gerar assinatura mensal no Asaas.';
-    throw new Error(errorMsg);
+  const linkData = await linkRes.json();
+  if (linkRes.ok && linkData.url) {
+    return {
+      subscriptionId: linkData.id,
+      invoiceUrl: linkData.url,
+      nextDueDate
+    };
   }
 
-  const subscriptionId = subData.id;
-  let invoiceUrl = '';
-
-  // Consulta a primeira fatura gerada para obter o link público de pagamento (invoiceUrl)
-  try {
-    const paymentsRes = await fetch(
-      `${getApiUrl()}/subscriptions/${subscriptionId}/payments?limit=1`,
-      { method: 'GET', headers: getHeaders() }
-    );
-    if (paymentsRes.ok) {
-      const paymentsData = await paymentsRes.json();
-      const firstPayment = paymentsData.data?.[0];
-      if (firstPayment) {
-        invoiceUrl = firstPayment.invoiceUrl || firstPayment.bankSlipUrl || '';
-      }
-    }
-  } catch (paymentErr) {
-    console.warn('[Asaas] Falha ao consultar fatura da assinatura:', paymentErr);
-  }
-
-  // Fallback caso a lista de pagamentos ainda não tenha propagado
-  if (!invoiceUrl) {
-    invoiceUrl = `https://www.asaas.com/i/${subscriptionId}`;
-  }
-
-  return {
-    subscriptionId,
-    invoiceUrl,
-    nextDueDate
-  };
+  const errorMsg =
+    subData?.errors?.[0]?.description ||
+    linkData?.errors?.[0]?.description ||
+    'Erro ao gerar link de pagamento recorrente no Asaas.';
+  throw new Error(errorMsg);
 }
