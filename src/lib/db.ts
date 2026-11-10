@@ -56,7 +56,7 @@ export interface Operator {
   pixType: string;
   pixKey: string;
   serialToken: string;
-  status: 'ATIVO' | 'BLOQUEADO';
+  status: 'PENDENTE_APROVACAO' | 'ATIVO' | 'BLOQUEADO';
   machineId?: string | null;
   osInfo?: string | null;
   operatorIp?: string | null;
@@ -71,7 +71,7 @@ export interface LicenseRecord {
   serialToken: string;
   operatorId?: string | null;
   operatorName?: string | null;
-  status: 'pending_activation' | 'active' | 'revoked' | 'ATIVO' | 'EM_USO' | 'BLOQUEADO';
+  status: 'pending_onboarding' | 'pending_approval' | 'pending_activation' | 'active' | 'revoked' | 'ATIVO' | 'EM_USO' | 'BLOQUEADO';
   machineId?: string | null;
   osInfo?: string | null;
   operatorIp?: string | null;

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readDb } from '@/lib/db';
+import { readDb, writeDb } from '@/lib/db';
+import crypto from 'crypto';
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,6 +25,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Licença bloqueada ou revogada
     if (license.status === 'revoked' || license.status === 'BLOQUEADO') {
       return NextResponse.json(
         { valid: false, error: 'Esta chave serial foi bloqueada ou revogada pelo Administrador Central.' },
@@ -31,19 +33,46 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Se a licença é virgem (aguardando onboarding)
-    if (license.status === 'pending_activation' || !license.operatorId) {
+    // Busca operador vinculado à chave (se houver)
+    const operator = db.operators.find(
+      o => o.serialToken.toUpperCase() === cleanedSerial || (license.operatorId && o.id === license.operatorId)
+    );
+
+    // 1. CHAVE VIRGEM (Sem operador cadastrado): aguarda onboarding
+    if (!operator && (!license.operatorId || license.status === 'pending_onboarding' || license.status === 'pending_activation')) {
       return NextResponse.json({
         valid: true,
-        requiresOnboarding: true,
-        status: 'pending_activation',
+        status: 'pending_onboarding',
         serialToken: cleanedSerial,
-        message: 'Chave serial virgem válida. Preencha seus dados de operador para ativação.'
+        message: 'Chave serial virgem. Preencha seus dados de operador para submeter o cadastro.'
       });
     }
 
-    // Licença já possui operador vinculado: verifica Hardware Lock
-    const isAdminMaster = cleanedSerial === 'BILLY-OP-ADMIN-MASTER-2026' || license.operatorId === 'OP-0001';
+    // 2. CADASTRO SUBMETIDO, AGUARDANDO APROVAÇÃO DO ADMIN
+    if (
+      license.status === 'pending_approval' ||
+      operator?.status === 'PENDENTE_APROVACAO' ||
+      (license.status === 'pending_activation' && operator)
+    ) {
+      return NextResponse.json({
+        valid: true,
+        status: 'pending_approval',
+        serialToken: cleanedSerial,
+        operatorName: operator?.name || license.operatorName || 'Operador Billy',
+        message: 'Cadastro recebido com sucesso. Aguardando aprovação e liberação do Administrador Master.'
+      });
+    }
+
+    // 3. OPERADOR BLOQUEADO
+    if (operator?.status === 'BLOQUEADO') {
+      return NextResponse.json(
+        { valid: false, error: 'O acesso deste operador foi bloqueado pelo Administrador.' },
+        { status: 403 }
+      );
+    }
+
+    // 4. LICENÇA ATIVA (active, ATIVO, EM_USO): Verifica Hardware Lock
+    const isAdminMaster = cleanedSerial === 'BILLY-OP-ADMIN-MASTER-2026' || operator?.id === 'OP-0001';
     if (!isAdminMaster && license.machineId && machineId && license.machineId !== machineId) {
       return NextResponse.json(
         {
@@ -54,16 +83,34 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const operator = db.operators.find(o => o.serialToken.toUpperCase() === cleanedSerial || o.id === license.operatorId);
+    // Vincula a máquina caso ainda não estivesse salva
+    if (!license.machineId && machineId) {
+      license.machineId = machineId;
+      if (operator) operator.machineId = machineId;
+      writeDb(db);
+    }
+
+    const sessionToken = `BILLY-SES-${crypto.randomBytes(16).toString('hex')}`;
+    const nowIso = new Date().toISOString();
 
     return NextResponse.json({
       valid: true,
-      requiresOnboarding: false,
       status: 'active',
       serialToken: cleanedSerial,
+      operatorId: operator?.id || license.operatorId || 'OP-0001',
       operatorName: operator?.name || license.operatorName || 'Operador Billy',
       operatorEmail: operator?.email || '',
-      message: 'Chave serial ativa e reconhecida para esta máquina.'
+      permissions: ['OPERATOR'],
+      sessionToken,
+      machineId: license.machineId || machineId,
+      activatedAt: license.activatedAt || nowIso,
+      apiConfig: {
+        geminiApiKey: db.adminSettings?.geminiApiKey || '',
+        geminiModel: db.adminSettings?.geminiModel || 'gemini-3.8-flash',
+        dailyLimit: operator?.dailyLimit || 50,
+        todayGenerations: 0
+      },
+      message: 'Chave serial ativa e liberada para uso!'
     });
 
   } catch (err: any) {

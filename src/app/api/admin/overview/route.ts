@@ -96,7 +96,7 @@ export async function GET(req: NextRequest) {
           pixKey: op?.pixKey || null,
           tempPasswordPlain: op?.tempPasswordPlain || null,
           mustChangePassword: op?.mustChangePassword ?? false,
-          operatorName: op?.name || lic.operatorName || (lic.status === 'pending_activation' ? 'Aguardando Onboarding' : 'Não vinculado')
+          operatorName: op?.name || lic.operatorName || (lic.status === 'pending_activation' || lic.status === 'pending_onboarding' ? 'Aguardando Onboarding' : 'Não vinculado')
         };
       }),
       sales: db.sales,

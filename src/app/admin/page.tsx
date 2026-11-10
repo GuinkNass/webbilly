@@ -211,6 +211,26 @@ export default function AdminDashboardPage() {
     }
   };
 
+  // Aprovar Operador e Liberar Licença Desktop
+  const handleApproveOperator = async (serialToken: string, operatorId?: string) => {
+    if (!confirm(`Deseja aprovar o cadastro do operador e liberar imediatamente o acesso desta licença (${serialToken})?`)) return;
+    try {
+      const res = await fetch('/api/admin/operators/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ serialToken, operatorId })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error);
+
+      setActionSuccess(json.message || `Operador aprovado com sucesso! Acesso liberado no app desktop.`);
+      setTimeout(() => setActionSuccess(null), 5000);
+      await loadData();
+    } catch (err: any) {
+      alert(err.message || 'Erro ao aprovar operador.');
+    }
+  };
+
   // Salvar Configurações Centrais de APIs
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -846,7 +866,8 @@ export default function AdminDashboardPage() {
                   </thead>
                   <tbody className="divide-y divide-zinc-800/60">
                     {(data?.licenses || []).map((l: any) => {
-                      const isVirgin = l.status === 'pending_activation' || !l.operatorId;
+                      const isVirgin = (l.status === 'pending_onboarding' || l.status === 'pending_activation') && !l.operatorId;
+                      const isPendingApproval = l.status === 'pending_approval' || (l.operatorId && (l.status === 'pending_activation' || l.status === 'pending_onboarding'));
                       const isBlocked = l.status === 'BLOQUEADO' || l.status === 'revoked';
 
                       return (
@@ -877,6 +898,8 @@ export default function AdminDashboardPage() {
                               className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
                                 isVirgin
                                   ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                                  : isPendingApproval
+                                  ? 'bg-sky-500/15 text-sky-300 border-sky-500/30 animate-pulse'
                                   : isBlocked
                                   ? 'bg-rose-500/10 text-rose-300 border-rose-500/30'
                                   : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
@@ -884,6 +907,8 @@ export default function AdminDashboardPage() {
                             >
                               {isVirgin
                                 ? '● Pendente (Virgem)'
+                                : isPendingApproval
+                                ? '⏳ Aguardando Aprovação'
                                 : isBlocked
                                 ? '● Bloqueado / Revogado'
                                 : '● Ativo'}
@@ -967,6 +992,17 @@ export default function AdminDashboardPage() {
                           {/* Ações */}
                           <td className="py-3.5 px-4 text-right">
                             <div className="flex items-center justify-end gap-1.5">
+                              {isPendingApproval && (
+                                <button
+                                  onClick={() => handleApproveOperator(l.serialToken, l.operatorId)}
+                                  className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] transition flex items-center gap-1 shadow-md shadow-emerald-600/30"
+                                  title="Aprova o operador e libera o acesso no Billy Suite Desktop imediatamente"
+                                >
+                                  <Check className="w-3.5 h-3.5" />
+                                  <span>✓ Aprovar Operador</span>
+                                </button>
+                              )}
+
                               {l.machineId && (
                                 <button
                                   onClick={() => handleResetMachine(l.serialToken)}

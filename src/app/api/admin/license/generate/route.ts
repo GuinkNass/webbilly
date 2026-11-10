@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       serialToken,
       operatorId: null,
       operatorName: 'Aguardando Onboarding',
-      status: 'pending_activation',
+      status: 'pending_onboarding',
       machineId: null,
       createdAt: nowIso,
       activatedAt: null,

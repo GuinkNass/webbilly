@@ -62,20 +62,28 @@ export async function POST(req: NextRequest) {
     const sessionToken = `BILLY-SES-${crypto.randomBytes(16).toString('hex')}`;
 
     // =========================================================================
-    // CASO 1: CHAVE VIRGEM (Aguardando Onboarding ou Primeira Ativação)
+    // CASO 1: CHAVE VIRGEM (Aguardando Onboarding) OU AGUARDANDO APROVAÇÃO
     // =========================================================================
-    if (license.status === 'pending_activation' || !license.operatorId) {
+    if (license.status === 'pending_approval') {
+      const op = db.operators.find(o => o.serialToken.toUpperCase() === cleanedSerial || o.id === license.operatorId);
+      return NextResponse.json({
+        valid: true,
+        status: 'pending_approval',
+        serialToken: cleanedSerial,
+        operatorName: op?.name || license.operatorName || 'Operador',
+        message: 'Cadastro recebido com sucesso. Aguardando liberação do Administrador Master.'
+      });
+    }
+
+    if (license.status === 'pending_onboarding' || license.status === 'pending_activation' || !license.operatorId) {
       if (!onboardingData) {
-        return NextResponse.json(
-          {
-            valid: true,
-            requiresOnboarding: true,
-            status: 'pending_activation',
-            serialToken: cleanedSerial,
-            error: 'Esta chave serial é virgem e requer o preenchimento do onboarding do operador.'
-          },
-          { status: 400 }
-        );
+        return NextResponse.json({
+          valid: true,
+          requiresOnboarding: true,
+          status: 'pending_onboarding',
+          serialToken: cleanedSerial,
+          message: 'Chave serial virgem. Preencha seus dados de operador para submeter o cadastro.'
+        });
       }
 
       const { name, cpf, email, whatsapp, pixType, pixKey } = onboardingData;
@@ -135,7 +143,7 @@ export async function POST(req: NextRequest) {
           pixType: pixType || 'cpf',
           pixKey: String(pixKey).trim(),
           serialToken: cleanedSerial,
-          status: 'ATIVO',
+          status: 'PENDENTE_APROVACAO',
           machineId,
           osInfo: osInfo || 'Windows PC',
           operatorIp: detectedIp || null,
@@ -159,51 +167,37 @@ export async function POST(req: NextRequest) {
         operator.osInfo = osInfo || 'Windows PC';
         operator.operatorIp = detectedIp || null;
         operator.lastSync = nowIso;
-        operator.status = 'ATIVO';
+        operator.status = 'PENDENTE_APROVACAO';
       }
 
-      // Ativa a licença e vincula ao computador e ao operador
+      // Vincula à licença e define status de aprovação
       license.operatorId = operator.id;
       license.operatorName = operator.name;
       license.machineId = machineId;
       license.osInfo = osInfo || 'Windows PC';
       license.operatorIp = detectedIp || null;
-      license.status = 'active';
-      license.activatedAt = nowIso;
+      license.status = 'pending_approval';
       license.lastSync = nowIso;
 
       writeDb(db);
 
-      const apiConfig = {
-        geminiApiKey: db.adminSettings?.geminiApiKey || '',
-        geminiModel: db.adminSettings?.geminiModel || 'gemini-3.8-flash',
-        cloudflareAccountId: db.adminSettings?.cloudflareAccountId || '',
-        cloudflareApiToken: db.adminSettings?.cloudflareApiToken || '',
-        vercelToken: db.adminSettings?.vercelToken || '',
-        dailyLimit: operator.dailyLimit || 50,
-        todayGenerations: 0
-      };
-
       return NextResponse.json({
         valid: true,
+        success: true,
         requiresOnboarding: false,
+        status: 'pending_approval',
         operatorId: operator.id,
         operatorName: operator.name,
         operatorEmail: operator.email,
-        permissions: ['OPERATOR'],
         sessionToken,
         machineId,
-        operatorIp: detectedIp || null,
-        isFirstActivation: true,
-        activatedAt: nowIso,
         webCredentials: {
           email: operator.email,
           tempPassword,
           mustChangePassword: true,
           webLoginUrl: 'https://webbilly.com.br/operador/login'
         },
-        apiConfig,
-        message: 'Licença ativada e operador provisionado com sucesso!'
+        message: 'Cadastro submetido com sucesso! Aguardando aprovação do Administrador Master.'
       });
     }
 
