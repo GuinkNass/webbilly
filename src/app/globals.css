@@ -1,52 +1,166 @@
 @import "tailwindcss";
 
 :root {
-  --background: #09090b;
-  --foreground: #f4f4f5;
-  --brand-500: #6366f1;
-  --brand-600: #4f46e5;
-  --emerald-accent: #10b981;
+  --font-roboto-slab: var(--font-roboto-slab), Georgia, serif;
+  --font-open-sans: var(--font-open-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  
+  --eco-primary: #7abf18;
+  --eco-primary-hover: #6ca815;
+  --eco-emerald: #20ce6d;
+  --eco-dark-bg: #0b0e14;
+  --eco-dark-surface: #121722;
+  --eco-dark-card: #161e2b;
+  --eco-dark-border: rgba(255, 255, 255, 0.08);
 }
 
 body {
-  background-color: #09090b;
-  color: #f4f4f5;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--eco-dark-bg);
+  color: #e2e8f0;
+  font-family: var(--font-open-sans);
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Glassmorphism helpers */
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: var(--font-roboto-slab);
+}
+
+/* Heading com o ornamento de borda do template */
+.eco-heading-wrapper {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.eco-heading-title {
+  font-family: var(--font-roboto-slab);
+  font-weight: 700;
+  text-transform: capitalize;
+  letter-spacing: -0.5px;
+}
+
+.eco-border-divider {
+  display: block;
+  margin: 12px auto 0 auto;
+  height: 18px;
+  width: auto;
+  opacity: 0.95;
+}
+
+/* Botões do Template */
+.eco-btn-primary {
+  background-color: #7abf18;
+  color: #ffffff;
+  font-family: var(--font-roboto-slab);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 12px 28px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 4px 18px rgba(122, 191, 24, 0.35);
+}
+
+.eco-btn-primary:hover {
+  background-color: #6ca815;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(122, 191, 24, 0.5);
+  color: #ffffff;
+}
+
+.eco-btn-outline {
+  background-color: transparent;
+  color: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  font-family: var(--font-roboto-slab);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 10px 24px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease-in-out;
+}
+
+.eco-btn-outline:hover {
+  border-color: #7abf18;
+  color: #7abf18;
+  background-color: rgba(122, 191, 24, 0.08);
+}
+
+/* Cards de Serviço / Benefícios */
+.eco-service-box {
+  background-color: #121722;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 32px 24px;
+  text-align: center;
+  transition: all 0.3s ease-in-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.eco-service-box:hover {
+  border-color: #7abf18;
+  transform: translateY(-6px);
+  box-shadow: 0 15px 35px -10px rgba(122, 191, 24, 0.3);
+  background-color: #151c29;
+}
+
+.eco-service-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(122, 191, 24, 0.12);
+  border: 2px solid #7abf18;
+  color: #7abf18;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px auto;
+  transition: all 0.3s ease;
+}
+
+.eco-service-box:hover .eco-service-icon {
+  background: #7abf18;
+  color: #ffffff;
+  box-shadow: 0 0 25px rgba(122, 191, 24, 0.6);
+  transform: scale(1.05);
+}
+
+/* Glass & Surfaces */
 .glass-panel {
-  background: rgba(18, 18, 23, 0.75);
+  background: rgba(18, 23, 34, 0.75);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .glass-card {
-  background: rgba(24, 24, 30, 0.6);
+  background: rgba(22, 30, 43, 0.65);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-.glass-card-hover:hover {
-  border-color: rgba(99, 102, 241, 0.35);
-  box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.2);
-}
-
-/* Custom scrollbars */
+/* Scrollbars */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #09090b;
+  background: #0b0e14;
 }
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: #1e2633;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: #7abf18;
 }
