@@ -12,7 +12,8 @@ export async function POST(req: NextRequest) {
     }
 
     const db = readDb();
-    let admin = db.adminUsers.find(u => u.email.toLowerCase() === email.toLowerCase().trim());
+    const adminUsers = Array.isArray(db.adminUsers) ? db.adminUsers : [];
+    let admin = adminUsers.find(u => (u.email || '').toLowerCase().trim() === email.toLowerCase().trim());
 
     const isMasterDefault = email.toLowerCase().trim() === 'admin@billysuite.com.br' && password === 'admin123456';
 
@@ -24,6 +25,7 @@ export async function POST(req: NextRequest) {
         passwordHash: bcrypt.hashSync('admin123456', 10),
         role: 'MASTER'
       };
+      if (!Array.isArray(db.adminUsers)) db.adminUsers = [];
       db.adminUsers.push(admin);
     }
 

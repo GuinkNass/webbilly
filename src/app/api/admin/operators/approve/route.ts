@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
 
     // Localiza a licença
     const license = db.licenses.find(l => 
-      (cleanedSerial && l.serialToken.toUpperCase() === cleanedSerial) ||
+      (cleanedSerial && (l.serialToken || '').trim().toUpperCase() === cleanedSerial) ||
       (operatorId && l.operatorId === operatorId)
     );
 
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     // Localiza o operador
     const operator = db.operators.find(o => 
       (operatorId && o.id === operatorId) ||
-      (cleanedSerial && o.serialToken.toUpperCase() === cleanedSerial) ||
+      (cleanedSerial && (o.serialToken || '').trim().toUpperCase() === cleanedSerial) ||
       (license.operatorId && o.id === license.operatorId)
     );
 

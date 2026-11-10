@@ -23,7 +23,8 @@ import {
   Globe,
   Lock,
   KeyRound,
-  AlertTriangle
+  AlertTriangle,
+  X
 } from 'lucide-react';
 
 export default function OperatorDashboardPage() {
@@ -37,6 +38,7 @@ export default function OperatorDashboardPage() {
 
   // Troca Obrigatória de Senha
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState<string | null>(null);
@@ -59,10 +61,10 @@ export default function OperatorDashboardPage() {
 
     setPasswordLoading(true);
     try {
-      const res = await fetch('/api/auth/operator/change-password', {
+      const res = await fetch('/api/operator/auth/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newPassword, confirmPassword })
+        body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
@@ -70,6 +72,9 @@ export default function OperatorDashboardPage() {
       setPasswordSuccess(true);
       setTimeout(() => {
         setShowPasswordModal(false);
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
         if (data && data.operator) {
           setData({
             ...data,
@@ -160,6 +165,22 @@ export default function OperatorDashboardPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                setPasswordError(null);
+                setPasswordSuccess(false);
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+                setShowPasswordModal(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 border border-zinc-850 text-zinc-300 hover:text-white hover:bg-zinc-800 transition cursor-pointer"
+              title="Alterar senha de acesso"
+            >
+              <Key className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Minha Conta / Alterar Senha</span>
+            </button>
+
             {(data?.isMaster || op?.email === 'admin@billysuite.com.br' || op?.id === 'OP-0001') && (
               <Link
                 href="/admin"
@@ -704,20 +725,32 @@ export default function OperatorDashboardPage() {
         )}
       </main>
 
-      {/* MODAL BLOQUEANTE DE TROCA OBRIGATÓRIA DE SENHA */}
+      {/* MODAL DE TROCA DE SENHA (PRIMEIRO ACESSO OU MANUAL) */}
       {showPasswordModal && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
           <div className="max-w-md w-full bg-zinc-900 border border-violet-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl relative">
+            {!data?.operator?.mustChangePassword && (
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="absolute top-4 right-4 text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-zinc-800 transition"
+                title="Fechar"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+
             <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto mb-4">
               <KeyRound className="w-6 h-6" />
             </div>
 
             <div className="text-center mb-6">
               <h3 className="text-lg font-black text-white">
-                Troca Obrigatória de Senha
+                {data?.operator?.mustChangePassword ? 'Troca Obrigatória de Senha' : 'Minha Conta • Alterar Senha'}
               </h3>
               <p className="text-xs text-zinc-400 mt-1">
-                Olá, <strong>{data?.operator?.name}</strong>! Por questões de segurança no primeiro acesso com senha provisória, defina sua senha definitiva.
+                {data?.operator?.mustChangePassword
+                  ? `Olá, ${data?.operator?.name}! Por questões de segurança no primeiro acesso com senha provisória, defina sua senha definitiva.`
+                  : 'Atualize sua senha de acesso ao portal do operador corporativo.'}
               </p>
             </div>
 
@@ -733,14 +766,30 @@ export default function OperatorDashboardPage() {
                 <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
-                <div className="text-sm font-bold text-white">Senha Definida com Sucesso!</div>
-                <p className="text-xs text-zinc-400">Acessando painel...</p>
+                <div className="text-sm font-bold text-white">Senha Salva com Sucesso!</div>
+                <p className="text-xs text-zinc-400">Suas credenciais já estão atualizadas.</p>
               </div>
             ) : (
               <form onSubmit={handleChangePassword} className="space-y-4">
+                {!data?.operator?.mustChangePassword && (
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                      Senha Atual
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      placeholder="Sua senha atual"
+                      className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-white text-xs focus:outline-none focus:border-violet-500 font-mono"
+                    />
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
-                    Nova Senha Pessoal *
+                    Nova Senha *
                   </label>
                   <input
                     type="password"
@@ -782,7 +831,7 @@ export default function OperatorDashboardPage() {
                     ) : (
                       <>
                         <Lock className="w-4 h-4" />
-                        Definir Senha Definitiva
+                        Salvar Nova Senha
                       </>
                     )}
                   </button>

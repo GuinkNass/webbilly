@@ -17,6 +17,23 @@
   ],
   "operators": [
     {
+      "id": "OP-6A42",
+      "name": "TESTE RODRIGUES BILLY",
+      "email": "guilherme.r.nascimentoml@gmail.com",
+      "passwordHash": ".qOh41GRa5LQt6Pf47rPMmZFzg0OphX2",
+      "whatsapp": "(11) 98765-4321",
+      "pixType": "email",
+      "pixKey": "guilherme.r.nascimentoml@gmail.com",
+      "serialToken": "BILLY-OP-6A42-08A9",
+      "status": "ATIVO",
+      "machineId": null,
+      "osInfo": null,
+      "lastSync": null,
+      "dailyLimit": 50,
+      "todayGenerations": 0,
+      "createdAt": "2026-11-10T14:00:00.000Z"
+    },
+    {
       "id": "OP-1001",
       "name": "Carlos Eduardo Silva",
       "email": "carlos.operador@billysuite.com.br",
@@ -52,6 +69,17 @@
     }
   ],
   "licenses": [
+    {
+      "serialToken": "BILLY-OP-6A42-08A9",
+      "operatorId": "OP-6A42",
+      "operatorName": "TESTE RODRIGUES BILLY",
+      "status": "active",
+      "machineId": null,
+      "osInfo": null,
+      "lastSync": null,
+      "createdAt": "2026-11-10T14:00:00.000Z",
+      "activatedAt": "2026-11-10T14:00:00.000Z"
+    },
     {
       "serialToken": "BILLY-OP-DEMO-9988-2026",
       "operatorId": "OP-1001",

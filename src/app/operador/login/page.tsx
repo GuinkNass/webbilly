@@ -7,8 +7,8 @@ import { Laptop, Lock, Mail, ArrowRight, ArrowLeft } from 'lucide-react';
 
 export default function OperatorLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('carlos.operador@billysuite.com.br');
-  const [password, setPassword] = useState('operador123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,9 +74,10 @@ export default function OperatorLoginPage() {
               <input
                 type="email"
                 required
+                placeholder="seu.email@empresa.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm focus:outline-none focus:border-emerald-500 placeholder-zinc-600"
               />
             </div>
           </div>
@@ -88,15 +89,12 @@ export default function OperatorLoginPage() {
               <input
                 type="password"
                 required
+                placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-sm focus:outline-none focus:border-emerald-500 placeholder-zinc-600"
               />
             </div>
-          </div>
-
-          <div className="p-2.5 rounded-lg bg-zinc-900/60 border border-zinc-800/80 text-[11px] text-zinc-500">
-            Acesso demo do operador: <code className="text-emerald-400">carlos.operador@billysuite.com.br</code> / <code className="text-emerald-400">operador123</code>
           </div>
 
           <button

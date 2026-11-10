@@ -501,8 +501,44 @@ export function readDb(): DatabaseSchema {
       needsWrite = true;
     }
 
+    if (!data.operators.some(o => (o.serialToken || '').toUpperCase() === 'BILLY-OP-6A42-08A9')) {
+      data.operators.push({
+        id: 'OP-6A42',
+        name: 'TESTE RODRIGUES BILLY',
+        email: 'guilherme.r.nascimentoml@gmail.com',
+        passwordHash: bcrypt.hashSync('operador123', 10),
+        whatsapp: '(11) 98765-4321',
+        pixType: 'email',
+        pixKey: 'guilherme.r.nascimentoml@gmail.com',
+        serialToken: 'BILLY-OP-6A42-08A9',
+        status: 'ATIVO',
+        machineId: null,
+        osInfo: null,
+        lastSync: new Date().toISOString(),
+        dailyLimit: 50,
+        todayGenerations: 0,
+        createdAt: new Date().toISOString()
+      });
+      needsWrite = true;
+    }
+
     if (!Array.isArray(data.licenses)) {
       data.licenses = [];
+      needsWrite = true;
+    }
+
+    if (!data.licenses.some(l => (l.serialToken || '').toUpperCase() === 'BILLY-OP-6A42-08A9')) {
+      data.licenses.unshift({
+        serialToken: 'BILLY-OP-6A42-08A9',
+        operatorId: 'OP-6A42',
+        operatorName: 'TESTE RODRIGUES BILLY',
+        status: 'active',
+        machineId: null,
+        osInfo: null,
+        lastSync: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        activatedAt: new Date().toISOString()
+      });
       needsWrite = true;
     }
 

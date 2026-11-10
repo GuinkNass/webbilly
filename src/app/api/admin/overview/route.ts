@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
         createdAt: op.createdAt
       })),
       licenses: db.licenses.map(lic => {
-        const op = db.operators.find(o => o.serialToken.toUpperCase() === lic.serialToken.toUpperCase() || o.id === lic.operatorId);
+        const op = db.operators.find(o => ((o.serialToken || '').trim().toUpperCase() === (lic.serialToken || '').trim().toUpperCase()) || o.id === lic.operatorId);
         return {
           ...lic,
           cpf: op?.cpf || null,
