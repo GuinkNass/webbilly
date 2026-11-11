@@ -29,7 +29,15 @@ import {
   KeyRound,
   RotateCcw,
   X,
-  AlertCircle
+  AlertCircle,
+  TrendingUp,
+  LayoutDashboard,
+  Settings,
+  HelpCircle,
+  CheckCircle2,
+  FileText,
+  Clock,
+  Sparkles
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
@@ -67,7 +75,6 @@ export default function AdminDashboardPage() {
     commissionPerSale: 200
   });
 
-  const [filterCandidate, setFilterCandidate] = useState<'TODOS' | 'PENDENTE' | 'APROVADO' | 'RECUSADO'>('TODOS');
   const [searchQuery, setSearchQuery] = useState('');
 
   const loadData = async () => {
@@ -96,31 +103,6 @@ export default function AdminDashboardPage() {
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/admin/login');
-  };
-
-  // Aprovar ou Recusar Candidato
-  const handleReviewCandidate = async (candidateId: string, action: 'APROVAR' | 'RECUSAR') => {
-    try {
-      const res = await fetch('/api/candidates/review', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ candidateId, action })
-      });
-
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error);
-
-      if (action === 'APROVAR') {
-        setApprovalModalData(json);
-      } else {
-        setActionSuccess(`Candidatura recusada com sucesso.`);
-        setTimeout(() => setActionSuccess(null), 4000);
-      }
-
-      await loadData();
-    } catch (err: any) {
-      alert(err.message || 'Erro ao processar ação no candidato.');
-    }
   };
 
   // Bloquear / Desbloquear Licença
@@ -155,7 +137,7 @@ export default function AdminDashboardPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
 
-      setActionSuccess(`Assinatura ${subscriptionId} alterada para: ${newStatus === 'active' ? 'Ativo (Site Online)' : 'Suspenso (Tela de Inadimplência Ativada)'}`);
+      setActionSuccess(`Assinatura alterada para: ${newStatus === 'active' ? 'Ativo (Site Online)' : 'Suspenso (Inadimplência)'}`);
       setTimeout(() => setActionSuccess(null), 4000);
       await loadData();
     } catch (err: any) {
@@ -332,419 +314,492 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#09090b] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#0d0f14] text-white flex items-center justify-center font-sans">
         <div className="flex items-center gap-3">
           <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-sm font-semibold">Carregando Painel Administrativo Master...</span>
+          <span className="text-sm font-semibold text-zinc-300">Carregando Synadmin Dashboard...</span>
         </div>
       </div>
     );
   }
 
-  const filteredCandidates = (data?.candidates || []).filter((c: any) => {
-    if (filterCandidate !== 'TODOS' && c.status !== filterCandidate) return false;
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      return c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q) || c.whatsapp.includes(q);
+  // Filtragem de Assinaturas
+  const subscriptionsList = (data?.subscriptions || []).filter((sub: any) => {
+    if (subFilter === 'ACTIVE' && sub.status !== 'active') return false;
+    if (subFilter === 'SUSPENDED' && sub.status !== 'suspended') return false;
+    if (subFilter === 'PENDING' && sub.status !== 'pending') return false;
+    if (subSearch) {
+      const q = subSearch.toLowerCase();
+      const matchSlug = (sub.siteSlug || '').toLowerCase().includes(q);
+      const matchName = (sub.clientName || '').toLowerCase().includes(q);
+      const matchOp = (sub.operatorName || '').toLowerCase().includes(q);
+      if (!matchSlug && !matchName && !matchOp) return false;
     }
     return true;
   });
 
   return (
-    <div className="min-h-screen bg-[#0d0f14] text-zinc-100 pb-16">
-      {/* Top Header */}
-      <header className="border-b border-white/[0.08] bg-[#111319]/95 backdrop-blur-md sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center font-black text-white text-lg">
-              B
+    <div className="min-h-screen bg-[#090b0e] text-zinc-100 flex font-sans antialiased select-none">
+      
+      {/* =========================================================================
+          1. SIDEBAR LATERAL ESQUERDA (ESTILO SYNADMIN / REACTBOARD)
+         ========================================================================= */}
+      <aside className="w-64 fixed left-0 top-0 bottom-0 bg-[#0f121a] border-r border-white/[0.08] flex flex-col justify-between z-40">
+        <div>
+          {/* Logo & Brand Header */}
+          <div className="h-16 px-5 border-b border-white/[0.08] flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500/20 via-indigo-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center font-black text-emerald-400 text-lg shadow-md shadow-emerald-500/10">
+              W
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-white text-base">Billy Master Admin</span>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-                  CENTRAL CONTROL
+              <div className="flex items-center gap-1.5">
+                <span className="font-extrabold text-sm text-white tracking-tight">Webbilly</span>
+                <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-mono">
+                  MASTER
                 </span>
               </div>
-              <p className="text-[11px] text-zinc-400">WebBilly - Gestão Centralizada da Operação</p>
+              <p className="text-[10px] text-zinc-400 font-medium">Synadmin Central Control</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => {
-                setChangePasswordError(null);
-                setChangePasswordSuccess(null);
-                setAdminCurrentPassword('');
-                setAdminNewPassword('');
-                setAdminConfirmPassword('');
-                setShowChangePasswordModal(true);
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 transition cursor-pointer"
-              title="Alterar Senha Master"
-            >
-              <Key className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Alterar Senha Master</span>
-            </button>
+          {/* Menu de Navegação Vertical */}
+          <div className="p-3">
+            <div className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 px-3 py-2">
+              Gestão da Plataforma
+            </div>
+            <nav className="space-y-1">
+              <button
+                onClick={() => setActiveTab('subscriptions')}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
+                  activeTab === 'subscriptions'
+                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-600/30'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <LayoutDashboard className={`w-4 h-4 ${activeTab === 'subscriptions' ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`} />
+                  <span>Assinaturas SaaS</span>
+                </div>
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                  activeTab === 'subscriptions' ? 'bg-white/20 text-white' : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                }`}>
+                  {data?.subscriptions?.length || 0}
+                </span>
+              </button>
 
-            <Link
-              href="/operador"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 transition"
-            >
-              <Laptop className="w-3.5 h-3.5 text-emerald-400" />
-              Área do Operador
-            </Link>
-            <button
-              onClick={loadData}
-              className="p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition"
-              title="Recarregar dados"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
-            <div className="h-4 w-[1px] bg-zinc-800"></div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition border border-rose-500/20"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              Sair
-            </button>
+              <button
+                onClick={() => setActiveTab('licenses')}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
+                  activeTab === 'licenses'
+                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-600/30'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Key className={`w-4 h-4 ${activeTab === 'licenses' ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`} />
+                  <span>Licenças & Operadores</span>
+                </div>
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                  activeTab === 'licenses' ? 'bg-white/20 text-white' : 'bg-zinc-800 text-zinc-300'
+                }`}>
+                  {data?.licenses?.length || 0}
+                </span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('financial')}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
+                  activeTab === 'financial'
+                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-600/30'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <DollarSign className={`w-4 h-4 ${activeTab === 'financial' ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`} />
+                  <span>Extrato & Repasses</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('apis')}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
+                  activeTab === 'apis'
+                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-600/30'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Sliders className={`w-4 h-4 ${activeTab === 'apis' ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`} />
+                  <span>Configurações & APIs</span>
+                </div>
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        {/* Rodapé da Sidebar */}
+        <div className="p-3 border-t border-white/[0.08] space-y-2">
+          {/* Card Asaas API Status */}
+          <div className="p-2.5 rounded-xl bg-[#141824] border border-white/[0.06] text-xs">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-300">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                Asaas API v3
+              </span>
+              <span className="text-[10px] font-mono text-emerald-400 font-bold">ONLINE</span>
+            </div>
+            <p className="text-[10px] text-zinc-400 mt-0.5">Cobranças & Webhook Ativos</p>
+          </div>
+
+          <Link
+            href="/operador"
+            className="w-full py-2 px-3 rounded-xl text-xs font-semibold text-zinc-300 hover:text-white hover:bg-white/[0.04] transition flex items-center justify-center gap-2 border border-white/[0.06]"
+          >
+            <Laptop className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Área do Operador</span>
+          </Link>
+
+          <button
+            onClick={handleLogout}
+            className="w-full py-1.5 px-3 rounded-xl text-xs font-semibold text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition flex items-center justify-center gap-2 border border-white/[0.06]"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Encerrar Sessão</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* =========================================================================
+          2. TOPBAR SUPERIOR (FIXA AO LADO DA SIDEBAR)
+         ========================================================================= */}
+      <header className="fixed top-0 left-64 right-0 h-16 bg-[#0f121a]/95 backdrop-blur-md border-b border-white/[0.08] px-6 lg:px-8 flex items-center justify-between z-30">
+        {/* Barra de Busca Global */}
+        <div className="relative w-80 max-w-sm">
+          <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Buscar comércios, seriais, faturas..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-12 py-1.5 bg-[#08090d] border border-white/[0.08] rounded-xl text-xs text-white placeholder-zinc-400 focus:outline-none focus:border-indigo-500 transition"
+          />
+          <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-zinc-400 bg-white/[0.06] px-1.5 py-0.5 rounded border border-white/[0.08]">
+            Ctrl K
+          </kbd>
+        </div>
+
+        {/* Lado Direito da Topbar */}
+        <div className="flex items-center gap-3">
+          {/* Badge Conexão Asaas */}
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            Asaas v3 Conectado
+          </span>
+
+          <button
+            onClick={() => {
+              setChangePasswordError(null);
+              setChangePasswordSuccess(null);
+              setAdminCurrentPassword('');
+              setAdminNewPassword('');
+              setAdminConfirmPassword('');
+              setShowChangePasswordModal(true);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#161a26] border border-white/[0.08] text-zinc-300 hover:text-white hover:bg-white/[0.06] transition"
+          >
+            <Key className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="hidden md:inline">Alterar Senha Master</span>
+          </button>
+
+          <button
+            onClick={loadData}
+            className="p-2 text-zinc-400 hover:text-white rounded-xl hover:bg-white/[0.06] border border-white/[0.08] transition"
+            title="Atualizar dados em tempo real"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+
+          {/* Avatar / Perfil Admin */}
+          <div className="flex items-center gap-2 pl-2 border-l border-white/[0.08]">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+              AD
+            </div>
+            <div className="hidden lg:block text-left">
+              <div className="text-xs font-bold text-white leading-none">Administrador</div>
+              <div className="text-[10px] text-zinc-400 leading-tight">Master Billy</div>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      {/* =========================================================================
+          3. ÁREA DE CONTEÚDO PRINCIPAL (COM PADDING TOP E LEFT)
+         ========================================================================= */}
+      <main className="ml-64 pt-20 p-6 lg:p-8 flex-1 min-h-screen overflow-x-hidden">
+        
         {/* Banner de Feedback */}
         {actionSuccess && (
-          <div className="mb-6 p-4 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-sm flex items-center gap-2 animate-fade-in">
-            <CheckCircle className="w-5 h-5 text-emerald-400 shrink-0" />
+          <div className="mb-6 p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center gap-2 animate-fade-in shadow-lg shadow-emerald-500/5">
+            <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>{actionSuccess}</span>
           </div>
         )}
 
-        {/* Métricas do Topo: Pivot SaaS Recorrente (Synadmin Data Widgets) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-[#151821] p-4.5 rounded-2xl border border-white/[0.08] shadow-lg flex items-center justify-between">
+        {/* =====================================================================
+            CARTÕES DE KPIS (PADRÃO SYNADMIN DASHBOARD)
+           ===================================================================== */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+          
+          {/* KPI 1: Sites Ativos */}
+          <div className="bg-[#11141c] p-5 rounded-2xl border border-white/[0.06] shadow-xl flex items-center justify-between group hover:border-emerald-500/30 transition">
             <div>
-              <span className="text-xs uppercase tracking-wider text-emerald-400 font-semibold">
-                Sites Ativos
+              <span className="text-[11px] uppercase tracking-wider text-zinc-400 font-bold block mb-1">
+                Sites Ativos (Subdomínio)
               </span>
-              <div className="text-2xl font-black text-white mt-1 tracking-tight">
-                {data?.metrics?.totalActiveSites || 0} sites
+              <div className="text-3xl font-black text-white tracking-tight">
+                {data?.metrics?.totalActiveSites || 0}
+                <span className="text-xs text-zinc-400 font-normal ml-1.5 font-mono">sites</span>
               </div>
-              <span className="text-[11px] text-zinc-500 font-medium">Assinaturas adimplentes</span>
+              <div className="text-[11px] text-emerald-400 font-medium mt-1 flex items-center gap-1">
+                <TrendingUp className="w-3 h-3" />
+                <span>100% adimplentes no ar</span>
+              </div>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
-              <Globe className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/10 group-hover:scale-105 transition">
+              <Globe className="w-6 h-6" />
             </div>
           </div>
 
-          <div className="bg-[#151821] p-4.5 rounded-2xl border border-white/[0.08] shadow-lg flex items-center justify-between">
+          {/* KPI 2: MRR Recorrente */}
+          <div className="bg-[#11141c] p-5 rounded-2xl border border-white/[0.06] shadow-xl flex items-center justify-between group hover:border-teal-500/30 transition">
             <div>
-              <span className="text-xs uppercase tracking-wider text-teal-400 font-semibold">
-                MRR Recorrente
+              <span className="text-[11px] uppercase tracking-wider text-zinc-400 font-bold block mb-1">
+                MRR Recorrente Total
               </span>
-              <div className="text-2xl font-black text-emerald-400 mt-1 tracking-tight">
+              <div className="text-3xl font-black text-emerald-400 tracking-tight">
                 R$ {(data?.metrics?.currentMRR || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
-              <span className="text-[11px] text-zinc-500 font-medium">R$ 29,90/mês por cliente</span>
+              <div className="text-[11px] text-teal-400 font-medium mt-1 flex items-center gap-1">
+                <span>R$ 29,90/mês por comércio</span>
+              </div>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-teal-500/15 border border-teal-500/30 text-teal-400 flex items-center justify-center shrink-0">
-              <CreditCard className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-xl bg-teal-500/15 border border-teal-500/25 text-teal-400 flex items-center justify-center shrink-0 shadow-md shadow-teal-500/10 group-hover:scale-105 transition">
+              <CreditCard className="w-6 h-6" />
             </div>
           </div>
 
-          <div className="bg-[#151821] p-4.5 rounded-2xl border border-white/[0.08] shadow-lg flex items-center justify-between">
+          {/* KPI 3: Inadimplência */}
+          <div className="bg-[#11141c] p-5 rounded-2xl border border-white/[0.06] shadow-xl flex items-center justify-between group hover:border-rose-500/30 transition">
             <div>
-              <span className="text-xs uppercase tracking-wider text-rose-400 font-semibold">
-                Inadimplência
+              <span className="text-[11px] uppercase tracking-wider text-zinc-400 font-bold block mb-1">
+                Taxa de Inadimplência
               </span>
-              <div className="text-2xl font-black text-rose-400 mt-1 tracking-tight">
+              <div className="text-3xl font-black text-rose-400 tracking-tight">
                 {data?.metrics?.delinquencyRate || 0}%
               </div>
-              <span className="text-[11px] text-zinc-500 font-medium">
+              <div className="text-[11px] text-zinc-400 font-medium mt-1">
                 {data?.metrics?.totalSuspendedSites || 0} suspensos • {data?.metrics?.totalPendingSites || 0} pendentes
-              </span>
+              </div>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0">
-              <AlertTriangle className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-xl bg-rose-500/15 border border-rose-500/25 text-rose-400 flex items-center justify-center shrink-0 shadow-md shadow-rose-500/10 group-hover:scale-105 transition">
+              <AlertTriangle className="w-6 h-6" />
             </div>
           </div>
 
-          <div className="bg-[#151821] p-4.5 rounded-2xl border border-white/[0.08] shadow-lg flex items-center justify-between">
+          {/* KPI 4: Repasses Operadores */}
+          <div className="bg-[#11141c] p-5 rounded-2xl border border-white/[0.06] shadow-xl flex items-center justify-between group hover:border-indigo-500/30 transition">
             <div>
-              <span className="text-xs uppercase tracking-wider text-indigo-400 font-semibold">
-                Repasses Operadores
+              <span className="text-[11px] uppercase tracking-wider text-zinc-400 font-bold block mb-1">
+                Repasses Operadores/Mês
               </span>
-              <div className="text-2xl font-black text-indigo-400 mt-1 tracking-tight">
+              <div className="text-3xl font-black text-indigo-400 tracking-tight">
                 R$ {(data?.metrics?.monthlyOperatorCommission || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
-              <span className="text-[11px] text-zinc-500 font-medium">R$ 10,00/mês por site</span>
+              <div className="text-[11px] text-indigo-300 font-medium mt-1">
+                R$ 10,00/mês por site ativo
+              </div>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shrink-0">
-              <Users className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-xl bg-indigo-500/15 border border-indigo-500/25 text-indigo-400 flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/10 group-hover:scale-105 transition">
+              <Users className="w-6 h-6" />
             </div>
           </div>
         </div>
 
-        {/* Abas de Navegação */}
-        <div className="flex border-b border-zinc-800 mb-6 space-x-2 overflow-x-auto">
-          <button
-            onClick={() => setActiveTab('subscriptions')}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 whitespace-nowrap transition ${
-              activeTab === 'subscriptions'
-                ? 'border-emerald-500 text-white bg-emerald-500/10 rounded-t-lg'
-                : 'border-transparent text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <Globe className="w-4 h-4 text-emerald-400" />
-            Gestão de Assinaturas (R$ 29,90/mês)
-            <span className="ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-              {data?.subscriptions?.length || 0}
-            </span>
-          </button>
-
-
-
-          <button
-            onClick={() => setActiveTab('licenses')}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition ${
-              activeTab === 'licenses'
-                ? 'border-indigo-500 text-white bg-indigo-500/10 rounded-t-lg'
-                : 'border-transparent text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <Key className="w-4 h-4" />
-            Gestor de Licenças & Seriais
-            <span className="ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-zinc-800 text-zinc-300">
-              {data?.licenses?.length || 0}
-            </span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('financial')}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition ${
-              activeTab === 'financial'
-                ? 'border-indigo-500 text-white bg-indigo-500/10 rounded-t-lg'
-                : 'border-transparent text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <DollarSign className="w-4 h-4" />
-            Extrato Financeiro Global
-          </button>
-
-          <button
-            onClick={() => setActiveTab('apis')}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition ${
-              activeTab === 'apis'
-                ? 'border-indigo-500 text-white bg-indigo-500/10 rounded-t-lg'
-                : 'border-transparent text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <Sliders className="w-4 h-4" />
-            Controle Central de APIs
-          </button>
-        </div>
-
-        {/* ========================================================= */}
-        {/* CONTEÚDO DA ABA PRINCIPAL: GESTÃO DE ASSINATURAS (SAAS)   */}
-        {/* ========================================================= */}
+        {/* =====================================================================
+            TAB 1: GESTÃO DE ASSINATURAS SAAS (SYNADMIN DATATABLE)
+           ===================================================================== */}
         {activeTab === 'subscriptions' && (
           <div className="space-y-4">
-            {/* Filtros e Busca */}
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-zinc-900/60 p-3 rounded-xl border border-zinc-800">
-              <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
-                {(['TODOS', 'ACTIVE', 'SUSPENDED', 'PENDING'] as const).map((st) => (
-                  <button
-                    key={st}
-                    onClick={() => setSubFilter(st)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition ${
-                      subFilter === st
-                        ? 'bg-emerald-600 text-white shadow-md'
-                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
-                    }`}
-                  >
-                    {st === 'TODOS' && 'Todos'}
-                    {st === 'ACTIVE' && 'Ativos (Em dia)'}
-                    {st === 'SUSPENDED' && 'Inadimplentes (Suspensos)'}
-                    {st === 'PENDING' && 'Aguardando Pagamento'}
-                  </button>
-                ))}
+            
+            {/* Header da Tabela com Filtros de Pílula */}
+            <div className="bg-[#11141c] p-4 rounded-2xl border border-white/[0.06] shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto">
+                <button
+                  onClick={() => setSubFilter('TODOS')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+                    subFilter === 'TODOS'
+                      ? 'bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/20'
+                      : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                  }`}
+                >
+                  Todos ({data?.subscriptions?.length || 0})
+                </button>
+                <button
+                  onClick={() => setSubFilter('ACTIVE')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 ${
+                    subFilter === 'ACTIVE'
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                  Ativos (Em dia)
+                </button>
+                <button
+                  onClick={() => setSubFilter('SUSPENDED')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 ${
+                    subFilter === 'SUSPENDED'
+                      ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+                  Inadimplentes (Suspensos)
+                </button>
+                <button
+                  onClick={() => setSubFilter('PENDING')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 ${
+                    subFilter === 'PENDING'
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                  Aguardando Pagamento
+                </button>
               </div>
 
-              <div className="relative w-full sm:w-72">
-                <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-2.5" />
+              {/* Busca na Tabela */}
+              <div className="relative w-full md:w-64">
+                <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-2.5" />
                 <input
                   type="text"
-                  placeholder="Buscar comércio, slug ou cliente..."
+                  placeholder="Buscar comércio ou slug..."
                   value={subSearch}
                   onChange={(e) => setSubSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 bg-zinc-950 border border-zinc-800 rounded-lg text-xs text-zinc-200 placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500"
+                  className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-[#0a0c10] border border-white/[0.08] text-xs text-white placeholder-zinc-400 focus:outline-none focus:border-indigo-500"
                 />
               </div>
             </div>
 
-            {/* Tabela de Assinaturas */}
-            <div className="glass-panel rounded-2xl border border-zinc-800 overflow-hidden">
+            {/* Tabela de Assinaturas Synadmin */}
+            <div className="bg-[#11141c] rounded-2xl border border-white/[0.06] shadow-xl overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className="border-b border-zinc-800 bg-zinc-900/80 text-zinc-400 font-bold uppercase tracking-wider text-[10px]">
-                      <th className="py-3.5 px-4">Comércio / Subdomínio</th>
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-white/[0.02] text-zinc-400 uppercase font-mono text-[11px] border-b border-white/[0.06]">
+                    <tr>
+                      <th className="py-3.5 px-5">Comércio / Subdomínio</th>
                       <th className="py-3.5 px-4">Cliente / WhatsApp</th>
                       <th className="py-3.5 px-4">Status</th>
                       <th className="py-3.5 px-4">Plano</th>
                       <th className="py-3.5 px-4">Renovação</th>
                       <th className="py-3.5 px-4">Operador</th>
-                      <th className="py-3.5 px-4 text-right">Ações Rápidas</th>
+                      <th className="py-3.5 px-5 text-right">Ações Rápidas</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-800/60">
-                    {data?.subscriptions
-                      ?.filter((s: any) => {
-                        if (subFilter === 'ACTIVE') return s.status === 'active';
-                        if (subFilter === 'SUSPENDED') return s.status === 'suspended';
-                        if (subFilter === 'PENDING') return s.status === 'pending';
-                        return true;
-                      })
-                      ?.filter((s: any) => {
-                        if (!subSearch.trim()) return true;
-                        const term = subSearch.toLowerCase();
-                        return (
-                          s.clientName?.toLowerCase().includes(term) ||
-                          s.siteSlug?.toLowerCase().includes(term) ||
-                          s.clientPhone?.includes(term) ||
-                          s.operatorName?.toLowerCase().includes(term)
-                        );
-                      })
-                      ?.map((sub: any) => (
-                        <tr key={sub.id} className="hover:bg-zinc-800/30 transition">
-                          <td className="py-3 px-4">
-                            <div className="font-bold text-white text-sm">
-                              {sub.clientName}
-                            </div>
+                  <tbody className="divide-y divide-white/[0.04]">
+                    {subscriptionsList.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="py-10 text-center text-zinc-400 text-xs">
+                          Nenhuma assinatura encontrada para os filtros selecionados.
+                        </td>
+                      </tr>
+                    ) : (
+                      subscriptionsList.map((sub: any) => (
+                        <tr key={sub.id} className="hover:bg-white/[0.02] transition">
+                          <td className="py-4 px-5">
+                            <span className="font-bold text-white text-sm block">{sub.clientName}</span>
                             <a
                               href={`https://${sub.siteSlug}.webbilly.com.br`}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex items-center gap-1 font-mono text-[11px] text-emerald-400 hover:underline mt-0.5"
+                              className="text-emerald-400 hover:underline font-mono text-xs inline-flex items-center gap-1 mt-0.5"
                             >
                               <span>{sub.siteSlug}.webbilly.com.br</span>
                               <ExternalLink className="w-3 h-3" />
                             </a>
                           </td>
-
-                          <td className="py-3 px-4">
-                            <div className="text-zinc-200 font-medium">{sub.clientName}</div>
-                            {sub.clientPhone ? (
-                              <a
-                                href={`https://wa.me/55${sub.clientPhone.replace(/\D/g, '')}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-[11px] text-zinc-400 hover:text-emerald-400 font-mono flex items-center gap-1 mt-0.5"
-                              >
-                                <span>{sub.clientPhone}</span>
-                              </a>
-                            ) : (
-                              <span className="text-[11px] text-zinc-500 font-mono">Não informado</span>
-                            )}
+                          <td className="py-4 px-4 font-mono text-zinc-300">
+                            <div>{sub.clientName}</div>
+                            <div className="text-[11px] text-zinc-400">{sub.clientPhone || 'Sem telefone'}</div>
                           </td>
-
-                          <td className="py-3 px-4">
-                            {sub.status === 'active' && (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                          <td className="py-4 px-4">
+                            {sub.status === 'active' ? (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                                 Ativo (Online)
                               </span>
-                            )}
-                            {sub.status === 'suspended' && (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
-                                <Lock className="w-3 h-3" />
+                            ) : sub.status === 'suspended' ? (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
                                 Suspenso (Inadimplente)
                               </span>
-                            )}
-                            {sub.status === 'pending' && (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                                <AlertTriangle className="w-3 h-3" />
-                                Pendente
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                Aguardando Pagamento
                               </span>
                             )}
                           </td>
-
-                          <td className="py-3 px-4">
-                            <div className="font-bold text-white font-mono">
-                              R$ {sub.monthlyPrice ? sub.monthlyPrice.toFixed(2).replace('.', ',') : '29,90'}/mês
-                            </div>
-                            <span className="text-[10px] text-zinc-500">Recorrente Asaas</span>
+                          <td className="py-4 px-4 font-mono">
+                            <div className="font-bold text-white">R$ 29,90/mês</div>
+                            <div className="text-[10px] text-zinc-400">Recorrente Asaas</div>
                           </td>
-
-                          <td className="py-3 px-4">
-                            <div className="text-zinc-300 font-medium">
-                              {sub.nextRenewalDate ? new Date(sub.nextRenewalDate).toLocaleDateString('pt-BR') : '—'}
-                            </div>
-                            <span className="text-[10px] text-zinc-500">
-                              {sub.status === 'suspended' ? 'Vencido' : 'Renovação automática'}
-                            </span>
+                          <td className="py-4 px-4 font-mono text-zinc-400 text-xs">
+                            <div>{new Date(sub.nextRenewalDate || Date.now()).toLocaleDateString('pt-BR')}</div>
+                            <div className="text-[10px] text-zinc-400">Renovação automática</div>
                           </td>
-
-                          <td className="py-3 px-4">
-                            <span className="text-zinc-300 font-medium">
-                              {sub.operatorName || 'Carlos Eduardo Silva'}
-                            </span>
-                            <div className="text-[10px] text-zinc-500 font-mono">
-                              Comissão: R$ 10,00/mês
-                            </div>
+                          <td className="py-4 px-4">
+                            <span className="font-semibold text-white block">{sub.operatorName || 'Administrador Master'}</span>
+                            <span className="text-[10px] text-zinc-400 font-mono">Comissão: R$ 10,00/mês</span>
                           </td>
+                          <td className="py-4 px-5 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {sub.status === 'active' ? (
+                                <button
+                                  onClick={() => handleToggleSubscription(sub.id, sub.status)}
+                                  className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-500/15 text-rose-300 border border-rose-500/30 hover:bg-rose-500/25 transition flex items-center gap-1"
+                                  title="Suspender site e exibir tela de inadimplência"
+                                >
+                                  <Lock className="w-3 h-3" />
+                                  <span>Suspender</span>
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleToggleSubscription(sub.id, sub.status)}
+                                  className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition flex items-center gap-1"
+                                  title="Reativar site no subdomínio"
+                                >
+                                  <Unlock className="w-3 h-3" />
+                                  <span>Reativar</span>
+                                </button>
+                              )}
 
-                          <td className="py-3 px-4 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
-                              {/* Botão Suspender / Reativar */}
-                              <button
-                                onClick={() => handleToggleSubscription(sub.id, sub.status)}
-                                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1 ${
-                                  sub.status === 'active'
-                                    ? 'bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/20'
-                                    : 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20'
-                                }`}
-                                title={sub.status === 'active' ? 'Suspender site por inadimplência' : 'Reativar site do cliente'}
-                              >
-                                {sub.status === 'active' ? (
-                                  <>
-                                    <Lock className="w-3 h-3" />
-                                    <span>Suspender</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Unlock className="w-3 h-3" />
-                                    <span>Reativar</span>
-                                  </>
-                                )}
-                              </button>
-
-                              {/* Botão Copiar Link da Fatura Asaas */}
-                              <button
-                                onClick={() => copyToClipboard(sub.asaasInvoiceUrl || sub.checkoutUrl || `https://webbilly.com.br/site/${sub.siteSlug}`)}
-                                className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-200 transition flex items-center gap-1 border border-zinc-700"
-                                title="Copiar link da fatura Asaas (Pix / Cartão)"
-                              >
-                                <Copy className="w-3 h-3 text-emerald-400" />
-                                <span>Fatura Asaas</span>
-                              </button>
-
-                              {/* Botão Visualizar Site */}
-                              <Link
-                                href={`/site/${sub.siteSlug}`}
-                                target="_blank"
-                                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition border border-transparent hover:border-zinc-700"
-                                title="Visualizar site ao vivo"
-                              >
-                                <Eye className="w-3.5 h-3.5" />
-                              </Link>
+                              {sub.checkoutUrl && (
+                                <button
+                                  onClick={() => copyToClipboard(sub.checkoutUrl)}
+                                  className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#161a26] text-zinc-200 border border-white/[0.08] hover:bg-white/[0.06] transition flex items-center gap-1"
+                                  title="Copiar Fatura Asaas"
+                                >
+                                  <CreditCard className="w-3 h-3 text-emerald-400" />
+                                  <span>Fatura Asaas</span>
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
-                      ))}
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -752,14 +807,18 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* CONTEÚDO DA ABA 2: GESTOR DE LICENÇAS E SERIAIS */}
+        {/* =====================================================================
+            TAB 2: GESTOR DE LICENÇAS E SERIAIS (SYNADMIN DATATABLE)
+           ===================================================================== */}
         {activeTab === 'licenses' && (
           <div className="space-y-4">
-            <div className="bg-[#151821] p-5 rounded-2xl border border-white/[0.08] shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            
+            {/* Header da Aba com Ação de Gerar Serial */}
+            <div className="bg-[#11141c] p-4.5 rounded-2xl border border-white/[0.06] shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                   <span>Licenças & Operadores Provisionados</span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 border border-violet-500/30">
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold">
                     Auto-Onboarding Ativo
                   </span>
                 </h3>
@@ -768,217 +827,143 @@ export default function AdminDashboardPage() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleGenerateSerial}
-                  className="px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-violet-600/30 transition cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Gerar Nova Chave Serial</span>
-                </button>
-              </div>
+              <button
+                onClick={handleGenerateSerial}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-xs bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 transition shadow-lg shadow-emerald-500/20 cursor-pointer"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>Gerar Nova Chave Serial</span>
+              </button>
             </div>
 
-            <div className="bg-[#151821] rounded-2xl border border-white/[0.08] shadow-xl overflow-hidden">
+            {/* Tabela de Licenças Synadmin */}
+            <div className="bg-[#11141c] rounded-2xl border border-white/[0.06] shadow-xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#111319] text-zinc-400 uppercase font-mono text-[11px] border-b border-white/[0.08]">
+                  <thead className="bg-white/[0.02] text-zinc-400 uppercase font-mono text-[11px] border-b border-white/[0.06]">
                     <tr>
-                      <th className="py-3 px-4">Token Serial</th>
-                      <th className="py-3 px-4">Status</th>
-                      <th className="py-3 px-4">Operador</th>
-                      <th className="py-3 px-4">CPF</th>
-                      <th className="py-3 px-4">WhatsApp</th>
-                      <th className="py-3 px-4">E-mail</th>
-                      <th className="py-3 px-4">Dados Pix</th>
-                      <th className="py-3 px-4">Data Ativação</th>
-                      <th className="py-3 px-4">Senha Provisória</th>
-                      <th className="py-3 px-4 text-right">Ações</th>
+                      <th className="py-3.5 px-5">Chave Serial (Token)</th>
+                      <th className="py-3.5 px-4">Operador / E-mail</th>
+                      <th className="py-3.5 px-4">Repasse Pix</th>
+                      <th className="py-3.5 px-4">Hardware Lock</th>
+                      <th className="py-3.5 px-4">Status</th>
+                      <th className="py-3.5 px-5 text-right">Ações de Gestão</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-800/60">
-                    {(data?.licenses || []).map((l: any) => {
-                      const isVirgin = (l.status === 'pending_onboarding' || l.status === 'pending_activation') && !l.operatorId;
-                      const isPendingApproval = l.status === 'pending_approval' || (l.operatorId && (l.status === 'pending_activation' || l.status === 'pending_onboarding'));
-                      const isBlocked = l.status === 'BLOQUEADO' || l.status === 'revoked';
+                  <tbody className="divide-y divide-white/[0.04]">
+                    {(data?.licenses || []).length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="py-10 text-center text-zinc-400 text-xs">
+                          Nenhuma licença cadastrada.
+                        </td>
+                      </tr>
+                    ) : (
+                      (data?.licenses || []).map((lic: any) => {
+                        const isPendingApproval = lic.status === 'pending_approval' || lic.status === 'AGUARDANDO_APROVACAO';
+                        const isVirgin = lic.status === 'pending_onboarding' || lic.status === 'VIRGEM';
+                        const isActive = lic.status === 'active' || lic.status === 'ATIVO';
 
-                      return (
-                        <tr key={l.serialToken} className="hover:bg-white/[0.02] transition duration-150">
-                          {/* Serial */}
-                          <td className="py-3.5 px-4 font-mono font-bold text-indigo-300">
-                            <div className="flex items-center gap-2">
-                              <span>{l.serialToken}</span>
-                              <button
-                                onClick={() => copyToClipboard(l.serialToken)}
-                                className="text-zinc-500 hover:text-white"
-                                title="Copiar chave serial"
-                              >
-                                <Copy className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                            {l.machineId && (
-                              <div className="text-[10px] text-zinc-500 flex items-center gap-1 mt-0.5">
-                                <Laptop className="w-3 h-3" />
-                                <span className="truncate max-w-[120px]">{l.machineId}</span>
-                              </div>
-                            )}
-                          </td>
-
-                          {/* Status */}
-                          <td className="py-3.5 px-4">
-                            <span
-                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                                isVirgin
-                                  ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
-                                  : isPendingApproval
-                                  ? 'bg-sky-500/15 text-sky-300 border-sky-500/30 animate-pulse'
-                                  : isBlocked
-                                  ? 'bg-rose-500/10 text-rose-300 border-rose-500/30'
-                                  : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
-                              }`}
-                            >
-                              {isVirgin
-                                ? '● Pendente (Virgem)'
-                                : isPendingApproval
-                                ? '⏳ Aguardando Aprovação'
-                                : isBlocked
-                                ? '● Bloqueado / Revogado'
-                                : '● Ativo'}
-                            </span>
-                          </td>
-
-                          {/* Operador */}
-                          <td className="py-3.5 px-4">
-                            <span className="font-semibold text-white block">
-                              {l.operatorName || (isVirgin ? 'Aguardando Onboarding' : '—')}
-                            </span>
-                            {l.operatorId && (
-                              <span className="text-[10px] text-zinc-500 font-mono">{l.operatorId}</span>
-                            )}
-                          </td>
-
-                          {/* CPF */}
-                          <td className="py-3.5 px-4 font-mono text-zinc-300">
-                            {l.cpf ? (
-                              <span>{l.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')}</span>
-                            ) : (
-                              <span className="text-zinc-600 italic">Pendente</span>
-                            )}
-                          </td>
-
-                          {/* WhatsApp */}
-                          <td className="py-3.5 px-4 font-mono text-zinc-300">
-                            {l.whatsapp || <span className="text-zinc-600 italic">Pendente</span>}
-                          </td>
-
-                          {/* E-mail */}
-                          <td className="py-3.5 px-4 text-zinc-300">
-                            {l.email || <span className="text-zinc-600 italic">Pendente</span>}
-                          </td>
-
-                          {/* Dados Pix */}
-                          <td className="py-3.5 px-4 font-mono text-[11px]">
-                            {l.pixKey ? (
-                              <div>
-                                <span className="text-emerald-400 font-bold block">{l.pixKey}</span>
-                                <span className="text-[10px] text-zinc-500 uppercase">{l.pixType || 'PIX'}</span>
-                              </div>
-                            ) : (
-                              <span className="text-zinc-600 italic">Pendente</span>
-                            )}
-                          </td>
-
-                          {/* Data de Ativação / Criação */}
-                          <td className="py-3.5 px-4 font-mono text-[11px] text-zinc-400">
-                            {l.activatedAt
-                              ? new Date(l.activatedAt).toLocaleDateString('pt-BR')
-                              : l.createdAt
-                              ? `${new Date(l.createdAt).toLocaleDateString('pt-BR')} (Criado)`
-                              : '—'}
-                          </td>
-
-                          {/* Senha Provisória Web */}
-                          <td className="py-3.5 px-4 font-mono text-[11px]">
-                            {l.tempPasswordPlain ? (
-                              <div className="flex items-center gap-1.5">
-                                <span className="bg-amber-500/10 text-amber-300 px-2 py-0.5 rounded border border-amber-500/30 font-bold">
-                                  {l.tempPasswordPlain}
+                        return (
+                          <tr key={lic.id || lic.serialToken} className="hover:bg-white/[0.02] transition">
+                            <td className="py-4 px-5 font-mono">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-white text-sm bg-[#08090d] px-2.5 py-1 rounded-lg border border-white/[0.08]">
+                                  {lic.serialToken}
                                 </span>
                                 <button
-                                  onClick={() => copyToClipboard(l.tempPasswordPlain)}
-                                  className="text-zinc-500 hover:text-white"
-                                  title="Copiar senha provisória"
+                                  onClick={() => copyToClipboard(lic.serialToken)}
+                                  className="text-zinc-400 hover:text-white p-1"
+                                  title="Copiar Serial"
                                 >
-                                  <Copy className="w-3 h-3" />
+                                  <Copy className="w-3.5 h-3.5" />
                                 </button>
                               </div>
-                            ) : l.operatorId ? (
-                              <span className="text-emerald-400 text-[10px] font-semibold">
-                                Senha Pessoal Definida
-                              </span>
-                            ) : (
-                              <span className="text-zinc-600 italic">Aguardando Onboarding</span>
-                            )}
-                          </td>
-
-                          {/* Ações */}
-                          <td className="py-3.5 px-4 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
-                              {isPendingApproval && (
-                                <button
-                                  onClick={() => handleApproveOperator(l.serialToken, l.operatorId)}
-                                  className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] transition flex items-center gap-1 shadow-md shadow-emerald-600/30"
-                                  title="Aprova o operador e libera o acesso no Billy Suite Desktop imediatamente"
-                                >
-                                  <Check className="w-3.5 h-3.5" />
-                                  <span>✓ Aprovar Operador</span>
-                                </button>
+                            </td>
+                            <td className="py-4 px-4">
+                              <span className="font-semibold text-white block">{lic.operatorName || 'Chave Virgem (Sem Nome)'}</span>
+                              <span className="text-[11px] text-zinc-400">{lic.operatorEmail || 'Aguardando preenchimento no app'}</span>
+                            </td>
+                            <td className="py-4 px-4 font-mono text-xs">
+                              {lic.pixKey ? (
+                                <div>
+                                  <span className="text-emerald-400 font-bold">{lic.pixKey}</span>
+                                  <div className="text-[10px] text-zinc-400 uppercase">{lic.pixType}</div>
+                                </div>
+                              ) : (
+                                <span className="text-zinc-400 italic">Pendente</span>
                               )}
-
-                              {l.machineId && (
-                                <button
-                                  onClick={() => handleResetMachine(l.serialToken)}
-                                  className="px-2 py-1 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] border border-zinc-700 transition"
-                                  title="Desvincula a máquina (permite ativar em outro PC)"
-                                >
-                                  Liberar PC
-                                </button>
+                            </td>
+                            <td className="py-4 px-4 font-mono text-[11px] text-zinc-400">
+                              {lic.machineId ? (
+                                <div className="flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                                  <span className="truncate max-w-[120px]" title={lic.machineId}>{lic.machineId}</span>
+                                  <button
+                                    onClick={() => handleResetMachine(lic.serialToken)}
+                                    className="text-amber-400 hover:underline text-[10px] ml-1"
+                                    title="Desvincular computador"
+                                  >
+                                    Resetar
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="text-zinc-400">Não vinculado</span>
                               )}
-
-                              {l.operatorId && (
-                                <button
-                                  onClick={() => handleResetOperatorPassword(l.serialToken, l.operatorId)}
-                                  className="px-2 py-1 rounded bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[11px] transition flex items-center gap-1"
-                                  title="Gera nova senha provisória e força troca no login web"
-                                >
-                                  <KeyRound className="w-3 h-3" />
-                                  <span>Reset Senha</span>
-                                </button>
+                            </td>
+                            <td className="py-4 px-4">
+                              {isActive ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                  ● Ativo
+                                </span>
+                              ) : isPendingApproval ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 animate-pulse">
+                                  ● Aguardando Aprovação
+                                </span>
+                              ) : isVirgin ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                                  ● Chave Virgem
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                                  ● Bloqueado
+                                </span>
                               )}
-
-                              <button
-                                onClick={() => handleToggleLicense(l.serialToken, l.status)}
-                                className={`px-2.5 py-1 rounded text-[11px] font-bold transition flex items-center gap-1 ${
-                                  isBlocked
-                                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                                    : 'bg-rose-600/80 hover:bg-rose-500 text-white'
-                                }`}
-                              >
-                                {isBlocked ? (
-                                  <>
-                                    <Unlock className="w-3 h-3" /> Reativar
-                                  </>
-                                ) : (
-                                  <>
-                                    <Lock className="w-3 h-3" /> Revogar
-                                  </>
+                            </td>
+                            <td className="py-4 px-5 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                {isPendingApproval && (
+                                  <button
+                                    onClick={() => handleApproveOperator(lic.serialToken, lic.operatorId)}
+                                    className="px-3 py-1 rounded-lg text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-zinc-950 transition shadow-md shadow-emerald-500/20"
+                                  >
+                                    ✓ Aprovar Operador
+                                  </button>
                                 )}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
+
+                                <button
+                                  onClick={() => handleResetOperatorPassword(lic.serialToken, lic.operatorId)}
+                                  className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#161a26] text-zinc-300 border border-white/[0.08] hover:bg-white/[0.06] transition"
+                                  title="Gerar nova senha provisória de acesso web"
+                                >
+                                  Resetar Senha
+                                </button>
+
+                                <button
+                                  onClick={() => handleToggleLicense(lic.serialToken, lic.status)}
+                                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
+                                    isActive
+                                      ? 'bg-rose-500/10 text-rose-300 border-rose-500/30 hover:bg-rose-500/20'
+                                      : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20'
+                                  }`}
+                                >
+                                  {isActive ? 'Bloquear' : 'Desbloquear'}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -986,96 +971,81 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* CONTEÚDO DA ABA 3: EXTRATO FINANCEIRO GLOBAL */}
+        {/* =====================================================================
+            TAB 3: EXTRATO FINANCEIRO & REPASSES PIX (SYNADMIN DATATABLE)
+           ===================================================================== */}
         {activeTab === 'financial' && (
-          <div className="space-y-6">
-            <div className="bg-[#151821] p-6 rounded-2xl border border-white/[0.08] shadow-xl">
-              <h3 className="text-base font-bold text-white mb-2">Relatório de Vendas Fechadas e Repasse Pix</h3>
+          <div className="space-y-4">
+            <div className="bg-[#11141c] p-5 rounded-2xl border border-white/[0.06] shadow-xl">
+              <h3 className="text-sm font-bold text-white mb-1">Modelo SaaS Recorrente & Repasses Pix</h3>
               <p className="text-xs text-zinc-400">
-                Modelo SaaS: Cada assinatura ativa gera R$ 29,90/mês, com repasse mensal recorrente de R$ 10,00 para o operador parceiro enquanto o cliente estiver adimplente.
+                Cada assinatura ativa gera R$ 29,90/mês, com repasse mensal recorrente de R$ 10,00 para o operador parceiro enquanto o cliente estiver adimplente.
               </p>
             </div>
 
-            <div className="bg-[#151821] rounded-2xl border border-white/[0.08] shadow-xl overflow-hidden">
+            <div className="bg-[#11141c] rounded-2xl border border-white/[0.06] shadow-xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#111319] text-zinc-400 uppercase font-mono text-[11px] border-b border-white/[0.08]">
+                  <thead className="bg-white/[0.02] text-zinc-400 uppercase font-mono text-[11px] border-b border-white/[0.06]">
                     <tr>
-                      <th className="py-3 px-4">Data / ID</th>
-                      <th className="py-3 px-4">Operador</th>
-                      <th className="py-3 px-4">Cliente / Nicho</th>
-                      <th className="py-3 px-4">Plano Mensal</th>
-                      <th className="py-3 px-4">Repasse Operador</th>
-                      <th className="py-3 px-4">Status do Pix</th>
-                      <th className="py-3 px-4 text-right">Ação Financeira</th>
+                      <th className="py-3.5 px-5">Data / ID</th>
+                      <th className="py-3.5 px-4">Operador</th>
+                      <th className="py-3.5 px-4">Cliente / Comércio</th>
+                      <th className="py-3.5 px-4">Plano Mensal</th>
+                      <th className="py-3.5 px-4">Repasse Operador</th>
+                      <th className="py-3.5 px-4">Status Pix</th>
+                      <th className="py-3.5 px-5 text-right">Ação Financeira</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-800/60">
+                  <tbody className="divide-y divide-white/[0.04]">
                     {(data?.sales || []).length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="py-8 text-center text-zinc-500 text-xs">
-                          Nenhuma venda registrada até o momento.
+                        <td colSpan={7} className="py-10 text-center text-zinc-400 text-xs">
+                          Nenhum repasse de comissão pendente no momento.
                         </td>
                       </tr>
                     ) : (
                       (data?.sales || []).map((s: any) => (
-                        <tr key={s.id} className="hover:bg-white/[0.02] transition duration-150">
-                          <td className="py-3.5 px-4 font-mono">
+                        <tr key={s.id} className="hover:bg-white/[0.02] transition">
+                          <td className="py-4 px-5 font-mono">
                             <span className="font-bold text-white">{s.id}</span>
-                            <div className="text-[11px] text-zinc-500">
+                            <div className="text-[11px] text-zinc-400">
                               {new Date(s.createdAt).toLocaleDateString('pt-BR')}
                             </div>
                           </td>
-                          <td className="py-3.5 px-4">
+                          <td className="py-4 px-4">
                             <span className="font-semibold text-white block">{s.operatorName}</span>
-                            <span className="text-[11px] text-zinc-500 font-mono">{s.operatorId}</span>
+                            <span className="text-[11px] text-zinc-400 font-mono">{s.operatorId}</span>
                           </td>
-                          <td className="py-3.5 px-4">
+                          <td className="py-4 px-4">
                             <div className="font-semibold text-zinc-200">{s.clientName}</div>
-                            <div className="text-[11px] text-zinc-400">{s.niche || 'Nicho Comercial'}</div>
-                            {s.siteUrl && (
-                              <a
-                                href={s.siteUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-[11px] text-indigo-400 hover:underline inline-flex items-center gap-1"
-                              >
-                                Ver Site Gerado <ExternalLink className="w-2.5 h-2.5" />
-                              </a>
-                            )}
+                            <div className="text-[11px] text-zinc-400">{s.niche || 'Comércio Local'}</div>
                           </td>
-                          <td className="py-3.5 px-4 font-bold text-white font-mono">
-                            R$ {s.saleValue?.toLocaleString('pt-BR')},00
+                          <td className="py-4 px-4 font-bold text-white font-mono">
+                            R$ 29,90/mês
                           </td>
-                          <td className="py-3.5 px-4 font-bold text-emerald-400 font-mono">
-                            R$ {s.commissionValue?.toLocaleString('pt-BR')},00
+                          <td className="py-4 px-4 font-bold text-emerald-400 font-mono">
+                            R$ 10,00/mês
                           </td>
-                          <td className="py-3.5 px-4">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                s.pixStatus === 'PAGO'
-                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                              }`}
-                            >
+                          <td className="py-4 px-4">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                              s.pixStatus === 'PAGO'
+                                ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                                : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                            }`}>
                               {s.pixStatus === 'PAGO' ? 'Pix Efetuado' : 'Pix Pendente'}
                             </span>
-                            {s.pixPaidAt && (
-                              <div className="text-[10px] text-zinc-500 font-mono mt-0.5">
-                                Pago em {new Date(s.pixPaidAt).toLocaleDateString('pt-BR')}
-                              </div>
-                            )}
                           </td>
-                          <td className="py-3.5 px-4 text-right">
+                          <td className="py-4 px-5 text-right">
                             {s.pixStatus === 'PENDENTE' ? (
                               <button
                                 onClick={() => handlePayPixCommission(s.id)}
-                                className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-md shadow-emerald-600/20"
+                                className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs transition shadow-md shadow-emerald-500/20"
                               >
                                 Pagar Pix
                               </button>
                             ) : (
-                              <span className="text-[11px] text-zinc-500 font-mono">Liquidado</span>
+                              <span className="text-[11px] text-zinc-400 font-mono">Liquidado</span>
                             )}
                           </td>
                         </tr>
@@ -1088,382 +1058,168 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* CONTEÚDO DA ABA 4: CONTROLE CENTRAL DE APIS */}
+        {/* =====================================================================
+            TAB 4: CONFIGURAÇÕES CENTRAIS & APIS
+           ===================================================================== */}
         {activeTab === 'apis' && (
-          <div className="max-w-3xl">
-            <div className="glass-panel p-6 rounded-2xl border border-zinc-800 shadow-2xl">
-              <div className="mb-6">
-                <h3 className="text-base font-bold text-white">Gerenciador Central de Chaves e Limites</h3>
-                <p className="text-xs text-zinc-400 mt-1">
-                  Estas credenciais são injetadas em tempo de execução no app Billy Suite Desktop do operador através da validação da licença. Os operadores não têm acesso direto às chaves raw.
-                </p>
-              </div>
+          <div className="space-y-6">
+            <div className="bg-[#11141c] p-6 rounded-2xl border border-white/[0.06] shadow-xl">
+              <h3 className="text-sm font-bold text-white mb-1">Controle Central de Credenciais & APIs</h3>
+              <p className="text-xs text-zinc-400 mb-6">
+                Todas as chaves salvas aqui são criptografadas e sincronizadas automaticamente com as máquinas dos operadores no heartbeat do app desktop.
+              </p>
 
               <form onSubmit={handleSaveSettings} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1">
-                    Google Gemini API Key
-                  </label>
-                  <input
-                    type="password"
-                    value={apiSettings.geminiApiKey || ''}
-                    onChange={(e) => setApiSettings({ ...apiSettings, geminiApiKey: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white font-mono text-xs focus:outline-none focus:border-indigo-500"
-                    placeholder="AQ.Ab8RN6LImQKyoWgqw..."
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1">
-                      Modelo Gemini Ativo
-                    </label>
-                    <select
-                      value={apiSettings.geminiModel || 'gemini-3.8-flash'}
-                      onChange={(e) => setApiSettings({ ...apiSettings, geminiModel: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-xs focus:outline-none focus:border-indigo-500"
-                    >
-                      <option value="gemini-3.8-flash">gemini-3.8-flash (Recomendado)</option>
-                      <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-                      <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                      <option value="gemini-1.5-pro">gemini-1.5-pro</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-zinc-300 uppercase tracking-wider mb-1">
-                      Limite Diário por Operador (Gerações/dia)
-                    </label>
-                    <input
-                      type="number"
-                      min="10"
-                      max="200"
-                      value={apiSettings.defaultDailyLimit || 50}
-                      onChange={(e) => setApiSettings({ ...apiSettings, defaultDailyLimit: Number(e.target.value) })}
-                      className="w-full px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-white text-xs focus:outline-none focus:border-indigo-500 font-mono"
-                    />
-                  </div>
-                </div>
-
-                <div className="border-t border-zinc-800 pt-4">
-                  <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-3">
-                    Deploy Automático (Cloudflare & Vercel)
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[11px] text-zinc-400 mb-1">Cloudflare Account ID</label>
-                      <input
-                        type="text"
-                        value={apiSettings.cloudflareAccountId || ''}
-                        onChange={(e) => setApiSettings({ ...apiSettings, cloudflareAccountId: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white text-xs font-mono focus:outline-none focus:border-indigo-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] text-zinc-400 mb-1">Cloudflare API Token</label>
-                      <input
-                        type="password"
-                        value={apiSettings.cloudflareApiToken || ''}
-                        onChange={(e) => setApiSettings({ ...apiSettings, cloudflareApiToken: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white text-xs font-mono focus:outline-none focus:border-indigo-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mt-3">
-                    <label className="block text-[11px] text-zinc-400 mb-1">Vercel Token (Deploy alternativo)</label>
+                    <label className="block text-xs font-semibold text-zinc-300 mb-1">Google Gemini API Key (IA)</label>
                     <input
                       type="password"
+                      placeholder="AIzaSy..."
+                      value={apiSettings.geminiApiKey || ''}
+                      onChange={(e) => setApiSettings({ ...apiSettings, geminiApiKey: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#08090d] border border-white/[0.08] text-white text-xs font-mono focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-300 mb-1">Vercel Deploy Token</label>
+                    <input
+                      type="password"
+                      placeholder="verc_tok_..."
                       value={apiSettings.vercelToken || ''}
                       onChange={(e) => setApiSettings({ ...apiSettings, vercelToken: e.target.value })}
-                      className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white text-xs font-mono focus:outline-none focus:border-indigo-500"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#08090d] border border-white/[0.08] text-white text-xs font-mono focus:outline-none focus:border-indigo-500"
                     />
                   </div>
                 </div>
 
-                <div className="border-t border-zinc-800 pt-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-xs font-bold text-sky-400 uppercase tracking-wider">
-                      Mercado Pago & Assinatura Recorrente SaaS (R$ 29,90/mês)
-                    </h4>
-                    <a
-                      href="https://www.mercadopago.com.br/developers/panel/app"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[11px] text-sky-400 hover:text-sky-300 flex items-center gap-1 font-semibold"
-                    >
-                      <span>Painel Mercado Pago Developers</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-300 mb-1">Preço Mensalidade SaaS (R$)</label>
+                    <input
+                      type="number"
+                      step="0.10"
+                      value={apiSettings.monthlySubscriptionPrice || 29.90}
+                      onChange={(e) => setApiSettings({ ...apiSettings, monthlySubscriptionPrice: Number(e.target.value) })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#08090d] border border-white/[0.08] text-white text-xs font-mono focus:outline-none focus:border-emerald-500"
+                    />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[11px] text-zinc-400 mb-1">Access Token (Produção)</label>
-                      <input
-                        type="password"
-                        value={apiSettings.mercadopagoAccessToken || ''}
-                        onChange={(e) => setApiSettings({ ...apiSettings, mercadopagoAccessToken: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white text-xs font-mono focus:outline-none focus:border-sky-500"
-                        placeholder="APP_USR-..."
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] text-zinc-400 mb-1">Public Key (Produção)</label>
-                      <input
-                        type="text"
-                        value={apiSettings.mercadopagoPublicKey || ''}
-                        onChange={(e) => setApiSettings({ ...apiSettings, mercadopagoPublicKey: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white text-xs font-mono focus:outline-none focus:border-sky-500"
-                        placeholder="APP_USR-..."
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
-                    <div>
-                      <label className="block text-[11px] text-zinc-400 mb-1">Valor da Mensalidade SaaS (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={apiSettings.monthlySubscriptionPrice ?? 29.90}
-                        onChange={(e) => setApiSettings({ ...apiSettings, monthlySubscriptionPrice: Number(e.target.value) })}
-                        className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white text-xs font-mono focus:outline-none focus:border-sky-500"
-                        placeholder="29.90"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] text-zinc-400 mb-1">Repasse Mensal por Assinatura ao Operador (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={apiSettings.operatorCommissionMonthly ?? 10.00}
-                        onChange={(e) => setApiSettings({ ...apiSettings, operatorCommissionMonthly: Number(e.target.value) })}
-                        className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white text-xs font-mono focus:outline-none focus:border-sky-500"
-                        placeholder="10.00"
-                      />
-                    </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-300 mb-1">Repasse Mensal por Assinatura (R$)</label>
+                    <input
+                      type="number"
+                      step="0.50"
+                      value={apiSettings.operatorCommissionMonthly || 10.00}
+                      onChange={(e) => setApiSettings({ ...apiSettings, operatorCommissionMonthly: Number(e.target.value) })}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#08090d] border border-white/[0.08] text-white text-xs font-mono focus:outline-none focus:border-emerald-500"
+                    />
                   </div>
                 </div>
 
-                <div className="border-t border-zinc-800 pt-4">
-                  <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-3">
-                    Gateway Pix & Repasse
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[11px] text-zinc-400 mb-1">Gateway Provedor</label>
-                      <select
-                        value={apiSettings.pixGateway || 'mercadopago'}
-                        onChange={(e) => setApiSettings({ ...apiSettings, pixGateway: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white text-xs focus:outline-none focus:border-emerald-500"
-                      >
-                        <option value="mercadopago">Mercado Pago API Pix</option>
-                        <option value="asaas">Asaas Pix Gateway</option>
-                        <option value="manual">Manual com comprovante</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[11px] text-zinc-400 mb-1">Comissão por Venda (R$)</label>
-                      <input
-                        type="number"
-                        value={apiSettings.commissionPerSale || 200}
-                        onChange={(e) => setApiSettings({ ...apiSettings, commissionPerSale: Number(e.target.value) })}
-                        className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-white text-xs font-mono focus:outline-none focus:border-emerald-500"
-                      />
-                    </div>
-                  </div>
+                <div className="pt-4 flex justify-end">
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 rounded-xl font-bold text-xs text-white bg-indigo-600 hover:bg-indigo-500 transition shadow-lg shadow-indigo-600/30 flex items-center gap-2 cursor-pointer"
+                  >
+                    <Sliders className="w-4 h-4" />
+                    <span>Salvar e Sincronizar Configurações</span>
+                  </button>
                 </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-3 rounded-xl font-bold text-xs text-white bg-indigo-600 hover:bg-indigo-500 transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 cursor-pointer mt-4"
-                >
-                  <Sliders className="w-4 h-4" />
-                  Salvar e Sincronizar Configurações Centrais
-                </button>
               </form>
             </div>
           </div>
         )}
+
       </main>
 
-      {/* MODAL DE CANDIDATO APROVADO COM SERIAL GERADO */}
-      {approvalModalData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                <CheckCircle className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-white">Operador Aprovado com Sucesso!</h3>
-                <p className="text-xs text-zinc-400">Token Serial único gerado e conta de operador criada.</p>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-3 font-mono text-xs mb-4">
-              <div>
-                <span className="text-zinc-500 block text-[10px] uppercase">Operador:</span>
-                <span className="text-white font-bold">{approvalModalData.operator?.name}</span>
-              </div>
-
-              <div>
-                <span className="text-zinc-500 block text-[10px] uppercase">Token Serial Oficial:</span>
-                <div className="flex items-center justify-between bg-zinc-900 p-2 rounded border border-indigo-500/30 text-indigo-300 font-bold text-sm">
-                  <span>{approvalModalData.operator?.serialToken}</span>
-                  <button
-                    onClick={() => copyToClipboard(approvalModalData.operator?.serialToken)}
-                    className="text-zinc-400 hover:text-white"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-[11px]">
-                <div>
-                  <span className="text-zinc-500 block text-[10px] uppercase">E-mail de Login:</span>
-                  <span className="text-zinc-300">{approvalModalData.operator?.email}</span>
-                </div>
-                <div>
-                  <span className="text-zinc-500 block text-[10px] uppercase">Senha Inicial:</span>
-                  <span className="text-emerald-400 font-bold">{approvalModalData.operator?.initialPassword}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-3 rounded-lg bg-zinc-900/60 border border-zinc-800 text-[11px] text-zinc-400 space-y-1 mb-4">
-              <div className="flex items-center gap-1.5 text-zinc-300 font-semibold">
-                <Mail className="w-3.5 h-3.5 text-indigo-400" /> E-mail enviado automaticamente ao operador
-              </div>
-              <p className="text-zinc-500">
-                O operador já pode acessar a Área do Operador e ativar o aplicativo Billy Suite Desktop com este serial.
-              </p>
-            </div>
-
-            <button
-              onClick={() => setApprovalModalData(null)}
-              className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition"
-            >
-              Concluir e Fechar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL DE TROCA DE SENHA MASTER */}
+      {/* =========================================================================
+          MODAL: ALTERAR SENHA MASTER
+         ========================================================================= */}
       {showChangePasswordModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-zinc-900 border border-indigo-500/30 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-            <button
-              onClick={() => setShowChangePasswordModal(false)}
-              className="absolute top-4 right-4 text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-zinc-800 transition"
-              title="Fechar"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
-                <Lock className="w-5 h-5" />
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-[#11141c] border border-white/[0.08] rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-scale-up">
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
+              <div className="flex items-center gap-2 text-white font-bold text-sm">
+                <Key className="w-4 h-4 text-indigo-400" />
+                <span>Alterar Senha Master</span>
               </div>
-              <div>
-                <h3 className="text-base font-bold text-white">Alterar Senha Master</h3>
-                <p className="text-xs text-zinc-400">Atualize a credencial central de acesso administrativo.</p>
-              </div>
+              <button
+                onClick={() => setShowChangePasswordModal(false)}
+                className="text-zinc-400 hover:text-white p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
             {changePasswordError && (
-              <div className="mb-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{changePasswordError}</span>
+              <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs">
+                {changePasswordError}
               </div>
             )}
 
-            {changePasswordSuccess ? (
-              <div className="text-center py-6 space-y-2">
-                <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto">
-                  <CheckCircle className="w-6 h-6" />
-                </div>
-                <div className="text-sm font-bold text-white">Senha Master Alterada!</div>
-                <p className="text-xs text-zinc-400">Sua nova credencial administrativa já está ativa.</p>
+            {changePasswordSuccess && (
+              <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs">
+                {changePasswordSuccess}
               </div>
-            ) : (
-              <form onSubmit={handleChangeAdminPassword} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
-                    Senha Master Atual *
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    value={adminCurrentPassword}
-                    onChange={(e) => setAdminCurrentPassword(e.target.value)}
-                    placeholder="Sua senha master atual"
-                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-white text-xs focus:outline-none focus:border-indigo-500 font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
-                    Nova Senha Master *
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    minLength={6}
-                    value={adminNewPassword}
-                    onChange={(e) => setAdminNewPassword(e.target.value)}
-                    placeholder="Mínimo 6 caracteres"
-                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-white text-xs focus:outline-none focus:border-indigo-500 font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
-                    Confirmar Nova Senha Master *
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    minLength={6}
-                    value={adminConfirmPassword}
-                    onChange={(e) => setAdminConfirmPassword(e.target.value)}
-                    placeholder="Repita a nova senha master"
-                    className="w-full px-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-white text-xs focus:outline-none focus:border-indigo-500 font-mono"
-                  />
-                </div>
-
-                <div className="pt-2 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowChangePasswordModal(false)}
-                    className="w-1/3 py-2.5 rounded-xl font-bold text-xs text-zinc-400 bg-zinc-800 hover:bg-zinc-700 transition"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={changePasswordLoading}
-                    className="w-2/3 py-2.5 rounded-xl font-bold text-xs text-white bg-indigo-600 hover:bg-indigo-500 transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    {changePasswordLoading ? (
-                      <>
-                        <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Salvando...
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="w-3.5 h-3.5" />
-                        Salvar Nova Senha
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
             )}
+
+            <form onSubmit={handleChangeAdminPassword} className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1">Senha Atual</label>
+                <input
+                  type="password"
+                  required
+                  value={adminCurrentPassword}
+                  onChange={(e) => setAdminCurrentPassword(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-[#08090d] border border-white/[0.08] text-white text-xs focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1">Nova Senha</label>
+                <input
+                  type="password"
+                  required
+                  value={adminNewPassword}
+                  onChange={(e) => setAdminNewPassword(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-[#08090d] border border-white/[0.08] text-white text-xs focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1">Confirmar Nova Senha</label>
+                <input
+                  type="password"
+                  required
+                  value={adminConfirmPassword}
+                  onChange={(e) => setAdminConfirmPassword(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl bg-[#08090d] border border-white/[0.08] text-white text-xs focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowChangePasswordModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs text-zinc-400 hover:text-white"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={changePasswordLoading}
+                  className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition shadow-md shadow-indigo-600/30"
+                >
+                  {changePasswordLoading ? 'Salvando...' : 'Salvar Senha'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
+
     </div>
   );
 }
