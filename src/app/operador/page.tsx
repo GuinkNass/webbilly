@@ -145,9 +145,9 @@ export default function OperatorDashboardPage() {
   const license = data?.license;
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-zinc-100 pb-16">
+    <div className="min-h-screen bg-[#0d0f14] text-zinc-100 pb-16">
       {/* Header */}
-      <header className="border-b border-zinc-800 bg-zinc-950 sticky top-0 z-30">
+      <header className="border-b border-white/[0.08] bg-[#111319]/95 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-black text-white text-lg">
@@ -212,7 +212,7 @@ export default function OperatorDashboardPage() {
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         {/* CARD PRINCIPAL DO TOKEN SERIAL DE ATIVAÇÃO */}
-        <div className="glass-panel p-6 rounded-2xl border border-indigo-500/30 bg-gradient-to-r from-indigo-950/40 via-zinc-900/60 to-purple-950/40 shadow-xl mb-8">
+        <div className="bg-[#151821] p-6 rounded-2xl border border-white/[0.08] shadow-2xl mb-8">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div>
               <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-xs font-bold mb-2">
@@ -258,38 +258,58 @@ export default function OperatorDashboardPage() {
           </div>
         </div>
 
-        {/* CARDS DE RESUMO FINANCEIRO E RECORRÊNCIA SAAS */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="glass-panel p-4 rounded-xl border border-zinc-800">
-            <span className="text-[11px] uppercase tracking-wider text-sky-400 font-semibold">Sites Ativos (SaaS)</span>
-            <div className="text-2xl font-black text-white mt-1">
-              {stats?.activeSubscriptionsCount ?? stats?.salesCount ?? 0} sites
+        {/* CARDS DE RESUMO FINANCEIRO E RECORRÊNCIA SAAS (Synadmin Widgets) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="bg-[#151821] p-4.5 rounded-2xl border border-white/[0.08] shadow-lg flex items-center justify-between">
+            <div>
+              <span className="text-xs uppercase tracking-wider text-sky-400 font-semibold">Sites Ativos</span>
+              <div className="text-2xl font-black text-white mt-1 tracking-tight">
+                {stats?.activeSubscriptionsCount ?? stats?.salesCount ?? 0} sites
+              </div>
+              <span className="text-[11px] text-zinc-500 font-medium">Publicados no subdomínio</span>
             </div>
-            <span className="text-[10px] text-zinc-500 font-mono">no ar via subdomínio</span>
+            <div className="w-11 h-11 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center shrink-0">
+              <Globe className="w-5 h-5" />
+            </div>
           </div>
 
-          <div className="glass-panel p-4 rounded-xl border border-zinc-800">
-            <span className="text-[11px] uppercase tracking-wider text-emerald-400 font-semibold">Comissão Mensal (MRR)</span>
-            <div className="text-2xl font-black text-emerald-400 mt-1">
-              R$ {(stats?.monthlyCommissionMRR ?? ((stats?.activeSubscriptionsCount ?? 0) * 10)).toLocaleString('pt-BR')},00
+          <div className="bg-[#151821] p-4.5 rounded-2xl border border-white/[0.08] shadow-lg flex items-center justify-between">
+            <div>
+              <span className="text-xs uppercase tracking-wider text-emerald-400 font-semibold">Repasse Mensal</span>
+              <div className="text-2xl font-black text-emerald-400 mt-1 tracking-tight">
+                R$ {(stats?.monthlyCommissionMRR ?? ((stats?.activeSubscriptionsCount ?? 0) * 10)).toLocaleString('pt-BR')},00
+              </div>
+              <span className="text-[11px] text-zinc-500 font-medium">R$ 10,00/mês por cliente adimplente</span>
             </div>
-            <span className="text-[10px] text-zinc-500">R$ 10,00/mês por cliente ativo</span>
+            <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+              <TrendingUp className="w-5 h-5" />
+            </div>
           </div>
 
-          <div className="glass-panel p-4 rounded-xl border border-zinc-800">
-            <span className="text-[11px] uppercase tracking-wider text-teal-400 font-semibold">Comissões Acumuladas</span>
-            <div className="text-2xl font-black text-teal-400 mt-1">
-              R$ {stats?.totalCommissions?.toLocaleString('pt-BR') || 0},00
+          <div className="bg-[#151821] p-4.5 rounded-2xl border border-white/[0.08] shadow-lg flex items-center justify-between">
+            <div>
+              <span className="text-xs uppercase tracking-wider text-teal-400 font-semibold">Total Liquidado</span>
+              <div className="text-2xl font-black text-teal-400 mt-1 tracking-tight">
+                R$ {stats?.totalCommissions?.toLocaleString('pt-BR') || 0},00
+              </div>
+              <span className="text-[11px] text-zinc-500 font-medium">Total histórico repassado</span>
             </div>
-            <span className="text-[10px] text-zinc-500">Total histórico registrado</span>
+            <div className="w-11 h-11 rounded-xl bg-teal-500/15 border border-teal-500/30 text-teal-400 flex items-center justify-center shrink-0">
+              <DollarSign className="w-5 h-5" />
+            </div>
           </div>
 
-          <div className="glass-panel p-4 rounded-xl border border-zinc-800">
-            <span className="text-[11px] uppercase tracking-wider text-amber-400 font-semibold">Chave Pix de Repasse</span>
-            <div className="text-sm font-black text-white mt-2 truncate">
-              {op?.pixKey || 'Não cadastrada'}
+          <div className="bg-[#151821] p-4.5 rounded-2xl border border-white/[0.08] shadow-lg flex items-center justify-between">
+            <div className="min-w-0 pr-2">
+              <span className="text-xs uppercase tracking-wider text-amber-400 font-semibold">Chave Pix Cadastrada</span>
+              <div className="text-sm font-black text-white mt-1 truncate">
+                {op?.pixKey || 'Não cadastrada'}
+              </div>
+              <span className="text-[11px] text-zinc-500 uppercase font-medium">{op?.pixType || 'Pix'} registrado</span>
             </div>
-            <span className="text-[10px] text-zinc-500 uppercase">{op?.pixType || 'Pix'} cadastrado</span>
+            <div className="w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">
+              <Key className="w-5 h-5" />
+            </div>
           </div>
         </div>
 
@@ -449,10 +469,10 @@ export default function OperatorDashboardPage() {
               </div>
             </div>
 
-            <div className="glass-panel rounded-xl border border-zinc-800 overflow-hidden">
+            <div className="bg-[#151821] rounded-2xl border border-white/[0.08] shadow-xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-zinc-900/80 text-zinc-400 uppercase font-mono border-b border-zinc-800">
+                  <thead className="bg-[#111319] text-zinc-400 uppercase font-mono text-[11px] border-b border-white/[0.08]">
                     <tr>
                       <th className="py-3 px-4">Subdomínio Oficial</th>
                       <th className="py-3 px-4">Cliente / Estabelecimento</th>
@@ -471,7 +491,7 @@ export default function OperatorDashboardPage() {
                       </tr>
                     ) : (
                       (data?.subscriptions || []).map((sub: any) => (
-                        <tr key={sub.id} className="hover:bg-zinc-800/40 transition">
+                        <tr key={sub.id} className="hover:bg-white/[0.02] transition duration-150">
                           <td className="py-3.5 px-4 font-mono">
                             <a
                               href={`https://${sub.slug}.webbilly.com.br`}
@@ -649,10 +669,10 @@ export default function OperatorDashboardPage() {
             </div>
 
             {/* Tabela de Vendas do Operador */}
-            <div className="glass-panel rounded-xl border border-zinc-800 overflow-hidden">
+            <div className="bg-[#151821] rounded-2xl border border-white/[0.08] shadow-xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-zinc-900/80 text-zinc-400 uppercase font-mono border-b border-zinc-800">
+                  <thead className="bg-[#111319] text-zinc-400 uppercase font-mono text-[11px] border-b border-white/[0.08]">
                     <tr>
                       <th className="py-3 px-4">Data / ID Venda</th>
                       <th className="py-3 px-4">Cliente / Estabelecimento</th>
@@ -671,7 +691,7 @@ export default function OperatorDashboardPage() {
                       </tr>
                     ) : (
                       (data?.sales || []).map((s: any) => (
-                        <tr key={s.id} className="hover:bg-zinc-800/40 transition">
+                        <tr key={s.id} className="hover:bg-white/[0.02] transition duration-150">
                           <td className="py-3.5 px-4 font-mono">
                             <span className="font-bold text-white">{s.id}</span>
                             <div className="text-[11px] text-zinc-500">

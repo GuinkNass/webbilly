@@ -351,9 +351,9 @@ export default function AdminDashboardPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-zinc-100 pb-16">
+    <div className="min-h-screen bg-[#0d0f14] text-zinc-100 pb-16">
       {/* Top Header */}
-      <header className="border-b border-zinc-800 bg-zinc-950 sticky top-0 z-30">
+      <header className="border-b border-white/[0.08] bg-[#111319]/95 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center font-black text-white text-lg">
@@ -423,52 +423,68 @@ export default function AdminDashboardPage() {
           </div>
         )}
 
-        {/* Métricas do Topo: Pivot SaaS Recorrente (R$ 29,90/mês) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="glass-panel p-4 rounded-xl border border-zinc-800">
-            <span className="text-[11px] uppercase tracking-wider text-emerald-400 font-semibold flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5" />
-              Sites Ativos no Subdomínio
-            </span>
-            <div className="text-2xl font-black text-white mt-1">
-              {data?.metrics?.totalActiveSites || 0} sites
+        {/* Métricas do Topo: Pivot SaaS Recorrente (Synadmin Data Widgets) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="bg-[#151821] p-4.5 rounded-2xl border border-white/[0.08] shadow-lg flex items-center justify-between">
+            <div>
+              <span className="text-xs uppercase tracking-wider text-emerald-400 font-semibold">
+                Sites Ativos
+              </span>
+              <div className="text-2xl font-black text-white mt-1 tracking-tight">
+                {data?.metrics?.totalActiveSites || 0} sites
+              </div>
+              <span className="text-[11px] text-zinc-500 font-medium">Assinaturas adimplentes</span>
             </div>
-            <span className="text-[10px] text-zinc-500 font-mono">Assinaturas adimplentes</span>
+            <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+              <Globe className="w-5 h-5" />
+            </div>
           </div>
 
-          <div className="glass-panel p-4 rounded-xl border border-zinc-800">
-            <span className="text-[11px] uppercase tracking-wider text-teal-400 font-semibold flex items-center gap-1.5">
-              <CreditCard className="w-3.5 h-3.5" />
-              MRR Atual (Recorrente)
-            </span>
-            <div className="text-2xl font-black text-emerald-400 mt-1">
-              R$ {(data?.metrics?.currentMRR || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+          <div className="bg-[#151821] p-4.5 rounded-2xl border border-white/[0.08] shadow-lg flex items-center justify-between">
+            <div>
+              <span className="text-xs uppercase tracking-wider text-teal-400 font-semibold">
+                MRR Recorrente
+              </span>
+              <div className="text-2xl font-black text-emerald-400 mt-1 tracking-tight">
+                R$ {(data?.metrics?.currentMRR || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </div>
+              <span className="text-[11px] text-zinc-500 font-medium">R$ 29,90/mês por cliente</span>
             </div>
-            <span className="text-[10px] text-zinc-500">Base: R$ 29,90/mês por cliente</span>
+            <div className="w-11 h-11 rounded-xl bg-teal-500/15 border border-teal-500/30 text-teal-400 flex items-center justify-center shrink-0">
+              <CreditCard className="w-5 h-5" />
+            </div>
           </div>
 
-          <div className="glass-panel p-4 rounded-xl border border-zinc-800">
-            <span className="text-[11px] uppercase tracking-wider text-rose-400 font-semibold flex items-center gap-1.5">
-              <AlertTriangle className="w-3.5 h-3.5" />
-              Inadimplência / Suspensos
-            </span>
-            <div className="text-2xl font-black text-rose-400 mt-1">
-              {data?.metrics?.delinquencyRate || 0}%
+          <div className="bg-[#151821] p-4.5 rounded-2xl border border-white/[0.08] shadow-lg flex items-center justify-between">
+            <div>
+              <span className="text-xs uppercase tracking-wider text-rose-400 font-semibold">
+                Inadimplência
+              </span>
+              <div className="text-2xl font-black text-rose-400 mt-1 tracking-tight">
+                {data?.metrics?.delinquencyRate || 0}%
+              </div>
+              <span className="text-[11px] text-zinc-500 font-medium">
+                {data?.metrics?.totalSuspendedSites || 0} suspensos • {data?.metrics?.totalPendingSites || 0} pendentes
+              </span>
             </div>
-            <span className="text-[10px] text-zinc-500">
-              {data?.metrics?.totalSuspendedSites || 0} suspensos • {data?.metrics?.totalPendingSites || 0} pendentes
-            </span>
+            <div className="w-11 h-11 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
           </div>
 
-          <div className="glass-panel p-4 rounded-xl border border-zinc-800">
-            <span className="text-[11px] uppercase tracking-wider text-indigo-400 font-semibold flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5" />
-              Comissões Parceiros/Mês
-            </span>
-            <div className="text-2xl font-black text-indigo-400 mt-1">
-              R$ {(data?.metrics?.monthlyOperatorCommission || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+          <div className="bg-[#151821] p-4.5 rounded-2xl border border-white/[0.08] shadow-lg flex items-center justify-between">
+            <div>
+              <span className="text-xs uppercase tracking-wider text-indigo-400 font-semibold">
+                Repasses Operadores
+              </span>
+              <div className="text-2xl font-black text-indigo-400 mt-1 tracking-tight">
+                R$ {(data?.metrics?.monthlyOperatorCommission || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </div>
+              <span className="text-[11px] text-zinc-500 font-medium">R$ 10,00/mês por site</span>
             </div>
-            <span className="text-[10px] text-zinc-500">Repasse recorrente de R$ 10/site</span>
+            <div className="w-11 h-11 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shrink-0">
+              <Users className="w-5 h-5" />
+            </div>
           </div>
         </div>
 
@@ -739,7 +755,7 @@ export default function AdminDashboardPage() {
         {/* CONTEÚDO DA ABA 2: GESTOR DE LICENÇAS E SERIAIS */}
         {activeTab === 'licenses' && (
           <div className="space-y-4">
-            <div className="glass-panel p-4 rounded-xl border border-zinc-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="bg-[#151821] p-5 rounded-2xl border border-white/[0.08] shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                   <span>Licenças & Operadores Provisionados</span>
@@ -763,10 +779,10 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            <div className="glass-panel rounded-xl border border-zinc-800 overflow-hidden">
+            <div className="bg-[#151821] rounded-2xl border border-white/[0.08] shadow-xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-zinc-900/80 text-zinc-400 uppercase font-mono border-b border-zinc-800">
+                  <thead className="bg-[#111319] text-zinc-400 uppercase font-mono text-[11px] border-b border-white/[0.08]">
                     <tr>
                       <th className="py-3 px-4">Token Serial</th>
                       <th className="py-3 px-4">Status</th>
@@ -787,7 +803,7 @@ export default function AdminDashboardPage() {
                       const isBlocked = l.status === 'BLOQUEADO' || l.status === 'revoked';
 
                       return (
-                        <tr key={l.serialToken} className="hover:bg-zinc-800/40 transition">
+                        <tr key={l.serialToken} className="hover:bg-white/[0.02] transition duration-150">
                           {/* Serial */}
                           <td className="py-3.5 px-4 font-mono font-bold text-indigo-300">
                             <div className="flex items-center gap-2">
@@ -973,17 +989,17 @@ export default function AdminDashboardPage() {
         {/* CONTEÚDO DA ABA 3: EXTRATO FINANCEIRO GLOBAL */}
         {activeTab === 'financial' && (
           <div className="space-y-6">
-            <div className="glass-panel p-6 rounded-xl border border-zinc-800">
+            <div className="bg-[#151821] p-6 rounded-2xl border border-white/[0.08] shadow-xl">
               <h3 className="text-base font-bold text-white mb-2">Relatório de Vendas Fechadas e Repasse Pix</h3>
               <p className="text-xs text-zinc-400">
                 Modelo SaaS: Cada assinatura ativa gera R$ 29,90/mês, com repasse mensal recorrente de R$ 10,00 para o operador parceiro enquanto o cliente estiver adimplente.
               </p>
             </div>
 
-            <div className="glass-panel rounded-xl border border-zinc-800 overflow-hidden">
+            <div className="bg-[#151821] rounded-2xl border border-white/[0.08] shadow-xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-zinc-900/80 text-zinc-400 uppercase font-mono border-b border-zinc-800">
+                  <thead className="bg-[#111319] text-zinc-400 uppercase font-mono text-[11px] border-b border-white/[0.08]">
                     <tr>
                       <th className="py-3 px-4">Data / ID</th>
                       <th className="py-3 px-4">Operador</th>
@@ -1003,7 +1019,7 @@ export default function AdminDashboardPage() {
                       </tr>
                     ) : (
                       (data?.sales || []).map((s: any) => (
-                        <tr key={s.id} className="hover:bg-zinc-800/40 transition">
+                        <tr key={s.id} className="hover:bg-white/[0.02] transition duration-150">
                           <td className="py-3.5 px-4 font-mono">
                             <span className="font-bold text-white">{s.id}</span>
                             <div className="text-[11px] text-zinc-500">
