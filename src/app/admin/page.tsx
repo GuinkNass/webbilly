@@ -34,7 +34,7 @@ import {
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'subscriptions' | 'licenses' | 'candidates' | 'financial' | 'apis'>('subscriptions');
+  const [activeTab, setActiveTab] = useState<'subscriptions' | 'licenses' | 'financial' | 'apis'>('subscriptions');
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -489,22 +489,7 @@ export default function AdminDashboardPage() {
             </span>
           </button>
 
-          <button
-            onClick={() => setActiveTab('candidates')}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 whitespace-nowrap transition ${
-              activeTab === 'candidates'
-                ? 'border-indigo-500 text-white bg-indigo-500/10 rounded-t-lg'
-                : 'border-transparent text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            <Users className="w-4 h-4" />
-            Candidatos a Operadores
-            {data?.metrics?.pendingCandidatesCount > 0 && (
-              <span className="ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                {data.metrics.pendingCandidatesCount}
-              </span>
-            )}
-          </button>
+
 
           <button
             onClick={() => setActiveTab('licenses')}
@@ -744,145 +729,6 @@ export default function AdminDashboardPage() {
                           </td>
                         </tr>
                       ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* CONTEÚDO DA ABA 1: CANDIDATOS */}
-        {activeTab === 'candidates' && (
-          <div className="space-y-4">
-            {/* Filtros e Busca */}
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-zinc-900/60 p-3 rounded-xl border border-zinc-800">
-              <div className="flex items-center gap-2">
-                {(['TODOS', 'PENDENTE', 'APROVADO', 'RECUSADO'] as const).map((st) => (
-                  <button
-                    key={st}
-                    onClick={() => setFilterCandidate(st)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                      filterCandidate === st
-                        ? 'bg-indigo-600 text-white'
-                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
-                    }`}
-                  >
-                    {st === 'TODOS' ? 'Todos' : st === 'PENDENTE' ? 'Pendentes' : st === 'APROVADO' ? 'Aprovados' : 'Recusados'}
-                  </button>
-                ))}
-              </div>
-
-              <div className="relative w-full sm:w-64">
-                <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-2.5" />
-                <input
-                  type="text"
-                  placeholder="Buscar candidato..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-zinc-950 border border-zinc-800 text-xs text-white focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-            </div>
-
-            {/* Tabela de Candidatos */}
-            <div className="glass-panel rounded-xl border border-zinc-800 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-zinc-900/80 text-zinc-400 uppercase font-mono border-b border-zinc-800">
-                    <tr>
-                      <th className="py-3 px-4">Candidato</th>
-                      <th className="py-3 px-4">Contato / Localidade</th>
-                      <th className="py-3 px-4">Chave Pix</th>
-                      <th className="py-3 px-4">Currículo / LinkedIn</th>
-                      <th className="py-3 px-4">Status</th>
-                      <th className="py-3 px-4 text-right">Ações Rápidas</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-800/60">
-                    {filteredCandidates.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="py-8 text-center text-zinc-500 text-xs">
-                          Nenhum candidato encontrado neste filtro.
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredCandidates.map((c: any) => (
-                        <tr key={c.id} className="hover:bg-zinc-800/40 transition">
-                          <td className="py-3.5 px-4 font-semibold text-white">
-                            <div>{c.name}</div>
-                            <div className="text-[11px] text-zinc-400 font-normal">{c.email}</div>
-                          </td>
-                          <td className="py-3.5 px-4">
-                            <a
-                              href={`https://wa.me/55${c.whatsapp.replace(/\D/g, '')}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-emerald-400 hover:underline flex items-center gap-1 font-mono"
-                            >
-                              {c.whatsapp}
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
-                            <div className="text-[11px] text-zinc-500">{c.city}/{c.state}</div>
-                          </td>
-                          <td className="py-3.5 px-4 font-mono">
-                            <span className="text-[10px] text-zinc-500 uppercase block">{c.pixType}</span>
-                            <span className="text-zinc-300">{c.pixKey}</span>
-                          </td>
-                          <td className="py-3.5 px-4">
-                            {c.resumeUrl ? (
-                              <a
-                                href={c.resumeUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-indigo-400 hover:underline flex items-center gap-1"
-                              >
-                                Ver Perfil
-                                <ExternalLink className="w-3 h-3" />
-                              </a>
-                            ) : (
-                              <span className="text-zinc-600">Não informado</span>
-                            )}
-                          </td>
-                          <td className="py-3.5 px-4">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                c.status === 'APROVADO'
-                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                                  : c.status === 'RECUSADO'
-                                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                              }`}
-                            >
-                              {c.status}
-                            </span>
-                          </td>
-                          <td className="py-3.5 px-4 text-right">
-                            {c.status === 'PENDENTE' ? (
-                              <div className="flex items-center justify-end gap-2">
-                                <button
-                                  onClick={() => handleReviewCandidate(c.id, 'APROVAR')}
-                                  className="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center gap-1 shadow-md shadow-emerald-600/20"
-                                  title="Aprova e gera o Token Serial com 1 clique"
-                                >
-                                  <Check className="w-3.5 h-3.5" />
-                                  Aprovar
-                                </button>
-                                <button
-                                  onClick={() => handleReviewCandidate(c.id, 'RECUSAR')}
-                                  className="px-2.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-rose-900/40 text-zinc-400 hover:text-rose-300 border border-zinc-700 hover:border-rose-500/40 text-xs transition flex items-center gap-1"
-                                  title="Recusar candidatura"
-                                >
-                                  <XCircle className="w-3.5 h-3.5" />
-                                  Recusar
-                                </button>
-                              </div>
-                            ) : (
-                              <span className="text-[11px] text-zinc-500 font-mono">Processado</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))
-                    )}
                   </tbody>
                 </table>
               </div>
@@ -1130,7 +976,7 @@ export default function AdminDashboardPage() {
             <div className="glass-panel p-6 rounded-xl border border-zinc-800">
               <h3 className="text-base font-bold text-white mb-2">Relatório de Vendas Fechadas e Repasse Pix</h3>
               <p className="text-xs text-zinc-400">
-                Cada site ativado gera uma receita de R$ 600,00, da qual <strong>R$ 200,00</strong> é creditada diretamente ao Operador comercial.
+                Modelo SaaS: Cada assinatura ativa gera R$ 29,90/mês, com repasse mensal recorrente de R$ 10,00 para o operador parceiro enquanto o cliente estiver adimplente.
               </p>
             </div>
 
@@ -1142,8 +988,8 @@ export default function AdminDashboardPage() {
                       <th className="py-3 px-4">Data / ID</th>
                       <th className="py-3 px-4">Operador</th>
                       <th className="py-3 px-4">Cliente / Nicho</th>
-                      <th className="py-3 px-4">Valor Total</th>
-                      <th className="py-3 px-4">Comissão Operador</th>
+                      <th className="py-3 px-4">Plano Mensal</th>
+                      <th className="py-3 px-4">Repasse Operador</th>
                       <th className="py-3 px-4">Status do Pix</th>
                       <th className="py-3 px-4 text-right">Ação Financeira</th>
                     </tr>

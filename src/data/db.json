@@ -101,23 +101,7 @@
       "createdAt": "2026-11-06T04:32:21.337Z"
     }
   ],
-  "sales": [
-    {
-      "id": "SALE-201",
-      "operatorId": "OP-1001",
-      "operatorName": "Carlos Eduardo Silva",
-      "clientName": "Barbearia Don Corleone",
-      "clientWhatsapp": "(11) 99111-2233",
-      "siteUrl": "https://barbearia-don-corleone.billy.app",
-      "niche": "Barbearia & Estética",
-      "saleValue": 600,
-      "commissionValue": 200,
-      "pixStatus": "PAGO",
-      "pixPaidAt": "2026-11-06T04:32:21.337Z",
-      "pixProof": "E2E-PIX-98827361726354",
-      "createdAt": "2026-11-06T04:32:21.337Z"
-    }
-  ],
+  "sales": [],
   "adminSettings": {
     "geminiApiKey": "",
     "geminiModel": "gemini-3.8-flash",

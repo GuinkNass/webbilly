@@ -5,7 +5,7 @@ import { findOrCreateCustomer, createSubscription } from '@/services/asaas';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    return await handleCreateCheckout(body);
+    return await handleCreateCheckout(req, body);
   } catch (err: any) {
     console.error('[create-checkout error]:', err);
     return NextResponse.json(
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
         searchParams.get('token') ||
         ''
     };
-    return await handleCreateCheckout(body);
+    return await handleCreateCheckout(req, body);
   } catch (err: any) {
     console.error('[create-checkout GET error]:', err);
     return NextResponse.json(
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-async function handleCreateCheckout(body: any) {
+async function handleCreateCheckout(req: NextRequest, body: any) {
   const db = readDb();
   if (!Array.isArray(db.subscriptions)) {
     db.subscriptions = [];
@@ -166,6 +166,16 @@ async function handleCreateCheckout(body: any) {
   }
 
   writeDb(db);
+
+  const acceptHeader = req.headers.get('accept') || '';
+  const isBrowserRequest =
+    req.method === 'GET' ||
+    acceptHeader.includes('text/html') ||
+    !acceptHeader.includes('application/json');
+
+  if (isBrowserRequest && sub.checkoutUrl) {
+    return NextResponse.redirect(sub.checkoutUrl, 302);
+  }
 
   return NextResponse.json({
     success: true,

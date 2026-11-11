@@ -359,36 +359,7 @@ function getDefaultDatabase(): DatabaseSchema {
         createdAt: new Date(Date.now() - 86400000 * 7).toISOString()
       }
     ],
-    sales: [
-      {
-        id: 'SALE-201',
-        operatorId: 'OP-1001',
-        operatorName: 'Carlos Eduardo Silva',
-        clientName: 'Barbearia Don Corleone',
-        clientWhatsapp: '(11) 99111-2233',
-        siteUrl: 'https://barbearia-don-corleone.billy.app',
-        niche: 'Barbearia & Estética',
-        saleValue: 600,
-        commissionValue: 200,
-        pixStatus: 'PAGO',
-        pixPaidAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-        pixProof: 'E2E-PIX-98827361726354',
-        createdAt: new Date(Date.now() - 86400000 * 3).toISOString()
-      },
-      {
-        id: 'SALE-202',
-        operatorId: 'OP-1001',
-        operatorName: 'Carlos Eduardo Silva',
-        clientName: 'Dra. Camila Odontologia Estética',
-        clientWhatsapp: '(11) 99222-3344',
-        siteUrl: 'https://dra-camila-odonto.billy.app',
-        niche: 'Dentista & Saúde',
-        saleValue: 600,
-        commissionValue: 200,
-        pixStatus: 'PENDENTE',
-        createdAt: new Date(Date.now() - 3600000 * 6).toISOString()
-      }
-    ],
+    sales: [],
     adminSettings: {
       geminiApiKey: '',
       geminiModel: 'gemini-3.8-flash',
