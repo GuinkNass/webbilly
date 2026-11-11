@@ -86,17 +86,29 @@ export async function GET(req: NextRequest) {
         createdAt: op.createdAt
       })),
       licenses: db.licenses.map(lic => {
-        const op = db.operators.find(o => ((o.serialToken || '').trim().toUpperCase() === (lic.serialToken || '').trim().toUpperCase()) || o.id === lic.operatorId);
+        const cleanSerial = (lic.serialToken || '').trim().toUpperCase();
+        const op = db.operators.find(o => 
+          ((o.serialToken || '').trim().toUpperCase() === cleanSerial) || 
+          (lic.operatorId && o.id === lic.operatorId)
+        );
+        const resolvedEmail = op?.email || lic.operatorEmail || (lic as any).email || null;
+        const resolvedName = op?.name || lic.operatorName || (lic.status === 'pending_activation' || lic.status === 'pending_onboarding' ? 'Aguardando Onboarding' : 'Não vinculado');
+        const isActive = lic.status === 'active' || lic.status === 'ATIVO' || op?.status === 'ATIVO';
+
         return {
           ...lic,
-          cpf: op?.cpf || null,
-          email: op?.email || null,
-          whatsapp: op?.whatsapp || null,
-          pixType: op?.pixType || null,
-          pixKey: op?.pixKey || null,
+          operatorName: resolvedName,
+          operatorEmail: resolvedEmail,
+          email: resolvedEmail,
+          cpf: op?.cpf || (lic as any).cpf || null,
+          whatsapp: op?.whatsapp || (lic as any).whatsapp || null,
+          pixType: op?.pixType || (lic as any).pixType || null,
+          pixKey: op?.pixKey || (lic as any).pixKey || null,
           tempPasswordPlain: op?.tempPasswordPlain || null,
           mustChangePassword: op?.mustChangePassword ?? false,
-          operatorName: op?.name || lic.operatorName || (lic.status === 'pending_activation' || lic.status === 'pending_onboarding' ? 'Aguardando Onboarding' : 'Não vinculado')
+          machineId: lic.machineId || op?.machineId || null,
+          lastSync: lic.lastSync || op?.lastSync || null,
+          status: isActive ? 'active' : lic.status
         };
       }),
       sales: db.sales,

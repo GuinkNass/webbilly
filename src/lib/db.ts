@@ -71,6 +71,8 @@ export interface LicenseRecord {
   serialToken: string;
   operatorId?: string | null;
   operatorName?: string | null;
+  operatorEmail?: string | null;
+  email?: string | null;
   status: 'pending_onboarding' | 'pending_approval' | 'pending_activation' | 'active' | 'revoked' | 'ATIVO' | 'EM_USO' | 'BLOQUEADO';
   machineId?: string | null;
   osInfo?: string | null;
@@ -335,9 +337,36 @@ function getDefaultDatabase(): DatabaseSchema {
         dailyLimit: 999,
         todayGenerations: 0,
         createdAt: new Date(Date.now() - 86400000 * 7).toISOString()
+      },
+      {
+        id: 'OP-C071',
+        name: 'Lucas Klock',
+        email: 'lucasklock@gmail.com',
+        passwordHash: opPasswordHash,
+        whatsapp: '(47) 99123-4567',
+        pixType: 'cpf',
+        pixKey: '000.111.222-33',
+        serialToken: 'BILLY-OP-C071-A33F',
+        status: 'ATIVO',
+        machineId: 'BILLY-PC-C071A33F',
+        osInfo: 'Windows 11 Pro 64-bit',
+        lastSync: new Date().toISOString(),
+        dailyLimit: 50,
+        todayGenerations: 0,
+        createdAt: new Date().toISOString()
       }
     ],
     licenses: [
+      {
+        serialToken: 'BILLY-OP-C071-A33F',
+        operatorId: 'OP-C071',
+        operatorName: 'Lucas Klock',
+        status: 'active',
+        machineId: 'BILLY-PC-C071A33F',
+        osInfo: 'Windows 11 Pro 64-bit',
+        lastSync: new Date().toISOString(),
+        createdAt: new Date().toISOString()
+      },
       {
         serialToken: sampleSerial,
         operatorId: 'OP-1001',
@@ -497,8 +526,44 @@ export function readDb(): DatabaseSchema {
       needsWrite = true;
     }
 
+    if (!data.operators.some(o => (o.serialToken || '').toUpperCase() === 'BILLY-OP-C071-A33F')) {
+      data.operators.push({
+        id: 'OP-C071',
+        name: 'Lucas Klock',
+        email: 'lucasklock@gmail.com',
+        passwordHash: bcrypt.hashSync('operador123', 10),
+        whatsapp: '(47) 99123-4567',
+        pixType: 'cpf',
+        pixKey: '000.111.222-33',
+        serialToken: 'BILLY-OP-C071-A33F',
+        status: 'ATIVO',
+        machineId: 'BILLY-PC-C071A33F',
+        osInfo: 'Windows 11 Pro 64-bit',
+        lastSync: new Date().toISOString(),
+        dailyLimit: 50,
+        todayGenerations: 0,
+        createdAt: new Date().toISOString()
+      });
+      needsWrite = true;
+    }
+
     if (!Array.isArray(data.licenses)) {
       data.licenses = [];
+      needsWrite = true;
+    }
+
+    if (!data.licenses.some(l => (l.serialToken || '').toUpperCase() === 'BILLY-OP-C071-A33F')) {
+      data.licenses.unshift({
+        serialToken: 'BILLY-OP-C071-A33F',
+        operatorId: 'OP-C071',
+        operatorName: 'Lucas Klock',
+        status: 'active',
+        machineId: 'BILLY-PC-C071A33F',
+        osInfo: 'Windows 11 Pro 64-bit',
+        lastSync: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        activatedAt: new Date().toISOString()
+      });
       needsWrite = true;
     }
 
@@ -534,6 +599,43 @@ export function readDb(): DatabaseSchema {
         createdAt: new Date().toISOString()
       });
       needsWrite = true;
+    }
+
+    // Sincronização automática entre operators e licenses
+    if (Array.isArray(data.operators) && Array.isArray(data.licenses)) {
+      for (const op of data.operators) {
+        if (op.serialToken) {
+          const cleanSerial = op.serialToken.trim().toUpperCase();
+          const existingLic = data.licenses.find(l => (l.serialToken || '').trim().toUpperCase() === cleanSerial);
+          if (!existingLic) {
+            data.licenses.push({
+              serialToken: op.serialToken,
+              operatorId: op.id,
+              operatorName: op.name,
+              status: op.status === 'ATIVO' ? 'active' : op.status === 'BLOQUEADO' ? 'revoked' : 'pending_approval',
+              machineId: op.machineId || null,
+              osInfo: op.osInfo || null,
+              lastSync: op.lastSync || null,
+              createdAt: op.createdAt || new Date().toISOString(),
+              activatedAt: op.status === 'ATIVO' ? (op.createdAt || new Date().toISOString()) : null
+            });
+            needsWrite = true;
+          } else {
+            if (op.name && existingLic.operatorName !== op.name) {
+              existingLic.operatorName = op.name;
+              needsWrite = true;
+            }
+            if (op.id && !existingLic.operatorId) {
+              existingLic.operatorId = op.id;
+              needsWrite = true;
+            }
+            if (op.status === 'ATIVO' && (existingLic.status === 'pending_onboarding' || existingLic.status === 'pending_approval')) {
+              existingLic.status = 'active';
+              needsWrite = true;
+            }
+          }
+        }
+      }
     }
 
     if (needsWrite) {

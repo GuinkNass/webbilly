@@ -66,9 +66,37 @@
       "dailyLimit": 999,
       "todayGenerations": 0,
       "createdAt": "2026-11-06T04:32:21.337Z"
+    },
+    {
+      "id": "OP-C071",
+      "name": "Lucas Klock",
+      "email": "lucasklock@gmail.com",
+      "passwordHash": "$2a$10$QK0t7Xx1/kp9Aeq7gZDIcOgWiv67Ql8zUA9je.iLBdcvKqaizufSS",
+      "whatsapp": "(47) 99123-4567",
+      "pixType": "cpf",
+      "pixKey": "000.111.222-33",
+      "serialToken": "BILLY-OP-C071-A33F",
+      "status": "ATIVO",
+      "machineId": "BILLY-PC-C071A33F",
+      "osInfo": "Windows 11 Pro 64-bit",
+      "lastSync": "2026-11-10T18:00:00.000Z",
+      "dailyLimit": 50,
+      "todayGenerations": 0,
+      "createdAt": "2026-11-10T12:00:00.000Z"
     }
   ],
   "licenses": [
+    {
+      "serialToken": "BILLY-OP-C071-A33F",
+      "operatorId": "OP-C071",
+      "operatorName": "Lucas Klock",
+      "status": "active",
+      "machineId": "BILLY-PC-C071A33F",
+      "osInfo": "Windows 11 Pro 64-bit",
+      "lastSync": "2026-11-10T18:00:00.000Z",
+      "createdAt": "2026-11-10T12:00:00.000Z",
+      "activatedAt": "2026-11-10T12:00:00.000Z"
+    },
     {
       "serialToken": "BILLY-OP-6A42-08A9",
       "operatorId": "OP-6A42",

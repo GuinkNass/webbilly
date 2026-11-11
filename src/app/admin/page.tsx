@@ -87,6 +87,19 @@ export default function AdminDashboardPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
 
+      // Sincronização dinâmica direta via /api/admin/licenses
+      try {
+        const licRes = await fetch('/api/admin/licenses');
+        if (licRes.ok) {
+          const licJson = await licRes.json();
+          if (Array.isArray(licJson.licenses)) {
+            json.licenses = licJson.licenses;
+          }
+        }
+      } catch (licErr) {
+        console.warn('Falha ao sincronizar /api/admin/licenses:', licErr);
+      }
+
       setData(json);
       setApiSettings(json.settings);
     } catch (err: any) {
@@ -535,7 +548,7 @@ export default function AdminDashboardPage() {
       {/* =========================================================================
           3. ÁREA DE CONTEÚDO PRINCIPAL (COM PADDING TOP E LEFT)
          ========================================================================= */}
-      <main className="ml-64 pt-20 p-6 lg:p-8 flex-1 min-h-screen overflow-x-hidden">
+      <main className="ml-64 pt-24 pb-12 p-6 lg:p-8 flex-1 min-h-screen overflow-x-hidden">
         
         {/* Banner de Feedback */}
         {actionSuccess && (
@@ -880,8 +893,22 @@ export default function AdminDashboardPage() {
                               </div>
                             </td>
                             <td className="py-4 px-4">
-                              <span className="font-semibold text-white block">{lic.operatorName || 'Chave Virgem (Sem Nome)'}</span>
-                              <span className="text-[11px] text-zinc-400">{lic.operatorEmail || 'Aguardando preenchimento no app'}</span>
+                              <span className="font-semibold text-white block">
+                                {lic.operatorName && lic.operatorName !== 'Aguardando Onboarding'
+                                  ? lic.operatorName
+                                  : isVirgin
+                                  ? 'Chave Virgem (Sem Nome)'
+                                  : 'Operador Não Identificado'}
+                              </span>
+                              <div className="text-[11px] mt-0.5">
+                                {(lic.operatorEmail || lic.email) ? (
+                                  <span className="text-zinc-300 font-mono text-[11px] font-medium">{lic.operatorEmail || lic.email}</span>
+                                ) : isVirgin ? (
+                                  <span className="text-amber-400/90 font-medium italic text-[10px]">Aguardando preenchimento no app</span>
+                                ) : (
+                                  <span className="text-zinc-500 text-[10px]">E-mail não cadastrado</span>
+                                )}
+                              </div>
                             </td>
                             <td className="py-4 px-4 font-mono text-xs">
                               {lic.pixKey ? (
