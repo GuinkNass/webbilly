@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import DashboardCharts from '@/components/DashboardCharts';
 import {
   Key,
   Copy,
@@ -161,22 +162,22 @@ export default function OperatorDashboardPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#090b0e] text-zinc-100 flex font-sans antialiased select-none">
+    <div className="min-h-screen bg-[#0a0c10] text-zinc-100 flex font-sans antialiased select-none">
       
       {/* =========================================================================
           1. SIDEBAR LATERAL ESQUERDA FIXA (SYNADMIN ARCHITECTURE)
          ========================================================================= */}
-      <aside className="w-64 fixed left-0 top-0 bottom-0 bg-[#0f121a] border-r border-white/[0.08] flex flex-col justify-between z-40">
+      <aside className="w-64 fixed left-0 top-0 bottom-0 bg-[#0f121a] border-r border-white/[0.06] flex flex-col justify-between z-40">
         <div>
           {/* Logo & Brand Header */}
-          <div className="h-16 px-5 border-b border-white/[0.08] flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500/20 via-teal-500/20 to-indigo-500/20 border border-emerald-500/30 flex items-center justify-center font-black text-emerald-400 text-lg shadow-md shadow-emerald-500/10">
+          <div className="h-16 px-5 border-b border-white/[0.06] flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-emerald-950/60 border border-emerald-800/40 flex items-center justify-center font-black text-emerald-400 text-lg">
               B
             </div>
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-sm text-white tracking-tight">Billy Suite</span>
-                <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-mono">
+                <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 font-mono">
                   {op?.id || 'OPERADOR'}
                 </span>
               </div>
@@ -194,7 +195,7 @@ export default function OperatorDashboardPage() {
                 onClick={() => setActiveTab('overview')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
                   activeTab === 'overview'
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-600/30'
+                    ? 'bg-emerald-600/90 text-white font-medium border border-emerald-500/30'
                     : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
@@ -203,7 +204,7 @@ export default function OperatorDashboardPage() {
                   <span>Download do App & Guia</span>
                 </div>
                 <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
-                  activeTab === 'overview' ? 'bg-white/20 text-white' : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                  activeTab === 'overview' ? 'bg-white/20 text-white' : 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/40'
                 }`}>
                   v2.0.4
                 </span>
@@ -213,7 +214,7 @@ export default function OperatorDashboardPage() {
                 onClick={() => setActiveTab('subscriptions')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
                   activeTab === 'subscriptions'
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-600/30'
+                    ? 'bg-emerald-600/90 text-white font-medium border border-emerald-500/30'
                     : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
@@ -232,7 +233,7 @@ export default function OperatorDashboardPage() {
                 onClick={() => setActiveTab('training')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
                   activeTab === 'training'
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-600/30'
+                    ? 'bg-emerald-600/90 text-white font-medium border border-emerald-500/30'
                     : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
@@ -241,7 +242,7 @@ export default function OperatorDashboardPage() {
                   <span>Área de Treinamento</span>
                 </div>
                 <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
-                  activeTab === 'training' ? 'bg-white/20 text-white' : 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/30'
+                  activeTab === 'training' ? 'bg-white/20 text-white' : 'bg-indigo-950/40 text-indigo-300 border border-indigo-800/40'
                 }`}>
                   4 Aulas
                 </span>
@@ -251,7 +252,7 @@ export default function OperatorDashboardPage() {
                 onClick={() => setActiveTab('sales')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
                   activeTab === 'sales'
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-600/30'
+                    ? 'bg-emerald-600/90 text-white font-medium border border-emerald-500/30'
                     : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
@@ -260,7 +261,7 @@ export default function OperatorDashboardPage() {
                   <span>Minhas Vendas & Pix</span>
                 </div>
                 <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
-                  activeTab === 'sales' ? 'bg-white/20 text-white' : 'bg-emerald-500/15 text-emerald-400'
+                  activeTab === 'sales' ? 'bg-white/20 text-white' : 'bg-emerald-950/40 text-emerald-400'
                 }`}>
                   R$ {(stats?.monthlyCommissionMRR ?? ((stats?.activeSubscriptionsCount ?? 0) * 10)).toLocaleString('pt-BR')}
                 </span>
@@ -327,8 +328,8 @@ export default function OperatorDashboardPage() {
         {/* Ações da Topbar */}
         <div className="flex items-center gap-3">
           {/* Status Asaas */}
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs font-semibold">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 text-xs font-semibold">
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
             <span>Asaas v3 Conectado</span>
           </div>
 
@@ -352,7 +353,7 @@ export default function OperatorDashboardPage() {
           {(data?.isMaster || op?.email === 'admin@billysuite.com.br' || op?.id === 'OP-0001') && (
             <Link
               href="/admin"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:brightness-110 shadow-md shadow-indigo-600/20 transition"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600/90 hover:bg-indigo-600 text-white border border-indigo-500/30 transition"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Painel Master Admin</span>
@@ -370,7 +371,7 @@ export default function OperatorDashboardPage() {
 
           {/* Perfil Operador */}
           <div className="flex items-center gap-2.5 pl-3 border-l border-white/[0.08]">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-bold text-xs flex items-center justify-center shadow-md">
+            <div className="w-8 h-8 rounded-xl bg-emerald-950/60 border border-emerald-800/40 text-emerald-400 font-bold text-xs flex items-center justify-center">
               {op?.name?.substring(0, 2)?.toUpperCase() || 'OP'}
             </div>
             <div className="hidden md:block text-left">
@@ -384,13 +385,13 @@ export default function OperatorDashboardPage() {
       {/* =========================================================================
           3. ÁREA DE CONTEÚDO PRINCIPAL (COM MARGEM ESQUERDA DA SIDEBAR)
          ========================================================================= */}
-      <main className="ml-64 pt-24 pb-12 p-6 lg:p-8 min-h-screen bg-[#090b0e] flex-1">
+      <main className="ml-64 pt-24 pb-12 p-6 lg:p-8 min-h-screen bg-[#0a0c10] flex-1">
         
         {/* BANNER DO SERIAL TOKEN DE ATIVAÇÃO HARDWARE-LOCK */}
-        <div className="bg-[#0f121a] p-6 rounded-2xl border border-white/[0.08] shadow-xl mb-6">
+        <div className="bg-[#11141c] p-6 rounded-2xl border border-white/[0.06] mb-6">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div>
-              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold mb-2">
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 text-xs font-bold mb-2">
                 <Key className="w-3.5 h-3.5" />
                 Seu Token Serial Oficial do Billy Suite Desktop
               </div>
@@ -400,7 +401,7 @@ export default function OperatorDashboardPage() {
                 </span>
                 <button
                   onClick={handleCopySerial}
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-lg shadow-emerald-600/20 cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl bg-emerald-600/90 hover:bg-emerald-600 text-white font-medium text-xs transition flex items-center gap-1.5 border border-emerald-500/30 cursor-pointer"
                 >
                   <Copy className="w-4 h-4" />
                   {copied ? 'Serial Copiado!' : 'Copiar Serial'}
@@ -411,11 +412,11 @@ export default function OperatorDashboardPage() {
               </p>
             </div>
 
-            <div className="bg-[#141824] border border-white/[0.08] rounded-xl p-4 text-xs space-y-2 shrink-0 min-w-[280px]">
+            <div className="bg-[#141824] border border-white/[0.06] rounded-xl p-4 text-xs space-y-2 shrink-0 min-w-[280px]">
               <div className="flex justify-between items-center">
                 <span className="text-zinc-400">Status da Licença:</span>
-                <span className="font-bold text-emerald-400 flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="font-semibold text-emerald-400 flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
                   {license?.status || op?.status || 'ATIVO'}
                 </span>
               </div>
@@ -436,7 +437,7 @@ export default function OperatorDashboardPage() {
         {/* 4 CARDS SYNADMIN KPI WIDGETS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
           {/* Card 1: Sites Ativos */}
-          <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.08] shadow-md flex items-center justify-between">
+          <div className="p-5 rounded-2xl bg-[#11141c] border border-white/[0.06] flex items-center justify-between">
             <div>
               <span className="text-[11px] uppercase font-bold tracking-wider text-sky-400">Sites Ativos (SaaS)</span>
               <div className="text-2xl font-black text-white mt-1 tracking-tight">
@@ -444,13 +445,13 @@ export default function OperatorDashboardPage() {
               </div>
               <span className="text-[11px] text-zinc-400 font-medium">Publicados no subdomínio</span>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-sky-400 flex items-center justify-center shrink-0">
               <Globe className="w-6 h-6" />
             </div>
           </div>
 
           {/* Card 2: Repasse Mensal */}
-          <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.08] shadow-md flex items-center justify-between">
+          <div className="p-5 rounded-2xl bg-[#11141c] border border-white/[0.06] flex items-center justify-between">
             <div>
               <span className="text-[11px] uppercase font-bold tracking-wider text-emerald-400">Repasse Mensal Recorrente</span>
               <div className="text-2xl font-black text-emerald-400 mt-1 tracking-tight">
@@ -458,13 +459,13 @@ export default function OperatorDashboardPage() {
               </div>
               <span className="text-[11px] text-zinc-400 font-medium">R$ 10,00/mês por cliente ativo</span>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-emerald-400 flex items-center justify-center shrink-0">
               <TrendingUp className="w-6 h-6" />
             </div>
           </div>
 
           {/* Card 3: Total Liquidado */}
-          <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.08] shadow-md flex items-center justify-between">
+          <div className="p-5 rounded-2xl bg-[#11141c] border border-white/[0.06] flex items-center justify-between">
             <div>
               <span className="text-[11px] uppercase font-bold tracking-wider text-teal-400">Total Liquidado</span>
               <div className="text-2xl font-black text-teal-400 mt-1 tracking-tight">
@@ -472,13 +473,13 @@ export default function OperatorDashboardPage() {
               </div>
               <span className="text-[11px] text-zinc-400 font-medium">Histórico repassado via Pix</span>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-teal-500/15 border border-teal-500/30 text-teal-400 flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-teal-400 flex items-center justify-center shrink-0">
               <DollarSign className="w-6 h-6" />
             </div>
           </div>
 
           {/* Card 4: Chave Pix */}
-          <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.08] shadow-md flex items-center justify-between">
+          <div className="p-5 rounded-2xl bg-[#11141c] border border-white/[0.06] flex items-center justify-between">
             <div className="min-w-0 pr-2">
               <span className="text-[11px] uppercase font-bold tracking-wider text-amber-400">Chave Pix Cadastrada</span>
               <div className="text-sm font-black text-white mt-1 truncate">
@@ -486,11 +487,20 @@ export default function OperatorDashboardPage() {
               </div>
               <span className="text-[11px] text-zinc-400 uppercase font-medium">{op?.pixType || 'Pix'} registrado</span>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-amber-400 flex items-center justify-center shrink-0">
               <Key className="w-6 h-6" />
             </div>
           </div>
         </div>
+
+        {/* =====================================================================
+            SEÇÃO MODULAR: 3 GRÁFICOS ANALÍTICOS (SYNADMIN STYLE)
+           ===================================================================== */}
+        <DashboardCharts
+          mode="operador"
+          subscriptions={data?.subscriptions}
+          operatorStats={stats}
+        />
 
         {/* =========================================================================
             ABA 1: DOWNLOAD DO INSTALADOR E GUIA RÁPIDO
@@ -499,9 +509,9 @@ export default function OperatorDashboardPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Card de Download */}
-              <div className="p-6 rounded-2xl bg-[#0f121a] border border-white/[0.08] shadow-xl flex flex-col justify-between">
+              <div className="p-6 rounded-2xl bg-[#11141c] border border-white/[0.06] flex flex-col justify-between">
                 <div>
-                  <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-emerald-400 flex items-center justify-center mb-4">
                     <Laptop className="w-6 h-6" />
                   </div>
                   <h3 className="text-lg font-bold text-white">Instalador Oficial Billy Suite Desktop</h3>
@@ -526,7 +536,7 @@ export default function OperatorDashboardPage() {
                   <a
                     href={data?.installer?.downloadUrl || '/Billy-Suite-Setup.exe'}
                     download
-                    className="w-full py-3.5 rounded-xl font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 transition shadow-xl shadow-emerald-600/20 flex items-center justify-center gap-2 text-sm"
+                    className="w-full py-3.5 rounded-xl font-medium text-white bg-emerald-600 hover:bg-emerald-500 transition border border-emerald-500/30 flex items-center justify-center gap-2 text-sm cursor-pointer"
                   >
                     <Download className="w-4 h-4" />
                     Baixar Billy Suite Desktop (.exe)
@@ -535,7 +545,7 @@ export default function OperatorDashboardPage() {
               </div>
 
               {/* Guia Rápido de Instalação */}
-              <div className="p-6 rounded-2xl bg-[#0f121a] border border-white/[0.08] shadow-xl">
+              <div className="p-6 rounded-2xl bg-[#11141c] border border-white/[0.06]">
                 <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-emerald-400" />
                   Passo a Passo de Instalação & Ativação
@@ -643,12 +653,12 @@ export default function OperatorDashboardPage() {
                           </td>
                           <td className="py-3.5 px-4">
                             <span
-                              className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+                              className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border ${
                                 sub.status === 'active'
-                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                  ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/40'
                                   : sub.status === 'suspended'
-                                  ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
-                                  : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                                  ? 'bg-rose-950/40 text-rose-400 border-rose-800/40'
+                                  : 'bg-amber-950/40 text-amber-400 border-amber-800/40'
                               }`}
                             >
                               {sub.status === 'active' ? '● No Ar (Ativo)' : sub.status === 'suspended' ? '● Suspenso (Inadimplente)' : '● Pendente'}
@@ -755,12 +765,12 @@ export default function OperatorDashboardPage() {
                       onClick={() => setSelectedVideo(mod)}
                       className={`w-full text-left p-4 rounded-xl border transition flex items-start gap-3 cursor-pointer ${
                         isCurrent
-                          ? 'bg-emerald-500/15 border-emerald-500/50 text-white shadow-lg shadow-emerald-500/10'
-                          : 'bg-[#0f121a] border-white/[0.06] text-zinc-400 hover:bg-[#141824] hover:text-zinc-200'
+                          ? 'bg-emerald-950/40 border-emerald-800/60 text-white'
+                          : 'bg-[#11141c] border-white/[0.06] text-zinc-400 hover:bg-[#141824] hover:text-zinc-200'
                       }`}
                     >
                       <div className={`p-2 rounded-lg shrink-0 mt-0.5 ${
-                        isCurrent ? 'bg-emerald-500 text-white' : 'bg-zinc-800 text-zinc-400'
+                        isCurrent ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-400'
                       }`}>
                         <PlayCircle className="w-4 h-4" />
                       </div>
@@ -783,7 +793,7 @@ export default function OperatorDashboardPage() {
            ========================================================================= */}
         {activeTab === 'sales' && (
           <div className="space-y-6">
-            <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.08] shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="p-5 rounded-2xl bg-[#11141c] border border-white/[0.06] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider block">
                   Chave Pix Cadastrada para Recebimento
@@ -797,7 +807,7 @@ export default function OperatorDashboardPage() {
               </div>
             </div>
 
-            <div className="bg-[#0f121a] rounded-2xl border border-white/[0.08] shadow-xl overflow-hidden">
+            <div className="bg-[#11141c] rounded-2xl border border-white/[0.06] overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-[#141824] text-zinc-400 uppercase font-mono text-[11px] border-b border-white/[0.08]">
@@ -848,10 +858,10 @@ export default function OperatorDashboardPage() {
                           </td>
                           <td className="py-3.5 px-4 text-right">
                             <span
-                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
                                 s.pixStatus === 'PAGO'
-                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                                  ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/40'
+                                  : 'bg-amber-950/40 text-amber-400 border border-amber-800/40'
                               }`}
                             >
                               {s.pixStatus === 'PAGO' ? 'Comissão Paga via Pix' : 'Aguardando Pagamento Pix'}
@@ -971,7 +981,7 @@ export default function OperatorDashboardPage() {
                   <button
                     type="submit"
                     disabled={passwordLoading}
-                    className="w-full py-3 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 transition shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    className="w-full py-3 rounded-xl font-medium text-xs text-white bg-emerald-600 hover:bg-emerald-500 transition border border-emerald-500/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
                     {passwordLoading ? (
                       <>

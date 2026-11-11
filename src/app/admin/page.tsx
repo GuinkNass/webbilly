@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import DashboardCharts from '@/components/DashboardCharts';
 import {
   Users,
   Key,
@@ -352,22 +353,22 @@ export default function AdminDashboardPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#090b0e] text-zinc-100 flex font-sans antialiased select-none">
+    <div className="min-h-screen bg-[#0a0c10] text-zinc-100 flex font-sans antialiased select-none">
       
       {/* =========================================================================
           1. SIDEBAR LATERAL ESQUERDA (ESTILO SYNADMIN / REACTBOARD)
          ========================================================================= */}
-      <aside className="w-64 fixed left-0 top-0 bottom-0 bg-[#0f121a] border-r border-white/[0.08] flex flex-col justify-between z-40">
+      <aside className="w-64 fixed left-0 top-0 bottom-0 bg-[#0f121a] border-r border-white/[0.06] flex flex-col justify-between z-40">
         <div>
           {/* Logo & Brand Header */}
-          <div className="h-16 px-5 border-b border-white/[0.08] flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500/20 via-indigo-500/20 to-teal-500/20 border border-emerald-500/30 flex items-center justify-center font-black text-emerald-400 text-lg shadow-md shadow-emerald-500/10">
+          <div className="h-16 px-5 border-b border-white/[0.06] flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-950/60 border border-indigo-800/40 flex items-center justify-center font-black text-indigo-400 text-lg">
               W
             </div>
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-sm text-white tracking-tight">Webbilly</span>
-                <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-mono">
+                <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-indigo-950/60 text-indigo-300 border border-indigo-800/40 font-mono">
                   MASTER
                 </span>
               </div>
@@ -385,7 +386,7 @@ export default function AdminDashboardPage() {
                 onClick={() => setActiveTab('subscriptions')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
                   activeTab === 'subscriptions'
-                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-600/30'
+                    ? 'bg-indigo-600/90 text-white font-medium border border-indigo-500/30'
                     : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
@@ -394,7 +395,7 @@ export default function AdminDashboardPage() {
                   <span>Assinaturas SaaS</span>
                 </div>
                 <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
-                  activeTab === 'subscriptions' ? 'bg-white/20 text-white' : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                  activeTab === 'subscriptions' ? 'bg-white/20 text-white' : 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/40'
                 }`}>
                   {data?.subscriptions?.length || 0}
                 </span>
@@ -404,7 +405,7 @@ export default function AdminDashboardPage() {
                 onClick={() => setActiveTab('licenses')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
                   activeTab === 'licenses'
-                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-600/30'
+                    ? 'bg-indigo-600/90 text-white font-medium border border-indigo-500/30'
                     : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
@@ -423,7 +424,7 @@ export default function AdminDashboardPage() {
                 onClick={() => setActiveTab('financial')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
                   activeTab === 'financial'
-                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-600/30'
+                    ? 'bg-indigo-600/90 text-white font-medium border border-indigo-500/30'
                     : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
@@ -437,7 +438,7 @@ export default function AdminDashboardPage() {
                 onClick={() => setActiveTab('apis')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
                   activeTab === 'apis'
-                    ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-600/30'
+                    ? 'bg-indigo-600/90 text-white font-medium border border-indigo-500/30'
                     : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                 }`}
               >
@@ -504,8 +505,8 @@ export default function AdminDashboardPage() {
         {/* Lado Direito da Topbar */}
         <div className="flex items-center gap-3">
           {/* Badge Conexão Asaas */}
-          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-950/40 text-emerald-400 border border-emerald-800/40">
+            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
             Asaas v3 Conectado
           </span>
 
@@ -534,7 +535,7 @@ export default function AdminDashboardPage() {
 
           {/* Avatar / Perfil Admin */}
           <div className="flex items-center gap-2 pl-2 border-l border-white/[0.08]">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+            <div className="w-8 h-8 rounded-full bg-indigo-900/80 border border-indigo-700/50 flex items-center justify-center text-white text-xs font-bold">
               AD
             </div>
             <div className="hidden lg:block text-left">
@@ -548,11 +549,11 @@ export default function AdminDashboardPage() {
       {/* =========================================================================
           3. ÁREA DE CONTEÚDO PRINCIPAL (COM PADDING TOP E LEFT)
          ========================================================================= */}
-      <main className="ml-64 pt-24 pb-12 p-6 lg:p-8 flex-1 min-h-screen overflow-x-hidden">
+      <main className="ml-64 pt-24 pb-12 p-6 lg:p-8 flex-1 min-h-screen bg-[#0a0c10] overflow-x-hidden">
         
         {/* Banner de Feedback */}
         {actionSuccess && (
-          <div className="mb-6 p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center gap-2 animate-fade-in shadow-lg shadow-emerald-500/5">
+          <div className="mb-6 p-4 rounded-2xl bg-emerald-950/40 border border-emerald-800/40 text-emerald-300 text-xs font-semibold flex items-center gap-2 animate-fade-in">
             <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>{actionSuccess}</span>
           </div>
@@ -564,7 +565,7 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
           
           {/* KPI 1: Sites Ativos */}
-          <div className="bg-[#11141c] p-5 rounded-2xl border border-white/[0.06] shadow-xl flex items-center justify-between group hover:border-emerald-500/30 transition">
+          <div className="bg-[#11141c] p-5 rounded-2xl border border-white/[0.06] flex items-center justify-between group hover:border-white/[0.12] transition">
             <div>
               <span className="text-[11px] uppercase tracking-wider text-zinc-400 font-bold block mb-1">
                 Sites Ativos (Subdomínio)
@@ -578,13 +579,13 @@ export default function AdminDashboardPage() {
                 <span>100% adimplentes no ar</span>
               </div>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 flex items-center justify-center shrink-0 shadow-md shadow-emerald-500/10 group-hover:scale-105 transition">
+            <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-emerald-400 flex items-center justify-center shrink-0">
               <Globe className="w-6 h-6" />
             </div>
           </div>
 
           {/* KPI 2: MRR Recorrente */}
-          <div className="bg-[#11141c] p-5 rounded-2xl border border-white/[0.06] shadow-xl flex items-center justify-between group hover:border-teal-500/30 transition">
+          <div className="bg-[#11141c] p-5 rounded-2xl border border-white/[0.06] flex items-center justify-between group hover:border-white/[0.12] transition">
             <div>
               <span className="text-[11px] uppercase tracking-wider text-zinc-400 font-bold block mb-1">
                 MRR Recorrente Total
@@ -596,13 +597,13 @@ export default function AdminDashboardPage() {
                 <span>R$ 29,90/mês por comércio</span>
               </div>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-teal-500/15 border border-teal-500/25 text-teal-400 flex items-center justify-center shrink-0 shadow-md shadow-teal-500/10 group-hover:scale-105 transition">
+            <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-teal-400 flex items-center justify-center shrink-0">
               <CreditCard className="w-6 h-6" />
             </div>
           </div>
 
           {/* KPI 3: Inadimplência */}
-          <div className="bg-[#11141c] p-5 rounded-2xl border border-white/[0.06] shadow-xl flex items-center justify-between group hover:border-rose-500/30 transition">
+          <div className="bg-[#11141c] p-5 rounded-2xl border border-white/[0.06] flex items-center justify-between group hover:border-white/[0.12] transition">
             <div>
               <span className="text-[11px] uppercase tracking-wider text-zinc-400 font-bold block mb-1">
                 Taxa de Inadimplência
@@ -614,13 +615,13 @@ export default function AdminDashboardPage() {
                 {data?.metrics?.totalSuspendedSites || 0} suspensos • {data?.metrics?.totalPendingSites || 0} pendentes
               </div>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-rose-500/15 border border-rose-500/25 text-rose-400 flex items-center justify-center shrink-0 shadow-md shadow-rose-500/10 group-hover:scale-105 transition">
+            <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-rose-400 flex items-center justify-center shrink-0">
               <AlertTriangle className="w-6 h-6" />
             </div>
           </div>
 
           {/* KPI 4: Repasses Operadores */}
-          <div className="bg-[#11141c] p-5 rounded-2xl border border-white/[0.06] shadow-xl flex items-center justify-between group hover:border-indigo-500/30 transition">
+          <div className="bg-[#11141c] p-5 rounded-2xl border border-white/[0.06] flex items-center justify-between group hover:border-white/[0.12] transition">
             <div>
               <span className="text-[11px] uppercase tracking-wider text-zinc-400 font-bold block mb-1">
                 Repasses Operadores/Mês
@@ -632,11 +633,20 @@ export default function AdminDashboardPage() {
                 R$ 10,00/mês por site ativo
               </div>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-indigo-500/15 border border-indigo-500/25 text-indigo-400 flex items-center justify-center shrink-0 shadow-md shadow-indigo-500/10 group-hover:scale-105 transition">
+            <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-indigo-400 flex items-center justify-center shrink-0">
               <Users className="w-6 h-6" />
             </div>
           </div>
         </div>
+
+        {/* =====================================================================
+            SEÇÃO MODULAR: 3 GRÁFICOS ANALÍTICOS (SYNADMIN STYLE)
+           ===================================================================== */}
+        <DashboardCharts
+          mode="admin"
+          subscriptions={data?.subscriptions}
+          metrics={data?.metrics}
+        />
 
         {/* =====================================================================
             TAB 1: GESTÃO DE ASSINATURAS SAAS (SYNADMIN DATATABLE)
@@ -645,13 +655,13 @@ export default function AdminDashboardPage() {
           <div className="space-y-4">
             
             {/* Header da Tabela com Filtros de Pílula */}
-            <div className="bg-[#11141c] p-4 rounded-2xl border border-white/[0.06] shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="bg-[#11141c] p-4 rounded-2xl border border-white/[0.06] flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto">
                 <button
                   onClick={() => setSubFilter('TODOS')}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
                     subFilter === 'TODOS'
-                      ? 'bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/20'
+                      ? 'bg-indigo-600/90 text-white font-medium border border-indigo-500/30'
                       : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                   }`}
                 >
@@ -661,7 +671,7 @@ export default function AdminDashboardPage() {
                   onClick={() => setSubFilter('ACTIVE')}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 ${
                     subFilter === 'ACTIVE'
-                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                      ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/40'
                       : 'text-zinc-400 hover:text-white'
                   }`}
                 >
@@ -672,7 +682,7 @@ export default function AdminDashboardPage() {
                   onClick={() => setSubFilter('SUSPENDED')}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 ${
                     subFilter === 'SUSPENDED'
-                      ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                      ? 'bg-rose-950/40 text-rose-400 border border-rose-800/40'
                       : 'text-zinc-400 hover:text-white'
                   }`}
                 >
@@ -683,7 +693,7 @@ export default function AdminDashboardPage() {
                   onClick={() => setSubFilter('PENDING')}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 ${
                     subFilter === 'PENDING'
-                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                      ? 'bg-amber-950/40 text-amber-400 border border-amber-800/40'
                       : 'text-zinc-400 hover:text-white'
                   }`}
                 >
@@ -706,7 +716,7 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Tabela de Assinaturas Synadmin */}
-            <div className="bg-[#11141c] rounded-2xl border border-white/[0.06] shadow-xl overflow-hidden">
+            <div className="bg-[#11141c] rounded-2xl border border-white/[0.06] overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-white/[0.02] text-zinc-400 uppercase font-mono text-[11px] border-b border-white/[0.06]">
@@ -748,17 +758,17 @@ export default function AdminDashboardPage() {
                           </td>
                           <td className="py-4 px-4">
                             {sub.status === 'active' ? (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-950/40 text-emerald-400 border border-emerald-800/40">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                                 Ativo (Online)
                               </span>
                             ) : sub.status === 'suspended' ? (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-rose-950/40 text-rose-400 border border-rose-800/40">
                                 <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
                                 Suspenso (Inadimplente)
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-950/40 text-amber-400 border border-amber-800/40">
                                 <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                                 Aguardando Pagamento
                               </span>
@@ -842,15 +852,15 @@ export default function AdminDashboardPage() {
 
               <button
                 onClick={handleGenerateSerial}
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-xs bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 transition shadow-lg shadow-emerald-500/20 cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-medium text-xs bg-indigo-600 hover:bg-indigo-500 text-white transition cursor-pointer border border-indigo-500/30"
               >
-                <Plus className="w-4 h-4 stroke-[3]" />
+                <Plus className="w-4 h-4 stroke-[2.5]" />
                 <span>Gerar Nova Chave Serial</span>
               </button>
             </div>
 
             {/* Tabela de Licenças Synadmin */}
-            <div className="bg-[#11141c] rounded-2xl border border-white/[0.06] shadow-xl overflow-hidden">
+            <div className="bg-[#11141c] rounded-2xl border border-white/[0.06] overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-white/[0.02] text-zinc-400 uppercase font-mono text-[11px] border-b border-white/[0.06]">
@@ -939,19 +949,19 @@ export default function AdminDashboardPage() {
                             </td>
                             <td className="py-4 px-4">
                               {isActive ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-950/40 text-emerald-400 border border-emerald-800/40">
                                   ● Ativo
                                 </span>
                               ) : isPendingApproval ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 animate-pulse">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-950/40 text-amber-400 border border-amber-800/40">
                                   ● Aguardando Aprovação
                                 </span>
                               ) : isVirgin ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-900/60 text-zinc-300 border border-zinc-700/50">
                                   ● Chave Virgem
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-950/40 text-rose-400 border border-rose-800/40">
                                   ● Bloqueado
                                 </span>
                               )}
@@ -961,7 +971,7 @@ export default function AdminDashboardPage() {
                                 {isPendingApproval && (
                                   <button
                                     onClick={() => handleApproveOperator(lic.serialToken, lic.operatorId)}
-                                    className="px-3 py-1 rounded-lg text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-zinc-950 transition shadow-md shadow-emerald-500/20"
+                                    className="px-3 py-1 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition border border-emerald-500/30"
                                   >
                                     ✓ Aprovar Operador
                                   </button>
@@ -1055,10 +1065,10 @@ export default function AdminDashboardPage() {
                             R$ 10,00/mês
                           </td>
                           <td className="py-4 px-4">
-                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
                               s.pixStatus === 'PAGO'
-                                ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
-                                : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                                ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/40'
+                                : 'bg-amber-950/40 text-amber-400 border border-amber-800/40'
                             }`}>
                               {s.pixStatus === 'PAGO' ? 'Pix Efetuado' : 'Pix Pendente'}
                             </span>
@@ -1067,7 +1077,7 @@ export default function AdminDashboardPage() {
                             {s.pixStatus === 'PENDENTE' ? (
                               <button
                                 onClick={() => handlePayPixCommission(s.id)}
-                                className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs transition shadow-md shadow-emerald-500/20"
+                                className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition border border-emerald-500/30"
                               >
                                 Pagar Pix
                               </button>
@@ -1090,7 +1100,7 @@ export default function AdminDashboardPage() {
            ===================================================================== */}
         {activeTab === 'apis' && (
           <div className="space-y-6">
-            <div className="bg-[#11141c] p-6 rounded-2xl border border-white/[0.06] shadow-xl">
+            <div className="bg-[#11141c] p-6 rounded-2xl border border-white/[0.06]">
               <h3 className="text-sm font-bold text-white mb-1">Controle Central de Credenciais & APIs</h3>
               <p className="text-xs text-zinc-400 mb-6">
                 Todas as chaves salvas aqui são criptografadas e sincronizadas automaticamente com as máquinas dos operadores no heartbeat do app desktop.
@@ -1148,7 +1158,7 @@ export default function AdminDashboardPage() {
                 <div className="pt-4 flex justify-end">
                   <button
                     type="submit"
-                    className="px-6 py-2.5 rounded-xl font-bold text-xs text-white bg-indigo-600 hover:bg-indigo-500 transition shadow-lg shadow-indigo-600/30 flex items-center gap-2 cursor-pointer"
+                    className="px-6 py-2.5 rounded-xl font-medium text-xs text-white bg-indigo-600 hover:bg-indigo-500 transition border border-indigo-500/30 flex items-center gap-2 cursor-pointer"
                   >
                     <Sliders className="w-4 h-4" />
                     <span>Salvar e Sincronizar Configurações</span>
@@ -1237,7 +1247,7 @@ export default function AdminDashboardPage() {
                 <button
                   type="submit"
                   disabled={changePasswordLoading}
-                  className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition shadow-md shadow-indigo-600/30"
+                  className="px-5 py-2 rounded-xl text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-500 transition border border-indigo-500/30"
                 >
                   {changePasswordLoading ? 'Salvando...' : 'Salvar Senha'}
                 </button>
