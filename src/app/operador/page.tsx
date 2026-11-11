@@ -534,8 +534,7 @@ export default function OperatorDashboardPage() {
 
                 <div className="mt-6">
                   <a
-                    href={data?.installer?.downloadUrl || '/Billy-Suite-Setup.exe'}
-                    download
+                    href={data?.installer?.downloadUrl || '/downloads/Billy-Suite-Setup.exe'}
                     className="w-full py-3.5 rounded-xl font-medium text-white bg-emerald-600 hover:bg-emerald-500 transition border border-emerald-500/30 flex items-center justify-center gap-2 text-sm cursor-pointer"
                   >
                     <Download className="w-4 h-4" />
