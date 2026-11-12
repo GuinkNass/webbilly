@@ -411,8 +411,8 @@ export async function resolveSiteBySlug(rawSlug: string): Promise<SiteRecord | n
   if (sub || demo) {
     const effectiveSlug = sub?.siteSlug || slug;
     
-    // Consulta status de suspensão na nuvem em tempo real (Edge Config + Registry)
-    let isSuspended = sub?.status === 'suspended' || sub?.status === 'cancelled';
+    // Consulta status de suspensão na nuvem em tempo real (Edge Config é a autoridade máxima instantânea < 50ms)
+    let isSuspended = false;
     try {
       const cloudSuspended = await fetchCloudSuspendedSlugs();
       if (cloudSuspended.has(effectiveSlug) || cloudSuspended.has(slug)) {
@@ -420,7 +420,9 @@ export async function resolveSiteBySlug(rawSlug: string): Promise<SiteRecord | n
       }
     } catch {}
 
-    const finalStatus: SiteRecord['status'] = isSuspended ? 'suspended' : (sub?.status || 'active');
+    const finalStatus: SiteRecord['status'] = isSuspended
+      ? 'suspended'
+      : (sub?.status === 'cancelled' ? 'cancelled' : 'active');
 
     const record: SiteRecord = {
       siteSlug: effectiveSlug,

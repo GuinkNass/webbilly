@@ -110,8 +110,8 @@ export default async function SiteViewerPage({
   }
 
   // 4. Regra de Renderização Única e Direta:
-  // Se isDirectlySuspended for true ou o status do banco/registro for suspended: renderiza "Publicação Pausada"
-  const isSuspended = isDirectlySuspended || (site?.status === 'suspended') || (site?.status === 'cancelled');
+  // Edge Config (isDirectlySuspended) é a autoridade máxima em tempo real instantânea (< 50ms)
+  const isSuspended = isDirectlySuspended || (site?.status === 'cancelled');
 
   const status = (queryStatus === 'suspended' || queryStatus === 'active')
     ? queryStatus
@@ -224,23 +224,25 @@ export default async function SiteViewerPage({
           </div>
         </div>
 
-        {/* Polling em tempo real: se o administrador reativar o site no painel, recarrega automaticamente */}
+        {/* Polling em tempo real ultra-reativo: ao reativar no painel admin, volta ao ar imediatamente */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                var timer = setInterval(async function() {
-                  try {
-                    var r = await fetch('/api/public/site-status?slug=${encodeURIComponent(slug)}&t=' + Date.now(), { cache: 'no-store' });
-                    if (r.ok) {
-                      var d = await r.json();
+                function pollStatus() {
+                  fetch('/api/public/site-status?slug=${encodeURIComponent(slug)}&t=' + Date.now(), { cache: 'no-store' })
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) {
                       if (d && d.status === 'active') {
-                        clearInterval(timer);
-                        window.location.reload();
+                        window.location.replace(window.location.pathname + '?status=active&_t=' + Date.now());
                       }
-                    }
-                  } catch(e) {}
-                }, 3000);
+                    })
+                    .catch(function() {});
+                }
+                var timer = setInterval(pollStatus, 1500);
+                document.addEventListener('visibilitychange', function() {
+                  if (document.visibilityState === 'visible') pollStatus();
+                });
               })();
             `
           }}
@@ -275,23 +277,27 @@ export default async function SiteViewerPage({
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
       />
 
-      {/* Polling em tempo real: se o administrador suspender o site no painel, recarrega imediatamente para a tela de fora do ar */}
+      {/* Polling em tempo real ultra-reativo: ao suspender no painel admin, o site sai do ar imediatamente */}
       <script
         dangerouslySetInnerHTML={{
           __html: `
             (function() {
-              var timer = setInterval(async function() {
-                try {
-                  var r = await fetch('/api/public/site-status?slug=${encodeURIComponent(slug)}&t=' + Date.now(), { cache: 'no-store' });
-                  if (r.ok) {
-                    var d = await r.json();
+              function pollStatus() {
+                fetch('/api/public/site-status?slug=${encodeURIComponent(slug)}&t=' + Date.now(), { cache: 'no-store' })
+                  .then(function(r) { return r.json(); })
+                  .then(function(d) {
                     if (d && d.status === 'suspended') {
-                      clearInterval(timer);
-                      window.location.reload();
+                      var frame = document.querySelector('iframe');
+                      if (frame) frame.style.display = 'none';
+                      window.location.replace(window.location.pathname + '?status=suspended&_t=' + Date.now());
                     }
-                  }
-                } catch(e) {}
-              }, 3000);
+                  })
+                  .catch(function() {});
+              }
+              var timer = setInterval(pollStatus, 1500);
+              document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'visible') pollStatus();
+              });
             })();
           `
         }}

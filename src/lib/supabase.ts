@@ -1,6 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { readDb, writeDb, SubscriptionRecord, Operator, AffiliateCommissionRecord } from './db';
 
-// Supabase URL & Keys
+// Supabase URL & Service Role Key
 const supabaseUrl =
   process.env.SUPABASE_URL ||
   process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -16,7 +17,7 @@ let supabaseAdmin: SupabaseClient | null = null;
 
 /**
  * Retorna o cliente Supabase com Service Role (bypassing RLS)
- * e fetch configurado com cache: 'no-store' para garantir leitura em tempo real sem cache do Next.js
+ * e fetch configurado com cache: 'no-store' para garantir leitura em tempo real
  */
 export function getSupabaseAdmin(): SupabaseClient {
   if (!supabaseAdmin) {
@@ -48,13 +49,244 @@ export interface SupabaseSiteRecord {
   checkoutUrl?: string;
   clientPhone?: string;
   clientEmail?: string;
+  operatorId?: string;
+  operatorName?: string;
+  operatorToken?: string;
   custom_domain?: string;
   domain_status?: string;
+  domain_purchased_at?: string;
+  accepted_terms_at?: string;
+  accepted_terms_ip?: string;
+  accepted_terms_version?: string;
   updatedAt?: string;
+  createdAt?: string;
 }
 
 /**
- * Consulta o site diretamente no Supabase por slug ou domínio próprio em tempo real
+ * Converte linha do Supabase (snake_case) para SubscriptionRecord do sistema
+ */
+export function mapRowToSubscription(row: any): SubscriptionRecord {
+  return {
+    id: row.id,
+    leadToken: row.lead_token || row.leadToken || '',
+    siteSlug: row.site_slug || row.siteSlug || '',
+    clientName: row.client_name || row.clientName || '',
+    clientPhone: row.client_phone || row.clientPhone || '',
+    clientEmail: row.client_email || row.clientEmail || '',
+    operatorId: row.operator_id || row.operatorId || '',
+    operatorName: row.operator_name || row.operatorName || '',
+    operatorToken: row.operator_token || row.operatorToken || '',
+    monthlyPrice: Number(row.monthly_price || row.monthlyPrice || 29.90),
+    commissionMonthly: Number(row.commission_monthly || row.commissionMonthly || 10.00),
+    status: (row.status || row.site_status || 'active').toLowerCase() as any,
+    deployedUrl: row.deployed_url || row.deployedUrl || `https://${row.site_slug || row.siteSlug}.vercel.app`,
+    checkoutUrl: row.checkout_url || row.checkoutUrl || `/api/subscription/create-checkout?slug=${row.site_slug || row.siteSlug}`,
+    lastPaymentDate: row.last_payment_date || row.lastPaymentDate || '',
+    nextRenewalDate: row.next_renewal_date || row.nextRenewalDate || '',
+    custom_domain: row.custom_domain || row.customDomain || undefined,
+    customDomain: row.custom_domain || row.customDomain || undefined,
+    domain_status: row.domain_status || row.domainStatus || 'subdomain_only',
+    domainStatus: row.domain_status || row.domainStatus || 'subdomain_only',
+    domain_purchased_at: row.domain_purchased_at || row.domainPurchasedAt || undefined,
+    domainPurchasedAt: row.domain_purchased_at || row.domainPurchasedAt || undefined,
+    accepted_terms_at: row.accepted_terms_at || undefined,
+    accepted_terms_ip: row.accepted_terms_ip || undefined,
+    accepted_terms_version: row.accepted_terms_version || undefined,
+    createdAt: row.created_at || row.createdAt || new Date().toISOString(),
+    updatedAt: row.updated_at || row.updatedAt || new Date().toISOString()
+  };
+}
+
+/**
+ * Converte linha do Supabase para Operator
+ */
+export function mapRowToOperator(row: any): Operator {
+  return {
+    id: row.id,
+    candidateId: row.candidate_id || row.candidateId,
+    name: row.name || '',
+    cpf: row.cpf,
+    email: row.email || '',
+    passwordHash: row.password_hash || row.passwordHash || '',
+    tempPasswordPlain: row.temp_password_plain || row.tempPasswordPlain,
+    mustChangePassword: row.must_change_password ?? row.mustChangePassword,
+    whatsapp: row.whatsapp || '',
+    pixType: row.pix_type || row.pixType || 'cpf',
+    pixKey: row.pix_key || row.pixKey || '',
+    serialToken: row.serial_token || row.serialToken || '',
+    status: row.status || 'ATIVO',
+    machineId: row.machine_id || row.machineId,
+    osInfo: row.os_info || row.osInfo,
+    operatorIp: row.operator_ip || row.operatorIp,
+    lastSync: row.last_sync || row.lastSync,
+    dailyLimit: Number(row.daily_limit || row.dailyLimit || 50),
+    todayGenerations: Number(row.today_generations || row.todayGenerations || 0),
+    createdAt: row.created_at || row.createdAt || new Date().toISOString(),
+    affiliate_enabled: row.affiliate_enabled ?? false,
+    affiliate_code: row.affiliate_code || undefined,
+    referred_by_operator_id: row.referred_by_operator_id || null,
+    accepted_terms_at: row.accepted_terms_at || undefined,
+    accepted_terms_ip: row.accepted_terms_ip || undefined,
+    accepted_terms_version: row.accepted_terms_version || undefined
+  };
+}
+
+/**
+ * Converte linha do Supabase para AffiliateCommissionRecord
+ */
+export function mapRowToAffiliateCommission(row: any): AffiliateCommissionRecord {
+  return {
+    id: row.id,
+    affiliate_operator_id: row.affiliate_operator_id,
+    invited_operator_id: row.invited_operator_id,
+    invited_operator_name: row.invited_operator_name || '',
+    lead_or_sale_id: row.lead_or_sale_id,
+    sale_amount: Number(row.sale_amount || 490.00),
+    commission_rate: Number(row.commission_rate || 0.05),
+    commission_amount: Number(row.commission_amount || 24.50),
+    month_ref: row.month_ref,
+    payout_status: row.payout_status || 'available',
+    created_at: row.created_at || new Date().toISOString()
+  };
+}
+
+let isSeeding = false;
+
+/**
+ * Importa automaticamente os dados existentes em db.json para o Supabase
+ * se as tabelas estiverem vazias (upsert idempotente).
+ */
+export async function seedSupabaseFromLocalDb(): Promise<void> {
+  if (isSeeding) return;
+  isSeeding = true;
+
+  try {
+    const supabase = getSupabaseAdmin();
+    const db = readDb();
+
+    // 1. Seed Subscriptions
+    const { count: subCount } = await supabase
+      .from('subscriptions')
+      .select('*', { count: 'exact', head: true });
+
+    if (subCount === 0 && Array.isArray(db.subscriptions) && db.subscriptions.length > 0) {
+      console.log(`[Supabase Seed] Importando ${db.subscriptions.length} assinaturas locais...`);
+      for (const sub of db.subscriptions) {
+        await upsertSubscriptionInSupabase(sub);
+      }
+    }
+
+    // 2. Seed Operators
+    const { count: opCount } = await supabase
+      .from('operators')
+      .select('*', { count: 'exact', head: true });
+
+    if (opCount === 0 && Array.isArray(db.operators) && db.operators.length > 0) {
+      console.log(`[Supabase Seed] Importando ${db.operators.length} operadores locais...`);
+      for (const op of db.operators) {
+        await upsertOperatorInSupabase(op);
+      }
+    }
+
+    // 3. Seed Affiliate Commissions
+    const { count: affCount } = await supabase
+      .from('affiliate_commissions')
+      .select('*', { count: 'exact', head: true });
+
+    if (affCount === 0 && Array.isArray(db.affiliateCommissions) && db.affiliateCommissions.length > 0) {
+      console.log(`[Supabase Seed] Importando ${db.affiliateCommissions.length} comissões de afiliados locais...`);
+      for (const aff of db.affiliateCommissions) {
+        await upsertAffiliateCommissionInSupabase(aff);
+      }
+    }
+  } catch (err) {
+    console.warn('[Supabase Seed] Aviso ao sincronizar seed inicial:', err);
+  } finally {
+    isSeeding = false;
+  }
+}
+
+/**
+ * Consulta todas as assinaturas diretamente no Supabase em tempo real.
+ * Se a tabela estiver vazia, aciona o seed inicial a partir do db.json.
+ */
+export async function fetchAllSubscriptionsFromSupabase(): Promise<SubscriptionRecord[]> {
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (!error && Array.isArray(data)) {
+      if (data.length === 0) {
+        // Tabela vazia: executa seed inicial
+        await seedSupabaseFromLocalDb();
+        const db = readDb();
+        return Array.isArray(db.subscriptions) ? db.subscriptions : [];
+      }
+      return data.map(mapRowToSubscription);
+    }
+  } catch (err) {
+    console.warn('[Supabase] Falha ao buscar assinaturas no Supabase:', err);
+  }
+
+  // Fallback seguro para banco local
+  const db = readDb();
+  return Array.isArray(db.subscriptions) ? db.subscriptions : [];
+}
+
+/**
+ * Consulta todos os operadores no Supabase em tempo real
+ */
+export async function fetchAllOperatorsFromSupabase(): Promise<Operator[]> {
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from('operators')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (!error && Array.isArray(data)) {
+      if (data.length === 0) {
+        await seedSupabaseFromLocalDb();
+        const db = readDb();
+        return Array.isArray(db.operators) ? db.operators : [];
+      }
+      return data.map(mapRowToOperator);
+    }
+  } catch (err) {
+    console.warn('[Supabase] Falha ao buscar operadores no Supabase:', err);
+  }
+
+  const db = readDb();
+  return Array.isArray(db.operators) ? db.operators : [];
+}
+
+/**
+ * Consulta todas as comissões de afiliados no Supabase em tempo real
+ */
+export async function fetchAllAffiliateCommissionsFromSupabase(): Promise<AffiliateCommissionRecord[]> {
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from('affiliate_commissions')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (!error && Array.isArray(data)) {
+      return data.map(mapRowToAffiliateCommission);
+    }
+  } catch (err) {
+    console.warn('[Supabase] Falha ao buscar comissões de afiliados no Supabase:', err);
+  }
+
+  const db = readDb();
+  return Array.isArray(db.affiliateCommissions) ? db.affiliateCommissions : [];
+}
+
+/**
+ * Consulta um site diretamente no Supabase por slug ou domínio próprio
  */
 export async function fetchSiteFromSupabase(slugOrDomain: string): Promise<SupabaseSiteRecord | null> {
   if (!slugOrDomain) return null;
@@ -67,49 +299,32 @@ export async function fetchSiteFromSupabase(slugOrDomain: string): Promise<Supab
     const { data: subData, error: subErr } = await supabase
       .from('subscriptions')
       .select('*')
-      .or(`siteSlug.eq.${clean},site_slug.eq.${clean},custom_domain.eq.${clean},customDomain.eq.${clean}`)
+      .or(`site_slug.eq.${clean},custom_domain.eq.${clean},id.eq.${clean}`)
       .limit(1)
       .maybeSingle();
 
     if (!subErr && subData) {
       return {
         id: subData.id || `sub_${clean}`,
-        siteSlug: subData.siteSlug || subData.site_slug || clean,
-        clientName: subData.clientName || subData.client_name || clean.toUpperCase(),
-        status: (subData.status || subData.site_status || 'active').toLowerCase(),
-        deployedUrl: subData.deployedUrl || subData.deployed_url || `https://${clean}.vercel.app`,
-        monthlyPrice: subData.monthlyPrice || subData.monthly_price || 29.90,
-        checkoutUrl: subData.checkoutUrl || subData.checkout_url || `/api/subscription/create-checkout?slug=${clean}`,
-        clientPhone: subData.clientPhone || subData.client_phone,
-        clientEmail: subData.clientEmail || subData.client_email,
-        custom_domain: subData.custom_domain || subData.customDomain,
-        domain_status: subData.domain_status || subData.domainStatus,
-        updatedAt: subData.updatedAt || subData.updated_at
-      };
-    }
-
-    // 2. Tenta buscar na tabela 'sites' (caso seja o nome no schema Supabase)
-    const { data: siteData, error: siteErr } = await supabase
-      .from('sites')
-      .select('*')
-      .or(`subdomain.eq.${clean},slug.eq.${clean},custom_domain.eq.${clean}`)
-      .limit(1)
-      .maybeSingle();
-
-    if (!siteErr && siteData) {
-      return {
-        id: siteData.id || `site_${clean}`,
-        siteSlug: siteData.subdomain || siteData.slug || clean,
-        clientName: siteData.client_name || siteData.name || clean.toUpperCase(),
-        status: (siteData.status || siteData.site_status || 'active').toLowerCase(),
-        deployedUrl: siteData.deployed_url || siteData.url || `https://${clean}.vercel.app`,
-        monthlyPrice: siteData.monthly_price || 29.90,
-        checkoutUrl: siteData.checkout_url || `/api/subscription/create-checkout?slug=${clean}`,
-        clientPhone: siteData.client_phone || siteData.phone,
-        clientEmail: siteData.client_email || siteData.email,
-        custom_domain: siteData.custom_domain,
-        domain_status: siteData.domain_status,
-        updatedAt: siteData.updated_at
+        siteSlug: subData.site_slug || clean,
+        clientName: subData.client_name || clean.toUpperCase(),
+        status: (subData.status || subData.site_status || 'active').toLowerCase() as any,
+        deployedUrl: subData.deployed_url || `https://${clean}.vercel.app`,
+        monthlyPrice: Number(subData.monthly_price || 29.90),
+        checkoutUrl: subData.checkout_url || `/api/subscription/create-checkout?slug=${clean}`,
+        clientPhone: subData.client_phone,
+        clientEmail: subData.client_email,
+        operatorId: subData.operator_id,
+        operatorName: subData.operator_name,
+        operatorToken: subData.operator_token,
+        custom_domain: subData.custom_domain,
+        domain_status: subData.domain_status,
+        domain_purchased_at: subData.domain_purchased_at,
+        accepted_terms_at: subData.accepted_terms_at,
+        accepted_terms_ip: subData.accepted_terms_ip,
+        accepted_terms_version: subData.accepted_terms_version,
+        updatedAt: subData.updated_at,
+        createdAt: subData.created_at
       };
     }
   } catch (err) {
@@ -120,7 +335,139 @@ export async function fetchSiteFromSupabase(slugOrDomain: string): Promise<Supab
 }
 
 /**
- * Atualiza o status do site no Supabase com service_role (bypassing RLS)
+ * Insere ou atualiza uma assinatura no Supabase (upsert idempotente)
+ */
+export async function upsertSubscriptionInSupabase(sub: Partial<SubscriptionRecord>): Promise<boolean> {
+  if (!sub || (!sub.id && !sub.siteSlug)) return false;
+
+  const id = sub.id || `sub_${sub.siteSlug}`;
+  const nowIso = new Date().toISOString();
+
+  const payload: any = {
+    id,
+    lead_token: sub.leadToken || null,
+    site_slug: sub.siteSlug || id.replace('sub_', ''),
+    client_name: sub.clientName || sub.siteSlug || 'Cliente Webbilly',
+    client_phone: sub.clientPhone || null,
+    client_email: sub.clientEmail || null,
+    operator_id: sub.operatorId || null,
+    operator_name: sub.operatorName || null,
+    operator_token: sub.operatorToken || null,
+    monthly_price: sub.monthlyPrice ?? 29.90,
+    commission_monthly: sub.commissionMonthly ?? 10.00,
+    status: (sub.status || 'active').toLowerCase(),
+    site_status: (sub.status || 'active').toLowerCase(),
+    custom_domain: sub.custom_domain || sub.customDomain || null,
+    domain_status: sub.domain_status || sub.domainStatus || 'subdomain_only',
+    domain_purchased_at: sub.domain_purchased_at || sub.domainPurchasedAt || null,
+    deployed_url: sub.deployedUrl || `https://${sub.siteSlug}.vercel.app`,
+    checkout_url: sub.checkoutUrl || `/api/subscription/create-checkout?slug=${sub.siteSlug}`,
+    updated_at: sub.updatedAt || nowIso
+  };
+
+  if (sub.accepted_terms_at) {
+    payload.accepted_terms_at = sub.accepted_terms_at;
+    payload.accepted_terms_ip = sub.accepted_terms_ip || null;
+    payload.accepted_terms_version = sub.accepted_terms_version || 'v1.0';
+  }
+
+  try {
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from('subscriptions')
+      .upsert(payload, { onConflict: 'id' });
+
+    if (!error) return true;
+    console.warn('[Supabase] Erro ao upsert em subscriptions:', error);
+  } catch (err) {
+    console.warn('[Supabase] Falha de conexão no upsert de assinatura:', err);
+  }
+
+  return false;
+}
+
+/**
+ * Insere ou atualiza um operador no Supabase
+ */
+export async function upsertOperatorInSupabase(op: Partial<Operator>): Promise<boolean> {
+  if (!op || (!op.id && !op.email)) return false;
+
+  const id = op.id || `OP-${Date.now().toString(36).toUpperCase()}`;
+  const nowIso = new Date().toISOString();
+
+  const payload: any = {
+    id,
+    name: op.name || 'Operador Webbilly',
+    email: op.email || '',
+    whatsapp: op.whatsapp || null,
+    pix_type: op.pixType || 'cpf',
+    pix_key: op.pixKey || '',
+    serial_token: op.serialToken || null,
+    status: op.status || 'ATIVO',
+    affiliate_enabled: Boolean(op.affiliate_enabled),
+    affiliate_code: op.affiliate_code || null,
+    referred_by_operator_id: op.referred_by_operator_id || null,
+    updated_at: nowIso
+  };
+
+  if (op.accepted_terms_at) {
+    payload.accepted_terms_at = op.accepted_terms_at;
+    payload.accepted_terms_ip = op.accepted_terms_ip || null;
+    payload.accepted_terms_version = op.accepted_terms_version || 'v1.0';
+  }
+
+  try {
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from('operators')
+      .upsert(payload, { onConflict: 'id' });
+
+    if (!error) return true;
+    console.warn('[Supabase] Erro ao upsert em operators:', error);
+  } catch (err) {
+    console.warn('[Supabase] Falha de conexão no upsert de operador:', err);
+  }
+
+  return false;
+}
+
+/**
+ * Insere uma comissão de afiliado no Supabase de forma idempotente
+ */
+export async function upsertAffiliateCommissionInSupabase(comm: AffiliateCommissionRecord): Promise<boolean> {
+  if (!comm || !comm.lead_or_sale_id) return false;
+
+  const payload = {
+    id: comm.id || `AFF-${comm.lead_or_sale_id}`,
+    affiliate_operator_id: comm.affiliate_operator_id,
+    invited_operator_id: comm.invited_operator_id,
+    invited_operator_name: comm.invited_operator_name || '',
+    lead_or_sale_id: comm.lead_or_sale_id,
+    sale_amount: Number(comm.sale_amount || 490.00),
+    commission_rate: Number(comm.commission_rate || 0.05),
+    commission_amount: Number(comm.commission_amount || 24.50),
+    month_ref: comm.month_ref,
+    payout_status: comm.payout_status || 'available',
+    created_at: comm.created_at || new Date().toISOString()
+  };
+
+  try {
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from('affiliate_commissions')
+      .upsert(payload, { onConflict: 'lead_or_sale_id' });
+
+    if (!error) return true;
+    console.warn('[Supabase] Erro ao upsert em affiliate_commissions:', error);
+  } catch (err) {
+    console.warn('[Supabase] Falha de conexão no upsert de comissão de afiliado:', err);
+  }
+
+  return false;
+}
+
+/**
+ * Atualiza o status do site no Supabase com service_role
  */
 export async function updateSiteStatusInSupabase(
   identifier: string,
@@ -133,34 +480,16 @@ export async function updateSiteStatusInSupabase(
     const supabase = getSupabaseAdmin();
     const nowIso = new Date().toISOString();
 
-    // 1. Tenta atualizar na tabela 'subscriptions'
-    const { error: subErr } = await supabase
+    const { error } = await supabase
       .from('subscriptions')
-      .update({
-        status: newStatus,
-        site_status: newStatus,
-        updated_at: nowIso,
-        updatedAt: nowIso
-      })
-      .or(`id.eq.${clean},siteSlug.eq.${clean},site_slug.eq.${clean}`);
-
-    if (!subErr) {
-      return true;
-    }
-
-    // 2. Tenta atualizar na tabela 'sites'
-    const { error: siteErr } = await supabase
-      .from('sites')
       .update({
         status: newStatus,
         site_status: newStatus,
         updated_at: nowIso
       })
-      .or(`id.eq.${clean},subdomain.eq.${clean},slug.eq.${clean}`);
+      .or(`id.eq.${clean},site_slug.eq.${clean},custom_domain.eq.${clean}`);
 
-    if (!siteErr) {
-      return true;
-    }
+    if (!error) return true;
   } catch (err) {
     console.warn('[Supabase] Erro ao atualizar status no Supabase:', err);
   }
@@ -170,7 +499,6 @@ export async function updateSiteStatusInSupabase(
 
 /**
  * Registra prova digital e auditoria jurídica de aceite eletrônico no Supabase
- * Salva accepted_terms_at (timestamptz), accepted_terms_ip (text) e accepted_terms_version (text)
  */
 export async function recordTermsAcceptanceInSupabase({
   targetType,
@@ -199,36 +527,15 @@ export async function recordTermsAcceptanceInSupabase({
       await supabase
         .from('operators')
         .update(payload)
-        .or(`id.eq.${cleanId},email.eq.${cleanId},serialToken.eq.${cleanId}`);
+        .or(`id.eq.${cleanId},email.eq.${cleanId},serial_token.eq.${cleanId}`);
       return true;
     }
 
-    if (targetType === 'candidate') {
-      await supabase
-        .from('candidates')
-        .update(payload)
-        .or(`id.eq.${cleanId},email.eq.${cleanId},whatsapp.eq.${cleanId}`);
-      return true;
-    }
-
-    if (targetType === 'subscription' || targetType === 'site') {
+    if (targetType === 'subscription' || targetType === 'site' || targetType === 'lead') {
       await supabase
         .from('subscriptions')
         .update(payload)
-        .or(`id.eq.${cleanId},siteSlug.eq.${cleanId},site_slug.eq.${cleanId},custom_domain.eq.${cleanId}`);
-      
-      await supabase
-        .from('sites')
-        .update(payload)
-        .or(`id.eq.${cleanId},subdomain.eq.${cleanId},slug.eq.${cleanId},custom_domain.eq.${cleanId}`);
-      return true;
-    }
-
-    if (targetType === 'lead') {
-      await supabase
-        .from('leads')
-        .update(payload)
-        .or(`id.eq.${cleanId},token.eq.${cleanId},leadToken.eq.${cleanId}`);
+        .or(`id.eq.${cleanId},site_slug.eq.${cleanId},lead_token.eq.${cleanId},custom_domain.eq.${cleanId}`);
       return true;
     }
   } catch (err) {

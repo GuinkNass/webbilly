@@ -34,11 +34,19 @@ export async function POST(req: NextRequest) {
     sub.status = newStatus;
     sub.updatedAt = new Date().toISOString();
 
-    // 1. Atualiza no Supabase e na Nuvem (Fonte Única de Verdade) em tempo real
+    const targetSlug = sub.siteSlug || sub.id;
+
+    // 1. Atualiza no Supabase e na Nuvem (Edge Config < 50ms) em tempo real
     try {
-      await syncSlugSuspension(sub.siteSlug || sub.id, newStatus === 'suspended');
+      await updateSiteStatusInSupabase(targetSlug, newStatus);
     } catch (sbErr) {
-      console.warn('[ToggleStatus] Cloud/Supabase sync:', sbErr);
+      console.warn('[ToggleStatus] Supabase sync:', sbErr);
+    }
+
+    try {
+      await syncSlugSuspension(targetSlug, newStatus === 'suspended');
+    } catch (edgeErr) {
+      console.warn('[ToggleStatus] Cloud/Edge sync:', edgeErr);
     }
 
     // 2. Persiste no arquivo local do runtime
