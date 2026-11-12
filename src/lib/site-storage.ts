@@ -1,3 +1,5 @@
+import fs from 'fs-extra';
+import path from 'path';
 import { readDb, writeDb, SubscriptionRecord } from '@/lib/db';
 
 export interface SiteRecord {
@@ -19,7 +21,118 @@ export interface SiteRecord {
 
 // In-memory cache de fallback para evitar requisições redundantes no mesmo ciclo de vida
 const memoryCache = new Map<string, { data: SiteRecord; expiresAt: number }>();
-const CACHE_TTL_MS = 30 * 1000; // 30 segundos de cache em memória
+const CACHE_TTL_MS = 15 * 1000; // 15 segundos de cache em memória
+
+const IS_VERCEL = !!process.env.VERCEL;
+const BUNDLED_SUSPENDED_PATH = path.join(process.cwd(), 'src', 'data', 'suspended_slugs.json');
+const RUNTIME_SUSPENDED_PATH = IS_VERCEL ? path.join('/tmp', 'webbilly_suspended_slugs.json') : BUNDLED_SUSPENDED_PATH;
+
+// Registro global em memória
+declare global {
+  // eslint-disable-next-line no-var
+  var __webbillySuspendedSlugs: Set<string> | undefined;
+}
+
+if (!globalThis.__webbillySuspendedSlugs) {
+  globalThis.__webbillySuspendedSlugs = new Set<string>();
+}
+
+/**
+ * Lê o conjunto consolidado de slugs suspensos
+ */
+export function getSuspendedSlugs(): Set<string> {
+  const set = new Set<string>(globalThis.__webbillySuspendedSlugs || []);
+
+  // 1. Lê do arquivo em runtime (/tmp ou data)
+  try {
+    const fileToRead = fs.existsSync(RUNTIME_SUSPENDED_PATH)
+      ? RUNTIME_SUSPENDED_PATH
+      : (fs.existsSync(BUNDLED_SUSPENDED_PATH) ? BUNDLED_SUSPENDED_PATH : null);
+
+    if (fileToRead) {
+      const slugsArray = fs.readJsonSync(fileToRead, { throws: false });
+      if (Array.isArray(slugsArray)) {
+        slugsArray.forEach((s: string) => {
+          if (s) set.add(sanitizeSlug(s));
+        });
+      }
+    }
+  } catch {}
+
+  // 2. Lê do DB local
+  try {
+    const db = readDb();
+    if (Array.isArray(db.subscriptions)) {
+      db.subscriptions.forEach(sub => {
+        if (sub.status === 'suspended' || sub.status === 'cancelled') {
+          if (sub.siteSlug) set.add(sanitizeSlug(sub.siteSlug));
+        }
+      });
+    }
+  } catch {}
+
+  return set;
+}
+
+/**
+ * Verifica se um slug está com publicação suspensa
+ */
+export function isSlugSuspended(rawSlug: string): boolean {
+  const clean = sanitizeSlug(rawSlug);
+  if (!clean) return false;
+  const suspendedSet = getSuspendedSlugs();
+  return suspendedSet.has(clean);
+}
+
+/**
+ * Define ou remove um slug do estado de suspensão com persistência
+ */
+export function setSlugSuspended(rawSlug: string, suspended: boolean): void {
+  const clean = sanitizeSlug(rawSlug);
+  if (!clean) return;
+
+  if (!globalThis.__webbillySuspendedSlugs) {
+    globalThis.__webbillySuspendedSlugs = new Set<string>();
+  }
+
+  const currentSet = getSuspendedSlugs();
+  if (suspended) {
+    currentSet.add(clean);
+    globalThis.__webbillySuspendedSlugs.add(clean);
+  } else {
+    currentSet.delete(clean);
+    globalThis.__webbillySuspendedSlugs.delete(clean);
+  }
+
+  // Limpa cache imediato
+  memoryCache.delete(clean);
+
+  // Persiste em arquivo
+  try {
+    const list = Array.from(currentSet);
+    fs.ensureDirSync(path.dirname(RUNTIME_SUSPENDED_PATH));
+    fs.writeJsonSync(RUNTIME_SUSPENDED_PATH, list, { spaces: 2 });
+    if (!IS_VERCEL) {
+      try {
+        fs.ensureDirSync(path.dirname(BUNDLED_SUSPENDED_PATH));
+        fs.writeJsonSync(BUNDLED_SUSPENDED_PATH, list, { spaces: 2 });
+      } catch {}
+    }
+  } catch (err) {
+    console.warn('[SiteStorage] Erro ao gravar suspended_slugs:', err);
+  }
+}
+
+/**
+ * Limpa o cache de resolução de um site ou de todos
+ */
+export function clearSiteCache(slug?: string): void {
+  if (slug) {
+    memoryCache.delete(sanitizeSlug(slug));
+  } else {
+    memoryCache.clear();
+  }
+}
 
 /**
  * Normaliza e sanitiza o slug de qualquer subdomínio
@@ -103,15 +216,24 @@ export async function resolveSiteBySlug(rawSlug: string): Promise<SiteRecord | n
   const slug = sanitizeSlug(rawSlug);
   if (!slug) return null;
 
+  const isSuspended = isSlugSuspended(slug);
+
   // 1. Verifica cache em memória rápido
   const cached = memoryCache.get(slug);
   if (cached && cached.expiresAt > Date.now()) {
+    // Se o slug foi marcado como suspenso após o cache, força o status suspenso
+    if (isSuspended && cached.data.status !== 'suspended') {
+      cached.data.status = 'suspended';
+    }
     return cached.data;
   }
 
   // 2. Tenta ler do Vercel KV / Redis se configurado
   const fromKv = await getFromKv(`site:${slug}`);
   if (fromKv && fromKv.deployedUrl) {
+    if (isSuspended) {
+      fromKv.status = 'suspended';
+    }
     memoryCache.set(slug, { data: fromKv, expiresAt: Date.now() + CACHE_TTL_MS });
     return fromKv;
   }
@@ -131,10 +253,14 @@ export async function resolveSiteBySlug(rawSlug: string): Promise<SiteRecord | n
     : null;
 
   if (sub || demo) {
+    const finalStatus: SiteRecord['status'] = isSuspended
+      ? 'suspended'
+      : (sub?.status || 'active');
+
     const record: SiteRecord = {
       siteSlug: slug,
       clientName: sub?.clientName || demo?.title || formatSlugToTitle(slug),
-      status: sub?.status || 'active',
+      status: finalStatus,
       deployedUrl: sub?.deployedUrl || demo?.deployedUrl || `https://${slug}.vercel.app`,
       monthlyPrice: sub?.monthlyPrice || 29.90,
       checkoutUrl: sub?.checkoutUrl || `/api/subscription/create-checkout?slug=${slug}`,
@@ -149,6 +275,21 @@ export async function resolveSiteBySlug(rawSlug: string): Promise<SiteRecord | n
 
     memoryCache.set(slug, { data: record, expiresAt: Date.now() + CACHE_TTL_MS });
     return record;
+  }
+
+  // Se o slug está na lista de suspensos mas não tem sub/demo, retorna o registro suspenso direto
+  if (isSuspended) {
+    const suspendedRecord: SiteRecord = {
+      siteSlug: slug,
+      clientName: formatSlugToTitle(slug),
+      status: 'suspended',
+      deployedUrl: `https://${slug}.vercel.app`,
+      monthlyPrice: 29.90,
+      checkoutUrl: `/api/subscription/create-checkout?slug=${slug}`,
+      updatedAt: new Date().toISOString()
+    };
+    memoryCache.set(slug, { data: suspendedRecord, expiresAt: Date.now() + CACHE_TTL_MS });
+    return suspendedRecord;
   }
 
   // 4. Detecção Ativa de Deployments Vercel em Tempo Real
@@ -173,7 +314,7 @@ export async function resolveSiteBySlug(rawSlug: string): Promise<SiteRecord | n
       const record: SiteRecord = {
         siteSlug: slug,
         clientName,
-        status: 'active',
+        status: isSuspended ? 'suspended' : 'active',
         deployedUrl: vercelTarget,
         monthlyPrice: 29.90,
         checkoutUrl: `/api/subscription/create-checkout?slug=${slug}`,
@@ -216,7 +357,12 @@ export async function persistSite(site: Partial<SiteRecord> & { siteSlug: string
     leadToken: site.leadToken
   };
 
-  // 1. Salva na memória
+  // 1. Salva na memória e no registro de status suspenso
+  if (record.status === 'suspended' || record.status === 'cancelled') {
+    setSlugSuspended(cleanSlug, true);
+  } else if (record.status === 'active') {
+    setSlugSuspended(cleanSlug, false);
+  }
   memoryCache.set(cleanSlug, { data: record, expiresAt: Date.now() + CACHE_TTL_MS });
 
   // 2. Salva no Vercel KV / Upstash Redis

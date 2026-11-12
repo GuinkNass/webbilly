@@ -227,7 +227,7 @@ export function getDefaultSubscriptions(): SubscriptionRecord[] {
       operatorToken: 'BILLY-OP-C071-A33F',
       monthlyPrice: 29.90,
       commissionMonthly: 10.00,
-      status: 'active',
+      status: 'suspended',
       deployedUrl: 'https://sushihiroshisp.vercel.app',
       checkoutUrl: 'https://webbilly.com.br/api/subscription/create-checkout?slug=sushihiroshisp',
       lastPaymentDate: new Date().toISOString(),
