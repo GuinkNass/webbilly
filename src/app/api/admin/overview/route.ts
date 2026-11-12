@@ -28,14 +28,16 @@ export async function GET(req: NextRequest) {
     const activeOperatorsCount = db.operators.filter(o => o.status === 'ATIVO').length;
     const blockedOperatorsCount = db.operators.filter(o => o.status === 'BLOQUEADO').length;
 
-    // Métricas do Novo Modelo SaaS Recorrente (R$ 29,90/mês) sincronizadas com o cloud registry
+    // Assinaturas e sites da plataforma sincronizados em tempo real com a nuvem (Fonte Única de Verdade)
     const cloudSuspended = await fetchCloudSuspendedSlugs();
     const rawSubs = Array.isArray(db.subscriptions) ? db.subscriptions : [];
     const subscriptions = rawSubs.map(s => {
-      const isSusp = s.siteSlug ? cloudSuspended.has(sanitizeSlug(s.siteSlug)) : false;
+      if (!s.siteSlug) return s;
+      const clean = sanitizeSlug(s.siteSlug);
+      const isSusp = cloudSuspended.has(clean);
       return {
         ...s,
-        status: isSusp ? 'suspended' : (s.status === 'suspended' && !isSusp ? 'active' : s.status)
+        status: isSusp ? 'suspended' : (s.status === 'pending' ? 'pending' : 'active')
       };
     });
     const activeSubs = subscriptions.filter(s => s.status === 'active');

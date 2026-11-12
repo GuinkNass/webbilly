@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.119.0",
     "bcryptjs": "^2.4.3",
     "canvas-confetti": "^1.9.4",
     "fs-extra": "^11.3.0",

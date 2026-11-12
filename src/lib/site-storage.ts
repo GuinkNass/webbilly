@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { readDb, writeDb, SubscriptionRecord } from '@/lib/db';
+import { fetchSiteFromSupabase, updateSiteStatusInSupabase } from '@/lib/supabase';
 
 export interface SiteRecord {
   siteSlug: string;
@@ -27,18 +28,16 @@ export interface SiteRecord {
   leadToken?: string;
 }
 
-// In-memory cache de fallback para evitar requisições redundantes no mesmo ciclo de vida
+// In-memory cache de fallback
 const memoryCache = new Map<string, { data: SiteRecord; expiresAt: number }>();
-const CACHE_TTL_MS = 15 * 1000; // 15 segundos de cache em memória
+const CACHE_TTL_MS = 2 * 1000; // 2 segundos
 
-const IS_VERCEL = !!process.env.VERCEL;
-const BUNDLED_SUSPENDED_PATH = path.join(process.cwd(), 'src', 'data', 'suspended_slugs.json');
-const RUNTIME_SUSPENDED_PATH = IS_VERCEL ? path.join('/tmp', 'webbilly_suspended_slugs.json') : BUNDLED_SUSPENDED_PATH;
-
-// Registro global em memória
+// Registro global em memória por processo lambda
 declare global {
   // eslint-disable-next-line no-var
   var __webbillySuspendedSlugs: Set<string> | undefined;
+  // eslint-disable-next-line no-var
+  var __webbillyLastCloudFetch: number | undefined;
 }
 
 if (!globalThis.__webbillySuspendedSlugs) {
@@ -46,23 +45,31 @@ if (!globalThis.__webbillySuspendedSlugs) {
 }
 
 const CLOUD_SUSPENDED_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a1d0a136a41894';
-let lastCloudFetch = 0;
-const CLOUD_CACHE_TIME = 2000; // 2 seconds
 
 /**
- * Lê a lista consolidada e em tempo real de slugs suspensos (sincronizada globalmente)
+ * Lê o conjunto consolidado de slugs suspensos em tempo real na nuvem
+ * Compartilhado instantaneamente entre todas as instâncias Vercel Lambdas
  */
 export async function fetchCloudSuspendedSlugs(): Promise<Set<string>> {
   const now = Date.now();
-  if (globalThis.__webbillySuspendedSlugs && (now - lastCloudFetch) < CLOUD_CACHE_TIME && globalThis.__webbillySuspendedSlugs.size > 0) {
+  const lastFetch = globalThis.__webbillyLastCloudFetch || 0;
+
+  // Cache em memória de apenas 1 segundo por processo para evitar múltiplos fetches na mesma renderização
+  if (globalThis.__webbillySuspendedSlugs && (now - lastFetch) < 1000 && globalThis.__webbillySuspendedSlugs.size > 0) {
     return globalThis.__webbillySuspendedSlugs;
   }
 
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
+
     const res = await fetch(CLOUD_SUSPENDED_URL, {
       cache: 'no-store',
-      headers: { 'Accept': 'application/json' }
+      headers: { Accept: 'application/json' },
+      signal: controller.signal
     });
+    clearTimeout(timeoutId);
+
     if (res.ok) {
       const json = await res.json();
       if (json && json.data && Array.isArray(json.data.slugs)) {
@@ -71,35 +78,39 @@ export async function fetchCloudSuspendedSlugs(): Promise<Set<string>> {
           if (s) cloudSet.add(sanitizeSlug(s));
         });
         globalThis.__webbillySuspendedSlugs = cloudSet;
-        lastCloudFetch = now;
+        globalThis.__webbillyLastCloudFetch = now;
         return cloudSet;
       }
     }
   } catch (err) {
-    console.warn('[SiteStorage] Erro ao buscar da nuvem:', err);
+    console.warn('[SiteStorage] Erro ao consultar registro em nuvem:', err);
   }
 
   return getSuspendedSlugs();
 }
 
 /**
- * Define ou remove a suspensão de um slug e sincroniza imediatamente com todas as instâncias Vercel
+ * Atualiza o status de suspensão na Nuvem e no Supabase em tempo real
  */
 export async function syncSlugSuspension(rawSlug: string, suspended: boolean): Promise<Set<string>> {
   const clean = sanitizeSlug(rawSlug);
   if (!clean) return getSuspendedSlugs();
 
-  // 1. Atualiza memória e disco locais
-  setSlugSuspended(clean, suspended);
+  // 1. Tenta atualizar no Supabase em paralelo
+  try {
+    await updateSiteStatusInSupabase(clean, suspended ? 'suspended' : 'active');
+  } catch (sbErr) {
+    console.warn('[SiteStorage] Supabase sync fallback:', sbErr);
+  }
 
-  // 2. Busca lista atualizada da nuvem primeiro para consolidar
+  // 2. Busca a lista atual da nuvem
   let currentSet: Set<string>;
   try {
-    const fetched = await fetchCloudSuspendedSlugs();
-    currentSet = new Set<string>(fetched);
+    currentSet = await fetchCloudSuspendedSlugs();
   } catch {
-    currentSet = new Set<string>(globalThis.__webbillySuspendedSlugs || getSuspendedSlugs());
+    currentSet = getSuspendedSlugs();
   }
+
   if (suspended) {
     currentSet.add(clean);
   } else {
@@ -107,22 +118,27 @@ export async function syncSlugSuspension(rawSlug: string, suspended: boolean): P
   }
 
   globalThis.__webbillySuspendedSlugs = currentSet;
-  lastCloudFetch = Date.now();
+  globalThis.__webbillyLastCloudFetch = Date.now();
   memoryCache.delete(clean);
 
-  // 3. Salva no registro da nuvem
+  // 3. Persiste no Cloud Registry com timeout de segurança
   try {
     const slugs = Array.from(currentSet);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+
     await fetch(CLOUD_SUSPENDED_URL, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: 'webbilly_suspended_registry',
         data: { slugs }
-      })
+      }),
+      signal: controller.signal
     });
-  } catch (err) {
-    console.warn('[SiteStorage] Erro ao sincronizar nuvem:', err);
+    clearTimeout(timeoutId);
+  } catch (cloudErr) {
+    console.warn('[SiteStorage] Erro ao sincronizar cloud registry:', cloudErr);
   }
 
   return currentSet;
@@ -132,25 +148,7 @@ export async function syncSlugSuspension(rawSlug: string, suspended: boolean): P
  * Lê o conjunto consolidado de slugs suspensos
  */
 export function getSuspendedSlugs(): Set<string> {
-  const set = new Set<string>(globalThis.__webbillySuspendedSlugs || []);
-
-  // 1. Lê do arquivo em runtime (/tmp ou data)
-  try {
-    const fileToRead = fs.existsSync(RUNTIME_SUSPENDED_PATH)
-      ? RUNTIME_SUSPENDED_PATH
-      : (fs.existsSync(BUNDLED_SUSPENDED_PATH) ? BUNDLED_SUSPENDED_PATH : null);
-
-    if (fileToRead) {
-      const slugsArray = fs.readJsonSync(fileToRead, { throws: false });
-      if (Array.isArray(slugsArray)) {
-        slugsArray.forEach((s: string) => {
-          if (s) set.add(sanitizeSlug(s));
-        });
-      }
-    }
-  } catch {}
-
-  // 2. Lê do DB local
+  const set = new Set<string>();
   try {
     const db = readDb();
     if (Array.isArray(db.subscriptions)) {
@@ -161,7 +159,6 @@ export function getSuspendedSlugs(): Set<string> {
       });
     }
   } catch {}
-
   return set;
 }
 
@@ -171,47 +168,16 @@ export function getSuspendedSlugs(): Set<string> {
 export function isSlugSuspended(rawSlug: string): boolean {
   const clean = sanitizeSlug(rawSlug);
   if (!clean) return false;
-  const suspendedSet = getSuspendedSlugs();
-  return suspendedSet.has(clean);
+  return getSuspendedSlugs().has(clean);
 }
 
 /**
- * Define ou remove um slug do estado de suspensão com persistência
+ * Define ou remove um slug do estado de suspensão
  */
 export function setSlugSuspended(rawSlug: string, suspended: boolean): void {
   const clean = sanitizeSlug(rawSlug);
   if (!clean) return;
-
-  if (!globalThis.__webbillySuspendedSlugs) {
-    globalThis.__webbillySuspendedSlugs = new Set<string>();
-  }
-
-  const currentSet = getSuspendedSlugs();
-  if (suspended) {
-    currentSet.add(clean);
-    globalThis.__webbillySuspendedSlugs.add(clean);
-  } else {
-    currentSet.delete(clean);
-    globalThis.__webbillySuspendedSlugs.delete(clean);
-  }
-
-  // Limpa cache imediato
   memoryCache.delete(clean);
-
-  // Persiste em arquivo
-  try {
-    const list = Array.from(currentSet);
-    fs.ensureDirSync(path.dirname(RUNTIME_SUSPENDED_PATH));
-    fs.writeJsonSync(RUNTIME_SUSPENDED_PATH, list, { spaces: 2 });
-    if (!IS_VERCEL) {
-      try {
-        fs.ensureDirSync(path.dirname(BUNDLED_SUSPENDED_PATH));
-        fs.writeJsonSync(BUNDLED_SUSPENDED_PATH, list, { spaces: 2 });
-      } catch {}
-    }
-  } catch (err) {
-    console.warn('[SiteStorage] Erro ao gravar suspended_slugs:', err);
-  }
 }
 
 /**
@@ -326,41 +292,25 @@ export async function resolveSiteBySlug(rawSlug: string): Promise<SiteRecord | n
 
   const lookupKey = cleanDomain || slug;
 
-  // Busca do registro da nuvem compartilhado entre lambdas
-  const cloudSet = await fetchCloudSuspendedSlugs();
-  const isSuspended =
-    cloudSet.has(slug) ||
-    (cleanDomain ? cloudSet.has(cleanDomain) : false) ||
-    isSlugSuspended(slug) ||
-    (cleanDomain ? isSlugSuspended(cleanDomain) : false);
-
-  // 1. Verifica cache em memória rápido
-  const cached = memoryCache.get(lookupKey) || (slug ? memoryCache.get(slug) : undefined);
-  if (cached && cached.expiresAt > Date.now()) {
-    // Se o slug foi marcado como suspenso, força imediatamente o status suspenso
-    if (isSuspended) {
-      cached.data.status = 'suspended';
-      return cached.data;
-    }
-    // Se o slug foi reativado, força o status active
-    if (cached.data.status === 'suspended' && !isSuspended) {
-      cached.data.status = 'active';
-      return cached.data;
-    }
-    return cached.data;
+  // 1. Consulta PRIMEIRO no Supabase (Fonte Única de Verdade)
+  const fromSupabase = await fetchSiteFromSupabase(lookupKey);
+  if (fromSupabase) {
+    return {
+      siteSlug: fromSupabase.siteSlug,
+      clientName: fromSupabase.clientName,
+      status: fromSupabase.status,
+      deployedUrl: fromSupabase.deployedUrl,
+      monthlyPrice: fromSupabase.monthlyPrice || 29.90,
+      checkoutUrl: fromSupabase.checkoutUrl || `/api/subscription/create-checkout?slug=${fromSupabase.siteSlug}`,
+      clientPhone: fromSupabase.clientPhone,
+      clientEmail: fromSupabase.clientEmail,
+      custom_domain: fromSupabase.custom_domain,
+      domain_status: fromSupabase.domain_status as any,
+      updatedAt: fromSupabase.updatedAt || new Date().toISOString()
+    };
   }
 
-  // 2. Tenta ler do Vercel KV / Redis se configurado
-  const fromKv = (await getFromKv(`site:${lookupKey}`)) || (slug ? await getFromKv(`site:${slug}`) : null);
-  if (fromKv && fromKv.deployedUrl) {
-    if (isSuspended) {
-      fromKv.status = 'suspended';
-    }
-    memoryCache.set(lookupKey, { data: fromKv, expiresAt: Date.now() + CACHE_TTL_MS });
-    return fromKv;
-  }
-
-  // 3. Lê do banco local/bundled db.json (busca por subdomínio ou por custom_domain)
+  // 2. Lê do banco local/bundled db.json (busca por subdomínio ou por custom_domain)
   const db = readDb();
   const subscriptions = Array.isArray(db.subscriptions) ? db.subscriptions : [];
   let sub = subscriptions.find(s => {
@@ -383,9 +333,7 @@ export async function resolveSiteBySlug(rawSlug: string): Promise<SiteRecord | n
 
   if (sub || demo) {
     const effectiveSlug = sub?.siteSlug || slug;
-    const finalStatus: SiteRecord['status'] = (isSuspended || isSlugSuspended(effectiveSlug))
-      ? 'suspended'
-      : (sub?.status || 'active');
+    const finalStatus: SiteRecord['status'] = sub?.status || 'active';
 
     const record: SiteRecord = {
       siteSlug: effectiveSlug,
@@ -418,22 +366,7 @@ export async function resolveSiteBySlug(rawSlug: string): Promise<SiteRecord | n
     return record;
   }
 
-  // Se o slug está na lista de suspensos mas não tem sub/demo, retorna o registro suspenso direto
-  if (isSuspended) {
-    const suspendedRecord: SiteRecord = {
-      siteSlug: slug,
-      clientName: formatSlugToTitle(slug),
-      status: 'suspended',
-      deployedUrl: `https://${slug}.vercel.app`,
-      monthlyPrice: 29.90,
-      checkoutUrl: `/api/subscription/create-checkout?slug=${slug}`,
-      updatedAt: new Date().toISOString()
-    };
-    memoryCache.set(lookupKey, { data: suspendedRecord, expiresAt: Date.now() + CACHE_TTL_MS });
-    return suspendedRecord;
-  }
-
-  // 4. Detecção Ativa de Deployments Vercel em Tempo Real
+  // 3. Detecção Ativa de Deployments Vercel em Tempo Real
   // Todo site compilado pelo desktop app é publicado em https://${slug}.vercel.app
   try {
     const vercelTarget = `https://${slug}.vercel.app`;
@@ -455,7 +388,7 @@ export async function resolveSiteBySlug(rawSlug: string): Promise<SiteRecord | n
       const record: SiteRecord = {
         siteSlug: slug,
         clientName,
-        status: isSuspended ? 'suspended' : 'active',
+        status: 'active',
         deployedUrl: vercelTarget,
         monthlyPrice: 29.90,
         checkoutUrl: `/api/subscription/create-checkout?slug=${slug}`,

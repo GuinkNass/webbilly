@@ -10,10 +10,13 @@ import {
   ShieldAlert
 } from 'lucide-react';
 import Link from 'next/link';
-import { resolveSiteBySlug, sanitizeSlug, fetchCloudSuspendedSlugs } from '@/lib/site-storage';
+import { resolveSiteBySlug, sanitizeSlug, fetchCloudSuspendedSlugs, formatSlugToTitle } from '@/lib/site-storage';
 import { resolveTemplateBySlug } from '@/lib/templates-data';
+import { fetchSiteFromSupabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
 
 interface SiteViewerPageProps {
   params: Promise<{ slug: string }>;
@@ -76,11 +79,13 @@ export default async function SiteViewerPage({
     );
   }
 
-  // Consulta em tempo real o registro compartilhado de suspensão na nuvem
+  // 2. Consulta suspensão global em tempo real na nuvem
   const cloudSuspended = await fetchCloudSuspendedSlugs();
   const isDirectlySuspended = cloudSuspended.has(slug);
 
-  const site = await resolveSiteBySlug(slug);
+  // 3. Consulta o registro no Supabase (Fonte Única de Verdade) ou no Banco Principal
+  const supabaseSite = await fetchSiteFromSupabase(slug);
+  const site = supabaseSite || (await resolveSiteBySlug(slug));
 
   if (!site && !isDirectlySuspended) {
     return (
@@ -102,19 +107,27 @@ export default async function SiteViewerPage({
     );
   }
 
-  // Permite teste forçado via query param ?status=suspended ou ?status=active
+  // 4. Regra de Renderização Única e Direta:
+  // Se isDirectlySuspended for true ou status === 'suspended': renderiza "Publicação Pausada"
+  // Caso contrário: renderiza o site oficial do cliente
+  let resolvedStatus = isDirectlySuspended ? 'suspended' : (site?.status || 'active').toLowerCase();
+  if (!isDirectlySuspended && resolvedStatus === 'suspended' && !cloudSuspended.has(slug)) {
+    // Se o banco local tinha marcado suspenso mas na nuvem já foi reativado
+    resolvedStatus = 'active';
+  }
+
   const status = (queryStatus === 'suspended' || queryStatus === 'active')
     ? queryStatus
-    : (isDirectlySuspended ? 'suspended' : (site?.status || 'active'));
+    : resolvedStatus;
 
-  const clientName = site?.clientName || slug.toUpperCase();
+  const clientName = site?.clientName || formatSlugToTitle(slug);
   const deployedUrl = site?.deployedUrl || `https://${slug}.vercel.app`;
   const checkoutUrl = site?.checkoutUrl || `/api/subscription/create-checkout?slug=${slug}`;
 
   // =========================================================================
   // CASO 1: SITE SUSPENSO OU CANCELADO (INADIMPLENTE OU CANCELADO)
   // =========================================================================
-  if (status === 'suspended' || status === 'cancelled') {
+  if (status === 'suspended' || status === 'inactive' || status === 'paused' || status === 'cancelled') {
     const contactEmail = 'contato@webbilly.com.br';
     const emailSubject = encodeURIComponent(`Reativação de Site - ${clientName} (${slug}.webbilly.com.br)`);
     const emailBody = encodeURIComponent(
