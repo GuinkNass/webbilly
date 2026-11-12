@@ -1,40 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDb, writeDb, Candidate } from '@/lib/db';
-import { sendOperatorApplicationEmail } from '@/lib/mailer';
+import { sendOperatorEmail } from '@/lib/lark-mailer';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const {
       name,
+      nome,
       whatsapp,
       email,
       city,
+      cidade,
       state,
       instagram,
       experience,
+      experiencia,
       pixType,
       pixKey,
       cityState,
     } = body;
 
-    if (!name || !whatsapp || !email) {
+    const candidateName = (name || nome || '').trim();
+    const candidateWhatsapp = (whatsapp || '').trim();
+    const candidateEmail = (email || '').trim().toLowerCase();
+
+    if (!candidateName || !candidateWhatsapp || !candidateEmail) {
       return NextResponse.json(
         { success: false, error: 'Por favor, preencha ao menos Nome, WhatsApp e E-mail.' },
         { status: 400 }
       );
     }
 
-    const cleanEmail = String(email).trim().toLowerCase();
-    if (!cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+    if (!candidateEmail.includes('@') || !candidateEmail.includes('.')) {
       return NextResponse.json(
         { success: false, error: 'Informe um endereço de e-mail válido.' },
         { status: 400 }
       );
     }
 
-    // Separa cidade e estado caso venham juntos em cityState (ex: "São Paulo/SP")
-    let parsedCity = (city || '').trim();
+    let parsedCity = (city || cidade || '').trim();
     let parsedState = (state || '').trim();
     if (!parsedCity && cityState) {
       const parts = String(cityState).split('/');
@@ -45,13 +50,13 @@ export async function POST(req: NextRequest) {
     const candidateId = `cand-${Date.now().toString(36)}`;
     const candidateData: Candidate = {
       id: candidateId,
-      name: String(name).trim(),
-      email: cleanEmail,
-      whatsapp: String(whatsapp).trim(),
+      name: candidateName,
+      email: candidateEmail,
+      whatsapp: candidateWhatsapp,
       city: parsedCity,
-      state: parsedState.toUpperCase(),
+      state: parsedState.toUpperCase() || 'BR',
       instagram: (instagram || '').trim(),
-      experience: (experience || '').trim(),
+      experience: (experience || experiencia || '').trim(),
       resumeUrl: '',
       pixType: pixType || 'cpf',
       pixKey: (pixKey || '').trim(),
@@ -62,12 +67,10 @@ export async function POST(req: NextRequest) {
     // 1. Persistência no Banco de Dados
     try {
       const db = readDb();
-      // Se não existir na lista, adiciona no topo
-      const existing = db.candidates.find(c => c.email.toLowerCase() === cleanEmail);
+      const existing = db.candidates.find(c => c.email.toLowerCase() === candidateEmail);
       if (!existing) {
         db.candidates.unshift(candidateData);
       } else {
-        // Atualiza dados
         Object.assign(existing, candidateData);
       }
       writeDb(db);
@@ -75,20 +78,15 @@ export async function POST(req: NextRequest) {
       console.warn('[Apply API] Aviso na persistência local do db:', dbErr);
     }
 
-    // 2. Disparo de E-mail via Lark Suite SMTP
-    let emailSent = false;
+    // 2. Disparo de E-mail via Lark Suite SMTP para operadores@webbilly.com.br
     try {
-      emailSent = await sendOperatorApplicationEmail({
-        name: candidateData.name,
+      await sendOperatorEmail({
+        nome: candidateData.name,
         whatsapp: candidateData.whatsapp,
         email: candidateData.email,
-        city: candidateData.city,
-        state: candidateData.state,
+        cidade: candidateData.city ? `${candidateData.city}/${candidateData.state}` : '',
         instagram: candidateData.instagram,
-        experience: candidateData.experience,
-        pixType: candidateData.pixType,
-        pixKey: candidateData.pixKey,
-        candidateId: candidateData.id,
+        experiencia: candidateData.experience,
       });
     } catch (mailErr: any) {
       console.error('[Apply API] Erro no envio via Lark SMTP:', mailErr?.message || mailErr);
@@ -98,13 +96,11 @@ export async function POST(req: NextRequest) {
       success: true,
       message: 'Candidatura de operador enviada com sucesso! Entraremos em contato via WhatsApp e E-mail.',
       candidateId: candidateData.id,
-      emailNotified: emailSent,
     });
-
   } catch (err: any) {
-    console.error('[Apply API] Erro interno:', err);
+    console.error('[Apply API] Erro no endpoint:', err);
     return NextResponse.json(
-      { success: false, error: 'Ocorreu um erro interno ao processar a candidatura.' },
+      { success: false, error: err.message || 'Erro interno ao processar candidatura.' },
       { status: 500 }
     );
   }

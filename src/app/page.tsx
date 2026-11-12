@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import confetti from 'canvas-confetti';
 import TrabalheAquiForm from '@/components/TrabalheAquiForm';
+import ContatoForm from '@/components/ContatoForm';
 import {
   Globe,
   Smartphone,
@@ -40,7 +41,8 @@ export default function WebbillyHomePage() {
     businessName: '',
     whatsapp: '',
     cityState: '',
-    niche: 'Geral'
+    niche: 'Geral',
+    instagramOuMaps: ''
   });
 
   const [loading, setLoading] = useState(false);
@@ -121,6 +123,21 @@ export default function WebbillyHomePage() {
     setPreviewSlug(slug);
 
     try {
+      // 1. Disparo de e-mail via Lark Suite SMTP para demo@webbilly.com.br
+      await fetch('/api/demonstracao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessName: formData.businessName,
+          whatsapp: formData.whatsapp,
+          responsibleName: formData.responsibleName,
+          cityState: formData.cityState,
+          niche: formData.niche,
+          instagramOuMaps: formData.instagramOuMaps,
+        })
+      }).catch((e) => console.warn('Aviso no envio de demo:', e));
+
+      // 2. Registro de lead/assinatura orgânica
       await fetch('/api/subscription/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -141,15 +158,15 @@ export default function WebbillyHomePage() {
 
       setSubmitted(true);
 
-      const cleanPhone = formData.whatsapp.replace(/\D/g, '');
       const whatsMessage = encodeURIComponent(
-        `Olá, equipe Webbilly! Gostaria de receber a demonstração do site profissional da minha empresa.\n\n` +
-        `🏢 Negócio: ${formData.businessName}\n` +
-        `👤 Responsável: ${formData.responsibleName || 'Não informado'}\n` +
-        `📍 Cidade/UF: ${formData.cityState || 'Não informado'}\n` +
-        `💼 Ramo: ${formData.niche}\n` +
-        `👉 Subdomínio desejado: ${slug}.webbilly.com.br\n\n` +
-        `Quero ver a demonstração funcionando no meu celular!`
+        `Olá, equipe Webbilly! Tudo bem?\n\n` +
+        `Gostaria de receber a demonstração do site oficial da minha empresa:\n\n` +
+        `Empresa: ${formData.businessName}\n` +
+        `Responsável: ${formData.responsibleName || 'Não informado'}\n` +
+        `Cidade/UF: ${formData.cityState || 'Não informado'}\n` +
+        `Segmento: ${formData.niche}\n` +
+        `Subdomínio pretendido: ${slug}.webbilly.com.br\n\n` +
+        `Aguardo o contato com a prévia no meu WhatsApp!`
       );
 
       setTimeout(() => {
@@ -292,6 +309,7 @@ export default function WebbillyHomePage() {
             <a href="#modelos" className="hover:text-[#7abf18] transition">Modelos</a>
             <a href="#trabalhe-aqui" className="hover:text-[#7abf18] transition font-bold text-emerald-400">Trabalhe Aqui</a>
             <a href="#faq" className="hover:text-[#7abf18] transition">Dúvidas</a>
+            <a href="#contato" className="hover:text-[#7abf18] transition text-zinc-300">SAC / Contato</a>
           </nav>
 
           {/* CTA Header */}
@@ -327,6 +345,7 @@ export default function WebbillyHomePage() {
             <a href="#vantagens" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-zinc-300">Vantagens</a>
             <a href="#modelos" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-zinc-300">Modelos</a>
             <a href="#trabalhe-aqui" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-emerald-400 font-bold">Trabalhe Aqui</a>
+            <a href="#contato" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-zinc-300">SAC & Atendimento</a>
             <a href="#demonstracao" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-[#7abf18] font-bold">Solicitar Demonstração →</a>
           </div>
         )}
@@ -1184,6 +1203,13 @@ export default function WebbillyHomePage() {
       </section>
 
       {/* =====================================================================
+          12.5. SAC & ATENDIMENTO COMERCIAL CENTRALIZADO (LARK SMTP)
+         ===================================================================== */}
+      <section id="contato" className="py-20 px-4 sm:px-8 bg-[#090b10] border-t border-white/[0.06] relative">
+        <ContatoForm />
+      </section>
+
+      {/* =====================================================================
           13. FOOTER (Inspirado em eco_footer_wrapper & eco_bottom_footer)
          ===================================================================== */}
       <footer className="bg-[#090c12] border-t border-white/[0.08] text-zinc-400 pt-16 pb-12 px-4 sm:px-8 text-xs">
@@ -1221,6 +1247,7 @@ export default function WebbillyHomePage() {
               <li><a href="#modelos" className="hover:text-[#7abf18] transition">Modelos de Sites</a></li>
               <li><a href="#demonstracao" className="hover:text-[#7abf18] transition">Pedir Demonstração</a></li>
               <li><a href="#trabalhe-aqui" className="hover:text-[#7abf18] transition text-emerald-400 font-semibold">Trabalhe Aqui (Seja Operador)</a></li>
+              <li><a href="#contato" className="hover:text-[#7abf18] transition text-zinc-300">SAC & Atendimento Direto</a></li>
             </ul>
           </div>
 
@@ -1254,13 +1281,13 @@ export default function WebbillyHomePage() {
             </ul>
           </div>
 
-          {/* Coluna 4: Contato */}
+          {/* Coluna 4: Contato & Canais Oficiais */}
           <div className="space-y-3">
             <h4 className="text-sm font-bold text-white font-heading uppercase tracking-wider">
-              Atendimento Direto
+              Canais de Atendimento
             </h4>
             <p className="text-zinc-500 text-xs">
-              Dúvidas ou suporte para seu comércio local:
+              Fale diretamente com o setor responsável:
             </p>
             <div className="space-y-2 pt-1 font-mono text-xs">
               <a
@@ -1272,10 +1299,41 @@ export default function WebbillyHomePage() {
                 <Phone className="w-3.5 h-3.5 text-[#7abf18]" />
                 WhatsApp: (11) 99999-9999
               </a>
-              <span className="flex items-center gap-2 text-zinc-400">
-                <Mail className="w-3.5 h-3.5 text-[#7abf18]" />
-                contato@webbilly.com.br
-              </span>
+              <a
+                href="mailto:comercial@webbilly.com.br"
+                className="hover:text-[#7abf18] transition flex items-center gap-2 text-zinc-400"
+              >
+                <Mail className="w-3.5 h-3.5 text-blue-400" />
+                <span>Comercial: <span className="text-zinc-300">comercial@webbilly.com.br</span></span>
+              </a>
+              <a
+                href="mailto:operadores@webbilly.com.br"
+                className="hover:text-[#7abf18] transition flex items-center gap-2 text-zinc-400"
+              >
+                <Mail className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Operadores: <span className="text-zinc-300">operadores@webbilly.com.br</span></span>
+              </a>
+              <a
+                href="mailto:demo@webbilly.com.br"
+                className="hover:text-[#7abf18] transition flex items-center gap-2 text-zinc-400"
+              >
+                <Mail className="w-3.5 h-3.5 text-purple-400" />
+                <span>Demonstrações: <span className="text-zinc-300">demo@webbilly.com.br</span></span>
+              </a>
+              <a
+                href="mailto:sac@webbilly.com.br"
+                className="hover:text-[#7abf18] transition flex items-center gap-2 text-zinc-400"
+              >
+                <Mail className="w-3.5 h-3.5 text-rose-400" />
+                <span>SAC & Suporte: <span className="text-zinc-300">sac@webbilly.com.br</span></span>
+              </a>
+              <a
+                href="mailto:financeiro@webbilly.com.br"
+                className="hover:text-[#7abf18] transition flex items-center gap-2 text-zinc-400"
+              >
+                <Mail className="w-3.5 h-3.5 text-amber-400" />
+                <span>Financeiro: <span className="text-zinc-300">financeiro@webbilly.com.br</span></span>
+              </a>
             </div>
           </div>
 

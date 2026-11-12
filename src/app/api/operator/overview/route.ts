@@ -109,6 +109,7 @@ export async function GET(req: NextRequest) {
       },
       sales: mySales,
       subscriptions: mySubscriptions,
+      payoutRequests: (db.payoutRequests || []).filter(p => p.operatorId === operator.id),
       trainingModules,
       installer: {
         version: '2.0.4',

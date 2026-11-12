@@ -183,6 +183,23 @@ export interface SubscriptionRecord {
   updatedAt: string;
 }
 
+export interface PayoutRequest {
+  id: string;
+  operatorId: string;
+  operatorName: string;
+  corporateEmail: string;
+  mesReferencia: string;
+  vendasCount: number;
+  valorTotalFaturado: number;
+  valorRepasse: number;
+  chavePix: string;
+  tipoPix?: string;
+  status: 'PENDENTE' | 'PAGO';
+  requestedAt: string;
+  paidAt?: string;
+  pixProof?: string;
+}
+
 export interface DatabaseSchema {
   candidates: Candidate[];
   operators: Operator[];
@@ -193,6 +210,7 @@ export interface DatabaseSchema {
   briefings?: Record<string, BriefingRecord>;
   demos?: Record<string, DemoRecord>;
   subscriptions: SubscriptionRecord[];
+  payoutRequests?: PayoutRequest[];
 }
 
 export function getDefaultSubscriptions(): SubscriptionRecord[] {
