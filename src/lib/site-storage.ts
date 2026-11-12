@@ -92,8 +92,14 @@ export async function syncSlugSuspension(rawSlug: string, suspended: boolean): P
   // 1. Atualiza memória e disco locais
   setSlugSuspended(clean, suspended);
 
-  // 2. Busca lista atualizada e ajusta o set
-  const currentSet = new Set<string>(globalThis.__webbillySuspendedSlugs || getSuspendedSlugs());
+  // 2. Busca lista atualizada da nuvem primeiro para consolidar
+  let currentSet: Set<string>;
+  try {
+    const fetched = await fetchCloudSuspendedSlugs();
+    currentSet = new Set<string>(fetched);
+  } catch {
+    currentSet = new Set<string>(globalThis.__webbillySuspendedSlugs || getSuspendedSlugs());
+  }
   if (suspended) {
     currentSet.add(clean);
   } else {

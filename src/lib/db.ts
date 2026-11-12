@@ -208,6 +208,19 @@ export interface PayoutRequest {
   pixProof?: string;
 }
 
+export interface MedalUpgradeRecord {
+  id: string;
+  operatorId: string;
+  fromTier: string;
+  toTier: string;
+  monthRef: string; // e.g. "2026-11"
+  bonusPercentage: number; // 20
+  baseEarnings: number;
+  bonusAmount: number;
+  achievedAt: string;
+  payoutApplied?: boolean;
+}
+
 export interface DatabaseSchema {
   candidates: Candidate[];
   operators: Operator[];
@@ -219,6 +232,7 @@ export interface DatabaseSchema {
   demos?: Record<string, DemoRecord>;
   subscriptions: SubscriptionRecord[];
   payoutRequests?: PayoutRequest[];
+  medalUpgrades?: MedalUpgradeRecord[];
 }
 
 export function getDefaultSubscriptions(): SubscriptionRecord[] {

@@ -33,7 +33,11 @@ import {
   Sparkles,
   Send,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Trophy,
+  Medal,
+  Target,
+  Flame
 } from 'lucide-react';
 
 export default function OperatorDashboardPage() {
@@ -41,7 +45,8 @@ export default function OperatorDashboardPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'subscriptions' | 'training' | 'sales'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'subscriptions' | 'training' | 'sales' | 'ranking'>('overview');
+  const [rankingData, setRankingData] = useState<any>(null);
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [copied, setCopied] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -142,6 +147,17 @@ export default function OperatorDashboardPage() {
       }
       if (json.trainingModules?.length > 0) {
         setSelectedVideo(json.trainingModules[0]);
+      }
+
+      // Carrega ranking e gamificação em tempo real
+      try {
+        const rankRes = await fetch('/api/operador/ranking');
+        if (rankRes.ok) {
+          const rankJson = await rankRes.json();
+          setRankingData(rankJson);
+        }
+      } catch (rankErr) {
+        console.warn('Falha ao carregar ranking:', rankErr);
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao carregar dados do operador.');
@@ -296,6 +312,26 @@ export default function OperatorDashboardPage() {
                   R$ {(stats?.monthlyCommissionMRR ?? ((stats?.activeSubscriptionsCount ?? 0) * 10)).toLocaleString('pt-BR')}
                 </span>
               </button>
+
+              <button
+                onClick={() => setActiveTab('ranking')}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
+                  activeTab === 'ranking'
+                    ? 'bg-emerald-600/90 text-white font-medium border border-emerald-500/30'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Trophy className={`w-4 h-4 ${activeTab === 'ranking' ? 'text-amber-300' : 'text-amber-400 group-hover:text-amber-300'}`} />
+                  <span>Ranking & Medalhas</span>
+                </div>
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold flex items-center gap-1 ${
+                  data?.gamification?.currentMedal?.badgeBg || 'bg-amber-500/20'
+                } ${data?.gamification?.currentMedal?.badgeText || 'text-amber-300'} border ${data?.gamification?.currentMedal?.badgeBorder || 'border-amber-500/30'}`}>
+                  <span>{data?.gamification?.currentMedal?.icon || '🌱'}</span>
+                  <span>{data?.gamification?.currentMedal?.name || 'Iniciante'}</span>
+                </span>
+              </button>
             </nav>
           </div>
         </div>
@@ -393,6 +429,19 @@ export default function OperatorDashboardPage() {
                 <ShieldCheck className="w-3.5 h-3.5" />
                 <span>Painel Master Admin</span>
               </Link>
+            )}
+
+            {/* Medalha & Ranking Pill */}
+            {data?.gamification?.currentMedal && (
+              <button
+                onClick={() => setActiveTab('ranking')}
+                className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold border transition ${data.gamification.currentMedal.badgeBg} ${data.gamification.currentMedal.badgeText} ${data.gamification.currentMedal.badgeBorder} hover:scale-105`}
+                title="Ver seu progresso no Ranking e Medalhas"
+              >
+                <span>{data.gamification.currentMedal.icon}</span>
+                <span>{data.gamification.currentMedal.name}</span>
+                <span className="text-[10px] opacity-80 font-mono">#{data.gamification.rank}</span>
+              </button>
             )}
 
             {/* Atualizar Dados */}
@@ -536,6 +585,44 @@ export default function OperatorDashboardPage() {
           subscriptions={data?.subscriptions}
           operatorStats={stats}
         />
+
+        {/* BANNER DE GAMIFICAÇÃO & RANKING EM TEMPO REAL */}
+        {data?.gamification && (
+          <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#141824] via-[#11141c] to-[#141824] border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-2xl shrink-0 shadow-md">
+                {data.gamification.currentMedal?.icon || '🌱'}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-white uppercase tracking-wider">
+                    Sua Medalha Oficial: <strong className="text-amber-300">{data.gamification.currentMedal?.name}</strong>
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    #{data.gamification.rank} no Ranking
+                  </span>
+                  {data.gamification.hasMedalUpgradeBonus && (
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse">
+                      ✨ +20% Bônus Ativo!
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Pontuação: <strong className="text-white font-mono">{data.gamification.rankingScore} pts</strong> ({data.gamification.activeRecurringCount} clientes ativos • {data.gamification.monthlyDomainSalesCount} domínios no mês)
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setActiveTab('ranking')}
+              className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition flex items-center gap-2 shrink-0 group"
+            >
+              <Trophy className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition" />
+              <span>Ver Ranking Completo</span>
+              <ChevronRight className="w-3.5 h-3.5 opacity-70" />
+            </button>
+          </div>
+        )}
 
         {/* =========================================================================
             ABA 1: DOWNLOAD DO INSTALADOR E GUIA RÁPIDO
@@ -1134,6 +1221,412 @@ export default function OperatorDashboardPage() {
                         </tr>
                       ))
                     )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* =========================================================================
+            ABA 5: RANKING & MEDALHAS DA EQUIPE (GAMIFICAÇÃO)
+           ========================================================================= */}
+        {activeTab === 'ranking' && (
+          <div className="space-y-6">
+            {/* 1. Header com Título e Data de Referência */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#11141c] p-6 rounded-2xl border border-white/[0.06]">
+              <div>
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-bold mb-2">
+                  <Trophy className="w-3.5 h-3.5" />
+                  Gamificação & Reconhecimento Oficial
+                </div>
+                <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                  Ranking em Tempo Real & Medalhas
+                </h1>
+                <p className="text-xs text-zinc-400 mt-1">
+                  Ciclo Ativo: <strong className="text-white">{data?.payoutRules?.currentMonthRef || 'Novembro de 2026'}</strong> • Atualizado instantaneamente a cada novo cliente
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="px-4 py-2.5 rounded-xl bg-zinc-900 border border-white/[0.08] text-right">
+                  <div className="text-[10px] uppercase font-bold text-zinc-400">Sua Classificação</div>
+                  <div className="text-lg font-black text-emerald-400 font-mono">
+                    #{data?.gamification?.rank || 1} <span className="text-xs text-zinc-500 font-normal">de {data?.gamification?.totalOperators || 4}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Card Principal de Status Pessoal do Operador */}
+            {(() => {
+              const g = data?.gamification;
+              const medal = g?.currentMedal || {
+                name: 'Iniciante',
+                icon: '🌱',
+                level: 0,
+                badgeBg: 'bg-zinc-800',
+                badgeText: 'text-zinc-400',
+                badgeBorder: 'border-zinc-700',
+                description: 'Construa sua carteira rumo ao Bronze'
+              };
+              const nextMedal = g?.nextMedal;
+              const hasBonus = g?.hasMedalUpgradeBonus;
+              const bonusAmount = g?.medalUpgradeBonusAmount || 0;
+
+              return (
+                <div className="space-y-6">
+                  {/* Banner de Bônus de +20% se conquistado */}
+                  {hasBonus ? (
+                    <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-950/60 via-amber-950/40 to-emerald-950/60 border border-amber-500/40 shadow-xl relative overflow-hidden">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-2xl shrink-0 shadow-lg shadow-amber-500/20">
+                            🎉
+                          </div>
+                          <div>
+                            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold text-[10px] uppercase tracking-wider mb-1">
+                              <Sparkles className="w-3 h-3" />
+                              Bônus de Subida de Medalha Destravado!
+                            </div>
+                            <h3 className="text-base sm:text-lg font-bold text-white">
+                              Parabéns! Você subiu de medalha e ganhou +20% DE BÔNUS!
+                            </h3>
+                            <p className="text-xs text-zinc-300 mt-0.5">
+                              Você atingiu a <strong className="text-amber-300">{medal.name}</strong> e destravou um bônus de <strong className="text-emerald-400 font-mono">+R$ {bonusAmount.toFixed(2).replace('.', ',')}</strong> que já está incluído no seu repasse Pix mensal!
+                            </p>
+                          </div>
+                        </div>
+                        <div className="px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-500/40 text-center shrink-0">
+                          <div className="text-[10px] uppercase font-bold text-amber-300">+20% Adicionado</div>
+                          <div className="text-lg font-black text-amber-400 font-mono">
+                            +R$ {bonusAmount.toFixed(2).replace('.', ',')}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-4 rounded-2xl bg-[#11141c] border border-white/[0.06] flex items-center gap-3 text-xs text-zinc-300">
+                      <Flame className="w-5 h-5 text-amber-400 shrink-0" />
+                      <div>
+                        <strong className="text-white">Regra do Bônus Financeiro de +20%:</strong> Suba de medalha neste mês (ex: Iniciante ➔ Bronze, Bronze ➔ Prata, etc.) e ganhe automaticamente um <span className="text-emerald-400 font-bold">bônus extra de +20%</span> sobre o total de todos os seus repasses e ganhos do mês!
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Grid de 3 Cards: Medalha Atual / Score & Posição / Próxima Conquista */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {/* Card 1: Medalha Atual */}
+                    <div className={`p-5 rounded-2xl border ${medal.badgeBorder} ${medal.badgeBg} flex flex-col justify-between relative overflow-hidden backdrop-blur-sm`}>
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">Sua Medalha Atual</span>
+                          <span className="text-2xl">{medal.icon}</span>
+                        </div>
+                        <div className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                          <span>{medal.name}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${medal.badgeText} bg-black/40 border border-white/10`}>
+                            Nível {medal.level}
+                          </span>
+                        </div>
+                        <p className="text-xs text-zinc-300 mt-2 leading-relaxed">
+                          {medal.description}
+                        </p>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-white/[0.08] flex items-center justify-between text-xs">
+                        <span className="text-zinc-400">Ganhos Base Mês:</span>
+                        <span className="font-mono font-bold text-emerald-400">
+                          R$ {(g?.monthlyBaseEarnings || 0).toFixed(2).replace('.', ',')}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Card 2: Pontuação Geral no Ranking */}
+                    <div className="p-5 rounded-2xl bg-[#11141c] border border-white/[0.06] flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">Pontuação de Ranking</span>
+                          <Award className="w-5 h-5 text-amber-400" />
+                        </div>
+                        <div className="text-3xl font-black text-white font-mono tracking-tight">
+                          {g?.rankingScore || 0} <span className="text-sm font-sans font-normal text-zinc-400">pts</span>
+                        </div>
+                        <div className="space-y-1.5 mt-3 text-xs text-zinc-400">
+                          <div className="flex justify-between">
+                            <span>Assinantes Ativos (1 pt cada):</span>
+                            <strong className="text-white font-mono">{g?.activeRecurringCount || 0} pts</strong>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Domínios R$ 490 no mês (10 pts cada):</span>
+                            <strong className="text-amber-400 font-mono">{(g?.monthlyDomainSalesCount || 0) * 10} pts</strong>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-white/[0.06] text-[11px] text-zinc-500">
+                        * Pontuação oficial calculada com base na carteira e fechamentos do mês.
+                      </div>
+                    </div>
+
+                    {/* Card 3: Metas para Próxima Medalha */}
+                    <div className="p-5 rounded-2xl bg-[#11141c] border border-white/[0.06] flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">Próximo Nível</span>
+                          <Target className="w-5 h-5 text-emerald-400" />
+                        </div>
+
+                        {nextMedal ? (
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">{nextMedal.icon}</span>
+                              <span className="text-sm font-bold text-white">Rumo à Medalha {nextMedal.name}</span>
+                            </div>
+
+                            {/* Barra 1: Assinantes Ativos */}
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-[11px]">
+                                <span className="text-zinc-400">Assinantes Ativos:</span>
+                                <span className="font-mono text-white font-bold">
+                                  {g?.activeRecurringCount || 0} / {nextMedal.minRecurring}
+                                </span>
+                              </div>
+                              <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                                <div
+                                  className="h-full bg-emerald-500 transition-all duration-500 rounded-full"
+                                  style={{ width: `${g?.recurringProgressPercent || 0}%` }}
+                                />
+                              </div>
+                              {(g?.recurringNeededForNext ?? 0) > 0 && (
+                                <div className="text-[10px] text-emerald-400 font-medium">
+                                  Faltam apenas {g?.recurringNeededForNext} assinante{g?.recurringNeededForNext > 1 ? 's' : ''} ativo{g?.recurringNeededForNext > 1 ? 's' : ''}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Barra 2: Domínios no Mês */}
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-[11px]">
+                                <span className="text-zinc-400">Domínios Próprios no Mês:</span>
+                                <span className="font-mono text-white font-bold">
+                                  {g?.monthlyDomainSalesCount || 0} / {nextMedal.minMonthlyDomainSales}
+                                </span>
+                              </div>
+                              <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                                <div
+                                  className="h-full bg-amber-500 transition-all duration-500 rounded-full"
+                                  style={{ width: `${g?.domainProgressPercent || 0}%` }}
+                                />
+                              </div>
+                              {(g?.domainNeededForNext ?? 0) > 0 && (
+                                <div className="text-[10px] text-amber-400 font-medium">
+                                  Falta{g?.domainNeededForNext > 1 ? 'm' : ''} {g?.domainNeededForNext} venda{g?.domainNeededForNext > 1 ? 's' : ''} de Domínio Próprio
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="py-4 text-center">
+                            <div className="text-3xl mb-2">💎</div>
+                            <div className="text-sm font-bold text-rose-400">Nível Máximo Conquistado!</div>
+                            <p className="text-xs text-zinc-400 mt-1">Você é o topo da equipe com a Medalha de Rubi.</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-white/[0.06] text-[10px] text-zinc-500">
+                        * Exige atingir AMBAS as metas (assinantes e domínios)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* 3. Tabela Oficial de Regras das Medalhas (Metas Claras) */}
+            <div className="bg-[#11141c] p-6 rounded-2xl border border-white/[0.06] space-y-4">
+              <div className="flex items-center gap-2">
+                <Medal className="w-4 h-4 text-amber-400" />
+                <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                  Tabela Oficial de Metas & Medalhas Webbilly
+                </h3>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Bronze */}
+                <div className="p-4 rounded-xl bg-[#141824] border border-orange-600/30 hover:border-orange-500/50 transition">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-orange-400 flex items-center gap-1.5">
+                      <span>🥉</span> Bronze (Nível 1)
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-600/20 text-orange-300 font-mono font-bold">
+                      Marco 1
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-xs text-zinc-300 mt-3">
+                    <div>• <strong>10+</strong> Assinantes Ativos</div>
+                    <div>• <strong>1+</strong> Domínio no Mês</div>
+                    <div className="pt-2 text-[11px] text-emerald-400 font-medium">+20% Bônus de Promoção</div>
+                  </div>
+                </div>
+
+                {/* Prata */}
+                <div className="p-4 rounded-xl bg-[#141824] border border-slate-400/30 hover:border-slate-300/50 transition">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                      <span>🥈</span> Prata (Nível 2)
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-400/20 text-slate-300 font-mono font-bold">
+                      Consistência
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-xs text-zinc-300 mt-3">
+                    <div>• <strong>35+</strong> Assinantes Ativos</div>
+                    <div>• <strong>5+</strong> Domínios no Mês</div>
+                    <div className="pt-2 text-[11px] text-emerald-400 font-medium">+20% Bônus de Promoção</div>
+                  </div>
+                </div>
+
+                {/* Ouro */}
+                <div className="p-4 rounded-xl bg-[#141824] border border-amber-500/30 hover:border-amber-400/50 transition">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                      <span>🥇</span> Ouro (Nível 3)
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono font-bold">
+                      Elite
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-xs text-zinc-300 mt-3">
+                    <div>• <strong>50+</strong> Assinantes Ativos</div>
+                    <div>• <strong>15+</strong> Domínios no Mês</div>
+                    <div className="pt-2 text-[11px] text-emerald-400 font-medium">+20% Bônus de Promoção</div>
+                  </div>
+                </div>
+
+                {/* Rubi */}
+                <div className="p-4 rounded-xl bg-[#141824] border border-rose-500/30 hover:border-rose-400/50 transition">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-rose-400 flex items-center gap-1.5">
+                      <span>💎</span> Rubi (Nível 4)
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-mono font-bold">
+                      Máximo
+                    </span>
+                  </div>
+                  <div className="space-y-1 text-xs text-zinc-300 mt-3">
+                    <div>• <strong>100+</strong> Assinantes Ativos</div>
+                    <div>• <strong>25+</strong> Domínios no Mês</div>
+                    <div className="pt-2 text-[11px] text-emerald-400 font-medium">+20% Bônus de Promoção</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 4. Leaderboard Oficial em Tempo Real da Equipe */}
+            <div className="bg-[#11141c] rounded-2xl border border-white/[0.06] overflow-hidden">
+              <div className="p-5 border-b border-white/[0.06] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <Trophy className="w-5 h-5 text-amber-400" />
+                  <div>
+                    <h3 className="text-sm font-bold text-white">Classificação Geral da Equipe (Ao Vivo)</h3>
+                    <p className="text-xs text-zinc-400">Nomes de colegas mascarados para conformidade e privacidade interna.</p>
+                  </div>
+                </div>
+                <div className="text-xs text-zinc-400 font-mono">
+                  {rankingData?.leaderboard?.length || 4} Operadores Ativos
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs text-zinc-300">
+                  <thead className="bg-[#0e1118] text-[10px] uppercase font-bold text-zinc-400 border-b border-white/[0.06]">
+                    <tr>
+                      <th className="py-3 px-4 text-center">Posição</th>
+                      <th className="py-3 px-4">Colaborador / Operador</th>
+                      <th className="py-3 px-4">Medalha</th>
+                      <th className="py-3 px-4 text-center">Assinantes Ativos</th>
+                      <th className="py-3 px-4 text-center">Domínios no Mês</th>
+                      <th className="py-3 px-4 text-right">Score Oficial</th>
+                      <th className="py-3 px-4 text-right">Status do Bônus</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.04]">
+                    {(rankingData?.leaderboard || []).map((row: any) => {
+                      const isMe = row.isCurrentUser;
+                      const isTop1 = row.rank === 1;
+                      const isTop2 = row.rank === 2;
+                      const isTop3 = row.rank === 3;
+
+                      return (
+                        <tr
+                          key={row.operatorId}
+                          className={`transition ${
+                            isMe
+                              ? 'bg-emerald-950/30 border-l-4 border-l-emerald-500 font-semibold'
+                              : 'hover:bg-white/[0.02]'
+                          }`}
+                        >
+                          <td className="py-3.5 px-4 text-center">
+                            <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full font-black text-xs font-mono ${
+                              isTop1
+                                ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40 shadow-sm shadow-amber-400/20'
+                                : isTop2
+                                ? 'bg-slate-300/20 text-slate-200 border border-slate-300/40'
+                                : isTop3
+                                ? 'bg-orange-600/20 text-orange-400 border border-orange-600/40'
+                                : 'bg-zinc-800 text-zinc-400'
+                            }`}>
+                              {isTop1 ? '🥇' : isTop2 ? '🥈' : isTop3 ? '🥉' : `#${row.rank}`}
+                            </span>
+                          </td>
+
+                          <td className="py-3.5 px-4">
+                            <div className="flex items-center gap-2">
+                              <span className={`font-medium ${isMe ? 'text-emerald-400 font-bold' : 'text-white'}`}>
+                                {row.displayName}
+                              </span>
+                              {isMe && (
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-wider">
+                                  Você
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          <td className="py-3.5 px-4">
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${row.medal?.badgeBg || 'bg-zinc-800'} ${row.medal?.badgeText || 'text-zinc-400'} ${row.medal?.badgeBorder || 'border-zinc-700'}`}>
+                              <span>{row.medal?.icon || '🌱'}</span>
+                              <span>{row.medal?.name || 'Iniciante'}</span>
+                            </span>
+                          </td>
+
+                          <td className="py-3.5 px-4 text-center font-mono font-bold text-white">
+                            {row.activeRecurringCount} <span className="text-[10px] text-zinc-500 font-normal">clientes</span>
+                          </td>
+
+                          <td className="py-3.5 px-4 text-center font-mono font-bold text-amber-400">
+                            {row.monthlyDomainSalesCount} <span className="text-[10px] text-zinc-500 font-normal">vendas</span>
+                          </td>
+
+                          <td className="py-3.5 px-4 text-right font-mono font-black text-white text-sm">
+                            {row.rankingScore} <span className="text-[10px] text-zinc-500 font-normal">pts</span>
+                          </td>
+
+                          <td className="py-3.5 px-4 text-right">
+                            {row.hasMedalUpgradeBonus ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                                <Sparkles className="w-2.5 h-2.5" />
+                                +20% Bônus
+                              </span>
+                            ) : (
+                              <span className="text-zinc-500 text-[10px]">-</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDb } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
+import { calculateOperatorGamification, getLeaderboard } from '@/lib/gamification';
 
 export async function GET(req: NextRequest) {
   try {
@@ -121,6 +122,12 @@ export async function GET(req: NextRequest) {
       }
     ];
 
+    // Gamificação em tempo real: Medalha, Pontuação e Bônus de +20%
+    const gamification = calculateOperatorGamification(operator, db, now, true);
+    const { leaderboard } = getLeaderboard(db, operator.id, now);
+    const myRankEntry = leaderboard.find(l => l.operatorId === operator.id);
+    const myRank = myRankEntry?.rank || 1;
+
     return NextResponse.json({
       operator: {
         id: operator.id,
@@ -139,6 +146,11 @@ export async function GET(req: NextRequest) {
         dailyLimit: operator.dailyLimit,
         todayGenerations: operator.todayGenerations,
         mustChangePassword: operator.mustChangePassword ?? false
+      },
+      gamification: {
+        ...gamification,
+        rank: myRank,
+        totalOperators: leaderboard.length
       },
       isMaster: user.role === 'MASTER' || operator.email.toLowerCase() === 'admin@billysuite.com.br',
       license: license || null,

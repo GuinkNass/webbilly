@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readDb } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
 import { fetchCloudSuspendedSlugs, sanitizeSlug } from '@/lib/site-storage';
+import { getLeaderboard } from '@/lib/gamification';
 
 export async function GET(req: NextRequest) {
   try {
@@ -54,6 +55,9 @@ export async function GET(req: NextRequest) {
     // Resumo seguro de APIs
     const settings = db.adminSettings;
 
+    // Ranking e gamificação dos operadores
+    const { leaderboard } = getLeaderboard(db);
+
     return NextResponse.json({
       metrics: {
         totalActiveSites,
@@ -73,27 +77,38 @@ export async function GET(req: NextRequest) {
         activeOperatorsCount,
         blockedOperatorsCount
       },
+      leaderboard,
       subscriptions,
       candidates: db.candidates,
-      operators: db.operators.map(op => ({
-        id: op.id,
-        name: op.name,
-        cpf: op.cpf || null,
-        email: op.email,
-        whatsapp: op.whatsapp,
-        pixType: op.pixType,
-        pixKey: op.pixKey,
-        serialToken: op.serialToken,
-        status: op.status,
-        machineId: op.machineId,
-        osInfo: op.osInfo,
-        tempPasswordPlain: op.tempPasswordPlain || null,
-        mustChangePassword: op.mustChangePassword ?? false,
-        lastSync: op.lastSync,
-        dailyLimit: op.dailyLimit,
-        todayGenerations: op.todayGenerations,
-        createdAt: op.createdAt
-      })),
+      operators: db.operators.map(op => {
+        const lbItem = leaderboard.find(l => l.operatorId === op.id);
+        return {
+          id: op.id,
+          name: op.name,
+          cpf: op.cpf || null,
+          email: op.email,
+          whatsapp: op.whatsapp,
+          pixType: op.pixType,
+          pixKey: op.pixKey,
+          serialToken: op.serialToken,
+          status: op.status,
+          machineId: op.machineId,
+          osInfo: op.osInfo,
+          tempPasswordPlain: op.tempPasswordPlain || null,
+          mustChangePassword: op.mustChangePassword ?? false,
+          lastSync: op.lastSync,
+          dailyLimit: op.dailyLimit,
+          todayGenerations: op.todayGenerations,
+          createdAt: op.createdAt,
+          rank: lbItem?.rank || null,
+          rankingScore: lbItem?.rankingScore || 0,
+          medal: lbItem?.medal || null,
+          activeRecurringCount: lbItem?.activeRecurringCount || 0,
+          monthlyDomainSalesCount: lbItem?.monthlyDomainSalesCount || 0,
+          hasMedalUpgradeBonus: lbItem?.hasMedalUpgradeBonus ?? false,
+          medalUpgradeBonusAmount: lbItem?.medalUpgradeBonusAmount || 0
+        };
+      }),
       licenses: db.licenses.map(lic => {
         const cleanSerial = (lic.serialToken || '').trim().toUpperCase();
         const op = db.operators.find(o => 

@@ -929,6 +929,7 @@ export default function AdminDashboardPage() {
                     <tr>
                       <th className="py-3.5 px-5">Chave Serial (Token)</th>
                       <th className="py-3.5 px-4">Operador / E-mail</th>
+                      <th className="py-3.5 px-4 text-center">Medalha & Ranking</th>
                       <th className="py-3.5 px-4">Repasse Pix</th>
                       <th className="py-3.5 px-4">Hardware Lock</th>
                       <th className="py-3.5 px-4">Status</th>
@@ -938,7 +939,7 @@ export default function AdminDashboardPage() {
                   <tbody className="divide-y divide-white/[0.04]">
                     {(data?.licenses || []).length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="py-10 text-center text-zinc-400 text-xs">
+                        <td colSpan={7} className="py-10 text-center text-zinc-400 text-xs">
                           Nenhuma licença cadastrada.
                         </td>
                       </tr>
@@ -981,6 +982,38 @@ export default function AdminDashboardPage() {
                                   <span className="text-zinc-500 text-[10px]">E-mail não cadastrado</span>
                                 )}
                               </div>
+                            </td>
+                            {/* Medalha & Ranking do Operador */}
+                            <td className="py-4 px-4 text-center">
+                              {(() => {
+                                const cleanSerial = (lic.serialToken || '').trim().toUpperCase();
+                                const op = (data?.operators || []).find((o: any) =>
+                                  (o.serialToken || '').trim().toUpperCase() === cleanSerial ||
+                                  (lic.operatorId && o.id === lic.operatorId)
+                                );
+                                if (!op || !op.medal) {
+                                  return <span className="text-zinc-600 text-[10px]">-</span>;
+                                }
+
+                                return (
+                                  <div className="inline-flex flex-col items-center gap-1">
+                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${op.medal?.badgeBg || 'bg-zinc-800'} ${op.medal?.badgeText || 'text-zinc-400'} ${op.medal?.badgeBorder || 'border-zinc-700'}`}>
+                                      <span>{op.medal?.icon || '🌱'}</span>
+                                      <span>{op.medal?.name || 'Iniciante'}</span>
+                                    </span>
+                                    <div className="flex items-center gap-1 text-[10px] text-zinc-400">
+                                      <span className="font-mono text-emerald-400 font-bold">#{op.rank || 1}</span>
+                                      <span>•</span>
+                                      <span className="font-mono">{op.rankingScore || 0} pts</span>
+                                    </div>
+                                    {op.hasMedalUpgradeBonus && (
+                                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                        +20% Bônus
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })()}
                             </td>
                             <td className="py-4 px-4 font-mono text-xs">
                               {lic.pixKey ? (

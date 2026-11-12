@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readDb, writeDb, PayoutRequest } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
 import { sendPayoutRequestEmail } from '@/lib/lark-mailer';
+import { calculateOperatorGamification } from '@/lib/gamification';
 
 export async function POST(req: NextRequest) {
   try {
@@ -104,6 +105,17 @@ export async function POST(req: NextRequest) {
       valorRepasse = activeSubsCount * operatorCommissionMonthly * monthsAccumulated;
     }
 
+    // REGRA DE GAMIFICAÇÃO: Bônus extra de +20% por Mudança / Conquista de Medalha no mês
+    const gamification = calculateOperatorGamification(operator, db, now, true);
+    let valorBonusMedalha = 0;
+    if (gamification.hasMedalUpgradeBonus && gamification.medalUpgradeBonusAmount > 0) {
+      valorBonusMedalha = gamification.medalUpgradeBonusAmount;
+      valorRepasse += valorBonusMedalha;
+      if (gamification.upgradeRecord) {
+        gamification.upgradeRecord.payoutApplied = true;
+      }
+    }
+
     if (valorRepasse <= 0) {
       return NextResponse.json(
         { error: 'Não há saldo disponível para repasse no momento (mínimo R$ 0,01).' },
@@ -156,7 +168,8 @@ export async function POST(req: NextRequest) {
         tipoPix: operator.pixType || 'cpf',
         vendasResumo: [
           ...paidDirectSales.map(s => ({ cliente: s.clientName || 'Cliente Direto', plano: 'Site Definitivo', valor: s.saleValue, data: s.createdAt })),
-          ...activeSubs.map(s => ({ cliente: s.clientName, plano: 'Assinatura R$ 29,90/mês', valor: s.monthlyPrice, data: s.createdAt }))
+          ...activeSubs.map(s => ({ cliente: s.clientName, plano: 'Assinatura R$ 29,90/mês', valor: s.monthlyPrice, data: s.createdAt })),
+          ...(valorBonusMedalha > 0 ? [{ cliente: `Bônus Performance (+20% Conquista Medalha ${gamification.currentMedal.name})`, plano: 'Bônus Gamificação', valor: valorBonusMedalha, data: new Date().toISOString() }] : [])
         ]
       });
       console.log(`[Repasse API] Solicitação de repasse de ${operator.name} enviada para financeiro@webbilly.com.br`);
