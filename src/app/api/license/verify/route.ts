@@ -95,9 +95,14 @@ export async function POST(req: NextRequest) {
           machineId: license.machineId || machineId,
           permissions: ['OPERATOR']
         },
+        config: {
+          geminiApiKey: process.env.GEMINI_API_KEY || db.adminSettings?.geminiApiKey || '',
+          geminiModel: process.env.GEMINI_MODEL || db.adminSettings?.geminiModel || 'gemini-3.8-flash',
+          dailyLimit: operator?.dailyLimit || 50
+        },
         apiConfig: {
-          geminiApiKey: db.adminSettings?.geminiApiKey || '',
-          geminiModel: db.adminSettings?.geminiModel || 'gemini-3.8-flash',
+          geminiApiKey: process.env.GEMINI_API_KEY || db.adminSettings?.geminiApiKey || '',
+          geminiModel: process.env.GEMINI_MODEL || db.adminSettings?.geminiModel || 'gemini-3.8-flash',
           dailyLimit: operator?.dailyLimit || 50,
           todayGenerations: 0
         },

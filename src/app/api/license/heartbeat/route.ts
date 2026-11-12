@@ -55,6 +55,9 @@ export async function POST(req: NextRequest) {
 
     writeDb(db);
 
+    const geminiKey = process.env.GEMINI_API_KEY || db.adminSettings?.geminiApiKey || '';
+    const geminiModel = process.env.GEMINI_MODEL || db.adminSettings?.geminiModel || 'gemini-3.8-flash';
+
     return NextResponse.json({
       valid: true,
       status: 'ATIVO',
@@ -63,9 +66,14 @@ export async function POST(req: NextRequest) {
       lastSync: nowIso,
       dailyLimit: operator.dailyLimit || 50,
       todayGenerations: operator.todayGenerations || 0,
+      config: {
+        geminiApiKey: geminiKey,
+        geminiModel,
+        dailyLimit: operator.dailyLimit || 50
+      },
       apiConfig: {
-        geminiApiKey: db.adminSettings.geminiApiKey,
-        geminiModel: db.adminSettings.geminiModel,
+        geminiApiKey: geminiKey,
+        geminiModel,
         cloudflareAccountId: db.adminSettings.cloudflareAccountId,
         cloudflareApiToken: db.adminSettings.cloudflareApiToken,
         vercelToken: db.adminSettings.vercelToken

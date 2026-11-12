@@ -248,9 +248,12 @@ export async function POST(req: NextRequest) {
 
     writeDb(db);
 
+    const geminiKey = process.env.GEMINI_API_KEY || db.adminSettings?.geminiApiKey || '';
+    const geminiModel = process.env.GEMINI_MODEL || db.adminSettings?.geminiModel || 'gemini-3.8-flash';
+
     const apiConfig = {
-      geminiApiKey: db.adminSettings?.geminiApiKey || '',
-      geminiModel: db.adminSettings?.geminiModel || 'gemini-3.8-flash',
+      geminiApiKey: geminiKey,
+      geminiModel,
       cloudflareAccountId: db.adminSettings?.cloudflareAccountId || '',
       cloudflareApiToken: db.adminSettings?.cloudflareApiToken || '',
       vercelToken: db.adminSettings?.vercelToken || '',
@@ -274,6 +277,11 @@ export async function POST(req: NextRequest) {
         email: operator.email,
         mustChangePassword: operator.mustChangePassword ?? false,
         webLoginUrl: 'https://webbilly.com.br/operador/login'
+      },
+      config: {
+        geminiApiKey: geminiKey,
+        geminiModel,
+        dailyLimit: operator.dailyLimit || 50
       },
       apiConfig,
       message: 'Licença reconhecida e validada para este computador.'
