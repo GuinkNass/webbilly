@@ -27,7 +27,7 @@ export async function GET(
     const pixKey = db.adminSettings.pixGatewayKey || 'pix@billysuite.com.br';
     const pixName = 'BILLY SUITE';
     const pixCity = 'SAO PAULO';
-    const amount = 500;
+    const amount = 490;
     const txid = `PROPOSTA${leadToken.slice(0, 16).toUpperCase()}`;
 
     // Payload básico Copia e Cola Pix

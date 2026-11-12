@@ -127,9 +127,32 @@ export async function POST(req: NextRequest) {
     sub.domainStatus = finalDomainStatus;
     sub.domain_purchased_at = nowIso;
     sub.domainPurchasedAt = nowIso;
-    sub.domainPrice = 500.0;
+    sub.domainPrice = 490.0;
     sub.domainPaymentMethod = paymentMethod === 'card_vercel' ? 'card_vercel' : 'pix_br';
     sub.updatedAt = nowIso;
+
+    // Se houver operador vinculado, registra a comissão de 30% (R$ 147,00)
+    if (sub.operatorId || sub.operatorToken) {
+      if (!Array.isArray(db.sales)) db.sales = [];
+      const existingDomainSale = db.sales.find(
+        (sale: any) => sale.siteUrl?.includes(domain) || (sale.clientName === sub.clientName && sale.saleValue === 490)
+      );
+      if (!existingDomainSale) {
+        db.sales.unshift({
+          id: `sale_dom_${Date.now()}`,
+          operatorId: sub.operatorId || 'OP-0001',
+          operatorName: sub.operatorName || 'Administrador Master',
+          clientName: sub.clientName,
+          clientWhatsapp: sub.clientPhone || '',
+          siteUrl: `https://${domain}`,
+          niche: 'Domínio Próprio (Opção 2)',
+          saleValue: 490.0,
+          commissionValue: 147.0, // 30% de R$ 490,00
+          pixStatus: 'PENDENTE',
+          createdAt: nowIso
+        });
+      }
+    }
 
     // Persiste no banco local e runtime
     writeDb(db);
@@ -157,7 +180,7 @@ export async function POST(req: NextRequest) {
         value: 'cname.vercel-dns.com'
       },
       registroBrUrl: `https://registro.br/busca-dominio/?fqdn=${encodeURIComponent(domain)}`,
-      pixPrice: 500.0
+      pixPrice: 490.0
     };
 
     return NextResponse.json({

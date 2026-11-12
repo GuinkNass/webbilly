@@ -157,12 +157,14 @@ export default function ProposalPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
             <div>
               <span className="font-mono text-[10px] uppercase tracking-wider text-emerald-400 font-bold block mb-1">
-                Pagamento Único • Sem Mensalidade
+                Pacote Completo • Domínio Próprio + Site por 1 Ano
               </span>
               <div className="text-3xl font-black text-white font-mono">
-                R$ 500,00
+                R$ 490,00
               </div>
-              <span className="text-xs text-slate-400">Ativação vitalícia com domínio próprio incluso</span>
+              <span className="text-xs text-slate-400">
+                1 ano de domínio próprio incluso • Renovação anual de R$ 70,00/ano • Atualizações avulsas por R$ 29,90 (sem mensalidade obrigatória)
+              </span>
             </div>
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs font-mono font-bold">
               <DollarSign className="w-4 h-4 text-emerald-400" />

@@ -70,7 +70,7 @@ export default function TrabalheAquiForm() {
           Trabalhe Aqui
         </h2>
         <p className="text-zinc-400 text-xs sm:text-sm max-w-xl mx-auto mt-2 leading-relaxed">
-          Torne-se um operador licenciado Billy Suite e fature 50% em cada venda
+          Torne-se um operador licenciado Billy Suite e fature <strong className="text-emerald-400">50% (R$ 14,95/mês)</strong> no plano mensal e <strong className="text-emerald-400">30% (R$ 147,00)</strong> nas vendas de Domínio Próprio de R$ 490,00
         </p>
       </div>
 

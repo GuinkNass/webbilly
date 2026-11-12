@@ -82,16 +82,40 @@ export async function POST(req: NextRequest) {
         const alreadyCredited = db.sales.some(s => s.id === saleId);
 
         if (!alreadyCredited && operator) {
+          const val = Number(payment.value) || 29.90;
+          let comm = 14.95; // 50% de R$ 29,90 padrão
+          let niche = 'Assinatura Recorrente Mensal';
+
+          if (val >= 450) {
+            // Pacote Completo Domínio Próprio Opção 2 (R$ 490,00): 30% = R$ 147,00
+            comm = 147.00;
+            niche = 'Site Completo + Domínio Próprio (Opção 2)';
+            if (sub) {
+              sub.domain_status = 'active';
+              sub.domainStatus = 'active';
+              sub.domain_purchased_at = nowIso;
+            }
+          } else if (val >= 60 && val <= 80) {
+            // Renovação Anual de Domínio Próprio (R$ 70,00)
+            comm = 21.00;
+            niche = 'Renovação Anual Domínio Próprio';
+          } else if (val >= 25 && val <= 35) {
+            comm = 14.95;
+            niche = 'Assinatura Recorrente Mensal';
+          }
+
           const newSale: Sale = {
             id: saleId,
             operatorId: operator.id,
             operatorName: operator.name,
             clientName: sub?.clientName || payment.customer || `Comércio ${siteSlug}`,
             clientWhatsapp: sub?.clientPhone || '',
-            siteUrl: `https://${siteSlug || sub?.siteSlug || 'site'}.webbilly.com.br`,
-            niche: 'Assinatura Recorrente Mensal',
-            saleValue: Number(payment.value) || 29.9,
-            commissionValue: 10.0,
+            siteUrl: sub?.custom_domain
+              ? `https://${sub.custom_domain}`
+              : `https://${siteSlug || sub?.siteSlug || 'site'}.webbilly.com.br`,
+            niche,
+            saleValue: val,
+            commissionValue: comm,
             pixStatus: 'PENDENTE',
             createdAt: nowIso
           };

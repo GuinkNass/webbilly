@@ -1133,7 +1133,7 @@ export default function WebbillyHomePage() {
                 Preciso pagar para registrar um domínio .com.br?
               </h3>
               <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-                Não! Seu site já é publicado e hospedado diretamente no subdomínio oficial da Webbilly (ex: <code className="text-[#7abf18]">seunegocio.webbilly.com.br</code>) sem nenhum custo de anuidade ou burocracia de compra de domínio.
+                Você pode escolher entre duas opções simples: na <strong>Opção 1 (R$ 29,90/mês)</strong>, seu site funciona no subdomínio oficial (ex: <code className="text-[#7abf18]">seunegocio.webbilly.com.br</code>) com zero taxa de criação e até 2 alterações simples por mês inclusas. Na <strong>Opção 2 (R$ 490,00 pagamento único)</strong>, você tem o site completo no seu domínio próprio exclusivo por 1 ano inteiro, com renovação anual de apenas R$ 70,00/ano e atualizações avulsas sob demanda por R$ 29,90 (sem mensalidade obrigatória).
               </p>
             </div>
 
@@ -1163,7 +1163,7 @@ export default function WebbillyHomePage() {
                 Como faço para atualizar preços, fotos ou telefone no futuro?
               </h3>
               <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-                Basta enviar as fotos ou novos preços pelo WhatsApp da nossa equipe de suporte. As alterações são aplicadas e publicadas de forma imediata.
+                No plano mensal de R$ 29,90/mês você tem direito a até 2 alterações simples por mês já inclusas. No plano de domínio próprio (Opção 2 de R$ 490,00), as atualizações são avulsas sob demanda por R$ 29,90 por atualização, sem nenhuma mensalidade obrigatória. Basta enviar as alterações pelo nosso WhatsApp de atendimento.
               </p>
             </div>
           </div>

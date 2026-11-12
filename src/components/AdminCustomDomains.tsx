@@ -48,6 +48,9 @@ export default function AdminCustomDomains({
   const [buyError, setBuyError] = useState<string | null>(null);
   const [buyResult, setBuyResult] = useState<any | null>(null);
 
+  const [chargeModalData, setChargeModalData] = useState<any | null>(null);
+  const [generatingCharge, setGeneratingCharge] = useState(false);
+
   const [verifyingDomain, setVerifyingDomain] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -152,6 +155,26 @@ export default function AdminCustomDomains({
     }
   };
 
+  // 4. Gerar cobrança rápida Pix Asaas (Renovação R$ 70 ou Atualização R$ 29,90)
+  const handleCreateCharge = async (domainToCharge: string, type: 'annual_renewal' | 'single_update') => {
+    setGeneratingCharge(true);
+    setStatusMessage(null);
+    try {
+      const res = await fetch('/api/admin/domains/create-charge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain: domainToCharge, type })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Erro ao gerar cobrança.');
+      setChargeModalData(json);
+    } catch (err: any) {
+      setStatusMessage(`Falha ao gerar cobrança: ${err.message}`);
+    } finally {
+      setGeneratingCharge(false);
+    }
+  };
+
   return (
     <div className="space-y-6 select-none">
       {/* Banner Principal com Apresentação da Opção 2 */}
@@ -163,20 +186,21 @@ export default function AdminCustomDomains({
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold tracking-wide uppercase">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Opção 2 • Domínio Próprio Exclusivo (R$ 500,00)</span>
+              <span>Opção 2 • Domínio Próprio Exclusivo (R$ 490,00)</span>
             </div>
             <h2 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
               Migração e Vinculação Automática de Domínio Próprio
             </h2>
             <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
-              Mapeie instantaneamente qualquer subdomínio oficial (<code className="text-emerald-400 font-mono">*.webbilly.com.br</code>) para o domínio próprio da marca do cliente (ex: <code className="text-white font-bold">empresa.com.br</code> ou <code className="text-white font-bold">empresa.com</code>). O site continua editável a qualquer momento e com sincronização automática em tempo real.
+              Mapeie instantaneamente qualquer subdomínio oficial (<code className="text-emerald-400 font-mono">*.webbilly.com.br</code>) para o domínio próprio da marca do cliente (ex: <code className="text-white font-bold">empresa.com.br</code> ou <code className="text-white font-bold">empresa.com</code>). O site inclui 1 ano completo de domínio, renovação anual de R$ 70,00/ano e atualizações avulsas sob demanda por R$ 29,90.
             </p>
           </div>
 
           <div className="bg-[#171c2c]/80 border border-white/[0.08] p-4 rounded-2xl flex flex-col gap-1 text-center shrink-0 min-w-[200px]">
             <span className="text-[11px] text-zinc-400 uppercase font-semibold tracking-wider">Valor do Pacote</span>
-            <span className="text-3xl font-black text-white font-mono">R$ 500,00</span>
-            <span className="text-[10px] text-emerald-400 font-medium">Registro Anual + SSL Vercel Incluso</span>
+            <span className="text-3xl font-black text-white font-mono">R$ 490,00</span>
+            <span className="text-[10px] text-emerald-400 font-medium">Site Completo + Domínio Próprio (1 Ano)</span>
+            <span className="text-[9px] text-zinc-400">Comissão Operador: 30% (R$ 147,00)</span>
           </div>
         </div>
       </div>
@@ -311,7 +335,7 @@ export default function AdminCustomDomains({
                     <div className="text-right">
                       <span className="text-xs text-zinc-400 block">Preço do Mapeamento:</span>
                       <span className="text-base font-extrabold text-emerald-400 font-mono">
-                        R$ 500,00
+                        R$ 490,00
                       </span>
                     </div>
                   )}
@@ -523,12 +547,35 @@ export default function AdminCustomDomains({
                       </td>
 
                       <td className="py-4 px-4 font-mono">
-                        <span className="font-bold text-emerald-400 block">R$ 500,00</span>
-                        <span className="text-[10px] text-zinc-400">Opção 2 (Anual)</span>
+                        <span className="font-bold text-emerald-400 block">R$ 490,00</span>
+                        <span className="text-[10px] text-zinc-400 block">Opção 2 (1 Ano Incluso)</span>
+                        <span className="text-[10px] text-indigo-300 font-mono mt-0.5 block">
+                          Venc: {sub.domain_purchased_at ? new Date(new Date(sub.domain_purchased_at).getTime() + 365*24*3600*1000).toLocaleDateString('pt-BR') : '1 ano após ativação'}
+                        </span>
                       </td>
 
                       <td className="py-4 px-5 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex flex-col sm:flex-row items-end sm:items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleCreateCharge(domainName, 'annual_renewal')}
+                            disabled={generatingCharge}
+                            className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition flex items-center gap-1"
+                            title="Gerar Cobrança Pix Asaas para Renovação Anual (R$ 70,00)"
+                          >
+                            <CreditCard className="w-3 h-3 text-emerald-400" />
+                            <span>Renovação (R$ 70)</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleCreateCharge(domainName, 'single_update')}
+                            disabled={generatingCharge}
+                            className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition flex items-center gap-1"
+                            title="Gerar Cobrança Pix Asaas para Atualização Avulsa Sob Demanda (R$ 29,90)"
+                          >
+                            <CreditCard className="w-3 h-3 text-amber-400" />
+                            <span>Atualização (R$ 29,90)</span>
+                          </button>
+
                           <button
                             onClick={() => handleVerify(domainName)}
                             disabled={verifyingDomain === domainName}
@@ -570,6 +617,81 @@ export default function AdminCustomDomains({
           </table>
         </div>
       </div>
+
+      {/* Modal de Cobrança Pix Gerada via Asaas */}
+      {chargeModalData && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-[#11141c] border border-white/[0.1] rounded-3xl p-6 sm:p-7 shadow-2xl relative space-y-5 animate-scaleUp">
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="text-[10px] font-mono text-emerald-400 font-bold uppercase tracking-wider block mb-1">
+                  Cobrança Pix Asaas Gerada
+                </span>
+                <h3 className="text-lg font-bold text-white">{chargeModalData.title}</h3>
+                <p className="text-xs text-zinc-400">Domínio: {chargeModalData.domain}</p>
+              </div>
+              <button
+                onClick={() => setChargeModalData(null)}
+                className="p-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-zinc-400 hover:text-white transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-zinc-950 border border-white/[0.06] text-center space-y-3">
+              <div className="text-2xl font-black text-white font-mono">
+                R$ {chargeModalData.amount.toFixed(2).replace('.', ',')}
+              </div>
+              {chargeModalData.qrCodeUrl && (
+                <div className="bg-white p-3 rounded-2xl max-w-[180px] mx-auto shadow-inner">
+                  <img src={chargeModalData.qrCodeUrl} alt="QR Code Pix" className="w-full h-auto" />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider block">
+                Pix Copia e Cola
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={chargeModalData.pixPayload}
+                  className="w-full px-3 py-2 bg-[#08090d] border border-white/[0.08] rounded-xl text-xs text-zinc-300 font-mono focus:outline-none"
+                />
+                <button
+                  onClick={() => copyToClipboard(chargeModalData.pixPayload, 'pixModal')}
+                  className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shrink-0 flex items-center gap-1"
+                >
+                  {copiedKey === 'pixModal' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>Copiar</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-2">
+              {chargeModalData.invoiceUrl && (
+                <a
+                  href={chargeModalData.invoiceUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition flex items-center justify-center gap-1.5 shadow"
+                >
+                  <span>Abrir Fatura Oficial Asaas</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              )}
+              <button
+                onClick={() => setChargeModalData(null)}
+                className="w-full py-2 px-4 rounded-xl text-xs text-zinc-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] transition"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -416,7 +416,7 @@ export default function AdminDashboardPage() {
                   <span>Domínio Próprio</span>
                 </div>
                 <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-mono">
-                  R$ 500
+                  R$ 490
                 </span>
               </button>
 
@@ -864,7 +864,7 @@ export default function AdminDashboardPage() {
                                   setActiveTab('domains');
                                 }}
                                 className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/25 transition flex items-center gap-1"
-                                title="Migrar para Domínio Próprio (Opção 2 - R$ 500)"
+                                title="Migrar para Domínio Próprio (Opção 2 - R$ 490)"
                               >
                                 <Globe className="w-3 h-3" />
                                 <span>Domínio</span>
