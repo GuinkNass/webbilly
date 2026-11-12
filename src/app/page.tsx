@@ -216,21 +216,17 @@ export default function WebbillyHomePage() {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
           {/* Logo da Marca */}
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#7abf18] to-[#20ce6d] p-0.5 shadow-lg shadow-[#7abf18]/25 group-hover:scale-105 transition-transform">
-              <div className="w-full h-full bg-[#0e121a] rounded-[10px] flex items-center justify-center overflow-hidden">
-                <img
-                  src="/billy-logo.png"
-                  alt="Webbilly"
-                  className="w-full h-full object-contain p-1"
-                />
-              </div>
-            </div>
+          <Link href="/" className="flex items-center gap-3.5 group">
+            <img
+              src="/billy-logo.png"
+              alt="Webbilly"
+              className="h-12 sm:h-14 w-auto object-contain drop-shadow-lg group-hover:scale-105 transition-transform duration-300"
+            />
             <div>
-              <span className="text-xl font-black tracking-tight text-white font-heading block leading-none">
+              <span className="text-2xl sm:text-[26px] font-black tracking-tight text-white font-heading block leading-none">
                 Web<span className="text-[#7abf18]">billy</span>
               </span>
-              <span className="text-[10px] text-zinc-400 uppercase tracking-widest block font-sans mt-0.5">
+              <span className="text-[11px] text-zinc-400 uppercase tracking-widest block font-sans mt-1">
                 Presença Web Recorrente
               </span>
             </div>
@@ -286,11 +282,29 @@ export default function WebbillyHomePage() {
       {/* =====================================================================
           3. HERO SECTION (Banner com estilo eco_banner_wrapper & slider)
          ===================================================================== */}
-      <section id="inicio" className="relative pt-16 pb-20 md:pt-24 md:pb-28 px-4 sm:px-8 overflow-hidden bg-gradient-to-b from-[#0f141d] via-[#121824] to-[#0b0e14]">
+      <section id="inicio" className="relative pt-16 pb-20 md:pt-24 md:pb-28 px-4 sm:px-8 overflow-hidden bg-[#0b0e14]">
         
+        {/* VÍDEO CINEMATOGRÁFICO DE FUNDO (444.mp4 - "Create a Website") */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            poster="/images/video-poster.jpg"
+            className="w-full h-full object-cover opacity-35 md:opacity-40 scale-105 filter brightness-90 contrast-110"
+          >
+            <source src="/videos/bg-hero.mp4" type="video/mp4" />
+            <source src="/videos/444.mp4" type="video/mp4" />
+          </video>
+          {/* Gradients de mesclagem para contraste premium e legibilidade impecável */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0b0e14]/90 via-[#0b0e14]/65 to-[#0b0e14]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-[#0b0e14]/50 to-[#0b0e14]" />
+        </div>
+
         {/* Glows decorativos de fundo */}
-        <div className="absolute w-[500px] h-[500px] bg-[#7abf18]/10 rounded-full blur-[140px] pointer-events-none -top-20 left-1/2 -translate-x-1/2" />
-        <div className="absolute w-80 h-80 bg-[#20ce6d]/10 rounded-full blur-[100px] pointer-events-none bottom-0 right-10" />
+        <div className="absolute w-[500px] h-[500px] bg-[#7abf18]/10 rounded-full blur-[140px] pointer-events-none -top-20 left-1/2 -translate-x-1/2 z-[1]" />
+        <div className="absolute w-80 h-80 bg-[#20ce6d]/10 rounded-full blur-[100px] pointer-events-none bottom-0 right-10 z-[1]" />
 
         <div className="max-w-5xl mx-auto text-center relative z-10">
           
@@ -1117,17 +1131,13 @@ export default function WebbillyHomePage() {
           
           {/* Coluna 1: Sobre */}
           <div className="space-y-3">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#7abf18] to-[#20ce6d] p-0.5">
-                <div className="w-full h-full bg-[#090c12] rounded-[6px] flex items-center justify-center overflow-hidden">
-                  <img
-                    src="/billy-logo.png"
-                    alt="Webbilly"
-                    className="w-full h-full object-contain p-0.5"
-                  />
-                </div>
-              </div>
-              <span className="text-lg font-black text-white font-heading">
+            <Link href="/" className="flex items-center gap-3 group">
+              <img
+                src="/billy-logo.png"
+                alt="Webbilly"
+                className="h-10 sm:h-12 w-auto object-contain drop-shadow-md group-hover:scale-105 transition-transform duration-300"
+              />
+              <span className="text-xl sm:text-2xl font-black text-white font-heading">
                 Web<span className="text-[#7abf18]">billy</span>
               </span>
             </Link>
