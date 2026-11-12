@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDb, writeDb, DemoRecord } from '@/lib/db';
+import { persistSite } from '@/lib/site-storage';
 
 export async function GET(
   req: NextRequest,
@@ -58,6 +59,23 @@ export async function POST(
     }
 
     writeDb(db);
+
+    // Persistência adicional de alta disponibilidade
+    try {
+      const siteSlug = (demoRecord.title || leadToken)
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+      await persistSite({
+        siteSlug,
+        leadToken,
+        clientName: demoRecord.title,
+        deployedUrl: demoRecord.deployedUrl,
+        clientPhone: demoRecord.phone,
+        status: 'active'
+      });
+    } catch {}
 
     return NextResponse.json({
       success: true,

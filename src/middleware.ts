@@ -14,29 +14,41 @@ export const config = {
 
 export default function middleware(req: NextRequest) {
   const url = req.nextUrl;
-  const hostname = req.headers.get('host') || '';
+  const hostHeader =
+    req.headers.get('x-forwarded-host') ||
+    req.headers.get('host') ||
+    url.hostname ||
+    '';
 
-  // Remove a porta se houver (ex: localhost:3000 -> localhost)
-  const currentHost = hostname.replace(/:[0-9]+$/, '');
-  const rootDomains = ['webbilly.com.br', 'localhost'];
+  // Remove a porta se houver (ex: sushihiroshisp.webbilly.com.br:443 -> sushihiroshisp.webbilly.com.br)
+  const currentHost = hostHeader.split(':')[0].toLowerCase().trim();
 
   let subdomain = '';
-  for (const root of rootDomains) {
-    if (currentHost.endsWith(root) && currentHost !== root) {
-      const candidate = currentHost.replace(`.${root}`, '');
-      const reserved = ['www', 'webmail', 'api', 'admin', 'operador'];
-      if (candidate && !reserved.includes(candidate.toLowerCase())) {
-        subdomain = candidate.toLowerCase();
-        break;
-      }
+
+  // 1. Host termina com .webbilly.com.br
+  if (currentHost.endsWith('.webbilly.com.br')) {
+    const candidate = currentHost.replace('.webbilly.com.br', '').trim();
+    const reserved = ['www', 'api', 'webmail'];
+    if (candidate && !reserved.includes(candidate)) {
+      subdomain = candidate.toLowerCase();
+    }
+  }
+  // 2. Host termina com .localhost (para testes locais em desenvolvimento)
+  else if (currentHost.endsWith('.localhost')) {
+    const candidate = currentHost.replace('.localhost', '').trim();
+    const reserved = ['www', 'api'];
+    if (candidate && !reserved.includes(candidate)) {
+      subdomain = candidate.toLowerCase();
     }
   }
 
-  // Se a requisição veio através de um subdomínio (ex: caoqripetshop.webbilly.com.br)
+  // Se a requisição veio através de um subdomínio válido
   if (subdomain) {
-    // Reescreve todas as rotas do subdomínio para a visualização controlada do site
+    // Não reescreve chamadas de API internas ou se já estiver na rota /site
     if (!url.pathname.startsWith('/api') && !url.pathname.startsWith('/site')) {
-      return NextResponse.rewrite(new URL(`/site/${subdomain}`, req.url));
+      const rewriteUrl = new URL(`/site/${subdomain.toLowerCase()}`, req.url);
+      rewriteUrl.search = url.search;
+      return NextResponse.rewrite(rewriteUrl);
     }
   }
 

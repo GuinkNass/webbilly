@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readDb } from '@/lib/db';
+import { resolveSiteBySlug, persistSite, sanitizeSlug } from '@/lib/site-storage';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(
   req: NextRequest,
@@ -7,44 +9,51 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
-    const cleanSlug = slug.toLowerCase().trim();
+    const cleanSlug = sanitizeSlug(slug);
 
-    const db = readDb();
-    const subscriptions = Array.isArray(db.subscriptions) ? db.subscriptions : [];
-    
-    // Procura assinatura por slug ou leadToken
-    let sub = subscriptions.find(s => s.siteSlug === cleanSlug || s.leadToken === cleanSlug);
+    const site = await resolveSiteBySlug(cleanSlug);
 
-    // Se não houver assinatura direta, procura se existe em demos
-    const demo = db.demos ? Object.values(db.demos).find(d => 
-      (d.leadToken && (d.leadToken === cleanSlug || d.leadToken.includes(cleanSlug))) ||
-      (d.title && d.title.toLowerCase().replace(/[^a-z0-9]/g, '').includes(cleanSlug.replace(/[^a-z0-9]/g, '')))
-    ) : null;
-
-    if (!sub && !demo) {
+    if (!site) {
       return NextResponse.json({
         found: false,
         error: `Nenhum site localizado para o subdomínio '${cleanSlug}'.`
       }, { status: 404 });
     }
 
-    const clientName = sub?.clientName || demo?.title || `Comércio ${cleanSlug}`;
-    const status = sub?.status || 'active';
-    const deployedUrl = sub?.deployedUrl || demo?.deployedUrl || null;
-    const monthlyPrice = sub?.monthlyPrice || 29.90;
-    const checkoutUrl = sub?.checkoutUrl || `/api/subscription/create-checkout?slug=${cleanSlug}`;
-    const nextRenewalDate = sub?.nextRenewalDate || null;
-
     return NextResponse.json({
       found: true,
-      siteSlug: cleanSlug,
-      clientName,
-      status, // 'active' | 'suspended' | 'pending'
-      deployedUrl,
-      monthlyPrice,
-      checkoutUrl,
-      nextRenewalDate,
-      subscription: sub || null
+      siteSlug: site.siteSlug,
+      clientName: site.clientName,
+      status: site.status, // 'active' | 'suspended' | 'pending'
+      deployedUrl: site.deployedUrl,
+      monthlyPrice: site.monthlyPrice,
+      checkoutUrl: site.checkoutUrl,
+      nextRenewalDate: site.nextRenewalDate || null,
+      lastPaymentDate: site.lastPaymentDate || null,
+      subscription: site
+    });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ slug: string }> }
+) {
+  try {
+    const { slug } = await params;
+    const cleanSlug = sanitizeSlug(slug);
+    const body = await req.json().catch(() => ({}));
+
+    const saved = await persistSite({
+      ...body,
+      siteSlug: cleanSlug
+    });
+
+    return NextResponse.json({
+      success: true,
+      site: saved
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDb, writeDb, SubscriptionRecord } from '@/lib/db';
 import { findOrCreateCustomer, createSubscription } from '@/services/asaas';
+import { persistSite } from '@/lib/site-storage';
 
 export async function POST(req: NextRequest) {
   try {
@@ -166,6 +167,25 @@ async function handleCreateCheckout(req: NextRequest, body: any) {
   }
 
   writeDb(db);
+
+  // Garante persistência remota e em cache do site recém registrado
+  try {
+    await persistSite({
+      siteSlug: sub.siteSlug,
+      clientName: sub.clientName,
+      status: sub.status,
+      deployedUrl: sub.deployedUrl,
+      monthlyPrice: sub.monthlyPrice,
+      checkoutUrl: sub.checkoutUrl,
+      clientPhone: sub.clientPhone,
+      clientEmail: sub.clientEmail,
+      operatorToken: sub.operatorToken,
+      operatorName: sub.operatorName,
+      leadToken: sub.leadToken
+    });
+  } catch (persistErr) {
+    console.warn('[create-checkout persistSite Warning]:', persistErr);
+  }
 
   const acceptHeader = req.headers.get('accept') || '';
   const isBrowserRequest =

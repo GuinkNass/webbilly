@@ -1,65 +1,34 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import React from 'react';
 import {
   AlertCircle,
   CreditCard,
   CheckCircle2,
   Lock,
   ArrowRight,
-  ShieldCheck,
-  RefreshCw,
-  ExternalLink,
-  Smartphone,
   MessageCircle
 } from 'lucide-react';
 import Link from 'next/link';
+import { resolveSiteBySlug, sanitizeSlug } from '@/lib/site-storage';
 
-export default function SiteViewerPage() {
-  const params = useParams();
-  const searchParams = useSearchParams();
-  const slug = (params?.slug as string) || '';
-  const queryStatus = searchParams.get('status');
+export const dynamic = 'force-dynamic';
 
-  const [loading, setLoading] = useState(true);
-  const [siteData, setSiteData] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
+interface SiteViewerPageProps {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
 
-  useEffect(() => {
-    if (!slug) return;
-    fetch(`/api/public/site/${slug}`)
-      .then(res => res.json())
-      .then(data => {
-        if (!data.found) {
-          setError(data.error || 'Site não localizado.');
-        } else {
-          // Permite teste forçado via query param ?status=suspended ou ?status=active
-          if (queryStatus === 'suspended' || queryStatus === 'active') {
-            data.status = queryStatus;
-          }
-          setSiteData(data);
-        }
-        setLoading(false);
-      })
-      .catch(err => {
-        setError(err.message || 'Erro ao carregar site.');
-        setLoading(false);
-      });
-  }, [slug, queryStatus]);
+export default async function SiteViewerPage({
+  params,
+  searchParams
+}: SiteViewerPageProps) {
+  const { slug: rawSlug } = await params;
+  const sp = await searchParams;
+  const slug = sanitizeSlug(rawSlug);
+  const queryStatus = typeof sp.status === 'string' ? sp.status : undefined;
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#07090e] text-white flex flex-col items-center justify-center p-4">
-        <div className="flex items-center gap-3 font-mono text-sm text-zinc-400">
-          <span className="w-5 h-5 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></span>
-          <span>Carregando site oficial...</span>
-        </div>
-      </div>
-    );
-  }
+  const site = await resolveSiteBySlug(slug);
 
-  if (error || !siteData) {
+  if (!site) {
     return (
       <div className="min-h-screen bg-[#07090e] text-white flex flex-col items-center justify-center p-6 text-center">
         <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 mb-4">
@@ -79,12 +48,17 @@ export default function SiteViewerPage() {
     );
   }
 
-  const { clientName, status, deployedUrl, checkoutUrl, monthlyPrice } = siteData;
+  // Permite teste forçado via query param ?status=suspended ou ?status=active
+  const status = (queryStatus === 'suspended' || queryStatus === 'active')
+    ? queryStatus
+    : site.status;
+
+  const { clientName, deployedUrl, checkoutUrl, monthlyPrice } = site;
 
   // =========================================================================
-  // CASO 1: SITE SUSPENSO (INADIMPLENTE OU CANCELADO)
+  // CASO 1: SITE SUSPENSO OU CANCELADO (INADIMPLENTE OU CANCELADO)
   // =========================================================================
-  if (status === 'suspended') {
+  if (status === 'suspended' || status === 'cancelled') {
     return (
       <div className="min-h-screen bg-[#090b10] text-white flex flex-col items-center justify-center p-4 sm:p-6 select-none">
         <div className="max-w-lg w-full bg-[#11141c] border border-zinc-800/90 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden text-center space-y-6">
@@ -124,7 +98,7 @@ export default function SiteViewerPage() {
             </div>
           </div>
 
-          {/* Botão de Regularização via Mercado Pago */}
+          {/* Botão de Regularização via Asaas */}
           <div className="space-y-3 pt-2">
             <a
               href={checkoutUrl}
@@ -174,7 +148,7 @@ export default function SiteViewerPage() {
 
       {/* Renderiza o site do cliente em tela cheia */}
       <iframe
-        src={deployedUrl || `/demo/${siteData.subscription?.leadToken || slug}`}
+        src={deployedUrl || `https://${slug}.vercel.app`}
         className="w-full h-full border-0 bg-white"
         title={`Site Oficial - ${clientName}`}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

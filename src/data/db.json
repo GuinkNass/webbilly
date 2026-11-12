@@ -151,6 +151,20 @@
     }
   ],
   "demos": {
+    "brf_yq194mxmwbdwzav": {
+      "leadToken": "brf_yq194mxmwbdwzav",
+      "title": "Restaurante Sushi Hiroshi",
+      "category": "Restaurante japonês",
+      "deployedUrl": "https://sushihiroshisp.vercel.app",
+      "updatedAt": "2026-11-12T00:34:34.166Z"
+    },
+    "brf_thehousesushi": {
+      "leadToken": "brf_thehousesushi",
+      "title": "The House Sushi",
+      "category": "Restaurante japonês",
+      "deployedUrl": "https://thehousesushi.vercel.app",
+      "updatedAt": "2026-11-11T00:00:00.000Z"
+    },
     "brf_8cf2jt1mw600z3g": {
       "leadToken": "brf_8cf2jt1mw600z3g",
       "title": "CAO Q' RI PET SHOP COMERCIO DE ALIMENTOS E ACESSORIOS PARA ANIMAIS LTDA",
@@ -160,6 +174,46 @@
     }
   },
   "subscriptions": [
+    {
+      "id": "sub_sushihiroshisp",
+      "leadToken": "brf_yq194mxmwbdwzav",
+      "siteSlug": "sushihiroshisp",
+      "clientName": "Restaurante Sushi Hiroshi",
+      "clientPhone": "(11) 2978-7128",
+      "clientEmail": "contato@sushihiroshisp.webbilly.com.br",
+      "operatorId": "OP-C071",
+      "operatorName": "Lucas Klock",
+      "operatorToken": "BILLY-OP-C071-A33F",
+      "monthlyPrice": 29.9,
+      "commissionMonthly": 10,
+      "status": "active",
+      "deployedUrl": "https://sushihiroshisp.vercel.app",
+      "checkoutUrl": "https://webbilly.com.br/api/subscription/create-checkout?slug=sushihiroshisp",
+      "lastPaymentDate": "2026-11-11T21:34:00.000Z",
+      "nextRenewalDate": "2026-12-11T21:34:00.000Z",
+      "createdAt": "2026-11-11T21:34:00.000Z",
+      "updatedAt": "2026-11-11T21:34:00.000Z"
+    },
+    {
+      "id": "sub_thehousesushi",
+      "leadToken": "brf_thehousesushi",
+      "siteSlug": "thehousesushi",
+      "clientName": "The House Sushi",
+      "clientPhone": "(11) 98765-4321",
+      "clientEmail": "contato@thehousesushi.com.br",
+      "operatorId": "OP-0001",
+      "operatorName": "Administrador Master Billy",
+      "operatorToken": "BILLY-OP-ADMIN-MASTER-2026",
+      "monthlyPrice": 29.9,
+      "commissionMonthly": 10,
+      "status": "active",
+      "deployedUrl": "https://thehousesushi.vercel.app",
+      "checkoutUrl": "https://webbilly.com.br/api/subscription/create-checkout?slug=thehousesushi",
+      "lastPaymentDate": "2026-11-10T20:00:00.000Z",
+      "nextRenewalDate": "2026-12-10T20:00:00.000Z",
+      "createdAt": "2026-11-10T20:00:00.000Z",
+      "updatedAt": "2026-11-10T20:00:00.000Z"
+    },
     {
       "id": "sub_caoqripetshop",
       "leadToken": "brf_8cf2jt1mw600z3g",
