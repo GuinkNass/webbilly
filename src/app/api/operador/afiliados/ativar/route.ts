@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readDb, writeDb } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
 import { isOperatorEligibleForAffiliates, generateAffiliateCode } from '@/lib/gamification';
+import { recordTermsAcceptanceInSupabase } from '@/lib/supabase';
 
 export async function POST(req: NextRequest) {
   try {
@@ -9,6 +10,10 @@ export async function POST(req: NextRequest) {
     if (!user || (user.role !== 'OPERATOR' && user.role !== 'MASTER')) {
       return NextResponse.json({ error: 'Acesso restrito a operadores autenticados.' }, { status: 401 });
     }
+
+    const forwarded = req.headers.get('x-forwarded-for');
+    const clientIp = forwarded ? forwarded.split(',')[0].trim() : req.headers.get('x-real-ip') || '127.0.0.1';
+    const nowIso = new Date().toISOString();
 
     const db = readDb();
     let operator = db.operators.find(o => o.id === user.userId || o.email.toLowerCase() === user.email.toLowerCase());
@@ -52,8 +57,20 @@ export async function POST(req: NextRequest) {
 
     operator.affiliate_enabled = true;
     operator.affiliate_code = code;
+    operator.accepted_terms_at = nowIso;
+    operator.accepted_terms_ip = clientIp;
+    operator.accepted_terms_version = 'v1.0';
 
     writeDb(db);
+
+    try {
+      await recordTermsAcceptanceInSupabase({
+        targetType: 'operator',
+        identifier: operator.id,
+        ip: clientIp,
+        version: 'v1.0'
+      });
+    } catch {}
 
     const inviteUrl = `https://webbilly.com.br/?ref=${code}#trabalhe-aqui`;
 

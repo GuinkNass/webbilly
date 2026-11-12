@@ -167,3 +167,73 @@ export async function updateSiteStatusInSupabase(
 
   return false;
 }
+
+/**
+ * Registra prova digital e auditoria jurídica de aceite eletrônico no Supabase
+ * Salva accepted_terms_at (timestamptz), accepted_terms_ip (text) e accepted_terms_version (text)
+ */
+export async function recordTermsAcceptanceInSupabase({
+  targetType,
+  identifier,
+  ip,
+  version = 'v1.0'
+}: {
+  targetType: 'operator' | 'candidate' | 'subscription' | 'lead' | 'site';
+  identifier: string;
+  ip: string;
+  version?: string;
+}): Promise<boolean> {
+  if (!identifier) return false;
+  const cleanId = identifier.trim();
+  const nowIso = new Date().toISOString();
+  const payload = {
+    accepted_terms_at: nowIso,
+    accepted_terms_ip: ip || '127.0.0.1',
+    accepted_terms_version: version
+  };
+
+  try {
+    const supabase = getSupabaseAdmin();
+
+    if (targetType === 'operator') {
+      await supabase
+        .from('operators')
+        .update(payload)
+        .or(`id.eq.${cleanId},email.eq.${cleanId},serialToken.eq.${cleanId}`);
+      return true;
+    }
+
+    if (targetType === 'candidate') {
+      await supabase
+        .from('candidates')
+        .update(payload)
+        .or(`id.eq.${cleanId},email.eq.${cleanId},whatsapp.eq.${cleanId}`);
+      return true;
+    }
+
+    if (targetType === 'subscription' || targetType === 'site') {
+      await supabase
+        .from('subscriptions')
+        .update(payload)
+        .or(`id.eq.${cleanId},siteSlug.eq.${cleanId},site_slug.eq.${cleanId},custom_domain.eq.${cleanId}`);
+      
+      await supabase
+        .from('sites')
+        .update(payload)
+        .or(`id.eq.${cleanId},subdomain.eq.${cleanId},slug.eq.${cleanId},custom_domain.eq.${cleanId}`);
+      return true;
+    }
+
+    if (targetType === 'lead') {
+      await supabase
+        .from('leads')
+        .update(payload)
+        .or(`id.eq.${cleanId},token.eq.${cleanId},leadToken.eq.${cleanId}`);
+      return true;
+    }
+  } catch (err) {
+    console.warn('[Supabase Terms] Aviso ao gravar aceite eletrônico no Supabase:', err);
+  }
+
+  return false;
+}

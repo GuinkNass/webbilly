@@ -1247,6 +1247,18 @@ export default function WebbillyHomePage() {
                   Download Billy Suite Desktop
                 </a>
               </li>
+              <li className="pt-2 border-t border-white/[0.06]">
+                <Link href="/termos" className="hover:text-white transition flex items-center gap-1.5 text-zinc-400">
+                  <ShieldCheck className="w-3 h-3 text-zinc-400" />
+                  Termos de Uso do Cliente
+                </Link>
+              </li>
+              <li>
+                <Link href="/contrato-operador" className="hover:text-white transition flex items-center gap-1.5 text-zinc-400">
+                  <ShieldCheck className="w-3 h-3 text-zinc-400" />
+                  Contrato de Parceria & NDA
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -1311,6 +1323,15 @@ export default function WebbillyHomePage() {
         {/* Rodapé inferior / Direitos */}
         <div className="max-w-7xl mx-auto mt-12 pt-6 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-zinc-500">
           <p>© {new Date().getFullYear()} Webbilly • Todos os direitos reservados.</p>
+          <div className="flex items-center gap-4">
+            <Link href="/termos" className="hover:text-zinc-300 transition underline underline-offset-2">
+              Termos de Uso
+            </Link>
+            <span className="text-zinc-700">•</span>
+            <Link href="/contrato-operador" className="hover:text-zinc-300 transition underline underline-offset-2">
+              Contrato do Operador & NDA
+            </Link>
+          </div>
           <p className="flex items-center gap-1">
             Plataforma B2B para Negócios Locais • Hospedagem e Subdomínio Inclusos
           </p>

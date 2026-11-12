@@ -56,7 +56,10 @@ export async function POST(req: NextRequest) {
         dailyLimit: db.adminSettings.defaultDailyLimit || 50,
         todayGenerations: 0,
         createdAt: new Date().toISOString(),
-        referred_by_operator_id: candidate.referred_by_operator_id || null
+        referred_by_operator_id: candidate.referred_by_operator_id || null,
+        accepted_terms_at: candidate.accepted_terms_at,
+        accepted_terms_ip: candidate.accepted_terms_ip,
+        accepted_terms_version: candidate.accepted_terms_version || 'v1.0'
       };
 
       const newLicense: LicenseRecord = {

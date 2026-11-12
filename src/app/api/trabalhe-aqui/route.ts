@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { readDb, writeDb, Candidate } from '@/lib/db';
 import { sendOperatorEmail } from '@/lib/lark-mailer';
+import { recordTermsAcceptanceInSupabase } from '@/lib/supabase';
 
 export async function POST(req: Request) {
   try {
@@ -14,6 +15,11 @@ export async function POST(req: Request) {
     const candidateExperience = (experiencia || experience || '').trim();
     const candidateInstagram = (instagram || '').trim();
     const rawRef = (refCode || affiliateCode || ref || '').trim().toUpperCase();
+
+    // Captura endereço IP real para prova digital de aceite jurídico
+    const forwarded = req.headers.get('x-forwarded-for');
+    const clientIp = forwarded ? forwarded.split(',')[0].trim() : req.headers.get('x-real-ip') || '127.0.0.1';
+    const nowIso = new Date().toISOString();
 
     if (!candidateName || !candidateWhatsapp || !candidateEmail) {
       return NextResponse.json(
@@ -52,9 +58,12 @@ export async function POST(req: Request) {
         pixType: 'cpf',
         pixKey: '',
         status: 'PENDENTE',
-        createdAt: existing?.createdAt || new Date().toISOString(),
+        createdAt: existing?.createdAt || nowIso,
         referred_by_operator_id: sponsorId || existing?.referred_by_operator_id || null,
-        affiliate_code_used: usedCode || existing?.affiliate_code_used || null
+        affiliate_code_used: usedCode || existing?.affiliate_code_used || null,
+        accepted_terms_at: nowIso,
+        accepted_terms_ip: clientIp,
+        accepted_terms_version: 'v1.0'
       };
 
       if (!existing) {
@@ -63,6 +72,14 @@ export async function POST(req: Request) {
         Object.assign(existing, candidateData);
       }
       writeDb(db);
+
+      // Grava no Supabase (Fonte de Auditoria)
+      await recordTermsAcceptanceInSupabase({
+        targetType: 'candidate',
+        identifier: candidateEmail,
+        ip: clientIp,
+        version: 'v1.0'
+      });
     } catch (dbErr) {
       console.warn('[Trabalhe Aqui] Aviso na persistência local:', dbErr);
     }

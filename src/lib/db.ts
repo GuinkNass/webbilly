@@ -44,6 +44,9 @@ export interface Candidate {
   notes?: string;
   referred_by_operator_id?: string | null;
   affiliate_code_used?: string | null;
+  accepted_terms_at?: string;
+  accepted_terms_ip?: string;
+  accepted_terms_version?: string;
 }
 
 export interface Operator {
@@ -70,6 +73,9 @@ export interface Operator {
   affiliate_enabled?: boolean;
   affiliate_code?: string;
   referred_by_operator_id?: string | null;
+  accepted_terms_at?: string;
+  accepted_terms_ip?: string;
+  accepted_terms_version?: string;
 }
 
 export interface LicenseRecord {
@@ -148,6 +154,9 @@ export interface BriefingRecord {
   status: 'PENDENTE' | 'PROCESSADO';
   deployedUrl?: string;
   demoUrl?: string;
+  accepted_terms_at?: string;
+  accepted_terms_ip?: string;
+  accepted_terms_version?: string;
 }
 
 export interface DemoRecord {
@@ -192,6 +201,9 @@ export interface SubscriptionRecord {
   domainPurchasedAt?: string;
   domainPrice?: number;
   domainPaymentMethod?: 'card_vercel' | 'pix_br';
+  accepted_terms_at?: string;
+  accepted_terms_ip?: string;
+  accepted_terms_version?: string;
   createdAt: string;
   updatedAt: string;
 }

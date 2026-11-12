@@ -14,6 +14,7 @@ export default function TrabalheAquiForm() {
   });
   const [refCode, setRefCode] = useState<string>('');
   const [sponsorInfo, setSponsorInfo] = useState<{ sponsorName: string; affiliateCode: string } | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +57,11 @@ export default function TrabalheAquiForm() {
       return;
     }
 
+    if (!termsAccepted) {
+      setError('É obrigatório ler e aceitar o Termo de Parceria Comercial Autônoma, Confidencialidade (NDA) e Regras de Afiliados.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -65,7 +71,9 @@ export default function TrabalheAquiForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          refCode: refCode || undefined
+          refCode: refCode || undefined,
+          acceptedTerms: true,
+          termsVersion: 'v1.0'
         })
       });
 
@@ -231,6 +239,31 @@ export default function TrabalheAquiForm() {
               onChange={handleChange}
               className="w-full px-3.5 py-2.5 rounded-xl bg-[#0b0e14] border border-white/[0.08] text-white text-xs focus:outline-none focus:border-emerald-500 placeholder-zinc-600 transition resize-none"
             />
+          </div>
+
+          {/* Aceite Obrigatório do Contrato de Operador / NDA / Afiliados */}
+          <div className="pt-2">
+            <label className="flex items-start gap-3 p-3.5 rounded-xl bg-[#0b0e14] border border-white/[0.08] cursor-pointer hover:border-emerald-500/40 transition select-none">
+              <input
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500/40 cursor-pointer shrink-0"
+              />
+              <span className="text-xs text-zinc-300 leading-relaxed">
+                Li e aceito integralmente o{' '}
+                <a
+                  href="/contrato-operador"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-emerald-400 hover:text-emerald-300 font-semibold underline underline-offset-2"
+                >
+                  Termo de Parceria Comercial Autônoma, Confidencialidade (NDA) e Regras de Afiliados
+                </a>
+                .
+              </span>
+            </label>
           </div>
 
           {/* Botão de Envio */}

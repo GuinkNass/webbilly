@@ -22,6 +22,8 @@ export default function ProposalPage() {
   const [data, setData] = useState<any>(null);
   const [selectedDomain, setSelectedDomain] = useState<string>('');
   const [copied, setCopied] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsSubmitting, setTermsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!leadToken) return;
@@ -32,10 +34,31 @@ export default function ProposalPage() {
         if (resData?.domains && resData.domains.length > 0) {
           setSelectedDomain(resData.domains[0].domain);
         }
+        if (resData?.lead?.accepted_terms_at) {
+          setTermsAccepted(true);
+        }
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, [leadToken]);
+
+  const handleToggleTerms = async (checked: boolean) => {
+    setTermsAccepted(checked);
+    if (checked && leadToken) {
+      setTermsSubmitting(true);
+      try {
+        await fetch(`/api/public/proposta/${leadToken}/accept-terms`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ version: 'v1.0' })
+        });
+      } catch (err) {
+        console.warn('Erro ao salvar aceite eletrônico:', err);
+      } finally {
+        setTermsSubmitting(false);
+      }
+    }
+  };
 
   const copyPix = () => {
     if (!data?.pix?.payload) return;
@@ -152,8 +175,39 @@ export default function ProposalPage() {
           </div>
         </div>
 
+        {/* Termos de Uso e Aceite Obrigatório */}
+        <div className="bg-[#0b101c] border border-white/[0.08] rounded-2xl p-5 shadow-xl">
+          <label className="flex items-start gap-3.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={termsAccepted}
+              onChange={(e) => handleToggleTerms(e.target.checked)}
+              className="mt-1 w-5 h-5 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500/40 cursor-pointer shrink-0"
+            />
+            <div className="space-y-1">
+              <span className="text-xs sm:text-sm text-slate-200 font-medium leading-relaxed block">
+                Li e concordo com os{' '}
+                <a
+                  href="/termos"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-emerald-400 hover:text-emerald-300 font-bold underline underline-offset-2 inline-flex items-center gap-1"
+                >
+                  <span>Termos de Uso e Licenciamento de Presença Digital da Webbilly</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+                .
+              </span>
+              <p className="text-[11px] text-slate-400">
+                O aceite eletrônico é registrado com endereço IP, data e hora nos termos da legislação brasileira vigente.
+              </p>
+            </div>
+          </label>
+        </div>
+
         {/* Pagamento Pix */}
-        <div className="bg-[#0b101c] border border-emerald-500/30 rounded-2xl p-6 sm:p-8 shadow-xl space-y-6">
+        <div className={`bg-[#0b101c] border border-emerald-500/30 rounded-2xl p-6 sm:p-8 shadow-xl space-y-6 transition-all ${!termsAccepted ? 'opacity-50 grayscale select-none pointer-events-none' : ''}`}>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
             <div>
               <span className="font-mono text-[10px] uppercase tracking-wider text-emerald-400 font-bold block mb-1">
