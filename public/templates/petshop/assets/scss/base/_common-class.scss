@@ -1,0 +1,30 @@
+@use '../abstracts' as *;
+@use './section-space' as *;
+
+
+
+.flex-wrap {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.items-center {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.justify-between {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+

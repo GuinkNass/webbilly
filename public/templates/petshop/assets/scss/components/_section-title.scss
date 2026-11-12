@@ -1,0 +1,147 @@
+@use '../base' as *;
+@use '../abstracts' as *;
+
+// Legacy section top (subtitle with lines)
+.section-top {
+  &__subtitle {
+    position: relative;
+    display: inline-flex;
+    margin-left: 37px;
+    margin-right: 37px;
+
+    &:before {
+      position: absolute;
+      content: '';
+      bottom: 0;
+      left: -37px;
+      width: 32px;
+      height: 2px;
+      background: $primary-color;
+    }
+
+    &:after {
+      position: absolute;
+      content: '';
+      bottom: 0;
+      right: -37px;
+      width: 32px;
+      height: 2px;
+      background: $primary-color;
+    }
+
+    &.after-none {
+      &:after {
+        display: none;
+      }
+    }
+  }
+}
+
+// ===============================
+// Section Title Component
+// ===============================
+// Reusable block: subtitle (optional icon) + title
+// Subtitle: Fredoka Medium 18px/24px, center, capitalize
+// Title: Fredoka Bold 48px/56px, -1px letter-spacing, text primary
+
+.section-title {
+  margin-bottom: 48px;
+
+  &__subtitle-line {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: rem(8);
+    margin-bottom: rem(8);
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: rem(20);
+    height: rem(18);
+    line-height: 0;
+    color: $text-primary;
+
+    i {
+      font-size: rem(20);
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+  }
+
+  &__subtitle {
+    font-family: $title-font;
+    font-weight: 500;
+    font-style: normal;
+    font-size: 18px;
+    line-height: 24px;
+    letter-spacing: 0;
+    text-align: center;
+    text-transform: capitalize;
+    color: $text-primary;
+  }
+
+  &__title {
+    font-family: $title-font;
+    font-weight: 700;
+    font-style: normal;
+    font-size: 48px;
+    line-height: 56px;
+    letter-spacing: -1px;
+    color: $text-primary;
+    margin-top: 0;
+
+    @include lg {
+      font-size: clamp(1.75rem, 3.5vw, 48px);
+      line-height: 1.2;
+    }
+
+    @include sm {
+      font-size: clamp(1.5rem, 5vw + 0.5rem, 2rem);
+    }
+  }
+
+
+  &__button {
+    border-bottom: 1px solid $text-primary;
+    padding: rem(8);
+    display: inline-flex;
+    align-items: center;
+    min-height: rem(56);
+  }
+
+  &__button-link {
+    color: $text-primary;
+    font-family: $title-font;
+    font-weight: 500;
+    font-size: 1rem;
+    line-height: 1.375;
+    text-decoration: none;
+
+    &:hover {
+      opacity: 0.85;
+    }
+  }
+
+  &__wrap {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: rem(16);
+    margin-bottom: rem(48);
+
+    .section-title__title {
+      margin-bottom: 0;
+    }
+  }
+}

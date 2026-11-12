@@ -337,84 +337,89 @@ export default function OperatorDashboardPage() {
       </aside>
 
       {/* =========================================================================
-          2. TOPBAR SUPERIOR FIXA (AO LADO DA SIDEBAR)
+          CONTAINER DIREITO (HEADER STICKY + ÁREA DE CONTEÚDO PRINCIPAL)
          ========================================================================= */}
-      <header className="fixed top-0 left-64 right-0 h-16 bg-[#0f121a]/95 backdrop-blur-md border-b border-white/[0.08] flex items-center justify-between px-8 z-30">
-        {/* Barra de Pesquisa / Identificação */}
-        <div className="flex items-center gap-4">
-          <div className="relative">
-            <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Buscar cliente, domínio slug ou dados..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-72 pl-9 pr-3 py-1.5 bg-[#141824] border border-white/[0.08] rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/60 transition"
-            />
-          </div>
-        </div>
+      <div className="ml-64 flex-1 flex flex-col min-w-0 min-h-screen bg-[#0a0c10]">
 
-        {/* Ações da Topbar */}
-        <div className="flex items-center gap-3">
-          {/* Status Asaas */}
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 text-xs font-semibold">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span>Asaas v3 Conectado</span>
+        {/* =========================================================================
+            2. TOPBAR SUPERIOR (STICKY NO TOPO - NUNCA SOBREPÕE O CONTEÚDO)
+           ========================================================================= */}
+        <header className="sticky top-0 z-30 h-16 bg-[#0f121a]/95 backdrop-blur-md border-b border-white/[0.08] flex items-center justify-between px-8 shrink-0">
+          {/* Barra de Pesquisa / Identificação */}
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Buscar cliente, domínio slug ou dados..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-72 pl-9 pr-3 py-1.5 bg-[#141824] border border-white/[0.08] rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/60 transition"
+              />
+            </div>
           </div>
 
-          {/* Troca de Senha */}
-          <button
-            onClick={() => {
-              setPasswordError(null);
-              setPasswordSuccess(false);
-              setCurrentPassword('');
-              setNewPassword('');
-              setConfirmPassword('');
-              setShowPasswordModal(true);
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#141824] border border-white/[0.08] text-zinc-300 hover:text-white hover:border-emerald-500/50 transition cursor-pointer"
-          >
-            <Key className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Minha Conta / Senha</span>
-          </button>
+          {/* Ações da Topbar */}
+          <div className="flex items-center gap-3">
+            {/* Status Asaas */}
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 text-xs font-semibold">
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span>Asaas v3 Conectado</span>
+            </div>
 
-          {/* Link para Painel Master Admin se o operador for master */}
-          {(data?.isMaster || op?.email === 'admin@billysuite.com.br' || op?.id === 'OP-0001') && (
-            <Link
-              href="/admin"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600/90 hover:bg-indigo-600 text-white border border-indigo-500/30 transition"
+            {/* Troca de Senha */}
+            <button
+              onClick={() => {
+                setPasswordError(null);
+                setPasswordSuccess(false);
+                setCurrentPassword('');
+                setNewPassword('');
+                setConfirmPassword('');
+                setShowPasswordModal(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#141824] border border-white/[0.08] text-zinc-300 hover:text-white hover:border-emerald-500/50 transition cursor-pointer"
             >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Painel Master Admin</span>
-            </Link>
-          )}
+              <Key className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Minha Conta / Senha</span>
+            </button>
 
-          {/* Atualizar Dados */}
-          <button
-            onClick={loadData}
-            className="p-2 text-zinc-400 hover:text-white rounded-xl hover:bg-white/[0.05] transition"
-            title="Atualizar dados"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
+            {/* Link para Painel Master Admin se o operador for master */}
+            {(data?.isMaster || op?.email === 'admin@billysuite.com.br' || op?.id === 'OP-0001') && (
+              <Link
+                href="/admin"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600/90 hover:bg-indigo-600 text-white border border-indigo-500/30 transition"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>Painel Master Admin</span>
+              </Link>
+            )}
 
-          {/* Perfil Operador */}
-          <div className="flex items-center gap-2.5 pl-3 border-l border-white/[0.08]">
-            <div className="w-8 h-8 rounded-xl bg-emerald-950/60 border border-emerald-800/40 text-emerald-400 font-bold text-xs flex items-center justify-center">
-              {op?.name?.substring(0, 2)?.toUpperCase() || 'OP'}
-            </div>
-            <div className="hidden md:block text-left">
-              <div className="text-xs font-bold text-white line-clamp-1">{op?.name || 'Operador'}</div>
-              <div className="text-[10px] text-zinc-400">{op?.email || 'operador@webbilly.com.br'}</div>
+            {/* Atualizar Dados */}
+            <button
+              onClick={loadData}
+              className="p-2 text-zinc-400 hover:text-white rounded-xl hover:bg-white/[0.05] transition"
+              title="Atualizar dados"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </button>
+
+            {/* Perfil Operador */}
+            <div className="flex items-center gap-2.5 pl-3 border-l border-white/[0.08]">
+              <div className="w-8 h-8 rounded-xl bg-emerald-950/60 border border-emerald-800/40 text-emerald-400 font-bold text-xs flex items-center justify-center">
+                {op?.name?.substring(0, 2)?.toUpperCase() || 'OP'}
+              </div>
+              <div className="hidden md:block text-left">
+                <div className="text-xs font-bold text-white line-clamp-1">{op?.name || 'Operador'}</div>
+                <div className="text-[10px] text-zinc-400">{op?.email || 'operador@webbilly.com.br'}</div>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* =========================================================================
-          3. ÁREA DE CONTEÚDO PRINCIPAL (COM MARGEM ESQUERDA DA SIDEBAR)
-         ========================================================================= */}
-      <main className="ml-64 px-6 lg:px-8 pt-28 pb-16 min-h-screen bg-[#0a0c10] flex-1">
+        {/* =========================================================================
+            3. ÁREA DE CONTEÚDO PRINCIPAL (COM ESPAÇAMENTO RESPONSIVO PERFEITO)
+           ========================================================================= */}
+        <main className="px-6 lg:px-8 py-8 flex-1 overflow-x-hidden">
         
         {/* BANNER DO SERIAL TOKEN DE ATIVAÇÃO HARDWARE-LOCK */}
         <div className="bg-[#11141c] p-6 rounded-2xl border border-white/[0.06] mb-6">
@@ -1016,6 +1021,8 @@ export default function OperatorDashboardPage() {
           </div>
         )}
       </main>
+
+      </div>
 
       {/* =========================================================================
           MODAL DE TROCA DE SENHA

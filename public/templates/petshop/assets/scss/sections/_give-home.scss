@@ -1,0 +1,159 @@
+@use "../abstracts" as *;
+
+// ===============================
+// Give Home Section
+// ===============================
+// BEM: .give-home
+// Layout: container > row > col only.
+
+.give-home {
+  $give-home-bg: #F9F0FF; // Light purple from reference
+  $circle-bg: #EAF8FF; // Light blue circle background
+
+  position: relative;
+  background: $white-color;
+  padding-top: rem(80);
+  padding-bottom: rem(100);
+  z-index: 1;
+
+  &,
+  & * {
+    box-sizing: border-box;
+  }
+
+  .container {
+    position: relative;
+    z-index: 2;
+  }
+
+
+  &__card {
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    color: $text-primary;
+    margin-top: rem(20);
+    text-align: center;
+
+    // Ensure card content centers
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  &__thumb-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start; // Align top
+    width: rem(260); // Large outer circle
+    height: rem(260);
+    background: linear-gradient(180deg, #FFFFFF 0%, $circle-bg 100%);
+    border-radius: 50%;
+    margin: 0 auto rem(24);
+    padding-top: rem(20); // Push image down slightly
+  }
+
+  &__thumb {
+    width: rem(170);
+    height: rem(170);
+    border-radius: 50%;
+    overflow: hidden;
+    background: $white-color;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    z-index: 2;
+    position: relative;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+  }
+
+  &__number {
+    position: absolute;
+    bottom: rem(25);
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: $title-font;
+    font-weight: 700;
+    font-size: rem(32);
+    color: #CBD5E0; // Light grey number
+    z-index: 1;
+    line-height: 1;
+    background: transparent;
+    width: auto;
+    height: auto;
+    border-radius: 0;
+  }
+
+  &__pet-name {
+    font-family: $title-font; // Fredoka
+    font-weight: 700;
+    font-size: rem(24);
+    line-height: rem(32);
+    text-align: center;
+    text-transform: capitalize;
+    color: $text-primary;
+    margin-bottom: rem(8);
+  }
+
+  &__pet-meta {
+    max-width: rem(260);
+    margin: 0 auto;
+    font-family: $body-font; // Jost
+    font-weight: 400;
+    font-size: rem(16);
+    line-height: rem(26);
+    text-align: center;
+    color: $text-secondary;
+  }
+
+
+
+  @include md {
+    padding-top: rem(70);
+    padding-bottom: rem(90);
+
+    &__thumb-wrap {
+      width: rem(220);
+      height: rem(220);
+    }
+
+    &__thumb {
+      width: rem(140);
+      height: rem(140);
+    }
+
+    &__number {
+      font-size: rem(28);
+      bottom: rem(20);
+    }
+  }
+
+  @include xs {
+    padding-top: rem(60);
+    padding-bottom: rem(80);
+
+    &__title {
+      text-align: center;
+    }
+
+    // Stack title and link on mobile
+    .row.mb-40 {
+      margin-bottom: rem(30);
+      text-align: center;
+    }
+
+    .col-md-4.text-md-end {
+      text-align: center !important;
+      margin-top: rem(15);
+    }
+  }
+}

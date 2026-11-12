@@ -1,0 +1,224 @@
+@use '../base' as *;
+
+
+.aboutone {
+    &__thumb {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 26px;
+        margin-left: -130px;
+
+        @include xl {
+            margin-left: 0;
+        }
+
+        &-shapeone {
+            position: absolute;
+            top: -23px;
+            left: -18px;
+            z-index: 0;
+
+            img {
+                @include xl {
+                    width: 80%;
+                    opacity: 0.3;
+                }
+
+                @include xs {
+                    width: 40%;
+                }
+            }
+
+        }
+
+        &-shapetwo {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 0;
+
+            @include xl {
+                opacity: 0.3;
+            }
+
+        }
+
+        &-shapethree {
+            position: absolute;
+            bottom: 0;
+            left: 24%;
+            z-index: 0;
+
+            @include xl {
+                opacity: 0.3;
+            }
+        }
+
+        &-shapefour {
+            position: absolute;
+            top: 0;
+            right: 20%;
+            z-index: 0;
+
+            @include xl {
+                opacity: 0.3;
+            }
+        }
+
+        &-one {
+            position: relative;
+            z-index: 6;
+
+            -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 390 502"><path fill-rule="evenodd" clip-rule="evenodd" d="M389.607 38.0566L384.612 501.706L0 388.261L85.7332 0L389.607 38.0566Z"/></svg>');
+            mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 390 502"><path fill-rule="evenodd" clip-rule="evenodd" d="M389.607 38.0566L384.612 501.706L0 388.261L85.7332 0L389.607 38.0566Z"/></svg>');
+            transition: $transition;
+        }
+
+        &-two {
+            position: relative;
+            z-index: 6;
+
+            -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 335 475"><path fill-rule="evenodd" clip-rule="evenodd" d="M294.929 50.7422L3.63999 0L0 474.732L334.982 413.127L294.929 50.7422Z"/></svg>');
+            mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"  viewBox="0 0 335 475"><path fill-rule="evenodd" clip-rule="evenodd" d="M294.929 50.7422L3.63999 0L0 474.732L334.982 413.127L294.929 50.7422Z"/></svg>');
+            transition: $transition;
+        }
+    }
+
+    &__blockone {
+        display: flex;
+        gap: 24px;
+        align-items: center;
+        padding-bottom: 48px;
+        margin-bottom: 32px;
+        border-bottom: 1px solid $border-primary;
+
+        @include xs {
+            flex-wrap: wrap;
+        }
+    }
+
+    &__blocktwo {
+        display: flex;
+        flex-wrap: wrap-reverse;
+        gap: 32px;
+        align-items: center;
+        justify-content: space-between;
+
+        @include sm {
+            gap: 15px;
+        }
+    }
+
+    &__featurelist {
+        position: relative;
+        padding-right: 25px;
+
+        li {
+            margin-bottom: 12px !important;
+
+            &:last-child {
+                margin-bottom: 0 !important;
+            }
+        }
+
+        &:before {
+            position: absolute;
+            content: '';
+            bottom: 0;
+            right: 0;
+            width: 8px;
+            height: 100%;
+            background: $primary-color;
+            border-radius: 16px;
+        }
+
+    }
+
+    &__video {
+        position: relative;
+
+        &-thumb {
+            position: relative;
+            z-index: 3;
+
+            @include sm {
+                max-width: 250px;
+            }
+        }
+
+        &-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 6;
+
+            a {
+                width: 65px;
+                height: 65px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                font-family: $title-font;
+                font-weight: 500;
+                font-size: 14px;
+                line-height: 20px;
+                letter-spacing: 0px;
+                color: $text-primary;
+                background: $primary-color;
+
+                &:after,
+                &:before {
+                    content: "";
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    width: 100%;
+                    height: 100%;
+                    transform: translate(-50%, -50%);
+                    border-radius: 50%;
+                    background: $primary-color;
+                    opacity: 0;
+                    animation: ripple 2s infinite ease-out;
+                }
+
+                &:after {
+                    animation-delay: 1s;
+                }
+            }
+        }
+    }
+
+    &__name {
+        font-family: $title-font;
+        font-weight: 400;
+        font-size: 32px;
+        line-height: 40px;
+        letter-spacing: 0.5px;
+        padding-right: 17px;
+        border-right: 1px solid $border-primary;
+
+    }
+
+    &__profile {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+}
+
+
+@keyframes ripple {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: translate(-50%, -50%) scale(2.6);
+        opacity: 0;
+    }
+}

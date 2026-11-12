@@ -1,0 +1,178 @@
+@use '../abstracts' as *;
+
+/* --------------------------------------------
+    Template Default Fonts & Fonts Styles
+ ---------------------------------------------- */
+
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+
+body {
+  font-family: $body-font;
+  background: $white-color;
+  color: $text-primary;
+  font-size: rem(16px);
+  padding: 0;
+  margin: 0;
+  overflow-x: hidden;
+}
+
+
+ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+button {
+  border: none;
+  background-color: transparent;
+  padding: 0;
+}
+
+input:focus {
+  box-shadow: unset;
+  outline: none;
+}
+
+
+
+p {
+  margin: 0px;
+  font-family: var(--body-font);
+}
+
+img {
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: $title-font;
+  margin: 0 0 16px 0;
+  padding: 0;
+  color: inherit;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+
+  a {
+    font-size: inherit;
+    color: inherit;
+    font-weight: inherit;
+
+  }
+}
+
+
+
+a {
+  text-decoration: none;
+  outline: none !important;
+  color: hsl(var(--base));
+}
+
+img {
+  max-width: 100%;
+  border-radius: inherit;
+}
+
+
+.fix {
+  overflow: hidden;
+}
+
+.container {
+  --bs-gutter-x: 32px;
+
+ @media (min-width: 1400px) {
+    max-width: 1352px;
+    margin-left: auto;
+    margin-right: auto; 
+  }
+  
+}
+
+.container-xl {
+  max-width: 1640px;
+}
+
+.container-1350 {
+  max-width: 1350px;
+}
+
+.container-1600 {
+  max-width: 1650px;
+}
+
+
+.row {
+  --bs-gutter-x: 32px;
+
+  @include xs {
+    --bs-gutter-x: 0px;
+  }
+}
+
+
+
+.gy-32 {
+  --bs-gutter-y: 32px;
+}
+
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 19px 16px;
+  font-family: $body-font;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0px;
+  color: $text-primary;
+  background-color: $white-color;
+  transition: $transition;
+  border: none;
+
+  &:focus {
+    border-color: $primary-color;
+    outline: none;
+    box-shadow: none;
+  }
+
+  &::placeholder {
+    color: $text-primary;
+    font-family: $body-font;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 24px;
+    letter-spacing: 0px;
+  }
+}
+
+textarea {
+  resize: none;
+}
+
+select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right .75rem center;
+  background-size: 16px 12px;
+  border-radius: .375rem;
+  transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}

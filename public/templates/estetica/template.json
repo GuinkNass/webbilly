@@ -1,0 +1,13 @@
+{
+  "id": "estetica-pureglow-spa",
+  "name": "PureGlow - Spa, Estética Avançada & Skincare",
+  "category": "Estética & Spa",
+  "description": "Visual luxuoso e sereno para clínicas de estética, spas, massoterapia e dermatologia. Cardápio de procedimentos faciais e corporais com agendamento.",
+  "accentColor": "#d4a373",
+  "features": [
+    "Design refinado com tema claro e escuro",
+    "Cardápio de procedimentos faciais e massagens",
+    "Fotos de resultados reais e instalações",
+    "Agendamento direto de avaliação no WhatsApp"
+  ]
+}

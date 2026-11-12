@@ -1,0 +1,251 @@
+@use "../abstracts" as *;
+
+.testimonial1 {
+    position: relative;
+    overflow: hidden;
+
+    // Header Area
+    &__header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: rem(20);
+        margin-bottom: rem(50);
+    }
+
+    // Using standard .section-title component
+    .section-title {
+        margin-bottom: 0;
+
+        .section-title__subtitle {
+            text-align: left;
+        }
+
+        .section-title__title {
+            margin-bottom: 0;
+        }
+    }
+
+    &__users {
+        display: flex;
+        align-items: center;
+        gap: rem(15);
+
+        &-group {
+            display: flex;
+
+            img {
+                width: rem(50);
+                height: rem(50);
+                border-radius: 50%;
+                border: 2px solid $white-color;
+                margin-left: rem(-15);
+                object-fit: cover;
+
+                &:first-child {
+                    margin-left: 0;
+                }
+            }
+
+            .add-icon {
+                width: rem(50);
+                height: rem(50);
+                border-radius: 50%;
+                background: $white-color;
+                border: 1px solid #e5e5e5;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-left: rem(-15);
+                color: $text-primary;
+                font-size: rem(14);
+                font-weight: 600;
+                z-index: 1;
+            }
+        }
+
+        &-text {
+            display: flex;
+            flex-direction: column;
+
+            span {
+                font-size: rem(14);
+                font-weight: 700;
+                color: $text-primary;
+                line-height: 1.2;
+            }
+
+            small {
+                font-size: rem(12);
+                color: $text-secondary;
+            }
+        }
+    }
+
+    // Content Area
+
+
+    &__thumb-wrapper {
+        position: relative;
+        height: 250px;
+        margin: 0 auto;
+
+        @include lg {
+            margin: 0;
+        }
+
+        @include md {
+            margin-bottom: 30px;
+        }
+    }
+
+    &__thumb {
+        width: 100%;
+        overflow: visible; // Allow shape to spill
+
+
+        img {
+            position: absolute;
+            top: 50%;
+            left: 60%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: rem(5) solid $white-color; // White border around image
+            z-index: 2;
+        }
+
+        // Yellow Circle Shape
+        &::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0%; // Shift left for the offset look
+            transform: translateY(-50%);
+            width: 207px;
+            height: 207px;
+            border: rem(2) solid #FFC107; // Yellow border
+            border-radius: 50%;
+            z-index: 1;
+
+            @include md {
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        // Quote Icon
+        .quote-icon {
+            position: absolute;
+            bottom: 44%;
+            left: 23%;
+            width: rem(60);
+            height: rem(60);
+            background: #FFC107;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: $text-primary;
+            font-size: rem(24);
+            border: rem(4) solid $white-color;
+            z-index: 3;
+
+            @include md {
+                left: 37%;
+            }
+        }
+    }
+
+    &__content {
+        padding-left: 0;
+        margin-top: rem(40);
+        position: relative; // Added for navigation positioning
+
+        @include lg {
+            padding-left: rem(50);
+            margin-top: 0;
+        }
+    }
+
+    &__stars {
+        color: #FFC107;
+        font-size: rem(18);
+        margin-bottom: rem(20);
+        display: flex;
+        gap: rem(5);
+    }
+
+    &__text {
+        font-family: $body-font; // Italic font if available, or just style italic
+        font-style: italic;
+        font-size: rem(20);
+        line-height: 1.6;
+        color: $text-primary;
+        margin-bottom: rem(30);
+        font-weight: 500;
+        min-height: rem(100); // Ensure consistent height for nav placement if needed
+    }
+
+    &__author {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        &-info {
+            h4 {
+                font-size: rem(18);
+                font-weight: 700;
+                color: $text-primary;
+                margin-bottom: rem(5);
+                font-family: $title-font;
+            }
+
+            span {
+                font-size: rem(14);
+                color: $text-secondary;
+            }
+        }
+    }
+
+    &-slider {
+        position: relative; // Ensure nav can be positioned relative to this
+    }
+
+    &__author-nav {
+        display: flex;
+        gap: rem(10);
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        z-index: 10;
+
+        @include md {
+            position: static;
+            justify-content: center;
+            margin-top: rem(30);
+        }
+
+        button {
+            width: rem(45);
+            height: rem(45);
+            border-radius: 50%;
+            border: none;
+            background: rgba($primary-color, 0.1); // Light yellow
+            color: $text-primary;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: $transition;
+            cursor: pointer;
+
+            &:hover,
+            &.active {
+                background: $primary-color;
+            }
+        }
+    }
+}

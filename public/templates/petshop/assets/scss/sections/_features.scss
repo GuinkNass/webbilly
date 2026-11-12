@@ -1,0 +1,765 @@
+@use '../base' as *;
+
+.beauty-feature {
+  &-item {
+    position: relative;
+    transition: all 0.4s ease-in-out;
+
+    &__card1 {
+      position: relative;
+      padding: 24px 15px;
+      background: $bg-secondary;
+      border-radius: 16px;
+      text-align: center;
+      width: 362px;
+      transition: all 0.4s ease-in-out;
+      z-index: 99;
+      margin-bottom: 114px;
+      border: 1px solid transparent;
+
+      @include xl {
+        padding: 20px 15px;
+        width: 322px;
+      }
+
+      @include lg {
+        padding: 20px 15px;
+        width: auto;
+        margin-bottom: 54px;
+      }
+
+      &::before {
+        position: absolute;
+        content: "";
+        background: $text-primary;
+        width: 16px;
+        height: 16px;
+        border-radius: 36px;
+        opacity: 1;
+        right: -40%;
+        top: 50%;
+        z-index: 9;
+
+        @include xl {
+          right: -47%;
+        }
+
+        @include lg {
+          display: none;
+        }
+      }
+
+      &::after {
+        position: absolute;
+        content: "";
+        border: 1px solid $border-primary;
+        width: 141px;
+        height: 0px;
+        border-width: 1px;
+        right: -39%;
+        top: 55%;
+        z-index: 1;
+
+        @include xl {
+          width: 137px;
+          right: -42%;
+        }
+
+        @include lg {
+          display: none;
+        }
+
+      }
+
+      &-title {
+        color: $text-primary;
+        font-family: $title-font;
+        font-weight: 700;
+        font-size: rem(24);
+        line-height: 1.25;
+        letter-spacing: 0px;
+        text-align: right;
+        text-transform: capitalize;
+        margin-bottom: 9px;
+
+        @include xl {
+          font-size: _rem(22);
+          line-height: 1.75;
+        }
+
+        @include lg {
+          font-size: _rem(20);
+          line-height: 1.625;
+        }
+
+        @include md {
+          font-size: _rem(19);
+          line-height: 1.5625;
+        }
+
+        @include sm {
+          font-size: _rem(18);
+          line-height: 1.5;
+        }
+
+        @include xs {
+          font-size: _rem(17);
+          line-height: 1.4375;
+        }
+      }
+
+      &-dsc {
+        color: $text-secondary;
+        font-family: $body-font;
+        font-weight: 500;
+        font-size: _rem(16);
+        line-height: 1.625;
+        letter-spacing: 0px;
+        text-align: right;
+      }
+
+      &:hover {
+        border: 1px solid $primary-color;
+        transition: all 0.4s ease-in-out;
+
+        &::before {
+          position: absolute;
+          content: "";
+          background: $primary-color;
+          width: 16px;
+          height: 16px;
+          border-radius: 36px;
+          opacity: 1;
+          right: -40%;
+          top: 50%;
+          z-index: 99;
+        }
+
+        &::after {
+          position: absolute;
+          content: "";
+          border: 1px solid $primary-color;
+          width: 141px;
+          height: 0px;
+          border-width: 1px;
+          right: -39%;
+          top: 55%;
+          z-index: 1;
+        }
+      }
+    }
+
+    &__card2 {
+      position: relative;
+      padding: 24px 24px;
+      background: $bg-secondary;
+      border-radius: 16px;
+      text-align: center;
+      width: 356px;
+      transition: all 0.4s ease-in-out;
+      z-index: 99;
+      margin-bottom: 114px;
+      margin-left: -50px;
+      border: 1px solid transparent;
+
+      @include xl {
+        width: 336px;
+        margin-left: 0px;
+      }
+
+      @include lg {
+        width: auto;
+        margin-left: 0px;
+        margin-bottom: 54px;
+      }
+
+      &::before {
+        position: absolute;
+        content: "";
+        background: $text-primary;
+        width: 16px;
+        height: 16px;
+        border-radius: 36px;
+        opacity: 1;
+        right: -41%;
+        top: 50%;
+        z-index: 9;
+
+        @include xl {
+          right: -22%;
+        }
+
+        @include lg {
+          display: none;
+        }
+
+      }
+
+      &::after {
+        position: absolute;
+        content: "";
+        border: 1px solid $border-primary;
+        width: 139px;
+        height: 0px;
+        border-width: 1px;
+        right: -39%;
+        top: 55%;
+        z-index: 1;
+
+        @include xl {
+          width: 65px;
+          right: -19%;
+        }
+
+        @include lg {
+          display: none;
+        }
+
+      }
+
+      &-title {
+        color: $text-primary;
+        font-family: $title-font;
+        font-weight: 700;
+        font-size: rem(24);
+        line-height: 1.25;
+        letter-spacing: 0px;
+        text-align: right;
+        text-transform: capitalize;
+        margin-bottom: 9px;
+
+        @include xl {
+          font-size: rem(22);
+          line-height: 28px;
+        }
+
+        @include lg {
+          font-size: rem(20);
+          line-height: 26px;
+        }
+
+        @include md {
+          font-size: rem(19);
+          line-height: 25px;
+        }
+
+        @include sm {
+          font-size: rem(18);
+          line-height: 24px;
+        }
+
+        @include xs {
+          font-size: rem(17);
+          line-height: 23px;
+        }
+      }
+
+      &-dsc {
+        color: $text-secondary;
+        font-family: $body-font;
+        font-weight: 500;
+        font-size: rem(16);
+        line-height: 1.625;
+        letter-spacing: 0px;
+        text-align: right;
+      }
+
+      &:hover {
+        border: 1px solid $primary-color;
+        transition: all 0.4s ease-in-out;
+
+        &::before {
+          position: absolute;
+          content: "";
+          background: $primary-color;
+        }
+
+        &::after {
+          position: absolute;
+          content: "";
+          border: 1px solid$primary-color;
+        }
+      }
+    }
+
+    &__card3 {
+      position: relative;
+      padding: 24px 24px;
+      background: $bg-secondary;
+      border-radius: 16px;
+      text-align: center;
+      width: 356px;
+      transition: all 0.4s ease-in-out;
+      z-index: 99;
+      border: 1px solid transparent;
+
+      @include xl {
+        width: 336px;
+      }
+
+      @include lg {
+        padding: 20px 20px;
+        width: auto;
+      }
+
+      &::before {
+        position: absolute;
+        content: "";
+        background: $text-primary;
+        width: 16px;
+        height: 16px;
+        border-radius: 36px;
+        opacity: 1;
+        right: -51%;
+        top: 40%;
+        z-index: 9;
+
+        @include lg {
+          display: none;
+        }
+      }
+
+      &::after {
+        position: absolute;
+        content: "";
+        border: 1px solid $border-primary;
+        width: 167px;
+        height: 0px;
+        border-width: 1px;
+        right: -47%;
+        top: 47%;
+        z-index: 1;
+
+        @include lg {
+          display: none;
+        }
+      }
+
+      &-title {
+        color: $text-primary;
+        font-family: $title-font;
+        font-weight: 700;
+        font-style: Bold;
+        font-size: rem(24);
+        line-height: 1.25;
+        letter-spacing: 0px;
+        text-align: right;
+        text-transform: capitalize;
+        margin-bottom: 9px;
+
+        @include lg {
+          font-size: rem(20);
+        }
+      }
+
+      &-dsc {
+        color: $text-secondary;
+        font-family: $body-font;
+        font-weight: 500;
+        font-size: rem(16);
+        line-height: 1.625;
+        letter-spacing: 0px;
+        text-align: right;
+      }
+
+      &:hover {
+        border: 1px solid $primary-color;
+        transition: all 0.4s ease-in-out;
+
+        &::before {
+          position: absolute;
+          content: "";
+          background: $primary-color;
+        }
+
+        &::after {
+          position: absolute;
+          content: "";
+          border: 1px solid $primary-color;
+        }
+      }
+    }
+  }
+
+  &__thumb {
+    border-radius: 1000px;
+    border-width: 1px;
+    border-style: dashed;
+    dashes: 8, 8;
+    border: 1px solid $border-primary;
+    padding: 25px 26px;
+
+    img {
+      width: 100%;
+    }
+  }
+
+  &-item2 {
+    position: relative;
+    transition: all 0.4s ease-in-out;
+
+    &__card1 {
+      position: relative;
+      padding: 24px 24px;
+      background: $bg-secondary;
+      border-radius: 16px;
+      text-align: center;
+      width: 362px;
+      transition: all 0.4s ease-in-out;
+      z-index: 99;
+      margin-bottom: 114px;
+      transform: rotate(179deg);
+      border: 1px solid transparent;
+
+      @include lg {
+        margin-left: 0px;
+        width: auto;
+        margin-bottom: 54px;
+      }
+
+      &::before {
+        position: absolute;
+        content: "";
+        background: $text-primary;
+        width: 16px;
+        height: 16px;
+        border-radius: 36px;
+        opacity: 1;
+        right: -27%;
+        top: 43%;
+        z-index: 9;
+
+        @include lg {
+          display: none;
+        }
+      }
+
+      &::after {
+        position: absolute;
+        content: "";
+        border: 1px solid $border-primary;
+        width: 97px;
+        height: 0px;
+        border-width: 1px;
+        right: -26%;
+        top: 50%;
+        z-index: 1;
+
+        @include lg {
+          display: none;
+        }
+      }
+
+      &-content {
+        transform: rotate(179deg);
+      }
+
+      &-title {
+        color: $text-primary;
+        font-family: $title-font;
+        font-weight: 700;
+        font-size: rem(24);
+        line-height: 1.25;
+        letter-spacing: 0px;
+        text-align: center;
+        text-transform: capitalize;
+        margin-bottom: 9px;
+
+        @include xl {
+          font-size: rem(22);
+          line-height: 28px;
+        }
+
+        @include lg {
+          font-size: rem(20);
+          line-height: 26px;
+        }
+
+        @include md {
+          font-size: rem(19);
+          line-height: 25px;
+        }
+
+        @include sm {
+          font-size: rem(18);
+          line-height: 24px;
+        }
+
+        @include xs {
+          font-size: rem(17);
+          line-height: 23px;
+        }
+      }
+
+      &-dsc {
+        color: $text-secondary;
+        font-family: $body-font;
+        font-weight: 500;
+        font-size: rem(16);
+        line-height: 1.625;
+        letter-spacing: 0px;
+        text-align: center;
+      }
+
+      &:hover {
+        border: 1px solid $primary-color;
+        transition: all 0.4s ease-in-out;
+
+        &::before {
+          position: absolute;
+          content: "";
+          background: $primary-color;
+        }
+
+        &::after {
+          position: absolute;
+          content: "";
+          border: 1px solid $primary-color;
+        }
+      }
+    }
+
+    &__card2 {
+      position: relative;
+      padding: 24px 24px;
+      background: $bg-secondary;
+      border-radius: 16px;
+      text-align: center;
+      width: 357px;
+      transition: all 0.4s ease-in-out;
+      z-index: 99;
+      transform: rotate(179deg);
+      margin-bottom: 114px;
+      margin-left: 70px;
+      border: 1px solid transparent;
+
+      @include lg {
+        margin-left: 0px;
+        margin-bottom: 54px;
+        width: auto;
+      }
+
+      &::before {
+        position: absolute;
+        content: "";
+        background: $text-primary;
+        width: 16px;
+        height: 16px;
+        border-radius: 36px;
+        opacity: 1;
+        right: -29%;
+        top: 50%;
+        z-index: 9;
+
+        @include lg {
+          display: none;
+        }
+      }
+
+      &::after {
+        position: absolute;
+        content: "";
+        border: 1px solid $border-primary;
+        width: 89px;
+        height: 0px;
+        border-width: 1px;
+        right: -25%;
+        top: 55%;
+        z-index: 1;
+
+        @include lg {
+          display: none;
+        }
+      }
+
+      &-content {
+        transform: rotate(179deg);
+      }
+
+      &-title {
+        color: $text-primary;
+        font-family: $title-font;
+        font-weight: 700;
+        font-size: rem(24);
+        line-height: 1.25;
+        letter-spacing: 0px;
+        text-align: center;
+        text-transform: capitalize;
+        margin-bottom: 9px;
+
+        @include xl {
+          font-size: rem(22);
+          line-height: 28px;
+        }
+
+        @include lg {
+          font-size: rem(20);
+          line-height: 26px;
+        }
+
+        @include md {
+          font-size: rem(19);
+          line-height: 25px;
+        }
+
+        @include sm {
+          font-size: rem(18);
+          line-height: 24px;
+        }
+
+        @include xs {
+          font-size: rem(17);
+          line-height: 23px;
+        }
+      }
+
+      &-dsc {
+        color: $text-secondary;
+        font-family: $body-font;
+        font-weight: 500;
+        font-size: rem(16);
+        line-height: 1.625;
+        letter-spacing: 0px;
+        text-align: center;
+      }
+
+      &:hover {
+        border: 1px solid $primary-color;
+        transition: all 0.4s ease-in-out;
+
+        &::before {
+          position: absolute;
+          content: "";
+          background: $primary-color;
+        }
+
+        &::after {
+          position: absolute;
+          content: "";
+          border: 1px solid $primary-color;
+        }
+      }
+    }
+
+    &__card3 {
+      position: relative;
+      padding: 24px 24px;
+      background: $bg-secondary;
+      border-radius: 16px;
+      text-align: center;
+      width: 370px;
+      transform: rotate(179deg);
+      transition: all 0.4s ease-in-out;
+      z-index: 99;
+      border: 1px solid transparent;
+
+      @include lg {
+        margin-left: 0px;
+        width: auto;
+      }
+
+      &::before {
+        position: absolute;
+        content: "";
+        background: $text-primary;
+        width: 16px;
+        height: 16px;
+        border-radius: 36px;
+        opacity: 1;
+        right: -29%;
+        top: 59%;
+        z-index: 9;
+        transition: all 0.4s ease-in-out;
+
+        @include lg {
+          display: none;
+        }
+      }
+
+      &::after {
+        position: absolute;
+        content: "";
+        border: 1px solid $border-primary;
+        width: 99px;
+        height: 0px;
+        border-width: 1px;
+        right: -27%;
+        top: 63%;
+        z-index: 1;
+        transition: all 0.4s ease-in-out;
+
+        @include lg {
+          display: none;
+        }
+      }
+
+      &-content {
+        transform: rotate(179deg);
+      }
+
+      &-title {
+        color: $text-primary;
+        font-family: $title-font;
+        font-weight: 700;
+        font-size: rem(24);
+        line-height: 1.25;
+        letter-spacing: 0px;
+        text-align: center;
+        text-transform: capitalize;
+        margin-bottom: 9px;
+
+        @include xl {
+          font-size: rem(22);
+          line-height: 28px;
+        }
+
+        @include lg {
+          font-size: rem(20);
+          line-height: 26px;
+        }
+
+        @include md {
+          font-size: rem(19);
+          line-height: 25px;
+        }
+
+        @include sm {
+          font-size: rem(18);
+          line-height: 24px;
+        }
+
+        @include xs {
+          font-size: rem(17);
+          line-height: 23px;
+        }
+      }
+
+      &-dsc {
+        color: $text-secondary;
+        font-family: $body-font;
+        font-weight: 500;
+        font-size: rem(16);
+        line-height: 1.625;
+        letter-spacing: 0px;
+        text-align: center;
+      }
+
+      &:hover {
+        border: 1px solid $primary-color;
+        transition: all 0.4s ease-in-out;
+
+        &::before {
+          position: absolute;
+          content: "";
+          background: $primary-color;
+        }
+
+        &::after {
+          position: absolute;
+          content: "";
+          border: 1px solid $primary-color;
+        }
+      }
+    }
+  }
+}

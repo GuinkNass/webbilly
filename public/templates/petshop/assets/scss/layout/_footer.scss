@@ -1,0 +1,407 @@
+@use '../base' as *;
+
+/* === Footer Section === */
+.footer {
+  position: relative;
+  z-index: 5;
+
+
+  &-main {
+    position: relative;
+    padding-bottom: 50px;
+
+
+    @media(max-width: 1199px) {
+      padding-bottom: 40px;
+    }
+
+    &.style1 {
+      padding: 220px 0px 100px;
+      margin-top: -100px;
+
+      @media (max-width: 1199px) {
+        padding: 180px 0 140px;
+      }
+
+      @media (max-width: 991px) {
+        padding: 160px 0 120px;
+      }
+
+      @media (max-width: 767px) {
+        padding: 140px 0 110px;
+      }
+    }
+
+    &.style2 {
+      padding: 110px 0px 100px;
+      margin-top: -10px;
+
+      @media (max-width: 1199px) {
+        padding: 80px 0 40px;
+      }
+
+      @media (max-width: 991px) {
+        padding: 60px 0 20px;
+      }
+
+      @media (max-width: 767px) {
+        padding: 40px 0 10px;
+      }
+    }
+
+    &::before {
+      position: absolute;
+      content: "";
+      background: $border-primary;
+      width: 1px;
+      height: 389px;
+      left: 40%;
+      bottom: 0%;
+      opacity: 0.24;
+
+      @include xl {
+        display: none;
+      }
+    }
+
+  }
+
+  &.extra-padding {
+    padding: 220px 0px 0px;
+    margin-top: -100px;
+
+    @media(max-width: 1199px) {
+      margin-top: -80px;
+      padding: 160px 0px 0px;
+    }
+  }
+
+  &-widget {
+    &__title {
+      position: relative;
+      color: $white-color;
+      font-family: $title-font;
+      font-weight: 700;
+      font-style: Bold;
+      font-size: 32px;
+      line-height: 40px;
+      letter-spacing: 0px;
+      text-transform: capitalize;
+      margin-bottom: 24px;
+      padding-bottom: 22px;
+
+      @include xl {
+        font-size: 25px;
+        margin-bottom: 20px;
+      }
+
+      @include lg {
+        font-size: 22px;
+      }
+
+      @include xs {
+        font-size: 19px;
+      }
+    }
+
+    &__desc {
+      color: $white-color;
+    }
+
+    &-button-items {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+
+      @include md {
+        gap: 10px;
+      }
+
+      @include xs {
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+
+      &-btn-wrapper {
+        .btn-button2 {
+          color: $white-color;
+          font-family: $title-font;
+          font-weight: 500;
+          font-style: Medium;
+          font-size: 16px;
+          line-height: 22px;
+          letter-spacing: 0px;
+          text-align: center;
+          vertical-align: middle;
+          align-items: center;
+          display: inline-flex;
+          gap: 10px;
+          border-radius: 132px;
+          text-transform: capitalize;
+          padding: 12px 32px;
+          border: 1px solid $border-primary;
+          justify-content: space-between;
+          background: transparent;
+
+          @include xs {
+            padding: 7px 19px 7px 30px;
+          }
+
+          @include xs {
+            padding: 7px 11px 7px 10px;
+            font-size: 14px;
+          }
+
+          .text {
+            display: block;
+            display: flex;
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            justify-items: center;
+            margin: 0 auto;
+            color: $white-color;
+            font-family: $title-font;
+            font-weight: 500;
+            font-style: Medium;
+            font-size: 16px;
+            line-height: 22px;
+            letter-spacing: 0px;
+            text-align: center;
+
+            @include xs {
+              font-size: 14px;
+            }
+          }
+
+          .icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            font-size: 20px;
+            color: $white-color;
+            align-items: center;
+            border-radius: 500px;
+            transition: all 0.3s;
+            justify-content: center;
+            background: $bg-primary;
+
+            @include xs {
+              width: 30px;
+              height: 30px;
+            }
+          }
+
+          &:hover {
+            background-color: $bg-primary;
+            color: $primary-color;
+
+            .icon {
+              rotate: -45deg;
+              background: $bg-secondary;
+              color: $text-primary;
+
+              svg path {
+                fill: $text-primary;
+              }
+            }
+
+            .text {
+              color: $primary-color;
+            }
+          }
+
+          &.btn-black {
+            color: $white-color;
+            background: $primary-color;
+
+            .icon {
+              color: $primary-color;
+              background: $text-primary;
+            }
+          }
+
+          &.btn-purple {
+            gap: 16px;
+            color: #000;
+            color: $white-color;
+            background: $border-primary;
+            padding: 10px 11px 10px 37px;
+
+            @include xs {
+              padding: 10px 8px 10px 20px;
+            }
+
+            .icon {
+              width: 44px;
+              height: 44px;
+              background: $white-color;
+
+              &:hover {
+                background: $primary-color;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    &__logo {
+      margin-bottom: 43px;
+
+      img {
+        object-fit: cover;
+      }
+    }
+
+    &__social {
+      &-title {
+        color: $white-color;
+        font-weight: 500;
+        font-style: Medium;
+        font-size: 18px;
+        line-height: 24px;
+        letter-spacing: 0px;
+        text-transform: capitalize;
+        margin-bottom: 16px;
+      }
+
+      &-link {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+
+        span {
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 16px;
+          font-weight: 400;
+          border-radius: 4px;
+          border: none;
+          color: $white-color;
+          background: $bg-primary;
+          transition: all 0.4s ease-in-out;
+
+          &:hover {
+            border: none;
+            background: $primary-color;
+            color: $bg-primary;
+          }
+        }
+      }
+    }
+
+    &__contact {
+      &-post {
+        margin-bottom: 32px;
+
+        &-title {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: $white-color;
+          font-family: $title-font;
+          font-weight: 500;
+          font-style: Medium;
+          font-size: 20px;
+          line-height: 26px;
+          letter-spacing: 0px;
+          text-align: start;
+          margin-bottom: 10px;
+
+          svg path {
+            fill: $primary-color;
+            transition: all 0.4s ease-in-out;
+          }
+        }
+
+        &-link {
+          color: $white-color;
+          font-family: $body-font;
+          font-weight: 400;
+          font-style: Regular;
+          font-size: 16px;
+          line-height: 26px;
+          letter-spacing: 0px;
+          transition: all 0.4s ease-in-out;
+
+          &:hover {
+            color: $primary-color;
+          }
+
+        }
+      }
+
+      &-items {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+
+        @include xs {
+          flex-wrap: wrap;
+        }
+      }
+    }
+  }
+
+  &-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid $border-primary;
+
+    &__wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 32px 0 32px;
+
+      @include md {
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+    }
+
+    &__copyright {
+      color: $white-color;
+      font-family: $body-font;
+      font-weight: 400;
+      font-style: Regular;
+      font-size: 16px;
+      line-height: 26px;
+      letter-spacing: 0px;
+
+      a {
+        color: $white-color;
+      }
+    }
+
+    &__navs {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+
+      @media(max-width: 767px) {
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+
+      a {
+        color: $white-color;
+        font-family: $body-font;
+        font-weight: 400;
+        font-style: Regular;
+        font-size: 16px;
+        line-height: 26px;
+        letter-spacing: 0px;
+
+        &:hover {
+          color: $white-color;
+        }
+      }
+    }
+  }
+}

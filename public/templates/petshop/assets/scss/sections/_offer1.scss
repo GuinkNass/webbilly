@@ -1,0 +1,100 @@
+@use "../abstracts" as *;
+
+.offer1 {
+    position: relative;
+    overflow: hidden;
+    background: #d2e8ff;
+
+    &__bg-shape {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        left: 0;
+        z-index: 0;
+        pointer-events: none;
+        width: 100%;
+
+        img {
+            width: 100%;
+        }
+    }
+
+    .container {
+        position: relative;
+        z-index: 1;
+    }
+
+    // Using standard .section-title component
+    .section-title {
+        margin-bottom: rem(20);
+        text-align: left;
+
+        .section-title__subtitle {
+            text-align: left;
+        }
+
+        .section-title__title {
+            margin-bottom: 0;
+        }
+    }
+
+    &__description {
+        font-size: rem(16);
+        line-height: 1.6;
+        color: $text-secondary;
+        margin-bottom: rem(32);
+        max-width: rem(500);
+    }
+
+    // Using standard .theme-btn component for button
+
+    &__images {
+        position: relative;
+        min-height: rem(290); // Increased height to accommodate the stack
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+
+        // Background shape handling
+        .offer1__images-shape {
+            position: absolute;
+            bottom: auto;
+            top: 15%;
+            right: 15%;
+            width: 70%; // reduced width as it looks like a smaller accent
+            max-width: none;
+            z-index: 0;
+            pointer-events: none;
+            // distinct rotation or position if needed matching reference "scratch" look
+            transform: none;
+
+            img {
+                width: 100%;
+                height: auto;
+                display: block;
+            }
+        }
+
+        img.offer1__image,
+        img.offer1__image2 {
+            position: absolute;
+            height: auto;
+            margin-bottom: -22%;
+        }
+
+        // Pet Food Bag
+        .offer1__image {
+            bottom: rem(20);
+            left: -25%;
+            z-index: 2;
+        }
+
+        // Dog and Cat
+        .offer1__image2 {
+            bottom: 0;
+            right: -15%;
+            z-index: 3; // On top of the food bag if overlapping
+        }
+    }
+}

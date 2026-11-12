@@ -1,0 +1,263 @@
+@use "../abstracts" as *;
+
+// ===============================
+// Pet Event Section
+// ===============================
+// BEM: .pet-event
+// Layout: container > row > col only.
+// Left: featured event card. Right: vertical list.
+
+.pet-event {
+  background: $white-color; // White background
+  padding-top: rem(80);
+  padding-bottom: rem(80);
+
+  @include md {
+    padding-top: rem(60);
+    padding-bottom: rem(60);
+  }
+
+  @include xs {
+    padding-top: rem(40);
+    padding-bottom: rem(40);
+  }
+
+  &,
+  & * {
+    box-sizing: border-box;
+  }
+
+  // Section heading
+  &__title {
+    font-family: $title-font;
+    font-weight: 800;
+    font-size: clamp(rem(28), 3vw + rem(4), rem(42));
+    line-height: 1.2;
+    color: $text-primary;
+    margin-bottom: rem(8);
+  }
+
+  &__subtitle {
+    max-width: rem(520);
+    margin: 0 auto;
+    font-family: $body-font;
+    font-size: rem(16);
+    line-height: 1.6;
+    color: $text-secondary;
+  }
+
+  // Featured card (left)
+  &__featured-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: rem(20);
+    overflow: hidden;
+    background: $bg-secondary; // Light blue background
+    transition: $transition;
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+  }
+
+  &__featured-thumb {
+    width: 100%;
+    height: rem(300); // Fixed height for image
+    overflow: hidden;
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: $transition;
+    }
+  }
+
+  &__featured-content {
+    padding: rem(30);
+    background: transparent; // Inherit light blue
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    @include xs {
+      padding: rem(24) rem(20);
+    }
+  }
+
+  &__featured-title {
+    font-family: $title-font;
+    font-weight: 700;
+    font-size: rem(24);
+    line-height: 1.3;
+    color: $text-primary;
+    margin-bottom: rem(12);
+  }
+
+  &__featured-desc {
+    font-family: $body-font; // Jost
+    font-weight: 400;
+    font-size: rem(16);
+    line-height: rem(26);
+    color: $text-secondary;
+    margin-bottom: rem(20);
+  }
+
+  &__featured-meta {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: rem(20);
+    border-top: 1px solid rgba($text-secondary, 0.1);
+    padding-top: rem(20);
+
+    li {
+      display: inline-flex;
+      align-items: center;
+      gap: rem(8);
+      font-size: rem(14);
+      color: $text-secondary;
+      font-weight: 500;
+
+      i {
+        color: $text-primary; // Dark icon
+        font-size: rem(16);
+      }
+    }
+  }
+
+  // Right column list
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: rem(20);
+    height: 100%;
+  }
+
+  &__item {
+    display: flex;
+    gap: rem(20);
+    padding: rem(24);
+    border-radius: rem(16);
+    background: $bg-secondary; // Light blue background
+    align-items: center;
+    transition: $transition;
+    flex: 1;
+
+    &:hover {
+      transform: translateX(5px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.03);
+    }
+
+    @include xs {
+      flex-direction: row; // Keep side-by-side on mobile if space allows, or stack
+      align-items: flex-start;
+      padding: rem(20);
+    }
+
+    // Tiny mobile check
+    @include vxs {
+      flex-direction: column;
+    }
+  }
+
+  &__date-box {
+    flex-shrink: 0;
+    text-align: center;
+    min-width: rem(50);
+  }
+
+  &__date-day {
+    display: block;
+    font-family: $title-font; // Fredoka
+    font-size: rem(32);
+    font-weight: 700;
+    line-height: rem(40);
+    text-align: center;
+    text-transform: capitalize;
+    color: $text-primary;
+  }
+
+  &__date-month {
+    display: block;
+    font-family: $body-font;
+    font-size: rem(13);
+    font-weight: 500;
+    color: $text-secondary;
+    margin-bottom: rem(4);
+  }
+
+  &__item-body {
+    flex: 1;
+    padding-left: rem(20);
+    border-left: 1px solid rgba($text-secondary, 0.1);
+
+    @include xs {
+      padding-left: rem(15);
+    }
+
+    @include vxs {
+      border-left: none;
+      padding-left: 0;
+      margin-top: rem(10);
+      padding-top: rem(10);
+      border-top: 1px solid rgba($text-secondary, 0.1);
+    }
+  }
+
+  &__item-title {
+    font-family: $title-font; // Fredoka
+    font-weight: 700;
+    font-size: rem(24);
+    line-height: rem(32);
+    text-transform: capitalize;
+    color: $text-primary;
+    margin-bottom: rem(8);
+  }
+
+  &__item-desc {
+    font-family: $body-font; // Jost
+    font-weight: 400;
+    font-size: rem(16);
+    line-height: rem(26);
+    color: $text-secondary;
+    margin-bottom: rem(12);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &__item-meta {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: rem(20);
+
+    li {
+      display: inline-flex;
+      align-items: center;
+      gap: rem(6);
+      font-size: rem(13);
+      color: $text-secondary;
+
+      i {
+        color: $text-primary; // Dark icon
+      }
+    }
+  }
+
+  @include md {
+    padding-top: rem(60);
+    padding-bottom: rem(60);
+  }
+}

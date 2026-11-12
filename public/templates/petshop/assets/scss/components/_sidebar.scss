@@ -1,0 +1,304 @@
+@use '../base' as *;
+
+
+ .sidebar {
+
+     &__search,
+     &__categories,
+     &__recent,
+     &__tags,
+     &__download {
+         background: $bg-primary;
+         padding: 2rem;
+         margin-bottom: 2rem;
+     }
+
+     &__search-form {
+         position: relative;
+
+         input {
+             position: relative;
+             padding: 16px 16px;
+         }
+
+         button {
+             position: absolute;
+             top: 8px;
+             bottom: 8px;
+             right: 12px;
+             background: $primary-color;
+             color: $white-color;
+             border: none;
+             padding: 0.6rem 1rem;
+             transition: $transition;
+
+         }
+     }
+
+     &__title {
+         position: relative;
+         font-family: $title-font;
+         color: $text-secondary; 
+         font-weight: 700;
+         font-size: 24px;
+         line-height: 32px;
+         letter-spacing: 0.5px;
+         margin-bottom: 1.5rem;
+         padding-bottom: 1rem;
+
+         &::before {
+             position: absolute;
+             content: "";
+             width: 100%;
+             height: 2px;
+             bottom: 0;
+             left: 0;
+             background: $border-primary;
+             margin-top: 0.4rem;
+         }
+
+         &::after {
+             position: absolute;
+             content: "";
+             width: 80px;
+             height: 2px;
+             bottom: 0;
+             left: 0;
+             background: $primary-color;
+             margin-top: 0.4rem;
+         }
+     }
+
+     // Categories
+     &__list {
+         list-style: none;
+         padding: 0;
+         margin: 0;
+
+         li {
+             border-bottom: 1px solid $border-primary;
+             font-size: 0.95rem;
+             color: $text-secondary;
+             transition: $transition;
+
+             a {
+                 display: flex;
+                 gap: 50px;
+                 align-items: center;
+                 justify-content: space-between;
+                 padding: 1rem 0;
+                 font-family: $body-font;
+                 font-weight: 400;
+                 font-size: 16px;
+                 line-height: 1.2;
+                 letter-spacing: 0px;
+                 transition: $transition;
+
+                 @include xs {
+                     font-size: 14px;
+                 }
+
+                 span {
+                     display: flex;
+                 }
+
+                 &:hover {
+                     color: $primary-color;
+                 }
+             }
+
+             i {
+                 color: $text-primary;
+                 background-color: $icon-primary;
+                 width: 20px;
+                 height: 20px;
+                 border-radius: 50%;
+                 font-size: 12px;
+                 line-height: 20px;
+                 text-align: center;
+                 margin-right: 10px;
+                 margin-right: 8px;
+                 transition: $transition;
+             }
+
+             &:hover {
+                 margin-left: 5px;
+
+                 i {
+                     background-color: $primary-color;
+                 }
+             }
+         }
+     }
+
+     // Recent Posts
+     &__post {
+         display: flex;
+         flex-direction: column;
+         gap: 1rem;
+         margin-bottom: 1.5rem;
+
+         &:last-child {
+             margin-bottom: 0;
+         }
+
+         &-img {
+             width: 100%;
+             height: 148px;
+             object-fit: cover;
+         }
+
+         &-content {
+             flex: 1;
+             display: flex;
+             flex-direction: column;
+             justify-content: center;
+         }
+
+         &-date {
+             color: $primary-color;
+             font-family: $body-font;
+             font-weight: 400;
+             font-size: 16px;
+             line-height: 24px;
+             letter-spacing: 0px;
+             margin-bottom: 4px;
+
+             i {
+                 margin-right: 8px;
+             }
+         }
+
+         &-title {
+             color: $text-secondary;
+             font-family: $title-font;
+             font-weight: 600;
+             font-size: 16px;
+             line-height: 24px;
+             letter-spacing: 0.5px;
+             text-decoration: none;
+             transition: $transition;
+
+             &:hover {
+                 color: $primary-color;
+             }
+         }
+     }
+
+     // Tags
+     &__tag-list {
+         display: flex;
+         flex-wrap: wrap;
+         gap: 12px;
+     }
+
+     &__tag {
+         display: inline-block;
+         padding: 6px 12px;
+         border: 1px solid $border-primary;
+         border-radius: 100px;
+         font-family: $body-font;
+         font-weight: 400;
+         font-size: 14px;
+         line-height: 20px;
+         letter-spacing: 0%;
+         text-align: center;
+         vertical-align: middle;
+         color: $text-secondary;
+         text-decoration: none;
+         transition: $transition;
+
+         &:hover {
+             background: $primary-color;
+             color: $text-primary;
+             border-color: $primary-color;
+         }
+
+         &--active {
+             background: $primary-color;
+             color: $text-primary;
+         }
+     }
+
+     //  Downloads
+     &__download {
+         &-item {
+             display: flex;
+             align-items: center;
+             justify-content: space-between;
+             margin-bottom: 24px;
+
+             &:last-child {
+                 margin-bottom: 0;
+             }
+         }
+
+         &-content {}
+
+         .btn__link {
+             width: 56px;
+             height: 56px;
+             padding: 5px 18px;
+         }
+     }
+
+
+     // Responsive
+     @include sm {
+
+         &__search,
+         &__categories,
+         &__recent,
+         &__tags {
+             padding: 1rem;
+         }
+
+         &__post-img {
+             width: 80px;
+             height: 60px;
+         }
+     }
+
+     @include xs {
+         &__post {
+             flex-direction: column;
+             align-items: flex-start;
+         }
+
+         &__post-img {
+             width: 100%;
+             height: 160px;
+         }
+     }
+ }
+
+
+ //  Help-box 
+ .help-box {
+     position: relative;
+     padding: 48px 64px;
+
+     &:before {
+         position: absolute;
+         content: '';
+         top: 0;
+         left: 0;
+         width: 100%;
+         height: 100%;
+         z-index: 0;
+         background: linear-gradient(146.33deg, $text-primary 10.25%, $primary-color 152.79%);
+         opacity: 0.9;
+     }
+
+
+     &__icon {
+        position: relative;
+        z-index: 8;
+     }
+
+     &__content {
+        position: relative;
+        z-index: 8;
+     }
+
+ }

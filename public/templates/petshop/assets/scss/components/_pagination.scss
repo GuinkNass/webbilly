@@ -1,0 +1,177 @@
+@use '../base' as *;
+
+// ==========================================
+// Theme Pagination (Modern Version)
+// ==========================================
+.theme-pagination {
+  margin-top: 50px;
+
+  ul {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    list-style: none;
+    padding: 0;
+
+    li {
+      a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: $bg-secondary; // Standard light pinkish background from theme widgets
+        color: $text-950;
+        font-family: $title-font;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+
+        &:hover,
+        &.active {
+          background: $primary-color;
+          color: $text-950;
+          box-shadow: 0 4px 15px rgba($primary-color, 0.4);
+          transform: translateY(-2px);
+        }
+
+        i {
+          font-size: 14px;
+        }
+      }
+    }
+  }
+
+  @include md {
+    margin-top: 40px;
+
+    ul {
+      gap: 10px;
+
+      li a {
+        width: 42px;
+        height: 42px;
+        font-size: 15px;
+      }
+    }
+  }
+
+  @include xs {
+    margin-top: 30px;
+
+    ul {
+      gap: 8px;
+
+      li a {
+        width: 38px;
+        height: 38px;
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+// ==========================================
+// Modern Pagination Styles
+// ==========================================
+.pagination-area {
+  text-align: center;
+  margin-top: 50px;
+}
+
+.pagination {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  list-style: none;
+  padding: 0;
+  margin-top: 30px;
+
+  a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 48px;
+    min-width: 48px;
+    padding: 0 15px;
+    border-radius: 50px;
+    background: $bg-secondary;
+    color: $text-950;
+    font-family: $title-font;
+    font-weight: 600;
+    font-size: 16px;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+
+    &.page {
+      padding: 0;
+      width: 48px;
+    }
+
+    &.prev,
+    &.next {
+      gap: 8px;
+      padding: 0 25px;
+      border-radius: 100px;
+    }
+
+    i {
+      font-size: 14px;
+    }
+
+    &:hover,
+    &.active {
+      background: $primary-color;
+      color: $text-950;
+      box-shadow: 0 4px 15px rgba($primary-color, 0.4);
+      transform: translateY(-2px);
+    }
+  }
+
+  // Responsive adjustments for the standalone .pagination component
+  @include md {
+    gap: 10px;
+
+    a {
+      height: 42px;
+      min-width: 42px;
+      padding: 0 12px;
+      font-size: 15px;
+
+      &.page {
+        width: 42px;
+      }
+
+      &.prev,
+      &.next {
+        padding: 0 20px;
+      }
+    }
+  }
+
+  @include xs {
+    gap: 8px;
+
+    a {
+      height: 38px;
+      min-width: 38px;
+      padding: 0 10px;
+      font-size: 14px;
+
+      &.page {
+        width: 38px;
+      }
+
+      &.prev,
+      &.next {
+        padding: 0 15px;
+      }
+    }
+  }
+}

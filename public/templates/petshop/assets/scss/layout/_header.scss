@@ -1,0 +1,555 @@
+@use '../base' as *;
+
+/* === header scss === */
+.header-top {
+  position: relative;
+  z-index: 9;
+  padding: rem(10) 0;
+  background: $text-primary; // Dark Blue Background
+
+  &__left {
+    a {
+      color: rgba(255, 255, 255, 0.7);
+      font-family: $body-font;
+      font-weight: 400;
+      font-size: rem(14);
+      line-height: 1;
+      text-decoration: none;
+      transition: $transition;
+
+      &:hover {
+        color: $white-color;
+      }
+    }
+
+    .separator {
+      color: rgba(255, 255, 255, 0.4);
+      padding: 0 rem(12);
+      font-size: rem(14);
+    }
+  }
+
+  &__center {
+    p {
+      color: $white-color;
+      font-family: $body-font;
+      font-weight: 500;
+      font-size: rem(14);
+      line-height: 1;
+      margin: 0;
+    }
+  }
+
+  &__right {
+    display: flex;
+    gap: rem(10);
+    align-items: center;
+    justify-content: flex-end;
+
+    a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: rem(32);
+      height: rem(32);
+      border-radius: rem(4);
+      background: rgba($white-color, 0.1);
+      color: $white-color;
+      transition: all 0.3s ease-in-out;
+      font-size: rem(14);
+
+      &.twitter {
+        background: $primary-color;
+        color: $text-primary;
+      }
+
+      &:hover {
+        background: $primary-color;
+        color: $text-primary;
+      }
+
+      @include xs {
+        width: rem(28);
+        height: rem(28);
+      }
+    }
+  }
+}
+
+// Header Layout One (Clean horizontal layout)
+.header-area.header-layoutone {
+  background: $white-color;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 99;
+  border-bottom: rem(1) solid rgba($text-primary, 0.08);
+
+  &.header-sticky {
+    position: sticky;
+  }
+
+  .header-main {
+    padding: rem(20) 0;
+    border: none;
+    background: transparent;
+
+    @include md {
+      padding: rem(15) 0;
+    }
+
+    @include xs {
+      padding: rem(12) 0;
+    }
+  }
+
+  .header__logo {
+    img {
+      max-width: rem(120);
+
+      @include md {
+        max-width: rem(100);
+      }
+
+      @include xs {
+        max-width: rem(90);
+      }
+    }
+  }
+
+  .main-menu {
+    >ul {
+      display: flex;
+      align-items: center;
+      gap: rem(40);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+
+      @media (max-width: 1399.98px) {
+        gap: rem(30);
+      }
+
+      >li {
+        position: relative;
+
+        >a {
+          font-family: $title-font;
+          color: $text-primary;
+          text-transform: capitalize;
+          padding: rem(10) 0;
+          display: block;
+          transition: $transition;
+          text-decoration: none;
+          font-weight: 500;
+          font-size: 16px;
+          line-height: 22px;
+          letter-spacing: 0px;
+
+
+          &:hover {
+            color: $text-secondary;
+          }
+        }
+      }
+    }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: rem(18);
+
+    @include md {
+      gap: rem(12);
+    }
+
+    .header-lang {
+      .form-select {
+        font-size: rem(14);
+        font-family: $body-font;
+        font-weight: 600;
+        color: $text-primary;
+        padding-right: rem(25);
+        cursor: pointer;
+
+        &:focus {
+          box-shadow: none;
+          outline: none;
+        }
+      }
+    }
+
+    .header__search {
+      position: relative;
+      z-index: 10;
+
+      .search-open-btn {
+        width: rem(24);
+        height: rem(24);
+        background: transparent;
+        border: none;
+        padding: 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: $transition;
+
+        svg {
+          width: rem(20);
+          height: rem(20);
+          transition: $transition;
+
+          path {
+            fill: $text-primary;
+            transition: $transition;
+          }
+        }
+
+        &:hover {
+          svg path {
+            fill: $text-secondary;
+          }
+        }
+      }
+    }
+
+    .action-btn {
+      width: rem(20);
+      height: rem(20);
+      background: transparent;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $text-primary;
+      font-size: rem(18);
+      transition: $transition;
+      text-decoration: none;
+
+      @include md {
+        font-size: rem(16);
+      }
+
+      &:hover {
+        color: $text-secondary;
+      }
+
+      i {
+        line-height: 1;
+      }
+    }
+
+    .header__navicon {
+      .side-toggle {
+        .bar-icon {
+          width: rem(40);
+          height: rem(40);
+          background: $primary-color;
+          border-radius: 50%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: rem(4);
+          padding: 0;
+          cursor: pointer;
+          transition: $transition;
+          text-decoration: none;
+
+          @include xs {
+            width: rem(36);
+            height: rem(36);
+          }
+
+          span {
+            width: rem(18);
+            height: rem(2);
+            background: $text-primary;
+            display: block;
+            transition: $transition;
+
+            @include xs {
+              width: rem(16);
+            }
+          }
+
+          &:hover {
+            background: $text-secondary;
+
+            span {
+              background: $white-color;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Header Layout Three (New Cyan Layout)
+.header-layoutthree {
+  background: transparent;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 99;
+  border-bottom: 1px solid $border-secondary;
+
+  @include lg {
+    padding: rem(10) 0;
+  }
+
+  // Extra breathing room on small screens
+  @include xs {
+    padding: rem(14) 0;
+
+    .header-right {
+      padding-inline: rem(8);
+    }
+  }
+
+  .header-main {
+    border: none;
+    background: transparent;
+  }
+
+  .main-menu {
+    >ul {
+      display: flex;
+      align-items: center;
+      gap: rem(15);
+
+      @media (max-width: 1399.98px) {
+        gap: rem(8);
+      }
+
+      >li {
+        >a {
+          font-family: $title-font;
+          font-weight: 500;
+          font-size: 16px;
+          line-height: 22px;
+          letter-spacing: 0px;
+          color: $text-primary;
+          text-transform: uppercase;
+          padding: rem(30) 0;
+
+          i {
+            font-size: rem(10);
+            margin-left: rem(4);
+          }
+
+          &:hover {
+            color: $text-secondary;
+          }
+        }
+      }
+    }
+  }
+
+  &__right {
+    .header-actions {
+      display: flex;
+      align-items: center;
+    }
+
+    .action-btn {
+      width: rem(42);
+      height: rem(42);
+      border-radius: 50%;
+      background: $white-color;
+      color: $text-primary;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: rem(16);
+      transition: $transition;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      position: relative;
+      z-index: 1;
+
+      @include lg {
+        width: rem(38);
+        height: rem(38);
+        font-size: rem(14);
+      }
+
+      @include xs {
+        width: rem(34);
+        height: rem(34);
+        font-size: rem(13);
+      }
+
+      &:hover {
+        background: $primary-color;
+        transform: translateY(-2px);
+      }
+
+      i {
+        line-height: 1;
+      }
+    }
+
+    .bar-icon {
+      background: $text-primary;
+      color: $white-color;
+
+      &:hover {
+        background: $text-secondary;
+        color: $white-color;
+      }
+    }
+
+    .form-select {
+      font-size: rem(15);
+      font-family: $body-font;
+      color: $text-primary;
+      padding-right: rem(25);
+    }
+  }
+
+  .header__logo {
+    img {
+      max-width: rem(140);
+
+      @include md {
+        max-width: rem(120);
+      }
+    }
+  }
+}
+
+
+
+
+// Header Layout Four
+
+.header-layoutfour {
+  position: absolute;
+
+  .header-area__inner {
+    position: relative;
+    z-index: 9;
+    background: $white-color;
+    margin-top: 0;
+    border-radius: 0px;
+    margin-left: -100px;
+    padding: 0px 35px 0px 100px;
+
+    @include lg {
+      margin-left: -70px;
+    }
+
+    @include md {
+      margin-left: -100px;
+      padding: 0px 15px 0px 100px;
+    }
+
+    &::before {
+      position: absolute;
+      content: '';
+      width: 386px;
+      height: 96px;
+      top: 0;
+      left: 0;
+      background: $primary-color;
+      z-index: 0;
+      clip-path: polygon(0 0, 95% 0, 75% 100%, 0% 100%);
+
+      @include xs {
+        width: 330px;
+      }
+    }
+  }
+
+  .header__logo {
+    position: relative;
+    z-index: 9;
+  }
+
+  .header__nav {
+    .main-menu {
+      border-radius: 0px;
+      border: 0px solid $border-secondary;
+    }
+  }
+
+  .main-menu {
+    li {
+      a {
+        padding: 35px 0;
+        text-transform: uppercase;
+        transition: all 0.3s ease-in-out;
+      }
+
+      &:hover {
+        >a {
+          color: $primary-color !important;
+        }
+      }
+    }
+  }
+
+
+
+  .header-right {
+    gap: 24px;
+    display: flex;
+    align-items: center;
+    padding: 20px 0;
+
+    .side-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $text-primary;
+      text-transform: uppercase;
+      font-family: $body-font;
+      width: 56px;
+      height: 56px;
+      gap: 8px;
+      border-radius: 100px;
+      background: $primary-color;
+
+
+    }
+
+    .search-open-btn {
+      gap: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 26px;
+      color: $text-primary;
+      text-transform: uppercase;
+      font-family: $body-font;
+      width: 56px;
+      height: 56px;
+      gap: 8px;
+      border-radius: 100px;
+      background: $primary-color;
+
+
+      i {
+        color: $text-primary;
+      }
+    }
+  }
+}
+
+// Hide desktop nav on mobile; menu is shown in side panel (.mobile-menu)
+@include lg {
+  .header-area .header__nav {
+    display: none !important;
+  }
+}

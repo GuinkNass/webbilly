@@ -1,0 +1,54 @@
+@use '../base' as *;
+
+
+.tab-menu ul {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    height: 100%;
+
+    @include lg {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    li {
+        padding: 16px 0;
+
+        @include xl {
+            padding: 12px 0px;
+        }
+
+        a {
+            padding: 16px 37px;
+            font-family: $title-font;
+            font-weight: 600;
+            font-size: 20px;
+            line-height: 28px;
+            letter-spacing: 0.5px;
+            color: $text-secondary;
+            background: $bg-primary;
+            transition: $transition;
+
+            @include xl {
+                padding: 12px 25px;
+                font-size: 16px;
+                line-height: 1.2;
+            }
+        }
+    }
+}
+
+.tab-menu ul .tab-menu ul li a:hover {
+    background: $primary-color;
+    color: $text-primary;
+}
+
+.tab-menu ul li a.active {
+    background: $primary-color;
+    color: $text-primary;
+}
+
+.tab-box {
+    display: none;
+}

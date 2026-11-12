@@ -1,0 +1,120 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+.services2-area {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    background-color: var(--white-color);
+
+
+    .section-title {
+        text-align: left;
+        margin-bottom: 40px;
+
+        &__subtitle {
+            justify-content: flex-start;
+        }
+
+        @include md {
+            margin-bottom: 30px;
+        }
+    }
+}
+
+.services2-item {
+    margin-bottom: 40px;
+
+    &__icon {
+        width: 60px;
+        height: 60px;
+        background-color: #E6F2FF; // Light blue default
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: var(--heading-color);
+        margin-bottom: 20px;
+        transition: var(--transition);
+
+        &.yellow {
+            background-color: var(--primary-color); // Yellow for specific items
+        }
+    }
+
+    &__title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 15px;
+        color: var(--heading-color);
+    }
+
+    &__text {
+        font-size: 16px;
+        line-height: 1.6;
+        color: var(--text-body);
+        margin: 0;
+    }
+
+    &:hover {
+        .services2-item__icon {
+            transform: translateY(-5px);
+        }
+    }
+}
+
+.services2-image {
+    position: relative;
+    text-align: center;
+    z-index: 1;
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+
+    img {
+        max-width: 100%;
+        height: auto;
+        position: relative;
+        z-index: 2;
+    }
+
+    // Yellow background circle
+    &::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 450px;
+        height: 450px;
+        background-color: rgba(255, 220, 29, 0.2); // Light yellow
+        border-radius: 50%;
+        z-index: 1;
+    }
+
+    // White/Border outline circle
+    &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(1.1);
+        width: 450px;
+        height: 450px;
+        border: 1px solid #E6E6E6;
+        border-radius: 50%;
+        z-index: 0;
+    }
+
+    @include md {
+        margin-top: 40px;
+
+        &::before,
+        &::after {
+            width: 300px;
+            height: 300px;
+        }
+    }
+}

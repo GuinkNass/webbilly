@@ -484,72 +484,77 @@ export default function AdminDashboardPage() {
       </aside>
 
       {/* =========================================================================
-          2. TOPBAR SUPERIOR (FIXA AO LADO DA SIDEBAR)
+          CONTAINER DIREITO (HEADER STICKY + ÁREA DE CONTEÚDO PRINCIPAL)
          ========================================================================= */}
-      <header className="fixed top-0 left-64 right-0 h-16 bg-[#0f121a]/95 backdrop-blur-md border-b border-white/[0.08] px-6 lg:px-8 flex items-center justify-between z-30">
-        {/* Barra de Busca Global */}
-        <div className="relative w-80 max-w-sm">
-          <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Buscar comércios, seriais, faturas..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-12 py-1.5 bg-[#08090d] border border-white/[0.08] rounded-xl text-xs text-white placeholder-zinc-400 focus:outline-none focus:border-indigo-500 transition"
-          />
-          <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-zinc-400 bg-white/[0.06] px-1.5 py-0.5 rounded border border-white/[0.08]">
-            Ctrl K
-          </kbd>
-        </div>
+      <div className="ml-64 flex-1 flex flex-col min-w-0 min-h-screen bg-[#0a0c10]">
 
-        {/* Lado Direito da Topbar */}
-        <div className="flex items-center gap-3">
-          {/* Badge Conexão Asaas */}
-          <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-950/40 text-emerald-400 border border-emerald-800/40">
-            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-            Asaas v3 Conectado
-          </span>
+        {/* =========================================================================
+            2. TOPBAR SUPERIOR (STICKY NO TOPO - NUNCA SOBREPÕE O CONTEÚDO)
+           ========================================================================= */}
+        <header className="sticky top-0 z-30 h-16 bg-[#0f121a]/95 backdrop-blur-md border-b border-white/[0.08] px-6 lg:px-8 flex items-center justify-between shrink-0">
+          {/* Barra de Busca Global */}
+          <div className="relative w-80 max-w-sm">
+            <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Buscar comércios, seriais, faturas..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-12 py-1.5 bg-[#08090d] border border-white/[0.08] rounded-xl text-xs text-white placeholder-zinc-400 focus:outline-none focus:border-indigo-500 transition"
+            />
+            <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-zinc-400 bg-white/[0.06] px-1.5 py-0.5 rounded border border-white/[0.08]">
+              Ctrl K
+            </kbd>
+          </div>
 
-          <button
-            onClick={() => {
-              setChangePasswordError(null);
-              setChangePasswordSuccess(null);
-              setAdminCurrentPassword('');
-              setAdminNewPassword('');
-              setAdminConfirmPassword('');
-              setShowChangePasswordModal(true);
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#161a26] border border-white/[0.08] text-zinc-300 hover:text-white hover:bg-white/[0.06] transition"
-          >
-            <Key className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="hidden md:inline">Alterar Senha Master</span>
-          </button>
+          {/* Lado Direito da Topbar */}
+          <div className="flex items-center gap-3">
+            {/* Badge Conexão Asaas */}
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-950/40 text-emerald-400 border border-emerald-800/40">
+              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+              Asaas v3 Conectado
+            </span>
 
-          <button
-            onClick={loadData}
-            className="p-2 text-zinc-400 hover:text-white rounded-xl hover:bg-white/[0.06] border border-white/[0.08] transition"
-            title="Atualizar dados em tempo real"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
+            <button
+              onClick={() => {
+                setChangePasswordError(null);
+                setChangePasswordSuccess(null);
+                setAdminCurrentPassword('');
+                setAdminNewPassword('');
+                setAdminConfirmPassword('');
+                setShowChangePasswordModal(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#161a26] border border-white/[0.08] text-zinc-300 hover:text-white hover:bg-white/[0.06] transition"
+            >
+              <Key className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="hidden md:inline">Alterar Senha Master</span>
+            </button>
 
-          {/* Avatar / Perfil Admin */}
-          <div className="flex items-center gap-2 pl-2 border-l border-white/[0.08]">
-            <div className="w-8 h-8 rounded-full bg-indigo-900/80 border border-indigo-700/50 flex items-center justify-center text-white text-xs font-bold">
-              AD
-            </div>
-            <div className="hidden lg:block text-left">
-              <div className="text-xs font-bold text-white leading-none">Administrador</div>
-              <div className="text-[10px] text-zinc-400 leading-tight">Master Billy</div>
+            <button
+              onClick={loadData}
+              className="p-2 text-zinc-400 hover:text-white rounded-xl hover:bg-white/[0.06] border border-white/[0.08] transition"
+              title="Atualizar dados em tempo real"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </button>
+
+            {/* Avatar / Perfil Admin */}
+            <div className="flex items-center gap-2 pl-2 border-l border-white/[0.08]">
+              <div className="w-8 h-8 rounded-full bg-indigo-900/80 border border-indigo-700/50 flex items-center justify-center text-white text-xs font-bold">
+                AD
+              </div>
+              <div className="hidden lg:block text-left">
+                <div className="text-xs font-bold text-white leading-none">Administrador</div>
+                <div className="text-[10px] text-zinc-400 leading-tight">Master Billy</div>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* =========================================================================
-          3. ÁREA DE CONTEÚDO PRINCIPAL (COM PADDING TOP E LEFT)
-         ========================================================================= */}
-      <main className="ml-64 px-6 lg:px-8 pt-28 pb-16 flex-1 min-h-screen bg-[#0a0c10] overflow-x-hidden">
+        {/* =========================================================================
+            3. ÁREA DE CONTEÚDO PRINCIPAL (COM ESPAÇAMENTO RESPONSIVO PERFEITO)
+           ========================================================================= */}
+        <main className="px-6 lg:px-8 py-8 flex-1 overflow-x-hidden">
         
         {/* Banner de Feedback */}
         {actionSuccess && (
@@ -1170,6 +1175,8 @@ export default function AdminDashboardPage() {
         )}
 
       </main>
+
+      </div>
 
       {/* =========================================================================
           MODAL: ALTERAR SENHA MASTER

@@ -1,0 +1,13 @@
+{
+  "id": "autoescola-drivepro",
+  "name": "DrivePro - Autoescola & Centro de Formação de Condutores",
+  "category": "Treinamento & Cursos",
+  "description": "Layout moderno e persuasivo para autoescolas e instrutores de trânsito. Planos de 1ª habilitação (CNH A/B), simulados e matrículas via WhatsApp.",
+  "accentColor": "#ffb400",
+  "features": [
+    "Tabela de pacotes para CNH A, B, AB e D",
+    "Apresentação de instrutores e frota de veículos",
+    "Estatísticas de aprovação e diferenciais",
+    "Botão de matrícula rápida direto no WhatsApp"
+  ]
+}

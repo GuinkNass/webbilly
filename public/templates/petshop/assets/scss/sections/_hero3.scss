@@ -1,0 +1,237 @@
+@use "../abstracts" as *;
+
+// ===============================
+// Hero3 Section (Friend Pet Community)
+// =============================== 
+
+.hero3 {
+    position: relative;
+    background: linear-gradient(-128.45deg, rgba(0, 201, 213, 0.4) 41.22%, rgba(0, 201, 213, 0) 90.67%);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    overflow: hidden;
+    z-index: 1;
+    padding: 220px 0 0px;
+
+    @include lg {
+        padding: 180px 0 0;
+    }
+
+    @include md {
+        padding: 140px 0 0;
+    }
+
+    @include xs {
+        padding: 110px 0 0;
+    }
+
+    // ---- Shapes ----
+    &__shape {
+        position: absolute;
+        pointer-events: none;
+        z-index: -1;
+        opacity: 0.6; // Subtle background feel
+
+        &--1 {
+            top: 20%;
+            left: 0%;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        &--2 {
+            top: 48%;
+            left: 7%;
+            animation: float 5s ease-in-out infinite reverse;
+        }
+
+        &--3 {
+            top: 10%;
+            left: 35%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        &--4 {
+            bottom: 30%;
+            left: 35%;
+            animation: float 5.5s ease-in-out infinite reverse;
+        }
+
+        &--5 {
+            top: 25%;
+            right: 2%;
+            animation: float 7s ease-in-out infinite;
+        }
+    }
+
+    // ---- Left Column (Cat Image) ----
+    &__thumb-left {
+        position: relative;
+        height: 100%;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        margin-left: -240px;
+        margin-right: -206px;
+
+        @include md {
+            min-height: rem(400);
+        }
+
+        img {
+            display: block;
+        }
+    }
+
+    // ---- Right Column (Dog & Cat Image) ----
+    &__thumb-right {
+        position: relative;
+        height: 100%;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        margin-right: -262px;
+        margin-left: -104px;
+        margin-top: 108px;
+
+        @include md {
+            min-height: rem(400);
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+    }
+
+    // ---- Center Content ----
+    &__content {
+        text-align: center;
+        padding: rem(20) 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        margin-bottom: 200px;
+        margin-left: -20px;
+        margin-right: -60px;
+
+        @include xxl {
+            margin-bottom: 200px;
+        }
+
+        @include xl {
+            margin-bottom: 120px;
+            margin-left: 0;
+            margin-right: 0;
+        }
+
+        @include lg {
+            padding: rem(60) rem(20);
+            margin-bottom: 80px;
+        }
+
+        @include md {
+            margin-bottom: 60px;
+        }
+    }
+
+    &__subtitle {
+        font-family: $title-font;
+        font-weight: 500;
+        font-size: 18px;
+        line-height: 24px;
+        letter-spacing: 0px;
+        text-align: center;
+        text-transform: capitalize;
+        color: $text-primary;
+        margin-bottom: rem(8);
+        display: inline-block;
+        letter-spacing: 0.5px;
+    }
+
+    &__title {
+        font-family: $title-font;
+        font-weight: 700;
+        font-size: clamp(rem(36), 5vw + rem(10), rem(76));
+        line-height: 1.1;
+        color: $text-primary;
+        margin-bottom: rem(24);
+
+        span {
+            display: block;
+        }
+    }
+
+    &__desc {
+        font-family: $body-font;
+        font-size: rem(16);
+        line-height: 1.6;
+        color: $text-secondary;
+        margin-bottom: rem(48);
+        max-width: rem(560);
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    &__btns {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: rem(16);
+        flex-wrap: wrap;
+    }
+
+    &__btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: rem(14) rem(32);
+        border-radius: rem(50);
+        font-family: $title-font;
+        font-weight: 500;
+        font-size: 16px;
+        line-height: 22px;
+        letter-spacing: 0px;
+        text-decoration: none;
+        transition: $transition;
+        border: 1px solid transparent;
+
+        &--primary {
+            background: $primary-color; // Yellow
+            color: $text-primary;
+
+            &:hover {
+                background: $primary-color;
+                opacity: 0.85;
+                transform: translateY(-2px);
+            }
+        }
+
+        &--white {
+            background: $white-color;
+            color: $text-primary;
+
+            &:hover {
+                background: $text-primary;
+                color: $white-color;
+                transform: translateY(-2px);
+            }
+        }
+    }
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}

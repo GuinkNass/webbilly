@@ -1,0 +1,161 @@
+@use '../abstracts' as *;
+
+/* ======================================
+   Fluid typography (clamp)
+   Viewport: 375px → 1440px
+   Display | Heading | Label | Paragraph
+====================================== */
+
+$typo-min-vw: 375px;
+$typo-max-vw: 1440px;
+
+@mixin fluid-size($min-fs, $max-fs, $min-lh, $max-lh) {
+  $fs-diff: $max-fs - $min-fs;
+  $lh-diff: $max-lh - $min-lh;
+  font-size: clamp(
+    #{$min-fs},
+    calc(#{$min-fs} + #{$fs-diff}px * ((100vw - #{$typo-min-vw}) / (#{$typo-max-vw} - #{$typo-min-vw}))),
+    #{$max-fs}
+  );
+  line-height: clamp(
+    #{$min-lh},
+    calc(#{$min-lh} + #{$lh-diff}px * ((100vw - #{$typo-min-vw}) / (#{$typo-max-vw} - #{$typo-min-vw}))),
+    #{$max-lh}
+  );
+}
+
+/* ---------- Display ---------- */
+.typo-d-l {
+  font-family: $title-font;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  @include fluid-size(36px, 100px, 40px, 108px);
+}
+
+.typo-d-m {
+  font-family: $title-font;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  @include fluid-size(32px, 84px, 36px, 88px);
+}
+
+.typo-d-s {
+  font-family: $title-font;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  @include fluid-size(28px, 76px, 32px, 80px);
+}
+
+.typo-d-xs {
+  font-family: $title-font;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  @include fluid-size(26px, 68px, 30px, 72px);
+}
+
+/* ---------- Heading ---------- */
+.typo-h-2xl,
+.typo-h-one {
+  font-family: $title-font;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  @include fluid-size(28px, 60px, 34px, 68px);
+}
+
+.typo-h-xl,
+.typo-h-two {
+  font-family: $title-font;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  @include fluid-size(24px, 48px, 30px, 56px);
+}
+
+.typo-h-l,
+.typo-h-three {
+  font-family: $title-font;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  @include fluid-size(22px, 40px, 28px, 48px);
+}
+
+.typo-h-m,
+.typo-h-four {
+  font-family: $title-font;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  @include fluid-size(20px, 32px, 26px, 40px);
+}
+
+.typo-h-s,
+.typo-h-five {
+  font-family: $title-font;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  @include fluid-size(18px, 24px, 24px, 32px);
+}
+
+.typo-h-xs,
+.typo-h-six {
+  font-family: $title-font;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  @include fluid-size(16px, 20px, 22px, 28px);
+}
+
+/* ---------- Label ---------- */
+.typo-l-l {
+  font-family: $title-font;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  @include fluid-size(18px, 22px, 24px, 28px);
+}
+
+.typo-l-m {
+  font-family: $title-font;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  @include fluid-size(16px, 20px, 22px, 26px);
+}
+
+.typo-l-s {
+  font-family: $title-font;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  @include fluid-size(14px, 18px, 20px, 24px);
+}
+
+.typo-l-xs {
+  font-family: $title-font;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  @include fluid-size(14px, 16px, 20px, 22px);
+}
+
+/* ---------- Paragraph ---------- */
+.typo-text-l {
+  font-family: $body-font;
+  font-weight: 400;
+  letter-spacing: 0;
+  @include fluid-size(14px, 18px, 22px, 28px);
+}
+
+.typo-text-m {
+  font-family: $body-font;
+  font-weight: 400;
+  letter-spacing: 0;
+  @include fluid-size(12px, 16px, 20px, 26px);
+}
+
+.typo-text-s {
+  font-family: $body-font;
+  font-weight: 400;
+  letter-spacing: 0;
+  @include fluid-size(12px, 14px, 20px, 22px);
+}
+
+.typo-text-xs {
+  font-family: $body-font;
+  font-weight: 400;
+  letter-spacing: 0;
+  @include fluid-size(11px, 12px, 18px, 20px);
+}

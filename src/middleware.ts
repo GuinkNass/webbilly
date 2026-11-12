@@ -5,10 +5,11 @@ export const config = {
     /*
      * Intercepta todas as requisições exceto:
      * - /api (APIs internas)
+     * - /templates (Arquivos estáticos de templates oficiais)
      * - /_next (arquivos estáticos compilados do Next.js)
      * - arquivos estáticos na raiz (favicon, imagens, etc.)
      */
-    '/((?!api/|_next/|_static/|[\\w-]+\\.\\w+).*)',
+    '/((?!api/|templates/|_next/|_static/|[\\w-]+\\.\\w+).*)',
   ],
 };
 
@@ -44,8 +45,8 @@ export default function middleware(req: NextRequest) {
 
   // Se a requisição veio através de um subdomínio válido
   if (subdomain) {
-    // Não reescreve chamadas de API internas ou se já estiver na rota /site
-    if (!url.pathname.startsWith('/api') && !url.pathname.startsWith('/site')) {
+    // Não reescreve chamadas de API internas, assets de templates ou se já estiver na rota /site
+    if (!url.pathname.startsWith('/api') && !url.pathname.startsWith('/templates') && !url.pathname.startsWith('/site')) {
       const rewriteUrl = new URL(`/site/${subdomain.toLowerCase()}`, req.url);
       rewriteUrl.search = url.search;
       return NextResponse.rewrite(rewriteUrl);

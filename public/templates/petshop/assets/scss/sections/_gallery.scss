@@ -1,0 +1,155 @@
+// ===============================
+// Gallery Section
+// ===============================
+// BEM block: .gallery
+// Uses section-padding (top/bottom 120px, left/right 0).
+// Responsive for all devices.
+
+@use "../abstracts" as *;
+
+.gallery {
+  position: relative;
+  overflow: hidden;
+  background: $bg-primary;
+
+  &,
+  & * {
+    box-sizing: border-box;
+  }
+
+  &__title {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: rem(16);
+    align-items: center;
+    justify-content: center;
+    margin-bottom: rem(32);
+  }
+
+  &__drived-01,
+  &__drived-02 {
+    flex-shrink: 0;
+    width: rem(80);
+    height: rem(6);
+    opacity: 0.4;
+    display: none;
+
+    @include sm {
+      display: block;
+      width: rem(120);
+    }
+    @include md {
+      width: rem(200);
+    }
+    @include lg {
+      width: rem(280);
+    }
+  }
+
+  &__drived-01 path,
+  &__drived-02 path {
+    fill: $border-primary;
+  }
+
+  &__happy-pets-gallery {
+    color: $text-primary;
+    font-family: $title-font;
+    font-weight: 700;
+    font-size: clamp(rem(22), 4vw + 0.5rem, rem(48));
+    line-height: 1.17;
+    letter-spacing: -0.02em;
+    text-align: center;
+  }
+
+  &__gallery2 {
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: rem(12);
+    align-items: stretch;
+
+    @include sm {
+      gap: rem(16);
+    }
+    @include md {
+      grid-template-columns: repeat(3, 1fr);
+      gap: rem(16);
+    }
+    @include lg {
+      grid-template-columns: repeat(6, 1fr);
+      gap: rem(16);
+    }
+  }
+
+  &__image-01,
+  &__image-02,
+  &__image-03,
+  &__image-04,
+  &__image-05,
+  &__image-06 {
+    border-radius: rem(16);
+    width: 100%;
+    height: 100%;
+    min-height: rem(160);
+    object-fit: cover;
+    display: block;
+    aspect-ratio: 4 / 3;
+
+    @include sm {
+      min-height: rem(180);
+    }
+    @include md {
+      min-height: rem(200);
+    }
+    @include lg {
+      min-height: rem(220);
+      aspect-ratio: auto;
+    }
+  }
+
+  &__instagram {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: rem(8);
+    background: $bg-primary;
+    border-radius: rem(88);
+    padding: 0 rem(20);
+    height: rem(36);
+    margin-top: rem(24);
+    margin-left: auto;
+    margin-right: auto;
+    text-decoration: none;
+    color: $text-primary;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+
+  &___011-instagram {
+    flex-shrink: 0;
+    width: rem(18);
+    height: rem(18);
+
+    path {
+      fill: $primary-color;
+    }
+  }
+
+  &__instagram2 {
+    font-size: rem(18);
+    font-weight: 500;
+    line-height: 1.33;
+  }
+}

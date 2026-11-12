@@ -1,0 +1,37 @@
+// ===============================
+// Theme Button Component
+// ===============================
+// Class: .theme-btn
+// Use as <a> or <button>; optional .theme-btn--primary modifier.
+
+  @use '../base' as *;
+
+.theme-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: rem(8);
+  background: $primary-color;
+  color: $text-primary;
+  font-family: $title-font;
+  font-weight: 500;
+  font-size: 1rem;
+  line-height: 1.375;
+  padding: rem(14) rem(28);
+  border-radius: 5.5rem;
+  text-decoration: none;
+  transition: $transition;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 0.92;
+    color: $text-primary;
+  }
+
+  // Optional modifier (same as default for now; extend as needed)
+  &--primary {
+    background: $primary-color;
+    color: $text-primary;
+  }
+}

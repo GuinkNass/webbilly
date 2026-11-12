@@ -1,0 +1,65 @@
+@use "sass:math";
+
+// utils/_functions.scss
+
+ 
+
+
+@function __rem($px, $base: 16) {
+  @if unit($px)==rem {
+    $value-without-unit: math.div($px, ($px * 0 + 1));
+    @return $value-without-unit;
+  }
+
+  @else if unit($px)==px {
+    $value-without-unit: math.div($px, ($px * 0 + 1));
+    $val: calc($value-without-unit / $base); //assume em always 16px;
+    @return $val;
+  }
+
+  @else if unit($px)=='' {
+    $val: calc($px / $base);
+    @return $val;
+  }
+
+  @else {
+    @warn "Invalid Value "; //syntax errors return;
+    @return '';
+  }
+}
+
+@function _rem($px) {
+  @return #{__rem($px) + 'rem'};
+}
+
+// Convert Hex to RGB
+@function _rgb($hex) {
+  @return red($hex), green($hex), blue($hex);
+}
+
+// Shortcut function for clamp;
+// Assuming the minimum screen width is 375 pixels and the maximum screen width is 1199px;
+@function _format($number) {
+  @return calc(round($number * 10000) / 10000);
+}
+
+@function _clamp($minSize, $maxSize, $minWidth: 375, $maxWidth: 1199) {
+  $minREMsize: __rem($minSize);
+  $maxREMsize: __rem($maxSize);
+  $minREMwidth: __rem($minWidth);
+  $maxREMwidth: __rem($maxWidth);
+
+  $slopFontCal: calc($maxREMsize - $minREMsize);
+  $slopWidthCal: calc($maxREMwidth - $minREMwidth);
+
+  $slop: calc($slopFontCal / $slopWidthCal);
+
+  $minusWidth: calc($minREMwidth * -1);
+  $xAxisIntersection: calc($minusWidth * $slop + $minREMsize);
+  $preferred: calc($slop * 100);
+
+  $xAxisMax: _format($xAxisIntersection);
+  $preferredMax: _format($preferred);
+
+  @return clamp(#{$minREMsize}rem, #{$xAxisMax}rem + #{$preferredMax}vw, #{$maxREMsize}rem);
+}

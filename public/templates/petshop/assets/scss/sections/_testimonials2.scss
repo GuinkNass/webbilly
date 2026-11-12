@@ -1,0 +1,265 @@
+@use '../base' as *;
+
+.testimonial2 {
+  &-wrapper {
+    padding: 0 120px;
+    overflow: hidden;
+
+    @include xl {
+      padding: 0 20px;
+    }
+
+    @include md {
+      padding: 0 10px;
+    }
+
+    @include sm {
+      padding: 0 5px;
+    }
+  }
+
+  &-card {
+    position: relative;
+    z-index: 1;
+
+    &__image {
+      text-align: center;
+      margin-bottom: 24px;
+
+      img {
+        width: 328px;
+      }
+    }
+
+    &__content {
+      text-align: center;
+
+      &-title {
+        font-weight: 700;
+        font-style: Bold;
+        font-size: 24px;
+        line-height: 30px;
+        letter-spacing: 0px;
+        text-align: center;
+        text-transform: capitalize;
+        margin-bottom: 16px;
+
+        @include xl {
+          font-size: 22px;
+        }
+
+        @include md {
+          font-size: 20px;
+        }
+      }
+
+      &-suntitle {
+        color: $text-secondary;
+        font-family: $body-font;
+        font-weight: 600;
+        font-size: clamp(14px, 2vw, 20px);
+        line-height: 1.5;
+        letter-spacing: 0.5px;
+        text-align: center;
+      }
+
+      &-star {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        margin-top: 32px;
+
+        i {
+          color: $primary-color;
+          margin-right: 8px;
+        }
+
+        @include md {
+          margin-top: 20px;
+        }
+
+        @include sm {
+          margin-top: 10px;
+        }
+      }
+    }
+  }
+
+  // Image Slider Styles
+  &-image-slider {
+    position: relative;
+    overflow: visible;
+    width: 100%;
+    padding: 40px 20px;
+
+    @include md {
+      padding: 20px 0;
+      margin-bottom: 30px;
+    }
+
+    @include sm {
+      padding: 10px 0;
+      margin-bottom: 5px;
+    }
+  }
+
+  .image-slider-track {
+    display: flex;
+    gap: 16px;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform;
+    align-items: center;
+  }
+
+  .image-slider-slide {
+    flex: 0 0 calc(33.333% - 11px);
+    width: calc(33.333% - 11px);
+    opacity: 0.4;
+    transform: scale(0.8);
+    transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 16px;
+    overflow: hidden;
+
+    img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 16px;
+    }
+
+    &.is-active {
+      opacity: 1;
+      transform: scale(1);
+      z-index: 2;
+    }
+  }
+
+  &-controls {
+    display: flex;
+    justify-content: space-between;
+
+    &__arrowLeft,
+    &__arrowRight {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 9;
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 20px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+
+      @include md {
+        width: 48px;
+        height: 48px;
+        font-size: 12px;
+      }
+
+      @include sm {
+        width: 40px;
+        height: 40px;
+        font-size: 10px;
+      }
+
+      i {
+        transition: transform 0.3s ease;
+      }
+
+      &:hover {
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+        transform: translateY(-50%) scale(1.05);
+
+        i {
+          transform: scale(1.1);
+        }
+      }
+
+      &:active {
+        transform: translateY(-50%) scale(0.98);
+      }
+    }
+
+    &__arrowLeft {
+      left: -10%;
+      background: #E8F3F8;
+      color: #2A514C;
+
+      &:hover {
+        background: #D0E7F0;
+      }
+
+      @include xl {
+        left: 0%;
+      }
+    }
+
+    &__arrowRight {
+      right: -10%;
+      background: $primary-color;
+      color: #2A514C;
+
+      &:hover {
+        background: #E6BC00; // Slightly darker yellow for hover
+      }
+
+      @include xl {
+        right: 0%;
+      }
+    }
+  }
+}
+
+
+
+.testimonial2-slider {
+  position: relative;
+  width: 100%;
+}
+
+.testimonial2-slider .slider-track {
+  display: flex;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.testimonial2-slider .slider-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  opacity: 0.4;
+  transform: scale(0.85);
+  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  touch-action: pan-y; // Allow vertical scrolling
+}
+
+// Active slide in center
+.testimonial2-slider .slider-slide.is-active {
+  opacity: 1;
+  transform: scale(1);
+  z-index: 2;
+
+  @include xl {
+    padding: 0 100px;
+  }
+
+  @include lg {
+    padding: 0 60px;
+  }
+
+  @include md {
+    padding: 0 20px;
+  }
+}
+
+.testimonial2-controls {
+  display: flex;
+  justify-content: space-between;
+}

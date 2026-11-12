@@ -1,0 +1,103 @@
+/*
+Theme Name: Petly - Pet Care & Animal HTML Template
+Author: Themewolfs
+Description: Petly - Pet Care & Animal HTML Template
+Version: 1.0.0
+*/
+/* ------------------------------------------------------------------
+[Table of Contents]
+-------------------------------------------------------------------
+
+=========== Utils ===========
+01. Color
+02. Functions
+03. Mixins
+04. Variables
+
+=========== Theme =========== 
+01. Animation
+02. Common Class
+03. Default
+04. Section Space
+05. Typography
+
+=========== Components ===========
+01. Accordion
+02. Back To Top
+03. Breadcrumb
+04. Buttons
+05. Card
+06. Common
+07. Form
+08. Main Sidebar
+09. Menu
+10. Pagination
+11. Preloader
+12. Progress Bar
+13. Search
+14. Section Title
+15. Sidebar Panel
+16. Sidebar
+17. Table
+18. Vanilla Plugins
+
+=========== Partials ===========
+01. Footer
+02. Header
+
+=========== Sections ===========
+01. About
+02. Blog1
+03. Cta2
+04. Faq2
+05. Featured Products
+06. Features
+07. Gallery
+08. Give Home
+09. Hero
+10. Hero2
+11. Hero3
+12. Instagram
+13. Instagram2
+14. Intro1
+15. Offer1
+16. Pet Categories
+17. Pet Event
+18. Popular Product
+19. Process
+20. Services
+21. Services2
+22. Site Footer
+23. Subscribe
+24. Subscribe2
+25. Team
+26. Testimonial1
+27. Testimonials
+28. Testimonials2
+29. Testimonials3
+30. Top Services
+31. Why Choose Us
+
+=========== Pages ===========
+01. About
+02. Blog Details
+03. Blog Standard
+04. Blog
+05. Cart
+06. Checkout
+07. Contact
+08. Error
+09. Home One
+10. Login
+11. Product Details
+12. Shop List
+13. Shop
+14. Wishlist
+*/
+
+// Main entry: load in dependency order (base → layout → sections → components → pages)
+@use 'base';
+@use 'layout';
+@use 'sections';
+@use 'components';
+@use 'pages';

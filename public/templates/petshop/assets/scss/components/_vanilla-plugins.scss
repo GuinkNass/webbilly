@@ -1,0 +1,429 @@
+// =============================================================================
+// Vanilla JS plugin replacements – SCSS for main.js behaviour (no jQuery/libs)
+// =============================================================================
+
+@use '../base' as *;
+
+// -----------------------------------------------------------------------------
+// 1. Sliders (replaces Swiper CSS)
+// -----------------------------------------------------------------------------
+$slider-transition: transform 0.5s ease;
+
+.intro-sliderone,
+.testimonial-sliderone,
+.project-silderone,
+.teamone__sliderone,
+.teamone__slidertwo,
+.teamone__sliderthree {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+
+  .swiper-wrapper,
+  .slider-track {
+    display: flex;
+    flex-wrap: nowrap;
+    transition: $slider-transition;
+    will-change: transform;
+  }
+
+  // Horizontal sliders
+  &:not([data-direction="vertical"]) {
+    .swiper-wrapper,
+    .slider-track {
+      flex-direction: row;
+    }
+
+    .swiper-slide {
+      flex: 0 0 100%;
+      width: 100%;
+      min-width: 0;
+    }
+  }
+
+  // Vertical: JS sets flex-direction on wrapper; these support layout
+  &.testimonial-sliderone {
+    .swiper-wrapper,
+    .slider-track {
+      flex-direction: column;
+    }
+
+    .swiper-slide {
+      flex: 0 0 auto;
+      width: 100%;
+    }
+  }
+
+  &.teamone__slidertwo {
+    .swiper-wrapper,
+    .slider-track {
+      flex-direction: column;
+    }
+
+    .swiper-slide {
+      flex: 0 0 auto;
+      width: 100%;
+    }
+  }
+}
+
+// Slider nav buttons (shared)
+.intro-silderone-next,
+.intro-silderone-prev,
+.testimonial-sliderone-next,
+.testimonial-sliderone-prev,
+.teamone-slidertwo-next,
+.teamone-slidertwo-prev,
+.swiper-button-next,
+.swiper-button-prev {
+  cursor: pointer;
+  user-select: none;
+  transition: $transition;
+}
+
+// Active slide visibility (for fade/card effects)
+.swiper-slide-active {
+  .project-card__content {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 2. Mobile menu in side panel (replaces Meanmenu)
+// -----------------------------------------------------------------------------
+.mobile-menu {
+  .mobile-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+
+    > li {
+      border-bottom: 1px solid $border-primary;
+
+      &:last-child {
+        border-bottom: 0;
+      }
+
+      > a {
+        display: block;
+        padding: 14px 0;
+        color: $text-primary;
+        font-family: $body-font;
+        font-weight: 500;
+        text-decoration: none;
+        transition: $transition;
+
+        &:hover {
+          color: $primary-color;
+        }
+      }
+    }
+
+    .menu-item-has-children {
+      .dp-menu,
+      ul {
+        display: none;
+        padding-left: 16px;
+        margin: 0;
+        list-style: none;
+        border-bottom: none;
+        background: transparent;
+        position: static;
+        width: 100%;
+        opacity: 1;
+        pointer-events: auto;
+        box-shadow: none;
+
+        li a {
+          padding: 10px 0;
+          color: $text-primary;
+          font-size: 14px;
+
+          &:hover {
+            color: $primary-color;
+          }
+        }
+      }
+
+      &.open {
+        > .dp-menu,
+        > ul {
+          display: block;
+        }
+      }
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 3. Image lightbox (replaces Magnific Popup)
+// -----------------------------------------------------------------------------
+.vanilla-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: $text-primary;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+
+  &[style*="display: flex"] {
+    display: flex !important;
+  }
+
+  img {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: 4px;
+  }
+
+  .vanilla-lightbox-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: $border-primary;
+    border: 0;
+    color: $text-primary;
+    font-size: 28px;
+    line-height: 1;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: $transition;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+
+    &:hover {
+      background: $border-primary;
+    }
+  }
+
+  .vanilla-lightbox-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .vanilla-lightbox-prev,
+  .vanilla-lightbox-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: $border-primary;
+    border: 0;
+    color: $text-primary;
+    font-size: 24px;
+    padding: 16px;
+    cursor: pointer;
+    transition: $transition;
+    border-radius: 4px;
+    z-index: 2;
+
+    &:hover {
+        background: $border-primary;
+    }
+  }
+
+  .vanilla-lightbox-prev {
+    left: 16px;
+  }
+
+  .vanilla-lightbox-next {
+    right: 16px;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 4. Video popup (replaces Magnific iframe)
+// -----------------------------------------------------------------------------
+.vanilla-video-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+
+  button {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 0;
+    color: #fff;
+    font-size: 28px;
+    line-height: 1;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: $transition;
+    z-index: 2;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+  }
+
+  iframe {
+    max-width: 100%;
+    width: 900px;
+    height: 506px;
+    border: 0;
+    border-radius: 4px;
+
+    @include md {
+      height: 400px;
+    }
+
+    @include sm {
+      height: 250px;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 5. Custom select (replaces Nice Select)
+// -----------------------------------------------------------------------------
+.vanilla-nice-select {
+  position: relative;
+  display: inline-block;
+  min-width: 160px;
+
+  .vanilla-nice-select-btn {
+    width: 100%;
+    padding: 10px 36px 10px 12px;
+    text-align: left;
+    background: $bg-primary;
+    border: 1px solid $border-primary;
+    border-radius: $primary-radius;
+    cursor: pointer;
+    font-family: $body-font;
+    font-size: 14px;
+    color: $text-secondary;
+    transition: $transition;
+    appearance: none;
+
+    &:hover {
+        border-color: $border-primary;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: $primary-color;
+    }
+  }
+
+  .vanilla-nice-select-list {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: $bg-primary;
+    border: 1px solid $border-primary; 
+    border-radius: $primary-radius;
+    max-height: 240px;
+    overflow-y: auto;
+    z-index: 100;
+    margin-top: 4px;
+    box-shadow: 0 4px 20px rgba(0, 40, 66, 0.12);
+
+    &[style*="display: block"] {
+      display: block !important;
+    }
+  }
+
+  .vanilla-nice-select-list > div {
+    padding: 10px 12px;
+    cursor: pointer;
+    font-family: $body-font;
+    font-size: 14px;
+    color: $text-secondary;
+    transition: $transition;
+
+    &:hover {
+      background: $bg-primary;
+      color: $primary-color;
+    }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 6. Scroll reveal (replaces WOW / animate.css)
+// -----------------------------------------------------------------------------
+.animated {
+  animation-duration: 1s;
+  animation-fill-mode: both;
+}
+
+.fadeInUp {
+  animation-name: vanilla-fadeInUp;
+}
+
+.fadeIn {
+  animation-name: vanilla-fadeIn;
+}
+
+.fadeInDown {
+  animation-name: vanilla-fadeInDown;
+}
+
+@keyframes vanilla-fadeInUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes vanilla-fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes vanilla-fadeInDown {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// 7. Odometer / counter (replaces odometer-theme-default)
+// -----------------------------------------------------------------------------
+.odometer {
+  font-variant-numeric: tabular-nums;
+  display: inline-block;
+  line-height: 1.2;
+  font-weight: 700;
+  color: $primary-color;
+  font-family: $title-font;
+  font-size: 2.5rem;
+  letter-spacing: 0.02em;
+
+  @include sm {
+    font-size: 2rem;
+  }
+}

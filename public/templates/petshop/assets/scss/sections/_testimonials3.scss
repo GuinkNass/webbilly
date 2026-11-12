@@ -1,0 +1,205 @@
+@use '../abstracts' as *;
+
+.testimonial3 {
+    background-color: transparent;
+    padding-bottom: rem(100);
+
+    &-card {
+        &__image-box {
+            position: relative;
+            display: inline-block;
+
+            @include lg {
+                margin-bottom: rem(30);
+            }
+        }
+
+        &__image {
+            width: rem(320);
+            height: rem(320);
+            border-radius: 50%;
+            overflow: hidden;
+            border: 10px solid $white-color;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            @include xl {
+                width: auto;
+                height: auto;
+            }
+
+            @include sm {
+                width: rem(250);
+                height: rem(250);
+            }
+        }
+
+        &__quote {
+            position: absolute;
+            top: 15%;
+            right: -10%;
+            width: rem(80);
+            height: rem(80);
+            background: $primary-color;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 5px solid $white-color;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            z-index: 2;
+
+            span {
+                font-family: $title-font;
+                font-weight: 800;
+                font-size: rem(36);
+                color: $text-primary;
+                line-height: 1;
+                letter-spacing: -2px;
+            }
+
+            @include sm {
+                width: rem(60);
+                height: rem(60);
+
+                span {
+                    font-size: rem(28);
+                }
+            }
+        }
+
+        &__shape {
+            position: absolute;
+            bottom: 0%;
+            left: rem(0);
+            z-index: 1;
+            pointer-events: none;
+
+            img {
+                max-width: rem(150);
+            }
+
+            @include xl {
+                display: none;
+            }
+        }
+
+        &__content {
+            position: relative;
+            padding: 0 0 0 rem(100);
+            border-radius: rem(20);
+            margin-left: rem(60);
+
+            @include lg {
+                margin-left: 0;
+                padding: rem(40) rem(30);
+            }
+
+            @include sm {
+                padding: rem(30) rem(20);
+            }
+        }
+
+        &__stars {
+            display: flex;
+            gap: rem(6);
+            margin-bottom: rem(24);
+
+            i {
+                color: $primary-color;
+                font-size: rem(18);
+            }
+        }
+
+        &__text {
+            font-family: $body-font;
+            font-weight: 500;
+            font-style: italic;
+            font-size: rem(20);
+            line-height: 1.6;
+            color: $text-primary;
+            margin-bottom: rem(40);
+
+            @include sm {
+                font-size: rem(18);
+            }
+        }
+
+        &__author-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: rem(20);
+        }
+
+        &__author-name {
+            font-family: $title-font;
+            font-weight: 800;
+            font-size: rem(22);
+            color: $text-primary;
+            margin-bottom: rem(4);
+            text-transform: capitalize;
+        }
+
+        &__author-role {
+            font-family: $body-font;
+            font-weight: 500;
+            font-size: rem(16);
+            color: $text-secondary;
+        }
+    }
+
+    &-controls {
+        display: flex;
+        gap: rem(12);
+
+        &__arrow {
+            width: rem(48);
+            height: rem(48);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            font-size: rem(16);
+
+            &--prev {
+                background-color: #EEF6FF;
+                color: $text-primary;
+
+                &:hover {
+                    background-color: $primary-color;
+                }
+            }
+
+            &--next {
+                background-color: $primary-color;
+                color: $text-primary;
+
+                &:hover {
+                    background-color: $text-primary;
+                    color: $white-color;
+                }
+            }
+        }
+    }
+
+    // Slider adjustments
+    &-slider {
+        .slider-slide {
+            transition: opacity 0.5s ease;
+
+            &:not(.is-active) {
+                opacity: 0;
+            }
+        }
+    }
+}

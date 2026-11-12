@@ -1,0 +1,328 @@
+@use '../base' as *;
+
+.shop-list {
+  &-wrapper {
+    &__items {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+
+      @include md {
+        margin-bottom: 28px;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+
+      @include xs {
+        margin-bottom: 24px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      &-text {
+        color: $text-600;
+        font-family: Lato;
+        font-weight: 400;
+        font-style: Regular;
+        font-size: 18px;
+        line-height: 28px;
+        letter-spacing: 0px;
+
+        @include md {
+          font-size: 16px;
+          line-height: 26px;
+        }
+
+        @include xs {
+          font-size: 14px;
+          line-height: 24px;
+        }
+      }
+
+      .language {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: $text-950;
+        width: 116px;
+        opacity: 1;
+        border-radius: 43px;
+        padding: 9px 24px;
+
+        .single-select {
+          border: none;
+          display: block;
+          width: 100%;
+          line-height: 5px;
+          height: 100%;
+          padding: 0px 5px 0px 0px;
+          background-image: none;
+          color: $color-white;
+          font-size: 14px;
+          font-style: normal;
+          font-weight: 500;
+          line-height: normal;
+          letter-spacing: -0.42px;
+          background-color: transparent;
+
+          &.open {
+            color: $text-color-two;
+            background-color: #0C0C0C;
+          }
+
+          &:after {
+            border-bottom: 1px solid $color-white;
+            border-right: 1px solid $color-white;
+            right: 20px;
+            height: 7px;
+            width: 7px;
+          }
+        }
+
+        .nice-select.open .list {
+          width: fit-content;
+          opacity: 1;
+          pointer-events: auto;
+          -webkit-transform: scale(1) translateY(8%);
+          -ms-transform: scale(1) translateY(8%);
+          transform: scale(1) translateY(8%);
+          -moz-transform: scale(1) translateY(8%);
+          -o-transform: scale(1) translateY(8%);
+        }
+      }
+    }
+
+    .pagination {
+      margin-top: 89px;
+
+      @include lg {
+        margin-top: 60px;
+      }
+
+      @include md {
+        margin-top: 50px;
+      }
+
+      @include sm {
+        margin-top: 40px;
+      }
+
+      @include xs {
+        margin-top: 30px;
+      }
+    }
+  }
+
+  &-card {
+    padding: 16px 40px 16px 16px;
+    border: 1px solid #E6E6E6;
+    display: flex;
+    gap: 24px;
+    border-radius: 12px;
+    align-items: center;
+    justify-content: space-between;
+
+    @include lg {
+      padding: 16px 30px 16px 16px;
+      gap: 20px;
+    }
+
+    @include md {
+      padding: 16px 24px 16px 16px;
+      gap: 18px;
+    }
+
+    @include sm {
+      padding: 16px 20px 16px 16px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    @include xs {
+      padding: 16px 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    &__thumb {
+      position: relative;
+
+      img {
+        border-radius: 16px;
+        width: 100%;
+      }
+
+      &-offer {
+        position: absolute;
+        top: 6%;
+        left: 7%;
+        padding: 5px 15px;
+        color: $text-color-one;
+        background: $color-yellow;
+        border-radius: 23px;
+        font-family: var(--font_Lato);
+        font-weight: 400;
+        font-style: Regular;
+        font-size: 14px;
+        line-height: 22px;
+        letter-spacing: 0px;
+      }
+    }
+
+    &__content {
+      &-star {
+        display: flex;
+        gap: 5px;
+        align-items: center;
+        color: $text-950;
+        margin-bottom: 17px;
+      }
+
+      &-title {
+        color: $text-950;
+        font-family: $font-playfair;
+        font-weight: 500;
+        font-style: Medium;
+        font-size: 20px;
+        line-height: 26px;
+        letter-spacing: 0px;
+        margin-bottom: 10px;
+
+        @include xs {
+          font-size: 17px;
+          margin-bottom: 8px;
+        }
+
+        a {
+          color: inherit;
+          text-decoration: none;
+          transition: all 0.3s ease;
+
+          &:hover {
+            color: $primary-950;
+          }
+        }
+      }
+
+      &-subtitle {
+        color: $text-600;
+        font-family: Lato;
+        font-weight: 400;
+        font-style: Regular;
+        font-size: 16px;
+        line-height: 26px;
+        letter-spacing: 0px;
+        margin-bottom: 17px;
+
+        @include xs {
+          font-size: 15px;
+          margin-bottom: 10px;
+        }
+      }
+
+      &-price {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        margin-bottom: 12px;
+
+        .original-price {
+          color: $text-color-one;
+          font-family: $font-playfair;
+          font-weight: 700;
+          font-style: Bold;
+          font-size: 24px;
+          line-height: 30px;
+          letter-spacing: 0px;
+          text-transform: capitalize;
+
+          @include xl {
+            font-size: 18px;
+          }
+
+          @include xs {
+            font-size: 17px;
+          }
+        }
+
+        .offer-price {
+          color: $text-color-two;
+          font-family: $font-playfair;
+          font-weight: 500;
+          font-style: Medium;
+          font-size: 24px;
+          line-height: 26px;
+          letter-spacing: 0px;
+          text-decoration: line-through;
+
+          @include xl {
+            font-size: 18px;
+          }
+
+          @include xs {
+            font-size: 17px;
+          }
+        }
+      }
+
+      &-social {
+        display: flex;
+        justify-content: flex-end;
+
+        @include md {
+          justify-content: flex-start;
+        }
+
+        @include xs {
+          width: 100%;
+          justify-content: center;
+        }
+
+        &-link {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+
+          @include md {
+            gap: 15px;
+          }
+
+          @include xs {
+            gap: 12px;
+            flex-wrap: wrap;
+          }
+
+          a {
+            background: $bg-secondary;
+            color: $color-black;
+            width: 40px;
+            height: 40px;
+            border-radius: 100px;
+            gap: 6.67px;
+            text-align: center;
+            opacity: 1;
+            padding-top: 8.33px;
+            padding-right: 10px;
+            padding-bottom: 8.33px;
+            padding-left: 10px;
+
+            @include md {
+              width: 36px;
+              height: 36px;
+              padding: 7px 9px;
+            }
+
+            @include xs {
+              width: 32px;
+              height: 32px;
+              padding: 6px 8px;
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,279 @@
+// ===============================
+// Footer2 Section (for index-3.html)
+// =============================== 
+
+@use "../abstracts" as *;
+
+.site-footer {
+    position: relative;
+    overflow: hidden;
+    background: #002842;
+    padding: rem(80) 0 0;
+
+    @include md {
+        padding: rem(60) 0 0;
+    }
+
+    @include sm {
+        padding: rem(40) 0 0;
+    }
+
+    // Paw decorations
+    &__paw {
+        position: absolute;
+        font-size: rem(120);
+        color: rgba(255, 255, 255, 0.04);
+        z-index: 0;
+        pointer-events: none;
+
+        &--left {
+            bottom: rem(100);
+            left: rem(50);
+            transform: rotate(7deg);
+        }
+
+        &--right {
+            top: rem(80);
+            right: rem(250);
+            transform: rotate(-25deg);
+            font-size: 90px;
+        }
+
+        &--bottom {
+            bottom: rem(0);
+            right: rem(0);
+        }
+    }
+
+    .container {
+        position: relative;
+        z-index: 2;
+    }
+
+    // Widget (left col)
+    &__widget {
+        max-width: rem(420);
+    }
+
+    &__widget-title {
+        color: #fff;
+        font-family: $title-font;
+        font-weight: 600;
+        font-size: rem(24);
+        line-height: 1.3;
+        margin-bottom: rem(12);
+    }
+
+    &__widget-desc {
+        color: rgba(255, 255, 255, 0.65);
+        font-family: $body-font;
+        font-size: rem(15);
+        line-height: 1.6;
+        margin-bottom: rem(28);
+    }
+
+    // Newsletter form
+    &__newsletter {
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: rem(50);
+        padding: rem(5);
+        margin-bottom: rem(28);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+
+        @include xs {
+            flex-direction: column;
+            border-radius: rem(16);
+            gap: rem(8);
+            padding: rem(8);
+        }
+    }
+
+    &__newsletter-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: #fff;
+        font-family: $body-font;
+        font-size: rem(15);
+        padding: rem(12) rem(20);
+        min-width: 0;
+
+        &::placeholder {
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        @include xs {
+            width: 100%;
+            text-align: center;
+        }
+    }
+
+    &__newsletter-btn {
+        background: #FFD100;
+        color: #0B2237;
+        font-family: $title-font;
+        font-weight: 500;
+        font-size: rem(16);
+        padding: rem(14) rem(28);
+        border: none;
+        border-radius: rem(50);
+        cursor: pointer;
+        transition: all 0.3s;
+        white-space: nowrap;
+
+        &:hover {
+            background: #e6bc00;
+            transform: translateY(-1px);
+        }
+
+        @include xs {
+            width: 100%;
+            border-radius: rem(12);
+        }
+    }
+
+    // Social icons
+    &__social {
+        display: flex;
+        align-items: center;
+        gap: rem(12);
+        flex-wrap: wrap;
+    }
+
+    &__social-label {
+        color: rgba(255, 255, 255, 0.65);
+        font-family: $body-font;
+        font-size: rem(15);
+        white-space: nowrap;
+    }
+
+    &__social-links {
+        display: flex;
+        align-items: center;
+        gap: rem(10);
+    }
+
+    &__social-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: rem(38);
+        height: rem(38);
+        border-radius: rem(6);
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        font-size: rem(15);
+        transition: all 0.3s;
+
+        &:hover {
+            background: #FFD100;
+            color: #0B2237;
+        }
+
+        &--highlight {
+            background: #FFD100;
+            color: #0B2237;
+        }
+    }
+
+    // Link columns (right side)
+    &__links-title {
+        color: #fff;
+        font-family: $title-font;
+        font-weight: 600;
+        font-size: rem(20);
+        line-height: 1.3;
+        margin-bottom: rem(16);
+        padding-bottom: rem(14);
+        position: relative;
+
+        &::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: rem(40);
+            height: rem(2);
+            background: rgba(255, 255, 255, 0.2);
+        }
+    }
+
+    &__links-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+
+        li {
+            margin-bottom: rem(12);
+
+            &:last-child {
+                margin-bottom: 0;
+            }
+        }
+
+        a {
+            color: rgba(255, 255, 255, 0.65);
+            font-family: $body-font;
+            font-size: rem(15);
+            line-height: 1.5;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: rem(8);
+
+            .chevron {
+                color: rgba(255, 255, 255, 0.35);
+                font-size: rem(14);
+                transition: color 0.3s;
+            }
+
+            &:hover {
+                color: #FFD100;
+
+                .chevron {
+                    color: #FFD100;
+                }
+            }
+        }
+    }
+
+    // Bottom bar
+    &__bottom {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin-top: rem(60);
+        padding: rem(24) 0;
+
+        @include md {
+            margin-top: rem(40);
+        }
+    }
+
+    &__bottom-logo {
+        img {
+            max-height: rem(40);
+            object-fit: contain;
+        }
+
+        @include md {
+            text-align: center;
+            margin-bottom: rem(12);
+        }
+    }
+
+    &__bottom-copyright {
+        color: rgba(255, 255, 255, 0.55);
+        font-family: $body-font;
+        font-size: rem(14);
+        line-height: 1.5;
+        margin: 0;
+        text-align: right;
+
+        @include md {
+            text-align: center;
+        }
+    }
+}

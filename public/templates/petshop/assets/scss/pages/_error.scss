@@ -1,0 +1,51 @@
+@use '../base' as *;
+
+
+.error-items {
+    &__title {
+        color: $text-secondary;
+        font-family: $title-font;
+        font-weight: 700;
+        font-size: clamp(3rem, 7vw, 100px);
+        line-height: 1.2;
+        letter-spacing: -1.5px;
+        text-align: center;
+        margin-bottom: 16px;
+        margin-top: 48px;
+        color: #002842;
+
+
+        span {
+            color: $primary-color;
+        }
+
+    }
+
+    &__title2 {
+        color: #002842;
+        font-family: $title-font;
+        font-weight: 600;
+        font-size: 32px;
+        line-height: 1.5;
+        text-align: center;
+        margin-bottom: 12px
+    }
+
+    &__text {
+        color: $text-secondary;
+        font-family: $body-font;
+        font-weight: 400;
+        font-size: 16px;
+        line-height: 24px;
+        letter-spacing: 0px;
+        text-align: center;
+        padding: 0 100px;
+        margin-bottom: 48px;
+
+        @include lg {
+            padding: 0 10px;
+            margin-bottom: 30px;
+        }
+
+    }
+}

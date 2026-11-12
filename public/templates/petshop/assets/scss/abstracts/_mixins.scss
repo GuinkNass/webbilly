@@ -1,0 +1,39 @@
+@use "sass:math";
+
+// Convert px → rem (16px base)
+@function rem($value) {
+  // if you passed something like 14px, strip the unit
+  @if math.is-unitless($value) == false {
+    $value: math.div($value, 1px);
+  }
+
+  @return math.div($value, 16) * 1rem;
+}
+
+// --------------------------
+// Responsive Font Mixin
+// -------------------------- 
+ @mixin responsive-heading($base, $xl, $lg, $md, $sm, $xs) {
+  font-size: $base;
+
+  @include xl { font-size: $xl; }
+  @include lg { font-size: $lg; }
+  @include md { font-size: $md; }
+  @include sm { font-size: $sm; }
+  @include xs { font-size: $xs; }
+}
+
+
+
+
+// ==========================================
+// Responsive Breakpoints
+// ==========================================
+@mixin vxs { @media (max-width: 399.98px) { @content; } }
+@mixin mxs { @media (max-width: 479.98px) { @content; } }
+@mixin xs { @media (max-width: 575.98px) { @content; } }
+@mixin sm { @media (max-width: 767.98px) { @content; } }
+@mixin md { @media (max-width: 991.98px) { @content; } }
+@mixin lg { @media (max-width: 1199.98px) { @content; } }
+@mixin xl { @media (max-width: 1399.98px) { @content; } }
+@mixin xxl { @media (min-width: 1600px) { @content; } }

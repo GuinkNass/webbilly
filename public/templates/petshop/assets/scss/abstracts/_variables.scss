@@ -1,0 +1,93 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Jost:ital,wght@0,100..900;1,100..900&display=swap');
+
+
+:root {
+    /* Colors */
+    --text-primary: #002842;
+    --text-secondary: #485C71;
+    --border-primary: #B7BEC8;
+    --border-secondary: #B7BEC83D;
+    --bg-primary: #1A3C52;
+    --bg-secondary: #EEF6FF;
+    --bg-tertiary: #E2EECD;
+    --icon-primary: #A0AAB6;
+    --icon-secondary: #738293;
+    --primary-color: #FFD100;
+    --black-color: #0C0C0C;
+    --white-color: #FFFFFF;
+
+    --transition: all 0.3s;
+    --primary-radius: 8px;
+
+    /* Typography */
+    --title-font: "Fredoka", sans-serif;
+    --body-font: "Jost", sans-serif;
+}
+
+/* Color variables */
+$text-primary: var(--text-primary);
+$text-secondary: var(--text-secondary);
+$border-primary: var(--border-primary);
+$border-secondary: var(--border-secondary);
+$bg-primary: var(--bg-primary);
+$bg-secondary: var(--bg-secondary);
+$bg-tertiary: var(--bg-tertiary);
+$icon-primary: var(--icon-primary);
+$icon-secondary: var(--icon-secondary);
+$primary-color: var(--primary-color);
+$black-color: var(--black-color);
+$white-color: var(--white-color);
+// Without Color
+$transition: var(--transition);
+$primary-radius: var(--primary-radius);
+
+/* Typography */
+$title-font: var(--title-font);
+$body-font: var(--body-font);
+
+// Compatibility Variables (Mapped to Theme)
+$font-playfair: $title-font;
+$text-950: $text-primary;
+$text-600: $text-secondary;
+$primary-100: $bg-secondary;
+$color-white: $white-color;
+$text-color-one: $text-primary;
+$text-color7: $border-primary;
+$bg-color-1: $bg-secondary;
+
+// Additional Compatibility Mappings
+$primary-950: $text-primary;
+$primary-200: $bg-tertiary;
+$text-200: $text-secondary;
+$white: $white-color;
+$color-black: $black-color;
+$color-primary: $primary-color;
+$radius: $primary-radius;
+$card-bg: $white-color;
+$circle-bg: $bg-secondary;
+$color-border2: $border-secondary;
+$color-orange: $primary-color;
+$color-yellow: $primary-color;
+$text-color-two: $text-secondary;
+$text-color-four: $text-secondary;
+$text-color6: $text-secondary;
+$theme-color-3: $bg-primary;
+$theme-color-4: $bg-secondary;
+
+// Hero / Section specific mappings
+$hero-bg: $bg-secondary;
+$hero2-bg: $bg-tertiary;
+$give-home-bg: $bg-secondary;
+$faq2-bg: $bg-secondary;
+$faq2-accent: $primary-color;
+$faq2-heading: $text-primary;
+$faq2-label: $text-secondary;
+$hero-green: $bg-tertiary;
+$hero-line: $border-primary;
+
+// Breakpoints
+$xl: "(max-width: 1399.98px)";
+$lg: "(max-width: 1199.98px)";
+$md: "(max-width: 991.98px)";
+$sm: "(max-width: 767.98px)";
+$xs: "(max-width: 575.98px)";

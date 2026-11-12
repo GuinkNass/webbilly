@@ -1,0 +1,13 @@
+{
+  "id": "barbearia-barberon-moderno",
+  "name": "Barberon — Barbearia & Estética Masculina",
+  "category": "Beleza & Estética",
+  "description": "Design escuro e sofisticado com hero dinâmico, lista de serviços com preços, avaliações e galeria de cortes.",
+  "accentColor": "#d4af37",
+  "features": [
+    "Tabela de preços de cortes e barba",
+    "Hero de autoridade com agendamento direto no WhatsApp",
+    "Galeria de fotos reais de trabalhos",
+    "Depoimentos e avaliações de clientes"
+  ]
+}

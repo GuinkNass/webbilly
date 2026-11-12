@@ -6,6 +6,7 @@ import Image from 'next/image';
 import confetti from 'canvas-confetti';
 import TrabalheAquiForm from '@/components/TrabalheAquiForm';
 import ContatoForm from '@/components/ContatoForm';
+import { OFFICIAL_TEMPLATES } from '@/lib/templates-data';
 import {
   Globe,
   Smartphone,
@@ -180,54 +181,9 @@ export default function WebbillyHomePage() {
     }
   };
 
-  const templatesList = [
-    {
-      name: 'BarberOn Prime',
-      niche: 'barbearia',
-      title: 'Barbearias & Estética Masculina',
-      desc: 'Agendamentos no WhatsApp, fotos dos cortes e tabela de preços moderna.',
-      tag: 'Mais Popular'
-    },
-    {
-      name: 'Burger & Smokehouse',
-      niche: 'gastronomia',
-      title: 'Hamburguerias & Gastronomia',
-      desc: 'Cardápio digital responsivo com fotos apetitosas e pedidos diretos no WhatsApp.',
-      tag: 'Alta Conversão'
-    },
-    {
-      name: 'PureGlow Spa & Estética',
-      niche: 'saude',
-      title: 'Clínicas & Estética Avançada',
-      desc: 'Visual sofisticado para clínicas médicas, odontologia e procedimentos estéticos.',
-      tag: 'Elegante'
-    },
-    {
-      name: 'Petly Care & Vet',
-      niche: 'servicos',
-      title: 'Pet Shops & Veterinárias',
-      desc: 'Apresentação de serviços de banho & tosa, vacinas e cuidados para animais.',
-      tag: 'Destaque'
-    },
-    {
-      name: 'Office Pro Consulting',
-      niche: 'servicos',
-      title: 'Consultoria & Serviços Locais',
-      desc: 'Design corporativo para advogados, contadores, oficinas e arquitetos.',
-      tag: 'Profissional'
-    },
-    {
-      name: 'DrivePro Centro Automotivo',
-      niche: 'servicos',
-      title: 'Oficinas & Autoescolas',
-      desc: 'Tabela de serviços automotivos, localização no mapa e chamada para orçamento.',
-      tag: 'Completo'
-    }
-  ];
-
   const filteredTemplates = activeNicheTab === 'todos' 
-    ? templatesList 
-    : templatesList.filter(t => t.niche === activeNicheTab);
+    ? OFFICIAL_TEMPLATES 
+    : OFFICIAL_TEMPLATES.filter(t => t.niche === activeNicheTab);
 
   return (
     <div className="min-h-screen bg-[#0b0e14] text-[#e2e8f0] flex flex-col font-sans selection:bg-[#7abf18] selection:text-white">
@@ -1007,53 +963,102 @@ export default function WebbillyHomePage() {
                   : 'bg-zinc-800/80 text-zinc-400 hover:text-white'
               }`}
             >
-              Hamburguerias & Gastronomia
+              Hamburguerias & Pubs
             </button>
             <button
-              onClick={() => setActiveNicheTab('saude')}
+              onClick={() => setActiveNicheTab('estetica')}
               className={`px-4 py-2 rounded-lg text-xs font-bold transition uppercase ${
-                activeNicheTab === 'saude'
+                activeNicheTab === 'estetica'
                   ? 'bg-[#7abf18] text-white shadow-md shadow-[#7abf18]/30'
                   : 'bg-zinc-800/80 text-zinc-400 hover:text-white'
               }`}
             >
-              Saúde & Estética
+              Clínicas & Estética
             </button>
             <button
-              onClick={() => setActiveNicheTab('servicos')}
+              onClick={() => setActiveNicheTab('pet')}
               className={`px-4 py-2 rounded-lg text-xs font-bold transition uppercase ${
-                activeNicheTab === 'servicos'
+                activeNicheTab === 'pet'
                   ? 'bg-[#7abf18] text-white shadow-md shadow-[#7abf18]/30'
                   : 'bg-zinc-800/80 text-zinc-400 hover:text-white'
               }`}
             >
-              Serviços Locais & Pet
+              Pet Shop & Vet
+            </button>
+            <button
+              onClick={() => setActiveNicheTab('consultoria')}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition uppercase ${
+                activeNicheTab === 'consultoria'
+                  ? 'bg-[#7abf18] text-white shadow-md shadow-[#7abf18]/30'
+                  : 'bg-zinc-800/80 text-zinc-400 hover:text-white'
+              }`}
+            >
+              Consultorias & B2B
+            </button>
+            <button
+              onClick={() => setActiveNicheTab('automotivo')}
+              className={`px-4 py-2 rounded-lg text-xs font-bold transition uppercase ${
+                activeNicheTab === 'automotivo'
+                  ? 'bg-[#7abf18] text-white shadow-md shadow-[#7abf18]/30'
+                  : 'bg-zinc-800/80 text-zinc-400 hover:text-white'
+              }`}
+            >
+              Autoescolas & Oficinas
             </button>
           </div>
 
-          {/* Grid de Modelos */}
+          {/* Grid de Modelos com Preview Real */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
-            {filteredTemplates.map((t, idx) => (
+            {filteredTemplates.map((t) => (
               <div
-                key={idx}
-                className="rounded-2xl bg-[#121722] border border-white/[0.08] overflow-hidden hover:border-[#7abf18] transition-all hover:-translate-y-1 group"
+                key={t.slug}
+                className="rounded-2xl bg-[#121722] border border-white/[0.08] overflow-hidden hover:border-[#7abf18] transition-all hover:-translate-y-1 group flex flex-col justify-between"
               >
-                <div className="h-44 bg-gradient-to-tr from-[#161f2e] via-zinc-800 to-zinc-900 p-5 flex flex-col justify-between relative overflow-hidden">
-                  <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-md bg-[#7abf18] text-white w-max shadow">
-                    {t.tag}
-                  </span>
-                  <div>
+                <div>
+                  {/* Preview Visual ao Vivo em Iframe Escalado */}
+                  <div className="h-48 bg-[#080a0f] relative overflow-hidden border-b border-white/[0.08]">
+                    <iframe
+                      src={t.demoPath}
+                      title={`Preview ${t.name}`}
+                      className="w-[1200px] h-[800px] border-0 scale-[0.25] sm:scale-[0.27] origin-top-left pointer-events-none select-none bg-white opacity-90 group-hover:opacity-100 transition-opacity"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#121722] via-transparent to-black/30 pointer-events-none" />
+                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-md bg-[#7abf18] text-white shadow-md">
+                        {t.tag}
+                      </span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-black/60 text-zinc-300 backdrop-blur-sm border border-white/10">
+                        R$ 29,90/mês
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-5 pb-0">
                     <span className="text-xs text-[#7abf18] font-bold block">{t.name}</span>
-                    <span className="text-base font-bold text-white font-heading">{t.title}</span>
+                    <h3 className="text-base font-bold text-white font-heading mt-0.5">{t.title}</h3>
+                    <p className="text-xs text-zinc-400 leading-relaxed mt-2 min-h-[36px]">
+                      {t.desc}
+                    </p>
                   </div>
                 </div>
 
-                <div className="p-5 space-y-4">
-                  <p className="text-xs text-zinc-400 leading-relaxed min-h-[36px]">
-                    {t.desc}
-                  </p>
+                <div className="p-5 pt-4 space-y-2">
+                  <a
+                    href={`https://${t.slug}.webbilly.com.br`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-2.5 rounded-lg bg-[#7abf18] hover:bg-[#6ca815] text-xs font-bold text-white transition flex items-center justify-center gap-1.5 shadow-md shadow-[#7abf18]/20"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Visualizar Site Demo</span>
+                  </a>
+
                   <a
                     href="#demonstracao"
+                    onClick={() => {
+                      setFormData(prev => ({ ...prev, niche: t.title }));
+                    }}
                     className="w-full py-2.5 rounded-lg border border-zinc-700 hover:border-[#7abf18] text-xs font-bold text-zinc-300 hover:text-white hover:bg-[#7abf18]/10 transition flex items-center justify-center gap-1.5"
                   >
                     <span>Quero Este Modelo Para Mim</span>

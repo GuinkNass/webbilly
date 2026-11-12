@@ -1,0 +1,216 @@
+// ===============================
+// FAQ2 Section (Common Pet Care Questions)
+// ===============================
+// BEM: .faq2
+// Layout: container > row > col only. Light pastel green bg, two columns, accordion on right.
+// Uses existing .faq accordion markup + JS. Pixel-perfect to reference.
+
+@use "../abstracts" as *;
+
+$faq2-bg: #eaf3d9;
+$faq2-heading: #212529;
+$faq2-label: #2a4b5b;
+$faq2-accent: #ffc107;
+
+.faq2 {
+  position: relative;
+  overflow: hidden;
+  background: $faq2-bg;
+  padding-bottom: rem(80);
+
+  &,
+  & * {
+    box-sizing: border-box;
+  }
+
+  // ---- Background shape ----
+  &__bg-shape {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    pointer-events: none;
+    z-index: 0;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .container {
+    position: relative;
+    z-index: 2;
+  }
+
+  // ---- Left column: label + paw ----
+  &__label-row {
+    display: flex;
+    align-items: center;
+    gap: rem(8);
+    margin-bottom: rem(12);
+  }
+
+  &__label-icon {
+    flex-shrink: 0;
+    width: rem(20);
+    height: rem(18);
+    color: $faq2-label;
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  &__label-text {
+    font-family: $title-font;
+    font-weight: 600;
+    font-size: rem(18);
+    line-height: 1.3;
+    color: $faq2-label;
+  }
+
+  // ---- Main title ----
+  &__title {
+    font-family: $title-font;
+    font-weight: 700;
+    font-size: clamp(rem(28), 3.5vw + 0.5rem, rem(42));
+    line-height: 1.2;
+    color: $faq2-heading;
+    margin-bottom: rem(16);
+  }
+
+  // ---- Description + paw ----
+  &__desc-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: rem(8);
+    margin-bottom: rem(28);
+  }
+
+  &__desc {
+    font-family: $body-font;
+    font-size: rem(16);
+    line-height: 1.6;
+    color: $text-secondary;
+    flex: 1;
+  }
+
+  &__desc-icon {
+    flex-shrink: 0;
+    width: rem(20);
+    height: rem(18);
+    color: $faq2-label;
+    margin-top: rem(2);
+  }
+
+  // ---- Contact Us button ----
+  &__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: rem(14) rem(32);
+    border-radius: $primary-radius;
+    background: $faq2-accent;
+    color: $faq2-heading;
+    font-family: $title-font;
+    font-weight: 600;
+    font-size: rem(17);
+    line-height: 1.3;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+    border: none;
+
+    &:hover {
+      opacity: 0.92;
+      color: $faq2-heading;
+    }
+  }
+
+  // ---- Right column: white accordion panel ----
+  &__panel {
+    background: $white-color;
+    border-radius: rem(12);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    padding: 0;
+  }
+
+  // Override/scope existing .faq inside .faq2
+  .faq {
+    &__item {
+      background: transparent;
+      margin-bottom: 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &.active {
+        .faq__icon {
+          color: $faq2-accent;
+          transform: rotate(90deg);
+        }
+
+        .faq__answer {
+          max-height: rem(200);
+          padding: rem(16) rem(20) rem(20) rem(20);
+          border-left: rem(4) solid $faq2-accent;
+          margin-left: 0;
+        }
+      }
+    }
+
+    &__question {
+      background: $white-color;
+      padding: rem(18) rem(20);
+      color: $faq2-heading;
+      font-family: $title-font;
+      font-weight: 600;
+      font-size: rem(16);
+      line-height: 1.4;
+      border: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: rem(12);
+      text-align: left;
+      cursor: pointer;
+      transition: $transition;
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.02);
+      }
+    }
+
+    &__answer {
+      max-height: 0;
+      overflow: hidden;
+      background: $bg-secondary;
+      color: $text-secondary;
+      font-size: rem(15);
+      line-height: 1.6;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      padding-left: rem(20);
+    }
+  }
+
+  .faq__icon {
+    flex-shrink: 0;
+    width: rem(20);
+    height: rem(20);
+    color: $faq2-label;
+    transition: transform 0.3s ease, color 0.2s ease;
+    background: none !important;
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  }
+}

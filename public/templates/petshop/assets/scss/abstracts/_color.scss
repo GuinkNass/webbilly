@@ -1,0 +1,64 @@
+@use './variables' as *;
+
+.typo-label-s-color {
+   color: $primary-color;
+}
+
+
+.typo-primary-color {
+   color: $primary-color;
+}
+
+ 
+
+.text-primary-color {
+   color: $text-primary;
+}
+
+.text-secondary-color {
+   color: $text-secondary;
+}
+
+.hover-color {
+   position: relative;
+   transition: all 0.3s;
+   display: inline-flex;
+
+   &.before {
+      &:before {
+         position: absolute;
+         content: '';
+         bottom: 0;
+         left: 0;
+         width: 0%;
+         height: 1px;
+         background: $primary-color;
+         transition: $transition;
+      }
+   }
+
+
+   &:hover {
+      color: $primary-color;
+
+      &.before {
+         &:before {
+            width: 100%;
+         }
+      }
+   }
+}
+
+.bg-secondary-color {
+   background: $bg-secondary;
+}
+
+.bg-primary-color {
+   background: $bg-primary;
+}
+
+.bg-text-primary-color {
+   background: $primary-color;
+}
+
+ 

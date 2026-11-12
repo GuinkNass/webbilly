@@ -1,0 +1,85 @@
+ @use '../base' as *;
+
+ .faq {
+     &__item {
+         background: $bg-primary;
+         margin-bottom: 20px;
+         overflow: hidden;
+         transition: $transition;
+
+         &:last-child {
+             margin-bottom: 0;
+         }
+
+         .faq__icon {
+             transition: $transition;
+         }
+
+         &.active {
+             .faq__icon {
+                 width: 64px;
+                 height: 64px;
+                 display: flex;
+                 align-items: center;
+                 justify-content: center;
+                 background: $primary-color;
+
+                 svg path {
+                     fill: $text-primary;
+                 }
+             }
+
+             .faq__question {
+                 padding-right: 0;
+                 padding-top: 0;
+                 padding-bottom: 0;
+             }
+
+             .faq__answer {
+                 max-height: 300px;
+                 padding: 1rem 1.25rem;
+             }
+         }
+     }
+
+     &__question {
+         width: 100%;
+         background: $bg-primary;
+         border: none;
+         display: flex;
+         justify-content: space-between;
+         align-items: center;
+         padding: 18px;
+         color: $text-secondary;
+         cursor: pointer;
+         transition: $transition;
+
+         &:hover {
+             background: $bg-primary;
+         }
+     }
+
+     &__icon {
+         width: 24px;
+         height: 24px;
+         transition: transform 0.3s;
+     }
+
+     &__answer {
+         max-height: 0;
+         overflow: hidden;
+         background: $bg-primary;
+         color: $text-secondary;
+         font-size: 0.95rem;
+         line-height: 1.5;
+         transition: max-height 0.4s ease, padding 0.4s ease;
+     }
+ }
+
+ // Responsive adjustments
+ @include sm {
+     .faq__question {
+         font-size: 0.95rem;
+         padding: 1rem;
+     }
+ }

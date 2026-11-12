@@ -1,0 +1,239 @@
+// ===============================
+// Subscribe2 Section (Newsletter)
+// ===============================
+// BEM block: .subscribe2
+// "Join Our Pet-Loving Community" - horizontal layout: heading left, input right
+// Light cream background with subtle paw prints. Responsive for all devices.
+
+@use "../abstracts" as *;
+
+.subscribe2 {
+    position: relative;
+    overflow: hidden;
+    background: #FBF9F6; // Light cream/beige background from reference
+    text-align: left;
+
+    &,
+    & * {
+        box-sizing: border-box;
+    }
+
+    // Decorative paw prints positioned absolutely - very subtle
+    &__paw {
+        position: absolute;
+        opacity: 0.04;
+        pointer-events: none;
+        z-index: 1;
+
+        &--1 {
+            top: rem(30);
+            left: rem(30);
+            width: rem(60);
+            height: rem(60);
+
+            @include md {
+                width: rem(80);
+                height: rem(80);
+                top: rem(40);
+                left: rem(60);
+            }
+        }
+
+        &--2 {
+            top: rem(20);
+            right: rem(80);
+            width: rem(50);
+            height: rem(50);
+
+            @include md {
+                width: rem(70);
+                height: rem(70);
+                right: rem(120);
+            }
+        }
+
+        &--3 {
+            bottom: rem(40);
+            left: rem(100);
+            width: rem(55);
+            height: rem(55);
+
+            @include md {
+                width: rem(75);
+                height: rem(75);
+            }
+        }
+
+        &--4 {
+            bottom: rem(30);
+            right: rem(50);
+            width: rem(65);
+            height: rem(65);
+
+            @include md {
+                width: rem(85);
+                height: rem(85);
+            }
+        }
+    }
+
+    &__container {
+        position: relative;
+        z-index: 2;
+    }
+
+    // Left side content
+    &__content {
+        @include md {
+            padding-right: rem(40);
+        }
+    }
+
+    &__heading {
+        color: $text-primary; // Dark navy
+        font-family: $title-font;
+        font-weight: 700;
+        font-size: clamp(rem(26), 3.5vw + 0.5rem, rem(42));
+        line-height: 1.25;
+        margin: 0 0 rem(12);
+
+        @include md {
+            margin: 0 0 rem(16);
+        }
+    }
+
+    &__subtitle {
+        color: $text-secondary;
+        font-family: $body-font;
+        font-weight: 400;
+        font-size: clamp(rem(14), 1.2vw + 0.5rem, rem(16));
+        line-height: 1.6;
+        margin: 0 0 rem(28);
+
+        @include md {
+            margin: 0;
+        }
+    }
+
+    // Right side form
+    &__form-wrapper {
+        @include md {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            height: 100%;
+        }
+    }
+
+    &__form {
+        display: flex;
+        justify-content: flex-start;
+        width: 100%;
+
+        @include md {
+            justify-content: flex-end;
+        }
+    }
+
+    // Single pill: input area (light with border) + button (yellow), one continuous shape
+    &__input-field {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        min-height: rem(54);
+        width: 100%;
+        max-width: 100%;
+        border-radius: rem(100);
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 40, 66, 0.06);
+
+        @include xs {
+            min-height: rem(56);
+        }
+
+        @include sm {
+            min-height: rem(58);
+            max-width: rem(520);
+        }
+
+        @include md {
+            max-width: rem(540);
+        }
+    }
+
+    &__input {
+        flex: 1;
+        min-width: 0;
+        background: $white-color;
+        border: 1px solid #E5E5E5;
+        border-right: none;
+        color: $text-primary;
+        font-size: rem(14);
+        font-family: $body-font;
+        line-height: 1.5;
+        padding: rem(16) rem(22);
+        outline: none;
+
+        &::placeholder {
+            color: $text-secondary;
+            opacity: 0.6;
+        }
+
+        &:focus {
+            border-color: #D0D0D0;
+
+            &::placeholder {
+                opacity: 0.4;
+            }
+        }
+
+        @include xs {
+            padding: rem(18) rem(24);
+        }
+
+        @include sm {
+            font-size: rem(15);
+            padding: rem(18) rem(26);
+        }
+    }
+
+    &__button {
+        flex-shrink: 0;
+        background: $primary-color;
+        border: 1px solid $primary-color;
+        cursor: pointer;
+        transition: $transition;
+        font-family: $title-font;
+        font-weight: 600;
+        font-size: rem(14);
+        line-height: 1.375;
+        color: $text-primary;
+        padding: 0 rem(26);
+        white-space: nowrap;
+        min-height: rem(54);
+        min-width: rem(150);
+
+        &:hover {
+            background: darken(#FFD100, 5%);
+            border-color: darken(#FFD100, 5%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 209, 0, 0.3);
+        }
+
+        &:active {
+            transform: translateY(0);
+        }
+
+        @include xs {
+            min-height: rem(56);
+            padding: 0 rem(30);
+        }
+
+        @include sm {
+            font-size: rem(15);
+            padding: 0 rem(34);
+            min-height: rem(58);
+            min-width: rem(170);
+        }
+    }
+}

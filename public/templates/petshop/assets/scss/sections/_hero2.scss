@@ -1,0 +1,188 @@
+// ===============================
+// Hero2 Section (Pet Care & Veterinary)
+// ===============================
+// BEM: .hero2
+// Layout: container > row > col only. Light lavender bg, wavy bottom, decorative elements.
+// Pixel-perfect to reference; responsive.
+
+@use "../abstracts" as *;
+
+$hero2-bg: #F2E0FF;
+
+.hero2 {
+  position: relative;
+  overflow: hidden;
+  background: $hero2-bg;
+  padding-top: rem(90);
+  padding-bottom: rem(171);
+
+
+  @include lg {
+    padding-top: rem(130);
+    padding-bottom: rem(180);
+  }
+
+  @include md {
+    padding-top: rem(100);
+    padding-bottom: rem(80);
+  }
+
+  // ---- Background Shape ----
+  &__bg-shape {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    pointer-events: none;
+    z-index: 9;
+  }
+
+  // ---- Decorative Shapes ----
+  &__shape-1 {
+    position: absolute;
+    top: 15%;
+    left: 5%;
+    width: clamp(rem(40), 10vw, rem(80));
+    height: auto;
+    pointer-events: none;
+    z-index: 1;
+    animation: floating 3s ease-in-out infinite;
+  }
+
+  &__shape-2 {
+    position: absolute;
+    bottom: 20%;
+    left: 8%;
+    width: clamp(rem(50), 12vw, rem(100));
+    height: auto;
+    pointer-events: none;
+    z-index: 1;
+    animation: floating 4s ease-in-out infinite reverse;
+  }
+
+  &__shape-3 {
+    position: absolute;
+    top: 20%;
+    right: 5%;
+    width: clamp(rem(30), 8vw, rem(60));
+    height: auto;
+    pointer-events: none;
+    z-index: 1;
+    animation: floating 3.5s ease-in-out infinite;
+  }
+
+  &__shape-4 {
+    position: absolute;
+    bottom: 15%;
+    right: 3%;
+    width: clamp(rem(40), 10vw, rem(90));
+    height: auto;
+    pointer-events: none;
+    z-index: 1;
+    animation: floating 4.5s ease-in-out infinite reverse;
+  }
+
+  // ---- Image column ----
+  &__image-wrap {
+    position: relative;
+    height: 100%;
+    margin-top: rem(40);
+    text-align: center;
+    z-index: 2;
+    margin-bottom: -155px;
+    margin-left: -80px;
+
+    @include lg {
+      margin-bottom: 0;
+      margin-left: 0;
+    }
+
+    @include md {
+      margin-top: 0;
+    }
+  }
+
+  &__image {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    display: inline-block;
+  }
+
+  // ---- Content column ----
+  &__content {
+    position: relative;
+    z-index: 3;
+    text-align: start;
+  }
+
+  &__subtitle-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: rem(10);
+    margin-bottom: rem(20);
+
+    @include md {
+      justify-content: flex-start;
+    }
+  }
+
+  &__subtitle-icon {
+    font-size: rem(18);
+    color: $text-primary;
+  }
+
+  &__subtitle {
+    font-family: $title-font;
+    font-weight: 500;
+    font-style: normal; // Changed from 'Medium' to 'normal' as 'Medium' isn't valid CSS keyword, 500 covers it
+    font-size: 18px;
+    line-height: 24px;
+    letter-spacing: 0px;
+    text-transform: capitalize;
+    color: $text-primary;
+  }
+
+  // ---- Main heading ----
+  &__heading {
+    font-family: $title-font;
+    font-weight: 700;
+    font-style: normal; // Changed from 'Bold' to 'normal', 700 covers it
+    font-size: clamp(40px, 5vw, 76px);
+    line-height: 1.05; // Adjusted slightly for better responsiveness, target represents desktop
+    letter-spacing: -1px;
+    color: $text-primary;
+    margin-bottom: rem(24);
+  }
+
+  // ---- Description ----
+  &__desc {
+    font-family: $body-font;
+    font-size: rem(16);
+    line-height: 1.6;
+    color: $text-secondary;
+    margin-bottom: rem(48);
+
+    i {
+      margin-left: rem(5);
+      transform: rotate(20deg);
+      display: inline-block;
+    }
+  }
+}
+
+@keyframes floating {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}

@@ -1,0 +1,193 @@
+@use '../abstracts/variables' as *;
+@use '../abstracts/mixins' as *;
+
+.process-area {
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.process-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    height: 100%;
+    gap: 30px;
+
+    &__lineone {
+        position: absolute;
+        top: 40%;
+        right: -49%;
+        z-index: 1;
+        transform: rotate(6deg);
+
+        @include xl {
+            display: none;
+        }
+    }
+
+    &__linetwo {
+        position: absolute;
+        top: 40%;
+        right: -49%;
+        z-index: 1;
+        transform: rotate(-4deg);
+
+        @include xl {
+            display: none;
+        }
+    }
+
+    &__icon-box {
+        position: relative;
+        width: 88px;
+        height: 88px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        z-index: 2;
+
+        // The dashed circle border
+        &::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 2px dashed #D2E8FF; // Light blue dashed border
+            border-radius: 50%;
+        }
+
+        .icon {
+            width: 72px;
+            height: 72px;
+            background-color: $bg-secondary;
+            border-radius: 50%; // Inner circle
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--heading-color); // Dark icon
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            position: relative;
+            z-index: 2;
+            transition: var(--transition);
+        }
+    }
+
+    &__content {
+        .step-number {
+            font-family: var(--body-font);
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-body);
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .title {
+            font-family: $title-font;
+            font-weight: 700;
+            font-size: 24px;
+            line-height: 1.2;
+            letter-spacing: 0px;
+            text-align: center;
+            text-transform: capitalize;
+            margin-bottom: 5px;
+        }
+
+        .text {
+            font-size: 16px;
+            line-height: 1.6;
+            margin: 0;
+        }
+    }
+
+    // Hover Effect
+    &:hover {
+        .process-card__icon-box .icon {
+            background-color: var(--primary-color);
+            color: var(--black-color);
+        }
+
+        .process-card__icon-box::before {
+            border-color: var(--primary-color);
+        }
+    }
+
+    // Desktop Zigzag Layout (> 991px)
+    @media (min-width: 992px) {
+        padding-top: 50px;
+        justify-content: space-between;
+
+        // Odd items (1, 3): Content Top, Icon Bottom
+        &:nth-child(odd) {
+            flex-direction: column;
+
+            .process-card__icon-box {
+                margin-top: 10px;
+            }
+        }
+
+        // Even items (2, 4): Icon Top, Content Bottom
+        &:nth-child(even) {
+            flex-direction: column-reverse;
+
+            .process-card__icon-box {
+                margin-bottom: 50px;
+            }
+        }
+
+
+        &:not(:last-child) {
+            .process-card__icon-box::after {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 100%;
+                width: 180%; // Span to next container
+                height: 2px;
+                background-image: linear-gradient(to right, #D2E8FF 50%, transparent 50%);
+                background-size: 20px 100%; // Dashed effect
+                z-index: -1;
+                transform-origin: left center;
+            }
+        }
+
+        // Specific rotations for the zigzag
+        // 1 (Low) -> 2 (High): Rotate Up (-angle)
+        // 2 (High) -> 3 (Low): Rotate Down (+angle)
+        // 3 (Low) -> 4 (High): Rotate Up (-angle)
+
+        // Adjusting angles strictly for visually matching the "zig-zag" 
+        // Logic: 
+        // Odd children have Icon at Bottom. Next is Even (Icon Top). Line goes UP.
+        // Even children have Icon at Top. Next is Odd (Icon Bottom). Line goes DOWN.
+
+        &:nth-child(odd):not(:last-child) .process-card__icon-box::after {
+            transform: rotate(-25deg);
+            top: 20%;
+        }
+
+        &:nth-child(even):not(:last-child) .process-card__icon-box::after {
+            transform: rotate(25deg);
+            top: 80%;
+        }
+    }
+}
+
+// Helper for the active/yellow item look from reference
+.process-card.active {
+    .process-card__icon-box {
+        &::before {
+            border-color: var(--primary-color);
+            border-style: solid;
+        }
+
+        .icon {
+            background-color: var(--primary-color);
+            color: var(--heading-color);
+        }
+    }
+}

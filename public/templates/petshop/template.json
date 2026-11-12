@@ -1,0 +1,13 @@
+{
+  "id": "petshop-petly-veterinaria",
+  "name": "Petly - Pet Shop, Clínica Veterinária & Banho e Tosa",
+  "category": "Pet Shop & Veterinária",
+  "description": "Design alegre e afetivo para pet shops, clínicas veterinárias e estética animal. Serviços de banho e tosa, rações, vacinas e emergências.",
+  "accentColor": "#ff6b6b",
+  "features": [
+    "Tabela de preços de banho, tosa e hotelzinho",
+    "Agendamento de consultas veterinárias e vacinas",
+    "Galeria de clientes de quatro patas",
+    "Botão de emergência 24h no WhatsApp"
+  ]
+}

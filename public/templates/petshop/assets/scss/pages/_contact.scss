@@ -1,0 +1,159 @@
+/* === Contact Section  === */
+@use '../base' as *;
+
+.contact2 {
+  .section-heading {
+    &__title {
+      font-weight: 700;
+      font-style: Bold;
+      font-size: 40px;
+      line-height: 48px;
+      letter-spacing: -0.5px;
+      margin-bottom: 20px;
+
+      @include lg {
+        font-size: 36px;
+        line-height: 44px;
+      }
+
+      @include md {
+        font-size: 32px;
+        line-height: 40px;
+        margin-bottom: 15px;
+      }
+
+      @include xs {
+        font-size: 28px;
+        line-height: 36px;
+        margin-bottom: 12px;
+      }
+    }
+
+    &__text {
+      color: $text-600;
+      font-family: Lato;
+      font-weight: 400;
+      font-style: Regular;
+      font-size: 14px;
+      line-height: 22px;
+      letter-spacing: 0px;
+      text-align: center;
+      border-bottom: 1px solid #E6E6E6;
+      padding: 0px 0px 30px;
+      margin-bottom: 40px;
+
+      @include md {
+        font-size: 13px;
+        line-height: 20px;
+        padding: 0px 0px 25px;
+        margin-bottom: 30px;
+      }
+
+      @include xs {
+        font-size: 12px;
+        line-height: 18px;
+        padding: 0px 0px 20px;
+        margin-bottom: 25px;
+      }
+    }
+  }
+
+  &-form {
+    position: relative;
+
+    &__input {
+      &-name {
+        color: $text-950;
+        font-family: $font-playfair;
+        font-weight: 500;
+        font-style: Medium;
+        display: block;
+        font-size: 20px;
+        line-height: 26px;
+        letter-spacing: 0px;
+        margin-bottom: 12px;
+
+        @include md {
+          font-size: 18px;
+          line-height: 24px;
+          margin-bottom: 10px;
+        }
+
+        @include xs {
+          font-size: 16px;
+          line-height: 22px;
+          margin-bottom: 8px;
+        }
+      }
+
+      &-field {
+        position: relative;
+        background: $bg-secondary;
+        padding: 15px 20px;
+        border-radius: 8px;
+        font-family: Lato;
+        font-weight: 400;
+        font-style: Regular;
+        font-size: 16px;
+        line-height: 26px;
+        letter-spacing: 0px;
+        width: 100%;
+        border: none;
+
+        @include md {
+          padding: 12px 18px;
+          font-size: 15px;
+          line-height: 24px;
+        }
+
+        @include xs {
+          padding: 10px 16px;
+          font-size: 14px;
+          line-height: 22px;
+        }
+
+        &::placeholder {
+          font-size: 16px;
+          font-weight: 400;
+          line-height: 23px;
+
+          @include md {
+            font-size: 15px;
+            line-height: 22px;
+          }
+
+          @include xs {
+            font-size: 14px;
+            line-height: 20px;
+          }
+        }
+      }
+
+      .textarea {
+        height: 163px;
+
+        @include md {
+          height: 140px;
+        }
+
+        @include xs {
+          height: 120px;
+        }
+      }
+    }
+  }
+}
+
+/* === Map Section  === */
+.map {
+  margin-bottom: -15px;
+  position: relative;
+  background-color: $color-black;
+}
+
+iframe {
+  width: 100%;
+  height: 682px;
+  margin-bottom: -15px;
+  background-color: $color-black;
+}

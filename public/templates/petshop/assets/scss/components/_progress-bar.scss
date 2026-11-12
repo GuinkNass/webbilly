@@ -1,0 +1,40 @@
+@use '../base' as *;
+
+ .progress__wrap {
+     .skill {
+         margin-bottom: 20px;
+
+         .skill-title {
+             margin-bottom: 16px;
+             font-family: $title-font;
+             font-weight: 600;
+             font-size: 18px;
+             line-height: 26px;
+             letter-spacing: 0.5px;
+             color: $text-secondary;
+         }
+
+         .progress-container {
+             width: 100%;
+             background-color: $border-primary;
+             border-radius: 25px;
+             overflow: hidden;
+             height: 12px;
+             position: relative;
+
+             .progress-bar {
+                 height: 100%;
+                 width: 0;
+                 background-color: $primary-color;
+                 text-align: right;
+                 line-height: 12px;
+                    color: $text-primary;
+                 padding-right: 10px;
+                 border-radius: 25px 0 0 25px;
+                 transition: width 1.5s ease-in-out;
+                 font-size: 10px;
+             }
+         }
+     }
+
+ }

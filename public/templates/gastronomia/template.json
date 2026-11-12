@@ -1,0 +1,13 @@
+{
+  "id": "bar-oldstory-whiskey",
+  "name": "Oldstory — Bar, Pub & Hamburgueria",
+  "category": "Gastronomia Local",
+  "description": "Visual rústico e escuro com pegada noturna para pubs, destilarias, cervejarias e hamburguerias de autoridade.",
+  "accentColor": "#ca8a04",
+  "features": [
+    "Cardápio de bebidas, drinks autorais e porções",
+    "Fotos noturnas de ambiente e gastronomia",
+    "Mapa integrado e botões de contato",
+    "Reservas de mesa e lista VIP"
+  ]
+}

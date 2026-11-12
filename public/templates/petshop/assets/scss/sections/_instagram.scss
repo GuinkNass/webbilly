@@ -1,0 +1,116 @@
+@use '../abstracts' as *;
+
+.instagram1 {
+    position: relative;
+    overflow: hidden;
+
+    &__title-wrapper {
+        margin-bottom: rem(60);
+    }
+
+    &__title {
+        font-family: $title-font;
+        font-weight: 700;
+        font-size: clamp(rem(30), 4vw, rem(48));
+        color: $text-primary;
+        margin: 0;
+    }
+
+    &-slider {
+        position: relative;
+        width: 100%;
+
+        .slider-track {
+            display: flex;
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .slider-slide {
+            flex-shrink: 0;
+            padding: 0 rem(10); // Gap between slides
+            position: relative;
+
+            // Image styling
+            .instagram1__image-wrap {
+                position: relative;
+                border-radius: rem(16);
+                overflow: hidden;
+                width: 100%;
+                aspect-ratio: 1; // Square images as per reference usually
+
+                img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    transition: transform 0.4s ease;
+                }
+
+                &::after {
+                    content: '';
+                    position: absolute;
+                    inset: 0;
+                    background: rgba($black-color, 0.2);
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                }
+            }
+
+            // Instagram Button (Using customized style for this section)
+            .instagram1__btn {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) scale(0.9);
+                background: $white-color;
+                padding: rem(10) rem(24);
+                border-radius: rem(50);
+                display: inline-flex;
+                align-items: center;
+                gap: rem(8);
+                color: $text-primary;
+                font-family: $title-font;
+                font-weight: 600;
+                font-size: rem(16);
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+                box-shadow: 0 rem(4) rem(12) rgba(0, 0, 0, 0.1);
+                white-space: nowrap;
+                z-index: 2;
+
+                i,
+                svg {
+                    color: #E1306C; // Instagram brand color or use $primary-color layout
+                    font-size: rem(18);
+                }
+
+                &:hover {
+                    background: $white-color;
+                    color: $primary-color;
+                }
+            }
+
+            // Hover state for all slides (optional)
+            &:hover {
+                .instagram1__image-wrap img {
+                    transform: scale(1.05);
+                }
+            }
+
+            // Active Slide Logic (Center slide highlight)
+            // Note: The slider logic needs to add 'is-active' class to the active index.
+            // We want the overlay to appear on the active slide.
+            &.is-active {
+                .instagram1__image-wrap::after {
+                    opacity: 0; // Or 1 if we want to darken others
+                }
+
+                .instagram1__btn {
+                    opacity: 1;
+                    visibility: visible;
+                    transform: translate(-50%, -50%) scale(1);
+                }
+            }
+        }
+    }
+}

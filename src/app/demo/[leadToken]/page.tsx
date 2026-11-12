@@ -15,10 +15,12 @@ import {
   RefreshCw
 } from 'lucide-react';
 import Link from 'next/link';
+import { resolveTemplateBySlug } from '@/lib/templates-data';
 
 export default function DemoPage() {
   const params = useParams();
   const leadToken = (params?.leadToken as string) || '';
+  const demoTemplate = resolveTemplateBySlug(leadToken);
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
@@ -27,6 +29,15 @@ export default function DemoPage() {
 
   useEffect(() => {
     if (!leadToken) return;
+    if (demoTemplate) {
+      setData({
+        title: demoTemplate.name,
+        category: demoTemplate.categoryLabel,
+        deployedUrl: demoTemplate.demoPath,
+      });
+      setLoading(false);
+      return;
+    }
     fetch(`/api/public/demo/${leadToken}`)
       .then(res => res.json())
       .then(resData => {

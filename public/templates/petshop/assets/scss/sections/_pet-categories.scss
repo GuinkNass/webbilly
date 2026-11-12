@@ -1,0 +1,114 @@
+// ===============================
+// Pet Categories Section
+// ===============================
+// BEM: .pet-categories
+// Use with .section-padding for top/bottom 120px. Responsive.
+
+@use "../abstracts" as *;
+
+.pet-categories {
+  position: relative;
+  overflow: hidden;
+
+
+  &__pet-categories2 {
+    color: $text-primary;
+    font-family: $title-font;
+    font-weight: 700;
+    font-size: clamp(1.5rem, 4vw + 0.5rem, 3rem);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    text-align: center;
+    margin-bottom: rem(48);
+  }
+
+
+
+  // Each category item (Dogs, Cats, Birds, etc.)
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: rem(12);
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  &__icon,
+  &__image2 {
+    position: relative;
+    flex-shrink: 0;
+    width: rem(132);
+    height: rem(132);
+  }
+
+  // Colored circle backgrounds
+  &__bg,
+  &__bg2,
+  &__bg3,
+  &__bg4,
+  &__bg5,
+  &__bg6 {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    width: rem(132);
+    height: rem(132);
+    border-radius: rem(40);
+    aspect-ratio: 1;
+  }
+
+  &__bg {
+    background: #dff5fa;
+  }
+
+  &__bg2 {
+    background: #ffe5d6;
+  }
+
+  &__bg3 {
+    background: #f3dfff;
+  }
+
+  &__bg4 {
+    background: #edf5dc;
+  }
+
+  &__bg5 {
+    background: #dff5fa;
+  }
+
+  &__bg6 {
+    background: #FFE5D6;
+  }
+
+  &__image,
+  &__image3,
+  &__image4 {
+    position: absolute;
+    left: 50%;
+    top: rem(22);
+    transform: translateX(-50%);
+    width: rem(88);
+    height: rem(88);
+    object-fit: cover;
+    aspect-ratio: 1;
+  }
+
+
+
+  // Labels
+  &__dogs2,
+  &__cats2,
+  &__birds2,
+  &__fish2,
+  &__hamster2,
+  &__rabbit {
+    color: $text-primary;
+    font-family: $title-font;
+    font-weight: 500;
+    font-size: clamp(1rem, 1.5vw + 0.5rem, 1.375rem);
+    line-height: 1.3;
+    text-align: center;
+  }
+}

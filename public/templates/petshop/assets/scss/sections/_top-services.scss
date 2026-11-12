@@ -1,0 +1,202 @@
+// ===============================
+// Top Services Section
+// =============================== 
+
+@use "../abstracts" as *;
+
+.top-services {
+  position: relative;
+  overflow: hidden;
+  min-height: auto;
+
+  &,
+  & * {
+    box-sizing: border-box;
+  }
+
+  &__left-column {
+    position: relative;
+  }
+
+  // Background decorative shape (hidden on small screens to avoid overlap)
+  &__bg-shape {
+    position: absolute;
+    right: 59.01%;
+    left: 17.08%;
+    bottom: 17.67%;
+    top: 9.78%;
+    overflow: visible;
+
+    @include xl {
+      left: 0;
+      right: 0;
+    }
+
+    @include sm {
+      top: -4%;
+    }
+  }
+
+  // Image column wrapper (original: top-services__image2)
+  &__image2 {
+    position: relative;
+    width: 100%;
+    max-width: 540px;
+    margin: 0 auto rem(32);
+    min-height: 280px;
+
+    @include lg {
+      max-width: 100%;
+      min-height: 380px;
+    }
+
+    @include md {
+      margin-bottom: 60px;
+    }
+
+  }
+
+  &__image3 {
+    position: relative;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    border-radius: $primary-radius;
+  }
+
+  &__image4 {
+    position: absolute;
+    left: 65%;
+    top: 58%;
+    width: 55%;
+    max-width: 220px;
+    height: auto;
+    object-fit: cover;
+    aspect-ratio: 331/369;
+    border-radius: var(--primary-radius);
+
+    @include xl {
+      left: 0;
+      right: 0;
+    }
+  }
+
+  // Content column
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: rem(40);
+
+    @include lg {
+      gap: rem(40);
+    }
+  }
+
+  &__title-body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__at-our-all-in-one-pet-store-care-we-believe-every-pet-deserves-expert-care-comfort-and-love-our-professional-services-are-designed-to-support-your-pet-s-health-happiness-and-overall-well-being-at-every-stage-of-life {
+    color: $text-secondary;
+    font-family: $body-font;
+    font-size: clamp(0.875rem, 1.5vw + 0.5rem, 1rem);
+    line-height: 1.6;
+    font-weight: 400;
+  }
+
+  // Service items grid
+  &__all-item {
+    display: flex;
+    flex-direction: column;
+    gap: rem(16);
+    width: 100%;
+  }
+
+  &__row,
+  &__row2 {
+    display: flex;
+    gap: rem(16);
+    align-items: stretch;
+
+    @include lg {
+      flex-wrap: wrap;
+    }
+  }
+
+  &__item-01,
+  &__item-02,
+  &__item-03,
+  &__item-04,
+  &__item-05,
+  &__item-06 {
+    display: flex;
+    align-items: center;
+    gap: rem(12);
+    padding: rem(12) rem(16);
+    border-radius: rem(12);
+    min-height: rem(56);
+    flex: 1 1 100%;
+    min-width: 0;
+
+    @include lg {
+      flex: 1 1 calc(50% - rem(12));
+      max-width: 305px;
+    }
+
+    @include sm {
+      flex: 1 1 calc(50% - rem(8));
+      padding: rem(5) rem(6);
+    }
+
+  }
+
+  &__item-01 {
+    background: #dff5fa;
+  }
+
+  &__item-02 {
+    background: #ffe5d6;
+  }
+
+  &__item-03 {
+    background: #edf5dc;
+  }
+
+  &__item-04 {
+    background: #f3dfff;
+  }
+
+  &__item-05 {
+    background: #ffe5d6;
+  }
+
+  &__item-06 {
+    background: #dff5fa;
+  }
+
+  &__check-4-1,
+  &__check-4-2,
+  &__check-4-22,
+  &__check-4-23,
+  &__check-4-24,
+  &__check-4-25 {
+    flex-shrink: 0;
+    width: rem(18);
+    height: rem(18);
+    color: $primary-color;
+  }
+
+  &__pet-grooming,
+  &__pet-training,
+  &__vet-consultation,
+  &__emergency-pet-care,
+  &__pet-sitting-daycare,
+  &__nutrition-diet-planning {
+    color: $text-primary;
+    font-family: $title-font;
+    font-size: clamp(0.875rem, 1.5vw + 0.4rem, 1.125rem);
+    line-height: 1.4;
+    font-weight: 500;
+  }
+}
