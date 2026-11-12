@@ -1,21 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDb, writeDb, Candidate } from '@/lib/db';
+import { sendOperatorApplicationEmail } from '@/lib/mailer';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, email, whatsapp, city, state, pixType, pixKey, resumeUrl, experience, termsAccepted } = body;
+    const { name, email, whatsapp, city, state, pixType, pixKey, resumeUrl, experience, termsAccepted, instagram } = body;
 
-    if (!name || !email || !whatsapp || !city || !state || !pixType || !pixKey) {
+    if (!name || !email || !whatsapp) {
       return NextResponse.json(
-        { error: 'Todos os campos obrigatórios devem ser preenchidos.' },
-        { status: 400 }
-      );
-    }
-
-    if (!termsAccepted) {
-      return NextResponse.json(
-        { error: 'É obrigatório aceitar o Contrato de Parceria Autônoma e Confidencialidade.' },
+        { error: 'Nome, E-mail e WhatsApp são obrigatórios.' },
         { status: 400 }
       );
     }
@@ -44,18 +38,37 @@ export async function POST(req: NextRequest) {
       name: name.trim(),
       email: email.trim().toLowerCase(),
       whatsapp: whatsapp.trim(),
-      city: city.trim(),
-      state: state.trim().toUpperCase(),
-      pixType,
-      pixKey: pixKey.trim(),
+      city: (city || '').trim(),
+      state: (state || '').trim().toUpperCase(),
+      pixType: pixType || 'cpf',
+      pixKey: (pixKey || '').trim(),
       resumeUrl: (resumeUrl || '').trim(),
       experience: (experience || '').trim(),
+      instagram: (instagram || '').trim(),
       status: 'PENDENTE',
       createdAt: new Date().toISOString()
     };
 
     db.candidates.unshift(newCandidate);
     writeDb(db);
+
+    // Dispara envio de e-mail formatado via Lark SMTP em segundo plano seguro
+    try {
+      await sendOperatorApplicationEmail({
+        name: newCandidate.name,
+        email: newCandidate.email,
+        whatsapp: newCandidate.whatsapp,
+        city: newCandidate.city,
+        state: newCandidate.state,
+        instagram: newCandidate.instagram,
+        experience: newCandidate.experience,
+        pixType: newCandidate.pixType,
+        pixKey: newCandidate.pixKey,
+        candidateId: newCandidate.id
+      });
+    } catch (mailErr) {
+      console.error('[Candidates API] Falha no disparo de e-mail Lark:', mailErr);
+    }
 
     return NextResponse.json({
       success: true,

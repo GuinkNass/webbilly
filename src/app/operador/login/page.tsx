@@ -119,6 +119,19 @@ export default function OperatorLoginPage() {
             )}
           </button>
         </form>
+
+        <div className="mt-6 pt-5 border-t border-white/[0.08] text-center">
+          <p className="text-xs text-zinc-400">
+            Ainda não é um Operador Credenciado?
+          </p>
+          <Link
+            href="/#seja-operador"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition mt-2"
+          >
+            <span>Candidate-se para faturar comissões Pix recorrentes</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
       </div>
     </div>
   );

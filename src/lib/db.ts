@@ -35,8 +35,9 @@ export interface Candidate {
   state: string;
   pixType: 'cpf' | 'cnpj' | 'phone' | 'email' | 'random';
   pixKey: string;
-  resumeUrl: string;
+  resumeUrl?: string;
   experience?: string;
+  instagram?: string;
   status: 'PENDENTE' | 'APROVADO' | 'RECUSADO';
   createdAt: string;
   reviewedAt?: string;

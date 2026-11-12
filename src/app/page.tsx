@@ -47,6 +47,56 @@ export default function WebbillyHomePage() {
   const [previewSlug, setPreviewSlug] = useState('');
   const [activeNicheTab, setActiveNicheTab] = useState('todos');
 
+  // Estados para Formulário de Candidatura de Operador (Lark SMTP)
+  const [operatorFormData, setOperatorFormData] = useState({
+    name: '',
+    whatsapp: '',
+    email: '',
+    cityState: '',
+    instagram: '',
+    experience: '',
+    pixType: 'cpf',
+    pixKey: ''
+  });
+  const [operatorLoading, setOperatorLoading] = useState(false);
+  const [operatorSubmitted, setOperatorSubmitted] = useState(false);
+  const [operatorError, setOperatorError] = useState<string | null>(null);
+
+  const handleOperatorInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setOperatorFormData({ ...operatorFormData, [e.target.name]: e.target.value });
+  };
+
+  const handleOperatorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!operatorFormData.name || !operatorFormData.whatsapp || !operatorFormData.email) {
+      alert('Por favor, informe ao menos Nome, WhatsApp e E-mail.');
+      return;
+    }
+    setOperatorLoading(true);
+    setOperatorError(null);
+    try {
+      const res = await fetch('/api/operators/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(operatorFormData)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Erro ao submeter candidatura.');
+      }
+      setOperatorSubmitted(true);
+      confetti({
+        particleCount: 80,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    } catch (err: any) {
+      setOperatorError(err.message || 'Erro ao enviar. Tente novamente.');
+    } finally {
+      setOperatorLoading(false);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -239,6 +289,7 @@ export default function WebbillyHomePage() {
             <a href="#servicos" className="hover:text-[#7abf18] transition">Serviços</a>
             <a href="#vantagens" className="hover:text-[#7abf18] transition">Vantagens</a>
             <a href="#modelos" className="hover:text-[#7abf18] transition">Modelos</a>
+            <a href="#seja-operador" className="hover:text-[#7abf18] transition font-bold text-emerald-400">Seja Operador</a>
             <a href="#faq" className="hover:text-[#7abf18] transition">Dúvidas</a>
           </nav>
 
@@ -274,6 +325,7 @@ export default function WebbillyHomePage() {
             <a href="#servicos" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-zinc-300">Serviços</a>
             <a href="#vantagens" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-zinc-300">Vantagens</a>
             <a href="#modelos" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-zinc-300">Modelos</a>
+            <a href="#seja-operador" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-emerald-400 font-bold">Seja Operador</a>
             <a href="#demonstracao" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-[#7abf18] font-bold">Solicitar Demonstração →</a>
           </div>
         )}
@@ -1058,6 +1110,211 @@ export default function WebbillyHomePage() {
               </div>
             </div>
 
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================================
+          11.5. SEJA UM OPERADOR PARCEIRO (FORMULÁRIO DE CANDIDATURA - LARK SMTP)
+         ===================================================================== */}
+      <section id="seja-operador" className="py-20 px-4 sm:px-8 bg-[#0a0d14] border-t border-white/[0.06] relative">
+        {/* Glow de fundo */}
+        <div className="absolute w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none top-10 left-1/2 -translate-x-1/2" />
+
+        <div className="max-w-4xl mx-auto relative z-10">
+          <div className="eco-heading-wrapper">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-800/40 text-emerald-400 text-[11px] font-bold uppercase tracking-wider mb-3">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+              Parceria Comercial &bull; Renda Recorrente Mensal
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white eco-heading-title">
+              Seja um Operador Parceiro Webbilly na Sua Cidade
+            </h2>
+            <img src="/images/border.png" alt="Border" className="eco-border-divider" />
+            <p className="text-zinc-400 text-xs sm:text-sm max-w-2xl mx-auto mt-3 leading-relaxed">
+              Receba sua chave de licença oficial para usar o software <strong>Billy Suite Desktop</strong> no seu PC. Capture clientes no Google Maps, gere sites em segundos com Gemini IA e fature <strong>R$ 10,00 recorrentes por mês</strong> por cada cliente ativo direto na sua chave Pix.
+            </p>
+          </div>
+
+          <div className="mt-12 bg-[#121622] border border-white/[0.08] rounded-2xl p-6 sm:p-10 shadow-2xl relative">
+            {operatorSubmitted ? (
+              <div className="text-center py-10 space-y-4 animate-fade-in">
+                <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/30">
+                  <CheckCircle2 className="w-8 h-8" />
+                </div>
+                <h3 className="text-2xl font-bold text-white font-heading">
+                  Candidatura Enviada com Sucesso!
+                </h3>
+                <p className="text-sm text-zinc-300 max-w-lg mx-auto leading-relaxed">
+                  Os detalhes da sua inscrição foram registrados e enviados diretamente para o nosso time comercial via <strong>Lark Mail</strong>. Entraremos em contato com você via WhatsApp para ativação da sua licença.
+                </p>
+                <div className="pt-4 flex flex-wrap items-center justify-center gap-3">
+                  <a
+                    href={`https://wa.me/5511999999999?text=${encodeURIComponent('Olá! Acabei de me candidatar para ser operador Webbilly: ' + operatorFormData.name)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="eco-btn-primary text-xs py-3 px-6"
+                  >
+                    Falar com a Equipe no WhatsApp &rarr;
+                  </a>
+                  <button
+                    onClick={() => {
+                      setOperatorSubmitted(false);
+                      setOperatorFormData({
+                        name: '',
+                        whatsapp: '',
+                        email: '',
+                        cityState: '',
+                        instagram: '',
+                        experience: '',
+                        pixType: 'cpf',
+                        pixKey: ''
+                      });
+                    }}
+                    className="eco-btn-outline text-xs py-3 px-6"
+                  >
+                    Enviar Outra Candidatura
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleOperatorSubmit} className="space-y-6">
+                {operatorError && (
+                  <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                    <span>{operatorError}</span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Nome Completo *</label>
+                    <input
+                      type="text"
+                      name="name"
+                      required
+                      placeholder="Ex: Lucas Ferreira"
+                      value={operatorFormData.name}
+                      onChange={handleOperatorInputChange}
+                      className="w-full px-4 py-3 rounded-xl bg-[#0b0e14] border border-white/[0.08] text-white text-xs focus:outline-none focus:border-emerald-500 placeholder-zinc-600 transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-300 mb-1.5">WhatsApp com DDD *</label>
+                    <input
+                      type="tel"
+                      name="whatsapp"
+                      required
+                      placeholder="Ex: (11) 98765-4321"
+                      value={operatorFormData.whatsapp}
+                      onChange={handleOperatorInputChange}
+                      className="w-full px-4 py-3 rounded-xl bg-[#0b0e14] border border-white/[0.08] text-white text-xs focus:outline-none focus:border-emerald-500 placeholder-zinc-600 transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-300 mb-1.5">E-mail de Contato *</label>
+                    <input
+                      type="email"
+                      name="email"
+                      required
+                      placeholder="Ex: lucas@email.com"
+                      value={operatorFormData.email}
+                      onChange={handleOperatorInputChange}
+                      className="w-full px-4 py-3 rounded-xl bg-[#0b0e14] border border-white/[0.08] text-white text-xs focus:outline-none focus:border-emerald-500 placeholder-zinc-600 transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Cidade e Estado (UF)</label>
+                    <input
+                      type="text"
+                      name="cityState"
+                      placeholder="Ex: Curitiba / PR"
+                      value={operatorFormData.cityState}
+                      onChange={handleOperatorInputChange}
+                      className="w-full px-4 py-3 rounded-xl bg-[#0b0e14] border border-white/[0.08] text-white text-xs focus:outline-none focus:border-emerald-500 placeholder-zinc-600 transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Instagram ou Link do Perfil</label>
+                    <input
+                      type="text"
+                      name="instagram"
+                      placeholder="Ex: @lucas.comercial ou linkedin.com/in/..."
+                      value={operatorFormData.instagram}
+                      onChange={handleOperatorInputChange}
+                      className="w-full px-4 py-3 rounded-xl bg-[#0b0e14] border border-white/[0.08] text-white text-xs focus:outline-none focus:border-emerald-500 placeholder-zinc-600 transition"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="col-span-1">
+                      <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Tipo Pix</label>
+                      <select
+                        name="pixType"
+                        value={operatorFormData.pixType}
+                        onChange={handleOperatorInputChange}
+                        className="w-full px-2.5 py-3 rounded-xl bg-[#0b0e14] border border-white/[0.08] text-white text-xs focus:outline-none focus:border-emerald-500 transition"
+                      >
+                        <option value="cpf">CPF</option>
+                        <option value="email">E-mail</option>
+                        <option value="phone">Telefone</option>
+                        <option value="cnpj">CNPJ</option>
+                        <option value="random">Aleatória</option>
+                      </select>
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Chave Pix (Repasses)</label>
+                      <input
+                        type="text"
+                        name="pixKey"
+                        placeholder="Chave para comissões"
+                        value={operatorFormData.pixKey}
+                        onChange={handleOperatorInputChange}
+                        className="w-full px-3 py-3 rounded-xl bg-[#0b0e14] border border-white/[0.08] text-white text-xs focus:outline-none focus:border-emerald-500 placeholder-zinc-600 transition"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Experiência com Vendas ou Atendimento Comercial</label>
+                  <textarea
+                    name="experience"
+                    rows={3}
+                    placeholder="Conte resumidamente sua experiência com vendas externas, telemarketing ou captação de clientes locais..."
+                    value={operatorFormData.experience}
+                    onChange={handleOperatorInputChange}
+                    className="w-full px-4 py-3 rounded-xl bg-[#0b0e14] border border-white/[0.08] text-white text-xs focus:outline-none focus:border-emerald-500 placeholder-zinc-600 transition resize-none"
+                  />
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={operatorLoading}
+                    className="w-full py-4 rounded-xl font-bold text-sm text-zinc-950 bg-gradient-to-r from-emerald-400 via-teal-400 to-[#7abf18] hover:opacity-95 transition shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    {operatorLoading ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-zinc-950/30 border-t-zinc-950 rounded-full animate-spin" />
+                        <span>Enviando Candidatura...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Enviar Minha Candidatura de Operador</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                  <p className="text-[11px] text-zinc-400 text-center mt-2.5">
+                    Notificação automática enviada via <strong>Lark Mail</strong> para nossa equipe comercial.
+                  </p>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       </section>
