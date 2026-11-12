@@ -385,7 +385,7 @@ export default function OperatorDashboardPage() {
       {/* =========================================================================
           3. ÁREA DE CONTEÚDO PRINCIPAL (COM MARGEM ESQUERDA DA SIDEBAR)
          ========================================================================= */}
-      <main className="ml-64 px-6 lg:px-8 pt-24 pb-16 min-h-screen bg-[#0a0c10] flex-1">
+      <main className="ml-64 px-6 lg:px-8 pt-28 pb-16 min-h-screen bg-[#0a0c10] flex-1">
         
         {/* BANNER DO SERIAL TOKEN DE ATIVAÇÃO HARDWARE-LOCK */}
         <div className="bg-[#11141c] p-6 rounded-2xl border border-white/[0.06] mb-6">
