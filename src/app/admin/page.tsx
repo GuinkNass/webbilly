@@ -549,7 +549,7 @@ export default function AdminDashboardPage() {
       {/* =========================================================================
           3. ÁREA DE CONTEÚDO PRINCIPAL (COM PADDING TOP E LEFT)
          ========================================================================= */}
-      <main className="ml-64 pt-24 pb-12 p-6 lg:p-8 flex-1 min-h-screen bg-[#0a0c10] overflow-x-hidden">
+      <main className="ml-64 px-6 lg:px-8 pt-24 pb-16 flex-1 min-h-screen bg-[#0a0c10] overflow-x-hidden">
         
         {/* Banner de Feedback */}
         {actionSuccess && (
