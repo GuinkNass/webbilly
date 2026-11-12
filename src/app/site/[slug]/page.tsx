@@ -32,60 +32,62 @@ export default async function SiteViewerPage({
   const slug = sanitizeSlug(rawSlug);
   const queryStatus = typeof sp.status === 'string' ? sp.status : undefined;
 
-  // 1. Verifica se o slug corresponde a um dos 6 Templates Oficiais de Demonstração
-  const demoTemplate = resolveTemplateBySlug(slug);
-  if (demoTemplate) {
-    return (
-      <div className="w-screen h-screen overflow-hidden bg-black flex flex-col select-none">
-        {/* Barra superior discreta oficial de modo demonstração */}
-        <header className="bg-[#0e121a] border-b border-white/[0.08] px-4 py-2.5 text-xs flex items-center justify-between shrink-0 shadow-lg z-30">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <Link href="/" className="flex items-center gap-1.5 shrink-0 hover:opacity-90 transition">
-              <span className="font-extrabold text-sm tracking-tight text-white font-heading">
-                Web<span className="text-[#7abf18]">billy</span>
-              </span>
-            </Link>
-            <span className="text-zinc-600 hidden sm:inline">•</span>
-            <span className="px-2 py-0.5 rounded-full bg-[#7abf18]/15 border border-[#7abf18]/30 text-[#7abf18] font-bold text-[10px] uppercase tracking-wider shrink-0">
-              Modo Demonstração
-            </span>
-            <span className="text-zinc-300 text-xs hidden md:inline truncate">
-              Modelo: <strong className="text-white">{demoTemplate.name}</strong> ({demoTemplate.title})
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            <span className="text-zinc-400 text-xs hidden sm:inline">
-              Por apenas <strong className="text-[#7abf18] font-mono">R$ 29,90/mês</strong>
-            </span>
-            <a
-              href={`https://webbilly.com.br/#demonstracao?modelo=${encodeURIComponent(demoTemplate.name)}`}
-              className="px-3.5 py-1.5 rounded-lg bg-[#7abf18] hover:bg-[#68a414] text-white font-bold text-xs transition flex items-center gap-1.5 shadow-md shadow-[#7abf18]/25"
-            >
-              <span>Quero Este Modelo Para Mim</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </a>
-          </div>
-        </header>
-
-        {/* Template completo em tela cheia */}
-        <iframe
-          src={demoTemplate.demoPath}
-          className="w-full flex-1 border-0 bg-black"
-          title={demoTemplate.name}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        />
-      </div>
-    );
-  }
-
-  // 2. Consulta suspensão global em tempo real na nuvem
+  // 1. Consulta suspensão global em tempo real na nuvem
   const cloudSuspended = await fetchCloudSuspendedSlugs();
   const isDirectlySuspended = cloudSuspended.has(slug);
 
-  // 3. Consulta o registro no Supabase (Fonte Única de Verdade) ou no Banco Principal
+  // 2. Consulta o registro no Supabase (Fonte Única de Verdade) ou no Banco Principal
   const supabaseSite = await fetchSiteFromSupabase(slug);
   const site = supabaseSite || (await resolveSiteBySlug(slug));
+
+  // 3. Se for um dos 6 Templates Oficiais de Demonstração (e não for um cliente cadastrado ou suspenso)
+  if (!site && !isDirectlySuspended) {
+    const demoTemplate = resolveTemplateBySlug(slug);
+    if (demoTemplate) {
+      return (
+        <div className="w-screen h-screen overflow-hidden bg-black flex flex-col select-none">
+          {/* Barra superior discreta oficial de modo demonstração */}
+          <header className="bg-[#0e121a] border-b border-white/[0.08] px-4 py-2.5 text-xs flex items-center justify-between shrink-0 shadow-lg z-30">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <Link href="/" className="flex items-center gap-1.5 shrink-0 hover:opacity-90 transition">
+                <span className="font-extrabold text-sm tracking-tight text-white font-heading">
+                  Web<span className="text-[#7abf18]">billy</span>
+                </span>
+              </Link>
+              <span className="text-zinc-600 hidden sm:inline">•</span>
+              <span className="px-2 py-0.5 rounded-full bg-[#7abf18]/15 border border-[#7abf18]/30 text-[#7abf18] font-bold text-[10px] uppercase tracking-wider shrink-0">
+                Modo Demonstração
+              </span>
+              <span className="text-zinc-300 text-xs hidden md:inline truncate">
+                Modelo: <strong className="text-white">{demoTemplate.name}</strong> ({demoTemplate.title})
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 shrink-0">
+              <span className="text-zinc-400 text-xs hidden sm:inline">
+                Por apenas <strong className="text-[#7abf18] font-mono">R$ 29,90/mês</strong>
+              </span>
+              <a
+                href={`https://webbilly.com.br/#demonstracao?modelo=${encodeURIComponent(demoTemplate.name)}`}
+                className="px-3.5 py-1.5 rounded-lg bg-[#7abf18] hover:bg-[#68a414] text-white font-bold text-xs transition flex items-center gap-1.5 shadow-md shadow-[#7abf18]/25"
+              >
+                <span>Quero Este Modelo Para Mim</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </header>
+
+          {/* Template completo em tela cheia */}
+          <iframe
+            src={demoTemplate.demoPath}
+            className="w-full flex-1 border-0 bg-black"
+            title={demoTemplate.name}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          />
+        </div>
+      );
+    }
+  }
 
   if (!site && !isDirectlySuspended) {
     return (

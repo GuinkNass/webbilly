@@ -100,6 +100,7 @@ export function resolveTemplateBySlug(slug: string): TemplateInfo | null {
     t.slug === clean || 
     t.folder === clean || 
     t.aliases.includes(clean) ||
-    clean.includes(t.slug)
+    clean === `${t.slug}-demo` ||
+    clean === `demo-${t.slug}`
   ) || null;
 }
