@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDb, writeDb } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
-import { setSlugSuspended, clearSiteCache, persistSite } from '@/lib/site-storage';
+import { syncSlugSuspension, clearSiteCache, persistSite } from '@/lib/site-storage';
 import path from 'path';
 import fs from 'fs-extra';
 
@@ -41,9 +41,9 @@ export async function POST(req: NextRequest) {
       }
     } catch {}
 
-    // 3. Atualiza o registro compartilhado de status e limpa caches
+    // 3. Atualiza o registro compartilhado de status na nuvem e limpa caches imediatamente
     if (sub.siteSlug) {
-      setSlugSuspended(sub.siteSlug, sub.status === 'suspended');
+      await syncSlugSuspension(sub.siteSlug, sub.status === 'suspended');
       clearSiteCache(sub.siteSlug);
       await persistSite(sub);
     }

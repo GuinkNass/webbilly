@@ -10,7 +10,7 @@ import {
   ShieldAlert
 } from 'lucide-react';
 import Link from 'next/link';
-import { resolveSiteBySlug, sanitizeSlug } from '@/lib/site-storage';
+import { resolveSiteBySlug, sanitizeSlug, fetchCloudSuspendedSlugs } from '@/lib/site-storage';
 import { resolveTemplateBySlug } from '@/lib/templates-data';
 
 export const dynamic = 'force-dynamic';
@@ -76,9 +76,13 @@ export default async function SiteViewerPage({
     );
   }
 
+  // Consulta em tempo real o registro compartilhado de suspensão na nuvem
+  const cloudSuspended = await fetchCloudSuspendedSlugs();
+  const isDirectlySuspended = cloudSuspended.has(slug);
+
   const site = await resolveSiteBySlug(slug);
 
-  if (!site) {
+  if (!site && !isDirectlySuspended) {
     return (
       <div className="min-h-screen bg-[#07090e] text-white flex flex-col items-center justify-center p-6 text-center">
         <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 mb-4">
@@ -101,9 +105,11 @@ export default async function SiteViewerPage({
   // Permite teste forçado via query param ?status=suspended ou ?status=active
   const status = (queryStatus === 'suspended' || queryStatus === 'active')
     ? queryStatus
-    : site.status;
+    : (isDirectlySuspended ? 'suspended' : (site?.status || 'active'));
 
-  const { clientName, deployedUrl, checkoutUrl, monthlyPrice } = site;
+  const clientName = site?.clientName || slug.toUpperCase();
+  const deployedUrl = site?.deployedUrl || `https://${slug}.vercel.app`;
+  const checkoutUrl = site?.checkoutUrl || `/api/subscription/create-checkout?slug=${slug}`;
 
   // =========================================================================
   // CASO 1: SITE SUSPENSO OU CANCELADO (INADIMPLENTE OU CANCELADO)

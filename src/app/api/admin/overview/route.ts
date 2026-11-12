@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDb } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
+import { fetchCloudSuspendedSlugs, sanitizeSlug } from '@/lib/site-storage';
 
 export async function GET(req: NextRequest) {
   try {
@@ -26,8 +27,16 @@ export async function GET(req: NextRequest) {
     const activeOperatorsCount = db.operators.filter(o => o.status === 'ATIVO').length;
     const blockedOperatorsCount = db.operators.filter(o => o.status === 'BLOQUEADO').length;
 
-    // Métricas do Novo Modelo SaaS Recorrente (R$ 29,90/mês)
-    const subscriptions = Array.isArray(db.subscriptions) ? db.subscriptions : [];
+    // Métricas do Novo Modelo SaaS Recorrente (R$ 29,90/mês) sincronizadas com o cloud registry
+    const cloudSuspended = await fetchCloudSuspendedSlugs();
+    const rawSubs = Array.isArray(db.subscriptions) ? db.subscriptions : [];
+    const subscriptions = rawSubs.map(s => {
+      const isSusp = s.siteSlug ? cloudSuspended.has(sanitizeSlug(s.siteSlug)) : false;
+      return {
+        ...s,
+        status: isSusp ? 'suspended' : (s.status === 'suspended' && !isSusp ? 'active' : s.status)
+      };
+    });
     const activeSubs = subscriptions.filter(s => s.status === 'active');
     const suspendedSubs = subscriptions.filter(s => s.status === 'suspended');
     const pendingSubs = subscriptions.filter(s => s.status === 'pending');

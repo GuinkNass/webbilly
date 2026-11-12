@@ -45,6 +45,83 @@ if (!globalThis.__webbillySuspendedSlugs) {
   globalThis.__webbillySuspendedSlugs = new Set<string>();
 }
 
+const CLOUD_SUSPENDED_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a1d0a136a41894';
+let lastCloudFetch = 0;
+const CLOUD_CACHE_TIME = 2000; // 2 seconds
+
+/**
+ * Lê a lista consolidada e em tempo real de slugs suspensos (sincronizada globalmente)
+ */
+export async function fetchCloudSuspendedSlugs(): Promise<Set<string>> {
+  const now = Date.now();
+  if (globalThis.__webbillySuspendedSlugs && (now - lastCloudFetch) < CLOUD_CACHE_TIME && globalThis.__webbillySuspendedSlugs.size > 0) {
+    return globalThis.__webbillySuspendedSlugs;
+  }
+
+  try {
+    const res = await fetch(CLOUD_SUSPENDED_URL, {
+      cache: 'no-store',
+      headers: { 'Accept': 'application/json' }
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json && json.data && Array.isArray(json.data.slugs)) {
+        const cloudSet = new Set<string>();
+        json.data.slugs.forEach((s: string) => {
+          if (s) cloudSet.add(sanitizeSlug(s));
+        });
+        globalThis.__webbillySuspendedSlugs = cloudSet;
+        lastCloudFetch = now;
+        return cloudSet;
+      }
+    }
+  } catch (err) {
+    console.warn('[SiteStorage] Erro ao buscar da nuvem:', err);
+  }
+
+  return getSuspendedSlugs();
+}
+
+/**
+ * Define ou remove a suspensão de um slug e sincroniza imediatamente com todas as instâncias Vercel
+ */
+export async function syncSlugSuspension(rawSlug: string, suspended: boolean): Promise<Set<string>> {
+  const clean = sanitizeSlug(rawSlug);
+  if (!clean) return getSuspendedSlugs();
+
+  // 1. Atualiza memória e disco locais
+  setSlugSuspended(clean, suspended);
+
+  // 2. Busca lista atualizada e ajusta o set
+  const currentSet = new Set<string>(globalThis.__webbillySuspendedSlugs || getSuspendedSlugs());
+  if (suspended) {
+    currentSet.add(clean);
+  } else {
+    currentSet.delete(clean);
+  }
+
+  globalThis.__webbillySuspendedSlugs = currentSet;
+  lastCloudFetch = Date.now();
+  memoryCache.delete(clean);
+
+  // 3. Salva no registro da nuvem
+  try {
+    const slugs = Array.from(currentSet);
+    await fetch(CLOUD_SUSPENDED_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'webbilly_suspended_registry',
+        data: { slugs }
+      })
+    });
+  } catch (err) {
+    console.warn('[SiteStorage] Erro ao sincronizar nuvem:', err);
+  }
+
+  return currentSet;
+}
+
 /**
  * Lê o conjunto consolidado de slugs suspensos
  */
@@ -242,14 +319,27 @@ export async function resolveSiteBySlug(rawSlug: string): Promise<SiteRecord | n
   if (!slug && !cleanDomain) return null;
 
   const lookupKey = cleanDomain || slug;
-  const isSuspended = isSlugSuspended(slug) || (cleanDomain ? isSlugSuspended(cleanDomain) : false);
+
+  // Busca do registro da nuvem compartilhado entre lambdas
+  const cloudSet = await fetchCloudSuspendedSlugs();
+  const isSuspended =
+    cloudSet.has(slug) ||
+    (cleanDomain ? cloudSet.has(cleanDomain) : false) ||
+    isSlugSuspended(slug) ||
+    (cleanDomain ? isSlugSuspended(cleanDomain) : false);
 
   // 1. Verifica cache em memória rápido
   const cached = memoryCache.get(lookupKey) || (slug ? memoryCache.get(slug) : undefined);
   if (cached && cached.expiresAt > Date.now()) {
-    // Se o slug foi marcado como suspenso após o cache, força o status suspenso
-    if (isSuspended && cached.data.status !== 'suspended') {
+    // Se o slug foi marcado como suspenso, força imediatamente o status suspenso
+    if (isSuspended) {
       cached.data.status = 'suspended';
+      return cached.data;
+    }
+    // Se o slug foi reativado, força o status active
+    if (cached.data.status === 'suspended' && !isSuspended) {
+      cached.data.status = 'active';
+      return cached.data;
     }
     return cached.data;
   }
