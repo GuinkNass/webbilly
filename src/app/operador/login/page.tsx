@@ -125,7 +125,7 @@ export default function OperatorLoginPage() {
             Ainda não é um Operador Credenciado?
           </p>
           <Link
-            href="/#seja-operador"
+            href="/#trabalhe-aqui"
             className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition mt-2"
           >
             <span>Candidate-se para faturar comissões Pix recorrentes</span>
