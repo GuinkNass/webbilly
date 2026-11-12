@@ -170,7 +170,7 @@ export default function WebbillyHomePage() {
       );
 
       setTimeout(() => {
-        window.open(`https://wa.me/5511999999999?text=${whatsMessage}`, '_blank');
+        window.open(`https://wa.me/5511943168939?text=${whatsMessage}`, '_blank');
       }, 1200);
 
     } catch (err) {
@@ -250,7 +250,7 @@ export default function WebbillyHomePage() {
 
           <div className="flex items-center gap-4 text-[11px]">
             <a
-              href="https://wa.me/5511999999999"
+              href="https://wa.me/5511943168939"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-[#7abf18] transition flex items-center gap-1 font-semibold"
@@ -500,7 +500,7 @@ export default function WebbillyHomePage() {
                 </p>
                 <div className="pt-2">
                   <a
-                    href={`https://wa.me/5511999999999?text=${encodeURIComponent('Olá! Acabei de pedir a demonstração do meu negócio: ' + formData.businessName)}`}
+                    href={`https://wa.me/5511943168939?text=${encodeURIComponent('Olá! Acabei de pedir a demonstração do meu negócio: ' + formData.businessName)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="eco-btn-primary text-sm py-3 px-6"
@@ -828,7 +828,7 @@ export default function WebbillyHomePage() {
               Quero Minha Página Profissional Agora
             </a>
             <a
-              href="https://wa.me/5511999999999"
+              href="https://wa.me/5511943168939"
               target="_blank"
               rel="noopener noreferrer"
               className="eco-btn-outline text-sm py-3 px-6"
@@ -1291,13 +1291,13 @@ export default function WebbillyHomePage() {
             </p>
             <div className="space-y-2 pt-1 font-mono text-xs">
               <a
-                href="https://wa.me/5511999999999"
+                href="https://wa.me/5511943168939"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-[#7abf18] transition flex items-center gap-2"
               >
                 <Phone className="w-3.5 h-3.5 text-[#7abf18]" />
-                WhatsApp: (11) 99999-9999
+                WhatsApp: (11) 94316-8939
               </a>
               <a
                 href="mailto:comercial@webbilly.com.br"
