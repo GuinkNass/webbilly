@@ -40,8 +40,10 @@ import {
   Flame,
   Users,
   Share2,
-  Check
+  Check,
+  HelpCircle
 } from 'lucide-react';
+import { startOperadorTour } from '@/lib/tours';
 
 export default function OperatorDashboardPage() {
   const router = useRouter();
@@ -204,6 +206,21 @@ export default function OperatorDashboardPage() {
     loadData();
   }, []);
 
+  // Disparo automático do Tour Guiado no primeiro acesso
+  useEffect(() => {
+    if (!loading && data) {
+      try {
+        const hasSeenTour = localStorage.getItem('webbilly_tour_operador_v1');
+        if (!hasSeenTour) {
+          const timer = setTimeout(() => {
+            startOperadorTour((tab) => setActiveTab(tab as any));
+          }, 1200);
+          return () => clearTimeout(timer);
+        }
+      } catch {}
+    }
+  }, [loading, data]);
+
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/operador/login');
@@ -291,6 +308,7 @@ export default function OperatorDashboardPage() {
               </button>
 
               <button
+                id="tour-nav-subscriptions"
                 onClick={() => setActiveTab('subscriptions')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
                   activeTab === 'subscriptions'
@@ -329,6 +347,7 @@ export default function OperatorDashboardPage() {
               </button>
 
               <button
+                id="tour-nav-sales"
                 onClick={() => setActiveTab('sales')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
                   activeTab === 'sales'
@@ -348,6 +367,7 @@ export default function OperatorDashboardPage() {
               </button>
 
               <button
+                id="tour-nav-ranking"
                 onClick={() => setActiveTab('ranking')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
                   activeTab === 'ranking'
@@ -368,6 +388,7 @@ export default function OperatorDashboardPage() {
               </button>
 
               <button
+                id="tour-nav-affiliates"
                 onClick={() => setActiveTab('affiliates')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
                   activeTab === 'affiliates'
@@ -443,7 +464,10 @@ export default function OperatorDashboardPage() {
         {/* =========================================================================
             2. TOPBAR SUPERIOR (STICKY NO TOPO - NUNCA SOBREPÕE O CONTEÚDO)
            ========================================================================= */}
-        <header className="sticky top-0 z-30 h-16 bg-[#0f121a]/95 backdrop-blur-md border-b border-white/[0.08] flex items-center justify-between px-8 shrink-0">
+        <header
+          id="tour-operador-header"
+          className="sticky top-0 z-30 h-16 bg-[#0f121a]/95 backdrop-blur-md border-b border-white/[0.08] flex items-center justify-between px-8 shrink-0"
+        >
           {/* Barra de Pesquisa / Identificação */}
           <div className="flex items-center gap-4">
             <div className="relative">
@@ -460,6 +484,16 @@ export default function OperatorDashboardPage() {
 
           {/* Ações da Topbar */}
           <div className="flex items-center gap-3">
+            {/* Botão Oficial do Tour Guiado */}
+            <button
+              onClick={() => startOperadorTour((tab) => setActiveTab(tab as any))}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#84cc16]/15 hover:bg-[#84cc16]/25 text-[#a3e635] hover:text-white border border-[#84cc16]/40 transition shadow-sm cursor-pointer"
+              title="Iniciar Tour Guiado Interativo do Painel do Operador"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-[#84cc16]" />
+              <span>? Tour Guiado</span>
+            </button>
+
             {/* Status Asaas */}
             <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 text-xs font-semibold">
               <span className="w-2 h-2 rounded-full bg-emerald-400" />
@@ -773,7 +807,7 @@ export default function OperatorDashboardPage() {
             ABA 2: SITES ATIVOS (ASSINATURAS SAAS R$ 29,90)
            ========================================================================= */}
         {activeTab === 'subscriptions' && (
-          <div className="space-y-6">
+          <div id="tour-operador-propostas" className="space-y-6">
             <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.08] shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <span className="text-xs font-bold text-sky-400 uppercase tracking-wider block">
@@ -1014,7 +1048,7 @@ export default function OperatorDashboardPage() {
               return (
                 <div className="space-y-4">
                   {/* Card Principal de Repasse */}
-                  <div className="p-6 rounded-2xl bg-gradient-to-br from-[#111927] to-[#0f141d] border border-emerald-500/30 relative overflow-hidden shadow-xl">
+                  <div id="tour-operador-repasse" className="p-6 rounded-2xl bg-gradient-to-br from-[#111927] to-[#0f141d] border border-emerald-500/30 relative overflow-hidden shadow-xl">
                     <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                       <div className="space-y-3 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
@@ -1325,7 +1359,7 @@ export default function OperatorDashboardPage() {
             ABA 5: RANKING & MEDALHAS DA EQUIPE (GAMIFICAÇÃO)
            ========================================================================= */}
         {activeTab === 'ranking' && (
-          <div className="space-y-6">
+          <div id="tour-operador-gamificacao" className="space-y-6">
             {/* 1. Header com Título e Data de Referência */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#11141c] p-6 rounded-2xl border border-white/[0.06]">
               <div>
@@ -1731,7 +1765,7 @@ export default function OperatorDashboardPage() {
             ABA 6: BILLY AFILIADOS (PROGRAMA DE PARCEIROS & REDE)
            ========================================================================= */}
         {activeTab === 'affiliates' && (
-          <div className="space-y-6">
+          <div id="tour-operador-afiliados" className="space-y-6">
             {/* Header com Título e Conceito */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#11141c] p-6 rounded-2xl border border-white/[0.06]">
               <div>

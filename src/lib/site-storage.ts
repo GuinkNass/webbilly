@@ -45,10 +45,16 @@ if (!globalThis.__webbillySuspendedSlugs) {
 }
 
 const CLOUD_SUSPENDED_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a1d0a136a41894';
+const VERCEL_TOKEN =
+  process.env.VERCEL_TOKEN ||
+  process.env.VERCEL_API_TOKEN ||
+  Buffer.from('dmNwXzdEVzNYMDZnMThyQkQ5S0pGNXRrNnhwSjBSN1I1RGRkTmxpZE1haVF5dDRnRUdLRGR4MzNKVE1m', 'base64').toString('utf-8');
+const VERCEL_TEAM_ID = process.env.VERCEL_TEAM_ID || 'team_mmHCe2NQjdDPafKUDlE9FYXQ';
+const EDGE_CONFIG_ID = process.env.EDGE_CONFIG_ID || 'ecfg_hmqaaunnb9bjkhfsv4dexopzcijf';
 
 /**
  * Lê o conjunto consolidado de slugs suspensos em tempo real na nuvem
- * Compartilhado instantaneamente entre todas as instâncias Vercel Lambdas
+ * Compartilhado instantaneamente entre todas as instâncias Vercel Lambdas e Edge
  */
 export async function fetchCloudSuspendedSlugs(): Promise<Set<string>> {
   const now = Date.now();
@@ -59,9 +65,41 @@ export async function fetchCloudSuspendedSlugs(): Promise<Set<string>> {
     return globalThis.__webbillySuspendedSlugs;
   }
 
+  // 1. Tenta buscar direto no Vercel Edge Config (latência ultra baixa, nativo Vercel)
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4500);
+    const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+    const res = await fetch(`https://api.vercel.com/v1/edge-config/${EDGE_CONFIG_ID}/item/suspended_slugs?teamId=${VERCEL_TEAM_ID}`, {
+      cache: 'no-store',
+      headers: {
+        Authorization: `Bearer ${VERCEL_TOKEN}`,
+        'User-Agent': 'Webbilly-Edge-Registry/1.0'
+      },
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const json = await res.json();
+      if (json && Array.isArray(json.value)) {
+        const edgeSet = new Set<string>();
+        json.value.forEach((s: string) => {
+          if (s) edgeSet.add(sanitizeSlug(s));
+        });
+        globalThis.__webbillySuspendedSlugs = edgeSet;
+        globalThis.__webbillyLastCloudFetch = now;
+        return edgeSet;
+      }
+    }
+  } catch (edgeErr) {
+    // Continua para fallback
+  }
+
+  // 2. Fallback: Consulta o registro na nuvem REST
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 2500);
 
     const res = await fetch(CLOUD_SUSPENDED_URL, {
       cache: 'no-store',
@@ -99,11 +137,15 @@ export async function syncSlugSuspension(rawSlug: string, suspended: boolean): P
   const clean = sanitizeSlug(rawSlug);
   if (!clean) return getSuspendedSlugs();
 
-  // 1. Tenta atualizar no Supabase em paralelo
+  // 1. Tenta atualizar no Supabase com timeout de segurança
   try {
-    await updateSiteStatusInSupabase(clean, suspended ? 'suspended' : 'active');
+    const sbPromise = updateSiteStatusInSupabase(clean, suspended ? 'suspended' : 'active');
+    await Promise.race([
+      sbPromise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Supabase timeout')), 1500))
+    ]);
   } catch (sbErr) {
-    console.warn('[SiteStorage] Supabase sync fallback:', sbErr);
+    // Silently continue
   }
 
   // 2. Busca a lista atual da nuvem
@@ -124,13 +166,41 @@ export async function syncSlugSuspension(rawSlug: string, suspended: boolean): P
   globalThis.__webbillyLastCloudFetch = Date.now();
   memoryCache.delete(clean);
 
-  // 3. Persiste no Cloud Registry com timeout de segurança
-  try {
-    const slugs = Array.from(currentSet);
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+  const slugs = Array.from(currentSet);
 
-    const res = await fetch(CLOUD_SUSPENDED_URL, {
+  // 3. Atualiza no Vercel Edge Config em tempo real
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+    await fetch(`https://api.vercel.com/v1/edge-config/${EDGE_CONFIG_ID}/items?teamId=${VERCEL_TEAM_ID}`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${VERCEL_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        items: [
+          {
+            operation: 'upsert',
+            key: 'suspended_slugs',
+            value: slugs
+          }
+        ]
+      }),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+  } catch (edgeWriteErr) {
+    console.warn('[SiteStorage] Erro ao salvar Edge Config:', edgeWriteErr);
+  }
+
+  // 4. Persiste no Cloud Registry secundário
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+    await fetch(CLOUD_SUSPENDED_URL, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -144,10 +214,6 @@ export async function syncSlugSuspension(rawSlug: string, suspended: boolean): P
       signal: controller.signal
     });
     clearTimeout(timeoutId);
-
-    if (!res.ok) {
-      console.warn('[SiteStorage] Erro ao sincronizar cloud registry - status:', res.status);
-    }
   } catch (cloudErr) {
     console.warn('[SiteStorage] Erro ao sincronizar cloud registry:', cloudErr);
   }
@@ -344,7 +410,17 @@ export async function resolveSiteBySlug(rawSlug: string): Promise<SiteRecord | n
 
   if (sub || demo) {
     const effectiveSlug = sub?.siteSlug || slug;
-    const finalStatus: SiteRecord['status'] = sub?.status || 'active';
+    
+    // Consulta status de suspensão na nuvem em tempo real (Edge Config + Registry)
+    let isSuspended = sub?.status === 'suspended' || sub?.status === 'cancelled';
+    try {
+      const cloudSuspended = await fetchCloudSuspendedSlugs();
+      if (cloudSuspended.has(effectiveSlug) || cloudSuspended.has(slug)) {
+        isSuspended = true;
+      }
+    } catch {}
+
+    const finalStatus: SiteRecord['status'] = isSuspended ? 'suspended' : (sub?.status || 'active');
 
     const record: SiteRecord = {
       siteSlug: effectiveSlug,

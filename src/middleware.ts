@@ -64,7 +64,10 @@ export default function middleware(req: NextRequest) {
     if (!url.pathname.startsWith('/api') && !url.pathname.startsWith('/templates') && !url.pathname.startsWith('/site')) {
       const rewriteUrl = new URL(`/site/${subdomain.toLowerCase()}`, req.url);
       rewriteUrl.search = url.search;
-      return NextResponse.rewrite(rewriteUrl);
+      const response = NextResponse.rewrite(rewriteUrl);
+      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+      response.headers.set('Pragma', 'no-cache');
+      return response;
     }
   }
 
@@ -73,7 +76,10 @@ export default function middleware(req: NextRequest) {
     if (!url.pathname.startsWith('/api') && !url.pathname.startsWith('/templates') && !url.pathname.startsWith('/site')) {
       const rewriteUrl = new URL(`/site/${encodeURIComponent(customDomainTarget)}`, req.url);
       rewriteUrl.search = url.search;
-      return NextResponse.rewrite(rewriteUrl);
+      const response = NextResponse.rewrite(rewriteUrl);
+      response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+      response.headers.set('Pragma', 'no-cache');
+      return response;
     }
   }
 

@@ -223,6 +223,28 @@ export default async function SiteViewerPage({
             Webbilly Plataforma de Presença Digital • Suporte Central 24h
           </div>
         </div>
+
+        {/* Polling em tempo real: se o administrador reativar o site no painel, recarrega automaticamente */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                var timer = setInterval(async function() {
+                  try {
+                    var r = await fetch('/api/public/site-status?slug=${encodeURIComponent(slug)}&t=' + Date.now(), { cache: 'no-store' });
+                    if (r.ok) {
+                      var d = await r.json();
+                      if (d && d.status === 'active') {
+                        clearInterval(timer);
+                        window.location.reload();
+                      }
+                    }
+                  } catch(e) {}
+                }, 3000);
+              })();
+            `
+          }}
+        />
       </div>
     );
   }
@@ -251,6 +273,28 @@ export default async function SiteViewerPage({
         className="w-full h-full border-0 bg-white"
         title={`Site Oficial - ${clientName}`}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+      />
+
+      {/* Polling em tempo real: se o administrador suspender o site no painel, recarrega imediatamente para a tela de fora do ar */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              var timer = setInterval(async function() {
+                try {
+                  var r = await fetch('/api/public/site-status?slug=${encodeURIComponent(slug)}&t=' + Date.now(), { cache: 'no-store' });
+                  if (r.ok) {
+                    var d = await r.json();
+                    if (d && d.status === 'suspended') {
+                      clearInterval(timer);
+                      window.location.reload();
+                    }
+                  }
+                } catch(e) {}
+              }, 3000);
+            })();
+          `
+        }}
       />
     </div>
   );

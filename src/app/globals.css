@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "driver.js/dist/driver.css";
 
 :root {
   --font-roboto-slab: var(--font-roboto-slab), Georgia, serif;
@@ -164,3 +165,126 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 ::-webkit-scrollbar-thumb:hover {
   background: #7abf18;
 }
+
+/* =====================================================================
+   ESTILIZAÇÃO EXCLUSIVA DRIVER.JS — WEBBILLY (DARK + VERDE NEON #84cc16)
+   ===================================================================== */
+.driver-popover.webbilly-tour-popover {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid #1e293b !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.8), 0 0 30px rgba(132, 204, 22, 0.15) !important;
+  padding: 1.25rem 1.4rem !important;
+  max-width: 400px !important;
+  font-family: var(--font-open-sans, system-ui, sans-serif) !important;
+  z-index: 1000000000 !important;
+}
+
+.driver-popover.webbilly-tour-popover .driver-popover-title {
+  color: #ffffff !important;
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em !important;
+  margin-bottom: 0.5rem !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.driver-popover.webbilly-tour-popover .driver-popover-description {
+  color: #cbd5e1 !important;
+  font-size: 0.825rem !important;
+  line-height: 1.55 !important;
+  margin-bottom: 1rem !important;
+}
+
+.driver-popover.webbilly-tour-popover .driver-popover-footer {
+  margin-top: 0.85rem !important;
+  padding-top: 0.85rem !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.5rem !important;
+}
+
+.driver-popover.webbilly-tour-popover .driver-popover-progress-text {
+  color: #a3e635 !important;
+  font-size: 0.75rem !important;
+  font-family: ui-monospace, monospace !important;
+  font-weight: 800 !important;
+  background-color: rgba(132, 204, 22, 0.1) !important;
+  padding: 0.2rem 0.5rem !important;
+  border-radius: 0.375rem !important;
+  border: 1px solid rgba(132, 204, 22, 0.25) !important;
+}
+
+.driver-popover.webbilly-tour-popover .driver-popover-navigation-btns {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+}
+
+.driver-popover.webbilly-tour-popover .driver-popover-prev-btn {
+  background-color: #1e293b !important;
+  color: #94a3b8 !important;
+  border: 1px solid #334155 !important;
+  border-radius: 0.5rem !important;
+  padding: 0.4rem 0.8rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  text-shadow: none !important;
+}
+
+.driver-popover.webbilly-tour-popover .driver-popover-prev-btn:hover {
+  background-color: #334155 !important;
+  color: #ffffff !important;
+}
+
+.driver-popover.webbilly-tour-popover .driver-popover-next-btn {
+  background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%) !important;
+  color: #090d16 !important;
+  border: none !important;
+  border-radius: 0.5rem !important;
+  padding: 0.4rem 0.95rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 900 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 14px rgba(132, 204, 22, 0.35) !important;
+  text-shadow: none !important;
+}
+
+.driver-popover.webbilly-tour-popover .driver-popover-next-btn:hover {
+  filter: brightness(1.1) !important;
+  transform: translateY(-1px) !important;
+}
+
+.driver-popover.webbilly-tour-popover .driver-popover-close-btn {
+  color: #64748b !important;
+  font-size: 1.25rem !important;
+  top: 0.75rem !important;
+  right: 0.75rem !important;
+  transition: color 0.2s ease !important;
+}
+
+.driver-popover.webbilly-tour-popover .driver-popover-close-btn:hover {
+  color: #f8fafc !important;
+}
+
+.driver-popover.webbilly-tour-popover .driver-popover-arrow-side-left.driver-popover-arrow {
+  border-left-color: #0f172a !important;
+}
+.driver-popover.webbilly-tour-popover .driver-popover-arrow-side-right.driver-popover-arrow {
+  border-right-color: #0f172a !important;
+}
+.driver-popover.webbilly-tour-popover .driver-popover-arrow-side-top.driver-popover-arrow {
+  border-top-color: #0f172a !important;
+}
+.driver-popover.webbilly-tour-popover .driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-bottom-color: #0f172a !important;
+}
+

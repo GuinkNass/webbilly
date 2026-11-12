@@ -41,6 +41,7 @@ import {
   Clock,
   Sparkles
 } from 'lucide-react';
+import { startAdminTour } from '@/lib/tours';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -115,6 +116,21 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Disparo automático do Tour Admin Master no primeiro acesso
+  useEffect(() => {
+    if (!loading && data) {
+      try {
+        const hasSeenTour = localStorage.getItem('webbilly_tour_admin_v1');
+        if (!hasSeenTour) {
+          const timer = setTimeout(() => {
+            startAdminTour((tab) => setActiveTab(tab as any));
+          }, 1200);
+          return () => clearTimeout(timer);
+        }
+      } catch {}
+    }
+  }, [loading, data]);
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -385,6 +401,7 @@ export default function AdminDashboardPage() {
             </div>
             <nav className="space-y-1">
               <button
+                id="tour-admin-nav-subscriptions"
                 onClick={() => setActiveTab('subscriptions')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
                   activeTab === 'subscriptions'
@@ -404,6 +421,7 @@ export default function AdminDashboardPage() {
               </button>
 
               <button
+                id="tour-admin-nav-domains"
                 onClick={() => setActiveTab('domains')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
                   activeTab === 'domains'
@@ -421,6 +439,7 @@ export default function AdminDashboardPage() {
               </button>
 
               <button
+                id="tour-admin-nav-licenses"
                 onClick={() => setActiveTab('licenses')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
                   activeTab === 'licenses'
@@ -440,6 +459,7 @@ export default function AdminDashboardPage() {
               </button>
 
               <button
+                id="tour-admin-nav-financial"
                 onClick={() => setActiveTab('financial')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
                   activeTab === 'financial'
@@ -529,7 +549,10 @@ export default function AdminDashboardPage() {
         {/* =========================================================================
             2. TOPBAR SUPERIOR (STICKY NO TOPO - NUNCA SOBREPÕE O CONTEÚDO)
            ========================================================================= */}
-        <header className="sticky top-0 z-30 h-16 bg-[#0f121a]/95 backdrop-blur-md border-b border-white/[0.08] px-6 lg:px-8 flex items-center justify-between shrink-0">
+        <header
+          id="tour-admin-header"
+          className="sticky top-0 z-30 h-16 bg-[#0f121a]/95 backdrop-blur-md border-b border-white/[0.08] px-6 lg:px-8 flex items-center justify-between shrink-0"
+        >
           {/* Barra de Busca Global */}
           <div className="relative w-80 max-w-sm">
             <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -547,6 +570,16 @@ export default function AdminDashboardPage() {
 
           {/* Lado Direito da Topbar */}
           <div className="flex items-center gap-3">
+            {/* Botão Oficial do Tour Admin Master */}
+            <button
+              onClick={() => startAdminTour((tab) => setActiveTab(tab as any))}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#84cc16]/15 hover:bg-[#84cc16]/25 text-[#a3e635] hover:text-white border border-[#84cc16]/40 transition shadow-sm cursor-pointer"
+              title="Iniciar Tour Guiado do Painel Admin Master"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-[#84cc16]" />
+              <span>? Tour Admin</span>
+            </button>
+
             {/* Badge Conexão Asaas */}
             <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-950/40 text-emerald-400 border border-emerald-800/40">
               <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
@@ -695,7 +728,7 @@ export default function AdminDashboardPage() {
             TAB 1: GESTÃO DE ASSINATURAS SAAS (SYNADMIN DATATABLE)
            ===================================================================== */}
         {activeTab === 'subscriptions' && (
-          <div className="space-y-4">
+          <div id="tour-admin-subscriptions" className="space-y-4">
             
             {/* Header da Tabela com Filtros de Pílula */}
             <div className="bg-[#11141c] p-4 rounded-2xl border border-white/[0.06] flex flex-col md:flex-row items-center justify-between gap-4">
@@ -901,21 +934,23 @@ export default function AdminDashboardPage() {
         )}
 
         {/* =====================================================================
-            TAB: MIGRAÇÃO E VINCULAÇÃO DE DOMÍNIO PRÓPRIO (OPÇÃO 2 - R$ 500)
+            TAB: MIGRAÇÃO E VINCULAÇÃO DE DOMÍNIO PRÓPRIO
            ===================================================================== */}
         {activeTab === 'domains' && (
-          <AdminCustomDomains
-            subscriptions={data?.subscriptions || []}
-            onRefresh={loadData}
-            selectedProjectId={selectedDomainProject}
-          />
+          <div id="tour-admin-domains">
+            <AdminCustomDomains
+              subscriptions={data?.subscriptions || []}
+              onRefresh={loadData}
+              selectedProjectId={selectedDomainProject}
+            />
+          </div>
         )}
 
         {/* =====================================================================
             TAB 2: GESTOR DE LICENÇAS E SERIAIS (SYNADMIN DATATABLE)
            ===================================================================== */}
         {activeTab === 'licenses' && (
-          <div className="space-y-4">
+          <div id="tour-admin-operators" className="space-y-4">
             
             {/* Header da Aba com Ação de Gerar Serial */}
             <div className="bg-[#11141c] p-4.5 rounded-2xl border border-white/[0.06] shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -1144,7 +1179,7 @@ export default function AdminDashboardPage() {
             TAB 3: EXTRATO FINANCEIRO & REPASSES PIX (SYNADMIN DATATABLE)
            ===================================================================== */}
         {activeTab === 'financial' && (
-          <div className="space-y-4">
+          <div id="tour-admin-payouts" className="space-y-4">
             <div className="bg-[#11141c] p-5 rounded-2xl border border-white/[0.06] shadow-xl">
               <h3 className="text-sm font-bold text-white mb-1">Modelo SaaS Recorrente & Repasses Pix</h3>
               <p className="text-xs text-zinc-400">
