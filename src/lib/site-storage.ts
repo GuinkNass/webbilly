@@ -15,6 +15,14 @@ export interface SiteRecord {
   operatorName?: string;
   nextRenewalDate?: string;
   lastPaymentDate?: string;
+  custom_domain?: string;
+  customDomain?: string;
+  domain_status?: 'subdomain_only' | 'pending_payment' | 'propagating' | 'active';
+  domainStatus?: 'subdomain_only' | 'pending_payment' | 'propagating' | 'active';
+  domain_purchased_at?: string;
+  domainPurchasedAt?: string;
+  domainPrice?: number;
+  domainPaymentMethod?: 'card_vercel' | 'pix_br';
   updatedAt: string;
   leadToken?: string;
 }
@@ -149,6 +157,21 @@ export function sanitizeSlug(rawSlug: string): string {
 }
 
 /**
+ * Normaliza e sanitiza um domínio próprio (ex: https://www.clinica.com.br/ -> clinica.com.br)
+ */
+export function sanitizeDomain(rawDomain: string): string {
+  return (rawDomain || '')
+    .toLowerCase()
+    .trim()
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .split('/')[0]
+    .split(':')[0]
+    .replace(/[^a-z0-9.-]/g, '')
+    .trim();
+}
+
+/**
  * Formata um slug para título amigável caso não haja nome cadastrado
  */
 export function formatSlugToTitle(slug: string): string {
@@ -210,16 +233,19 @@ async function saveToKv(key: string, value: any): Promise<boolean> {
 }
 
 /**
- * Tenta localizar ou resolver o site com persistência real em produção
+ * Tenta localizar ou resolver o site com persistência real em produção (por subdomínio ou domínio customizado)
  */
 export async function resolveSiteBySlug(rawSlug: string): Promise<SiteRecord | null> {
+  const isCustomDomainCandidate = (rawSlug || '').includes('.');
+  const cleanDomain = isCustomDomainCandidate ? sanitizeDomain(rawSlug) : '';
   const slug = sanitizeSlug(rawSlug);
-  if (!slug) return null;
+  if (!slug && !cleanDomain) return null;
 
-  const isSuspended = isSlugSuspended(slug);
+  const lookupKey = cleanDomain || slug;
+  const isSuspended = isSlugSuspended(slug) || (cleanDomain ? isSlugSuspended(cleanDomain) : false);
 
   // 1. Verifica cache em memória rápido
-  const cached = memoryCache.get(slug);
+  const cached = memoryCache.get(lookupKey) || (slug ? memoryCache.get(slug) : undefined);
   if (cached && cached.expiresAt > Date.now()) {
     // Se o slug foi marcado como suspenso após o cache, força o status suspenso
     if (isSuspended && cached.data.status !== 'suspended') {
@@ -229,19 +255,26 @@ export async function resolveSiteBySlug(rawSlug: string): Promise<SiteRecord | n
   }
 
   // 2. Tenta ler do Vercel KV / Redis se configurado
-  const fromKv = await getFromKv(`site:${slug}`);
+  const fromKv = (await getFromKv(`site:${lookupKey}`)) || (slug ? await getFromKv(`site:${slug}`) : null);
   if (fromKv && fromKv.deployedUrl) {
     if (isSuspended) {
       fromKv.status = 'suspended';
     }
-    memoryCache.set(slug, { data: fromKv, expiresAt: Date.now() + CACHE_TTL_MS });
+    memoryCache.set(lookupKey, { data: fromKv, expiresAt: Date.now() + CACHE_TTL_MS });
     return fromKv;
   }
 
-  // 3. Lê do banco local/bundled db.json
+  // 3. Lê do banco local/bundled db.json (busca por subdomínio ou por custom_domain)
   const db = readDb();
   const subscriptions = Array.isArray(db.subscriptions) ? db.subscriptions : [];
-  let sub = subscriptions.find(s => s.siteSlug === slug || s.leadToken === slug);
+  let sub = subscriptions.find(s => {
+    if (slug && (s.siteSlug === slug || s.leadToken === slug)) return true;
+    if (cleanDomain) {
+      if (s.custom_domain && sanitizeDomain(s.custom_domain) === cleanDomain) return true;
+      if (s.customDomain && sanitizeDomain(s.customDomain) === cleanDomain) return true;
+    }
+    return false;
+  });
 
   // Procura em demos
   const demo = db.demos
@@ -253,27 +286,39 @@ export async function resolveSiteBySlug(rawSlug: string): Promise<SiteRecord | n
     : null;
 
   if (sub || demo) {
-    const finalStatus: SiteRecord['status'] = isSuspended
+    const effectiveSlug = sub?.siteSlug || slug;
+    const finalStatus: SiteRecord['status'] = (isSuspended || isSlugSuspended(effectiveSlug))
       ? 'suspended'
       : (sub?.status || 'active');
 
     const record: SiteRecord = {
-      siteSlug: slug,
-      clientName: sub?.clientName || demo?.title || formatSlugToTitle(slug),
+      siteSlug: effectiveSlug,
+      clientName: sub?.clientName || demo?.title || formatSlugToTitle(effectiveSlug),
       status: finalStatus,
-      deployedUrl: sub?.deployedUrl || demo?.deployedUrl || `https://${slug}.vercel.app`,
+      deployedUrl: sub?.deployedUrl || demo?.deployedUrl || `https://${effectiveSlug}.vercel.app`,
       monthlyPrice: sub?.monthlyPrice || 29.90,
-      checkoutUrl: sub?.checkoutUrl || `/api/subscription/create-checkout?slug=${slug}`,
+      checkoutUrl: sub?.checkoutUrl || `/api/subscription/create-checkout?slug=${effectiveSlug}`,
       clientPhone: sub?.clientPhone || demo?.phone,
       operatorToken: sub?.operatorToken,
       operatorName: sub?.operatorName,
       nextRenewalDate: sub?.nextRenewalDate,
       lastPaymentDate: sub?.lastPaymentDate,
+      custom_domain: sub?.custom_domain || sub?.customDomain,
+      customDomain: sub?.custom_domain || sub?.customDomain,
+      domain_status: sub?.domain_status || sub?.domainStatus,
+      domainStatus: sub?.domain_status || sub?.domainStatus,
+      domain_purchased_at: sub?.domain_purchased_at || sub?.domainPurchasedAt,
+      domainPurchasedAt: sub?.domain_purchased_at || sub?.domainPurchasedAt,
+      domainPrice: sub?.domainPrice,
+      domainPaymentMethod: sub?.domainPaymentMethod,
       updatedAt: sub?.updatedAt || demo?.updatedAt || new Date().toISOString(),
       leadToken: sub?.leadToken || demo?.leadToken
     };
 
-    memoryCache.set(slug, { data: record, expiresAt: Date.now() + CACHE_TTL_MS });
+    memoryCache.set(lookupKey, { data: record, expiresAt: Date.now() + CACHE_TTL_MS });
+    if (effectiveSlug !== lookupKey) {
+      memoryCache.set(effectiveSlug, { data: record, expiresAt: Date.now() + CACHE_TTL_MS });
+    }
     return record;
   }
 
@@ -288,7 +333,7 @@ export async function resolveSiteBySlug(rawSlug: string): Promise<SiteRecord | n
       checkoutUrl: `/api/subscription/create-checkout?slug=${slug}`,
       updatedAt: new Date().toISOString()
     };
-    memoryCache.set(slug, { data: suspendedRecord, expiresAt: Date.now() + CACHE_TTL_MS });
+    memoryCache.set(lookupKey, { data: suspendedRecord, expiresAt: Date.now() + CACHE_TTL_MS });
     return suspendedRecord;
   }
 
@@ -323,7 +368,7 @@ export async function resolveSiteBySlug(rawSlug: string): Promise<SiteRecord | n
 
       // Auto-cura e salva nos armazenamentos para persistência
       await persistSite(record);
-      memoryCache.set(slug, { data: record, expiresAt: Date.now() + CACHE_TTL_MS });
+      memoryCache.set(lookupKey, { data: record, expiresAt: Date.now() + CACHE_TTL_MS });
       return record;
     }
   } catch (probeErr) {
@@ -353,6 +398,14 @@ export async function persistSite(site: Partial<SiteRecord> & { siteSlug: string
     operatorName: site.operatorName,
     nextRenewalDate: site.nextRenewalDate,
     lastPaymentDate: site.lastPaymentDate,
+    custom_domain: site.custom_domain || site.customDomain,
+    customDomain: site.custom_domain || site.customDomain,
+    domain_status: site.domain_status || site.domainStatus,
+    domainStatus: site.domain_status || site.domainStatus,
+    domain_purchased_at: site.domain_purchased_at || site.domainPurchasedAt,
+    domainPurchasedAt: site.domain_purchased_at || site.domainPurchasedAt,
+    domainPrice: site.domainPrice,
+    domainPaymentMethod: site.domainPaymentMethod,
     updatedAt: nowIso,
     leadToken: site.leadToken
   };
@@ -389,6 +442,14 @@ export async function persistSite(site: Partial<SiteRecord> & { siteSlug: string
       checkoutUrl: record.checkoutUrl,
       lastPaymentDate: record.lastPaymentDate,
       nextRenewalDate: record.nextRenewalDate,
+      custom_domain: record.custom_domain,
+      customDomain: record.customDomain,
+      domain_status: record.domain_status,
+      domainStatus: record.domainStatus,
+      domain_purchased_at: record.domain_purchased_at,
+      domainPurchasedAt: record.domainPurchasedAt,
+      domainPrice: record.domainPrice,
+      domainPaymentMethod: record.domainPaymentMethod,
       createdAt: nowIso,
       updatedAt: nowIso,
       leadToken: record.leadToken

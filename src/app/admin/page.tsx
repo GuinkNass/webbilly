@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardCharts from '@/components/DashboardCharts';
+import AdminCustomDomains from '@/components/AdminCustomDomains';
 import {
   Users,
   Key,
@@ -43,7 +44,8 @@ import {
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'subscriptions' | 'licenses' | 'financial' | 'apis'>('subscriptions');
+  const [activeTab, setActiveTab] = useState<'subscriptions' | 'licenses' | 'financial' | 'apis' | 'domains'>('subscriptions');
+  const [selectedDomainProject, setSelectedDomainProject] = useState<string>('');
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -402,6 +404,23 @@ export default function AdminDashboardPage() {
               </button>
 
               <button
+                onClick={() => setActiveTab('domains')}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
+                  activeTab === 'domains'
+                    ? 'bg-indigo-600/90 text-white font-medium border border-indigo-500/30'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Globe className={`w-4 h-4 ${activeTab === 'domains' ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`} />
+                  <span>Domínio Próprio</span>
+                </div>
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-mono">
+                  R$ 500
+                </span>
+              </button>
+
+              <button
                 onClick={() => setActiveTab('licenses')}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
                   activeTab === 'licenses'
@@ -747,15 +766,30 @@ export default function AdminDashboardPage() {
                         <tr key={sub.id} className="hover:bg-white/[0.02] transition">
                           <td className="py-4 px-5">
                             <span className="font-bold text-white text-sm block">{sub.clientName}</span>
-                            <a
-                              href={`https://${sub.siteSlug}.webbilly.com.br`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-emerald-400 hover:underline font-mono text-xs inline-flex items-center gap-1 mt-0.5"
-                            >
-                              <span>{sub.siteSlug}.webbilly.com.br</span>
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
+                            <div className="flex flex-col gap-1 mt-0.5">
+                              <a
+                                href={`https://${sub.siteSlug}.webbilly.com.br`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-emerald-400 hover:underline font-mono text-xs inline-flex items-center gap-1"
+                              >
+                                <span>{sub.siteSlug}.webbilly.com.br</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                              {(sub.custom_domain || sub.customDomain) && (
+                                <a
+                                  href={`https://${sub.custom_domain || sub.customDomain}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-white hover:text-emerald-400 font-mono text-xs font-bold inline-flex items-center gap-1 bg-[#151a28] px-2 py-0.5 rounded-md border border-white/[0.08] w-fit"
+                                  title="Domínio próprio conectado"
+                                >
+                                  <Globe className="w-3 h-3 text-indigo-400" />
+                                  <span>{sub.custom_domain || sub.customDomain}</span>
+                                  <ExternalLink className="w-2.5 h-2.5 text-zinc-500" />
+                                </a>
+                              )}
+                            </div>
                           </td>
                           <td className="py-4 px-4 font-mono text-zinc-300">
                             <div>{sub.clientName}</div>
@@ -823,6 +857,18 @@ export default function AdminDashboardPage() {
                                   <span>Fatura Asaas</span>
                                 </button>
                               )}
+
+                              <button
+                                onClick={() => {
+                                  setSelectedDomainProject(sub.id);
+                                  setActiveTab('domains');
+                                }}
+                                className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/25 transition flex items-center gap-1"
+                                title="Migrar para Domínio Próprio (Opção 2 - R$ 500)"
+                              >
+                                <Globe className="w-3 h-3" />
+                                <span>Domínio</span>
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -833,6 +879,17 @@ export default function AdminDashboardPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* =====================================================================
+            TAB: MIGRAÇÃO E VINCULAÇÃO DE DOMÍNIO PRÓPRIO (OPÇÃO 2 - R$ 500)
+           ===================================================================== */}
+        {activeTab === 'domains' && (
+          <AdminCustomDomains
+            subscriptions={data?.subscriptions || []}
+            onRefresh={loadData}
+            selectedProjectId={selectedDomainProject}
+          />
         )}
 
         {/* =====================================================================

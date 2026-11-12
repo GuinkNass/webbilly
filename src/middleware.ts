@@ -25,6 +25,16 @@ export default function middleware(req: NextRequest) {
   const currentHost = hostHeader.split(':')[0].toLowerCase().trim();
 
   let subdomain = '';
+  let isCustomDomain = false;
+  let customDomainTarget = '';
+
+  const reservedMainHosts = [
+    'webbilly.com.br',
+    'www.webbilly.com.br',
+    'localhost',
+    '127.0.0.1',
+    'webbilly.vercel.app'
+  ];
 
   // 1. Host termina com .webbilly.com.br
   if (currentHost.endsWith('.webbilly.com.br')) {
@@ -42,12 +52,26 @@ export default function middleware(req: NextRequest) {
       subdomain = candidate.toLowerCase();
     }
   }
+  // 3. Host externo/Domínio próprio (ex: empresa.com.br ou www.empresa.com.br)
+  else if (!reservedMainHosts.includes(currentHost) && !currentHost.endsWith('.vercel.app')) {
+    isCustomDomain = true;
+    customDomainTarget = currentHost.replace(/^www\./, '').toLowerCase().trim();
+  }
 
   // Se a requisição veio através de um subdomínio válido
   if (subdomain) {
     // Não reescreve chamadas de API internas, assets de templates ou se já estiver na rota /site
     if (!url.pathname.startsWith('/api') && !url.pathname.startsWith('/templates') && !url.pathname.startsWith('/site')) {
       const rewriteUrl = new URL(`/site/${subdomain.toLowerCase()}`, req.url);
+      rewriteUrl.search = url.search;
+      return NextResponse.rewrite(rewriteUrl);
+    }
+  }
+
+  // Se a requisição veio através de um domínio próprio vinculado
+  if (isCustomDomain && customDomainTarget) {
+    if (!url.pathname.startsWith('/api') && !url.pathname.startsWith('/templates') && !url.pathname.startsWith('/site')) {
+      const rewriteUrl = new URL(`/site/${encodeURIComponent(customDomainTarget)}`, req.url);
       rewriteUrl.search = url.search;
       return NextResponse.rewrite(rewriteUrl);
     }

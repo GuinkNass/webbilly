@@ -179,6 +179,14 @@ export interface SubscriptionRecord {
   checkoutUrl: string;
   lastPaymentDate?: string;
   nextRenewalDate?: string;
+  custom_domain?: string;
+  customDomain?: string;
+  domain_status?: 'subdomain_only' | 'pending_payment' | 'propagating' | 'active';
+  domainStatus?: 'subdomain_only' | 'pending_payment' | 'propagating' | 'active';
+  domain_purchased_at?: string;
+  domainPurchasedAt?: string;
+  domainPrice?: number;
+  domainPaymentMethod?: 'card_vercel' | 'pix_br';
   createdAt: string;
   updatedAt: string;
 }
