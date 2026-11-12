@@ -21,64 +21,99 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Operador não encontrado.' }, { status: 404 });
     }
 
-    // Calcula o mês de referência atual (ex: "Novembro / 2026")
+    // Calcula o mês de referência atual (ex: "Novembro de 2026")
     const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
     const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-    const mesReferencia = `${meses[now.getMonth()]} / ${now.getFullYear()}`;
+    const mesReferenciaBase = `${meses[currentMonth]} de ${currentYear}`;
 
-    // Recalcula diretamente no backend a partir das vendas e assinaturas do operador para evitar manipulação
-    const mySales = (db.sales || []).filter(s => s.operatorId === operator.id);
-    const mySubscriptions = (db.subscriptions || []).filter(
-      sub => sub.operatorId === operator.id || sub.operatorToken === operator.serialToken || (operator.id === 'OP-0001' && !sub.operatorId)
-    );
-
-    const activeSubs = mySubscriptions.filter(s => s.status === 'active');
-    const operatorCommissionMonthly = db.adminSettings?.operatorCommissionMonthly ?? 10.0;
-    const monthlySubsCommission = activeSubs.length * operatorCommissionMonthly;
-
-    // Vendas diretas pagas
-    const paidDirectSales = mySales.filter(s => s.pixStatus === 'PAGO');
-    const directSalesTotal = paidDirectSales.reduce((acc, s) => acc + (s.saleValue || 0), 0);
-    const directSalesCommission = paidDirectSales.reduce((acc, s) => acc + (s.commissionValue || (s.saleValue ? s.saleValue * 0.5 : 0)), 0);
-
-    // Faturamento total e Repasse líquido (50%)
-    let valorTotalFaturado = directSalesTotal + (activeSubs.length * 29.90);
-    let valorRepasse = directSalesCommission + monthlySubsCommission;
-
-    // Fallback se for operador ativo demonstrativo com comissões pendentes acumuladas
-    const pendingSales = mySales.filter(s => s.pixStatus === 'PENDENTE');
-    if (valorRepasse <= 0 && pendingSales.length > 0) {
-      valorTotalFaturado = pendingSales.reduce((acc, s) => acc + (s.saleValue || 0), 0);
-      valorRepasse = pendingSales.reduce((acc, s) => acc + (s.commissionValue || (s.saleValue ? s.saleValue * 0.5 : 0)), 0);
-    }
-
-    // Se ainda for zero mas houver assinaturas ativas
-    if (valorRepasse <= 0 && activeSubs.length > 0) {
-      valorTotalFaturado = activeSubs.length * 29.90;
-      valorRepasse = (valorTotalFaturado * 0.5);
-    }
-
-    if (valorRepasse <= 0) {
-      return NextResponse.json(
-        { error: 'Não há saldo disponível para repasse neste período (mínimo R$ 0,01).' },
-        { status: 400 }
-      );
-    }
+    // Data de liberação do próximo mês (1º dia do mês seguinte)
+    const nextMonthDate = new Date(currentYear, currentMonth + 1, 1);
+    const nextUnlockFormatted = `01/${String(nextMonthDate.getMonth() + 1).padStart(2, '0')}/${nextMonthDate.getFullYear()}`;
+    const nextUnlockFull = `1º de ${meses[nextMonthDate.getMonth()]} de ${nextMonthDate.getFullYear()}`;
 
     if (!db.payoutRequests) {
       db.payoutRequests = [];
     }
 
-    // Verifica se já existe solicitação pendente para o mesmo período
-    const existingPending = db.payoutRequests.find(
-      p => p.operatorId === operator.id && p.mesReferencia === mesReferencia && p.status === 'PENDENTE'
-    );
-    if (existingPending) {
+    // REGRA 1 & 2: Apenas 1 solicitação por mês civil. Próxima liberação após o 1º dia do mês seguinte.
+    const alreadyRequestedThisMonth = db.payoutRequests.find(p => {
+      if (p.operatorId !== operator.id) return false;
+      const d = new Date(p.requestedAt);
+      return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
+    });
+
+    if (alreadyRequestedThisMonth) {
       return NextResponse.json(
-        { error: `Já existe uma solicitação de repasse pendente para ${mesReferencia}. Aguarde o processamento do comprovante.` },
+        {
+          error: `Você já realizou a sua solicitação de repasse mensal referente a ${mesReferenciaBase}. Conforme o regulamento operacional, cada colaborador pode solicitar 1 repasse por mês civil. Sua próxima solicitação estará liberada a partir de ${nextUnlockFull} (${nextUnlockFormatted}).`
+        },
         { status: 400 }
       );
     }
+
+    // REGRA 3: Se não solicitou há mais de 1 mês, o saldo continua acumulando normalmente.
+    const operatorPayouts = db.payoutRequests
+      .filter(p => p.operatorId === operator.id)
+      .sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime());
+    const lastPayout = operatorPayouts[0] || null;
+
+    const mySales = (db.sales || []).filter(s => s.operatorId === operator.id);
+    const mySubscriptions = (db.subscriptions || []).filter(
+      sub => sub.operatorId === operator.id || sub.operatorToken === operator.serialToken || (operator.id === 'OP-0001' && !sub.operatorId)
+    );
+    const activeSubs = mySubscriptions.filter(s => s.status === 'active');
+
+    let monthsAccumulated = 1;
+    if (lastPayout) {
+      const lastDate = new Date(lastPayout.requestedAt);
+      const diff = (currentYear - lastDate.getFullYear()) * 12 + (currentMonth - lastDate.getMonth());
+      monthsAccumulated = Math.max(1, diff);
+    } else {
+      const oldestSub = mySubscriptions.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())[0];
+      const oldestDate = oldestSub?.createdAt ? new Date(oldestSub.createdAt) : (operator.createdAt ? new Date(operator.createdAt) : now);
+      const diff = (currentYear - oldestDate.getFullYear()) * 12 + (currentMonth - oldestDate.getMonth());
+      monthsAccumulated = Math.max(1, diff);
+    }
+
+    // REGRA 5: Repasse fixo de R$ 10,00 a cada plano vendido/ativo de R$ 29,90/mês
+    const operatorCommissionMonthly = db.adminSettings?.operatorCommissionMonthly ?? 10.0;
+    const planPrice = 29.90;
+    const activeSubsCount = activeSubs.length;
+
+    // Vendas diretas pagas (se houver)
+    const paidDirectSales = mySales.filter(s => s.pixStatus === 'PAGO');
+    const directSalesTotal = paidDirectSales.reduce((acc, s) => acc + (s.saleValue || 0), 0);
+    const directSalesCommission = paidDirectSales.reduce((acc, s) => acc + (s.commissionValue || (s.saleValue ? s.saleValue * 0.5 : 0)), 0);
+
+    // Faturamento total e Repasse acumulado: R$ 10,00 por plano de R$ 29,90 por mês acumulado
+    let valorTotalFaturado = (activeSubsCount * planPrice * monthsAccumulated) + directSalesTotal;
+    let valorRepasse = (activeSubsCount * operatorCommissionMonthly * monthsAccumulated) + directSalesCommission;
+
+    // Fallback se for operador novo com comissões pendentes acumuladas em vendas
+    const pendingSales = mySales.filter(s => s.pixStatus === 'PENDENTE');
+    if (valorRepasse <= 0 && pendingSales.length > 0) {
+      valorTotalFaturado = pendingSales.reduce((acc, s) => acc + (s.saleValue || 0), 0);
+      valorRepasse = pendingSales.reduce((acc, s) => acc + (s.commissionValue || 10.0), 0);
+    }
+
+    // Se ainda for zero mas houver assinaturas ativas
+    if (valorRepasse <= 0 && activeSubsCount > 0) {
+      valorTotalFaturado = activeSubsCount * planPrice * monthsAccumulated;
+      valorRepasse = activeSubsCount * operatorCommissionMonthly * monthsAccumulated;
+    }
+
+    if (valorRepasse <= 0) {
+      return NextResponse.json(
+        { error: 'Não há saldo disponível para repasse no momento (mínimo R$ 0,01).' },
+        { status: 400 }
+      );
+    }
+
+    const mesReferencia = monthsAccumulated > 1
+      ? `${mesReferenciaBase} (Acumulado de ${monthsAccumulated} meses)`
+      : mesReferenciaBase;
 
     // E-mail corporativo do operador (@webbilly.com.br)
     const corporateEmail = operator.email.toLowerCase().endsWith('@webbilly.com.br')

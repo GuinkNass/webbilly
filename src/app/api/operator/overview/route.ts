@@ -40,6 +40,52 @@ export async function GET(req: NextRequest) {
       .filter(s => s.pixStatus === 'PENDENTE')
       .reduce((acc, s) => acc + (s.commissionValue || 0), 0);
 
+    // Histórico de solicitações de repasse do operador
+    const myPayoutRequests = (db.payoutRequests || []).filter(p => p.operatorId === operator.id);
+    const sortedPayouts = [...myPayoutRequests].sort(
+      (a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime()
+    );
+    const lastPayout = sortedPayouts[0] || null;
+
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    const currentMonthRef = `${meses[currentMonth]} de ${currentYear}`;
+
+    // Data de liberação do próximo mês (1º dia do mês seguinte)
+    const nextMonthDate = new Date(currentYear, currentMonth + 1, 1);
+    const nextUnlockFormatted = `01/${String(nextMonthDate.getMonth() + 1).padStart(2, '0')}/${nextMonthDate.getFullYear()}`;
+    const nextUnlockFull = `1º de ${meses[nextMonthDate.getMonth()]} de ${nextMonthDate.getFullYear()}`;
+
+    // REGRA 1 & 2: Verifica se já realizou solicitação no mês atual
+    const currentMonthPayout = sortedPayouts.find(p => {
+      const d = new Date(p.requestedAt);
+      return d.getFullYear() === currentYear && d.getMonth() === currentMonth;
+    });
+    const hasRequestedThisMonth = Boolean(currentMonthPayout);
+
+    // REGRA 3: Cálculo de acúmulo de meses caso não tenha solicitado no(s) mês(es) anterior(es)
+    let monthsAccumulated = 1;
+    if (!hasRequestedThisMonth) {
+      if (lastPayout) {
+        const lastDate = new Date(lastPayout.requestedAt);
+        const diff = (currentYear - lastDate.getFullYear()) * 12 + (currentMonth - lastDate.getMonth());
+        monthsAccumulated = Math.max(1, diff);
+      } else {
+        const oldestSub = mySubscriptions.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())[0];
+        const oldestDate = oldestSub?.createdAt ? new Date(oldestSub.createdAt) : (operator.createdAt ? new Date(operator.createdAt) : now);
+        const diff = (currentYear - oldestDate.getFullYear()) * 12 + (currentMonth - oldestDate.getMonth());
+        monthsAccumulated = Math.max(1, diff);
+      }
+    }
+
+    // REGRA 5: R$ 10,00 por plano vendido de R$ 29,90
+    const planPrice = 29.90;
+    const commissionPerPlan = operatorCommissionMonthly; // R$ 10,00
+    const accumulatedBilling = activeSubscriptionsCount * planPrice * (hasRequestedThisMonth ? 1 : monthsAccumulated);
+    const accumulatedRepasse = (activeSubscriptionsCount * commissionPerPlan * (hasRequestedThisMonth ? 1 : monthsAccumulated)) + pendingCommissions;
+
     const trainingModules = [
       {
         id: 'mod-1',
@@ -110,6 +156,20 @@ export async function GET(req: NextRequest) {
       sales: mySales,
       subscriptions: mySubscriptions,
       payoutRequests: (db.payoutRequests || []).filter(p => p.operatorId === operator.id),
+      payoutRules: {
+        hasRequestedThisMonth,
+        currentMonthPayout: currentMonthPayout || null,
+        nextUnlockFormatted,
+        nextUnlockFull,
+        monthsAccumulated,
+        accumulatedBilling,
+        accumulatedRepasse,
+        commissionPerPlan,
+        planPrice,
+        currentMonthRef,
+        activePlansCount: activeSubscriptionsCount,
+        lastPayout
+      },
       trainingModules,
       installer: {
         version: '2.0.4',

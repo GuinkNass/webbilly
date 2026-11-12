@@ -32,6 +32,7 @@ import {
   Search,
   Sparkles,
   Send,
+  Calendar,
   AlertCircle
 } from 'lucide-react';
 
@@ -827,107 +828,226 @@ export default function OperatorDashboardPage() {
         {activeTab === 'sales' && (
           <div className="space-y-6">
             {/* Card de Solicitação de Repasse Mensal */}
+            {/* Card de Solicitação de Repasse Mensal & Regras Oficiais */}
             {(() => {
+              const rules = data?.payoutRules;
               const now = new Date();
               const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-              const mesReferencia = `${meses[now.getMonth()]} de ${now.getFullYear()}`;
+              const currentMonthRef = rules?.currentMonthRef || `${meses[now.getMonth()]} de ${now.getFullYear()}`;
               const corporateEmail = op?.email?.toLowerCase().endsWith('@webbilly.com.br')
                 ? op.email.toLowerCase()
                 : `${op?.name ? op.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '') : 'operador'}@webbilly.com.br`;
-              const confirmedSalesCount = stats?.salesCount || (data?.sales || []).length || (data?.subscriptions || []).filter((s: any) => s.status === 'active').length || 0;
-              const totalFaturado = stats?.totalSold || (stats?.monthlyCommissionMRR ? stats.monthlyCommissionMRR * 2 : 0) || (confirmedSalesCount * 29.9);
-              const saldoLiquidoRepasse = stats?.pendingCommissions || stats?.monthlyCommissionMRR || stats?.totalCommissions || (confirmedSalesCount * 10);
-              const hasPendingRequest = (data?.payoutRequests || []).some((p: any) => p.status === 'PENDENTE');
+
+              const activeSubsCount = stats?.activeSubscriptionsCount || (data?.subscriptions || []).filter((s: any) => s.status === 'active').length || 0;
+              const monthsAccumulated = rules?.monthsAccumulated || 1;
+              const hasRequestedThisMonth = rules?.hasRequestedThisMonth ?? (data?.payoutRequests || []).some((p: any) => {
+                const d = new Date(p.requestedAt);
+                return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+              });
+
+              const nextUnlockFormatted = rules?.nextUnlockFormatted || `01/${String(now.getMonth() + 2 > 12 ? 1 : now.getMonth() + 2).padStart(2, '0')}/${now.getMonth() + 2 > 12 ? now.getFullYear() + 1 : now.getFullYear()}`;
+              const nextUnlockFull = rules?.nextUnlockFull || `1º de ${meses[(now.getMonth() + 1) % 12]} de ${now.getMonth() + 1 > 11 ? now.getFullYear() + 1 : now.getFullYear()}`;
+
+              // R$ 10,00 por plano vendido/ativo de R$ 29,90/mês
+              const planPrice = 29.90;
+              const commissionPerPlan = 10.00;
+              const totalFaturado = activeSubsCount * planPrice * monthsAccumulated;
+              const saldoLiquidoRepasse = (activeSubsCount * commissionPerPlan * monthsAccumulated) + (stats?.pendingCommissions || 0);
+
+              const currentPayout = rules?.currentMonthPayout || (data?.payoutRequests || []).find((p: any) => {
+                const d = new Date(p.requestedAt);
+                return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+              });
+              const isPending = currentPayout?.status === 'PENDENTE';
+              const isPaid = currentPayout?.status === 'PAGO';
 
               return (
-                <div className="p-6 rounded-2xl bg-gradient-to-br from-[#111927] to-[#0f141d] border border-emerald-500/30 relative overflow-hidden shadow-xl">
-                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
-                    <div className="space-y-3 flex-1">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-800/40 text-emerald-400 text-xs font-bold uppercase tracking-wider">
-                        <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
-                        Solicitar Repasse Mensal &bull; Lark Financeiro
-                      </div>
-                      <h3 className="text-xl font-bold text-white tracking-tight">
-                        Solicitação de Repasse Pix — <span className="capitalize text-emerald-400">{mesReferencia}</span>
-                      </h3>
-                      
-                      {/* Grid de Resumo Calculado */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                        <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06]">
-                          <span className="text-[10px] uppercase font-bold text-zinc-400 block">Vendas no Período</span>
-                          <span className="text-lg font-black text-white font-mono">{confirmedSalesCount} confirmadas</span>
+                <div className="space-y-4">
+                  {/* Card Principal de Repasse */}
+                  <div className="p-6 rounded-2xl bg-gradient-to-br from-[#111927] to-[#0f141d] border border-emerald-500/30 relative overflow-hidden shadow-xl">
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                      <div className="space-y-3 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-800/40 text-emerald-400 text-xs font-bold uppercase tracking-wider">
+                            <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                            Repasse Mensal • R$ 10,00 por Plano Ativo
+                          </div>
+
+                          {monthsAccumulated > 1 && !hasRequestedThisMonth && (
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-950/60 border border-amber-800/40 text-amber-300 text-xs font-bold animate-pulse">
+                              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                              <span>Saldo Acumulado de {monthsAccumulated} meses!</span>
+                            </div>
+                          )}
+
+                          {hasRequestedThisMonth && (
+                            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-950/60 border border-blue-800/40 text-blue-300 text-xs font-bold">
+                              <Clock className="w-3.5 h-3.5 text-blue-400" />
+                              <span>Solicitação de {currentMonthRef} Realizada</span>
+                            </div>
+                          )}
                         </div>
-                        <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06]">
-                          <span className="text-[10px] uppercase font-bold text-zinc-400 block">Total Faturado</span>
-                          <span className="text-lg font-black text-zinc-200 font-mono">R$ {totalFaturado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+
+                        <h3 className="text-xl font-bold text-white tracking-tight">
+                          Solicitação de Repasse Pix — <span className="capitalize text-emerald-400">{currentMonthRef}</span>
+                        </h3>
+                        
+                        {/* Grid de Resumo Calculado (Exato: R$ 10,00 por plano de R$ 29,90) */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                          <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06]">
+                            <span className="text-[10px] uppercase font-bold text-zinc-400 block">Planos Ativos</span>
+                            <span className="text-lg font-black text-white font-mono">{activeSubsCount} clientes</span>
+                            <span className="text-[10px] text-zinc-400 block mt-0.5">R$ 29,90/mês cada</span>
+                          </div>
+                          <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06]">
+                            <span className="text-[10px] uppercase font-bold text-zinc-400 block">
+                              Total Faturado {monthsAccumulated > 1 && !hasRequestedThisMonth ? `(${monthsAccumulated}m)` : ''}
+                            </span>
+                            <span className="text-lg font-black text-zinc-200 font-mono">
+                              R$ {totalFaturado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                            <span className="text-[10px] text-zinc-400 block mt-0.5">Mensalidades clientes</span>
+                          </div>
+                          <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/40">
+                            <span className="text-[10px] uppercase font-bold text-emerald-400 block">
+                              Seu Repasse {monthsAccumulated > 1 && !hasRequestedThisMonth ? `(${monthsAccumulated} meses)` : ''}
+                            </span>
+                            <span className="text-lg font-black text-emerald-300 font-mono">
+                              R$ {saldoLiquidoRepasse.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            </span>
+                            <span className="text-[10px] text-emerald-400/80 block mt-0.5">R$ 10,00/mês por comércio</span>
+                          </div>
+                          <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06]">
+                            <span className="text-[10px] uppercase font-bold text-zinc-400 block">Chave Pix Destino</span>
+                            <span className="text-xs font-mono font-bold text-amber-300 truncate block select-all" title={op?.pixKey || 'Não cadastrada'}>
+                              {op?.pixKey || 'Não cadastrada'}
+                            </span>
+                            <span className="text-[10px] text-zinc-400 block mt-0.5">Tipo: {op?.pixType?.toUpperCase() || 'CPF'}</span>
+                          </div>
                         </div>
-                        <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/40">
-                          <span className="text-[10px] uppercase font-bold text-emerald-400 block">Repasse Líquido (50%)</span>
-                          <span className="text-lg font-black text-emerald-300 font-mono">R$ {saldoLiquidoRepasse.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                        </div>
-                        <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06]">
-                          <span className="text-[10px] uppercase font-bold text-zinc-400 block">Chave Pix Destino</span>
-                          <span className="text-xs font-mono font-bold text-amber-300 truncate block select-all">{op?.pixKey || 'Não cadastrada'}</span>
+
+                        <div className="text-xs text-zinc-400 flex flex-wrap items-center gap-4 pt-1">
+                          <span>Comprovante enviado para: <strong className="text-sky-400 font-mono">{corporateEmail}</strong></span>
+                          <span>Chave Pix: <strong className="text-emerald-400 font-mono">{op?.pixKey || 'Não cadastrada'} ({op?.pixType?.toUpperCase() || 'CPF'})</strong></span>
                         </div>
                       </div>
 
-                      <div className="text-xs text-zinc-400 flex flex-wrap items-center gap-4 pt-1">
-                        <span>E-mail Corporativo p/ Comprovante: <strong className="text-sky-400 font-mono">{corporateEmail}</strong></span>
-                        <span>Chave Pix: <strong className="text-emerald-400 font-mono">{op?.pixKey || 'Não cadastrada'} ({op?.pixType?.toUpperCase() || 'CPF'})</strong></span>
-                      </div>
-                    </div>
+                      {/* Botão de Solicitação com Validação de Mês Civil */}
+                      <div className="flex flex-col items-center lg:items-end gap-2 w-full lg:w-auto shrink-0">
+                        <button
+                          onClick={handleSolicitarRepasse}
+                          disabled={payoutLoading || saldoLiquidoRepasse <= 0 || hasRequestedThisMonth}
+                          className={`w-full sm:w-auto py-3 px-6 rounded-xl font-bold text-xs uppercase tracking-wider text-white transition shadow-lg flex items-center justify-center gap-2 ${
+                            hasRequestedThisMonth
+                              ? 'bg-zinc-800 text-zinc-400 border border-white/[0.08] cursor-not-allowed shadow-none'
+                              : saldoLiquidoRepasse <= 0
+                              ? 'bg-zinc-800/80 text-zinc-500 border border-white/[0.06] cursor-not-allowed shadow-none'
+                              : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30 cursor-pointer'
+                          }`}
+                        >
+                          {payoutLoading ? (
+                            <>
+                              <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              <span>Enviando ao Financeiro...</span>
+                            </>
+                          ) : hasRequestedThisMonth ? (
+                            isPaid ? (
+                              <>
+                                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                                <span>Repasse Pago Neste Mês</span>
+                              </>
+                            ) : (
+                              <>
+                                <Lock className="w-4 h-4 text-amber-400" />
+                                <span>Solicitação deste Mês Enviada</span>
+                              </>
+                            )
+                          ) : (
+                            <>
+                              <Send className="w-4 h-4" />
+                              <span>Solicitar Repasse de R$ {saldoLiquidoRepasse.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                            </>
+                          )}
+                        </button>
 
-                    {/* Botão de Solicitação com 1 Clique */}
-                    <div className="flex flex-col items-center lg:items-end gap-2 w-full lg:w-auto shrink-0">
-                      <button
-                        onClick={handleSolicitarRepasse}
-                        disabled={payoutLoading || saldoLiquidoRepasse <= 0 || hasPendingRequest}
-                        className="w-full sm:w-auto py-3 px-6 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 cursor-pointer"
-                      >
-                        {payoutLoading ? (
-                          <>
-                            <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            <span>Enviando ao Financeiro...</span>
-                          </>
-                        ) : hasPendingRequest ? (
-                          <>
-                            <Clock className="w-4 h-4 text-amber-300" />
-                            <span>Repasse em Processamento</span>
-                          </>
+                        {/* Aviso Explícito de Liberação Próximo Mês */}
+                        {hasRequestedThisMonth ? (
+                          <div className="text-[11px] text-amber-300/90 font-medium bg-amber-950/40 border border-amber-800/40 px-3 py-1.5 rounded-xl text-center lg:text-right max-w-xs">
+                            🔒 <strong>1 solicitação por mês civil.</strong> Sua próxima solicitação estará liberada a partir de <strong>{nextUnlockFull}</strong> ({nextUnlockFormatted}).
+                          </div>
+                        ) : saldoLiquidoRepasse <= 0 ? (
+                          <span className="text-[11px] text-zinc-500">
+                            Nenhum saldo pendente a repassar no momento.
+                          </span>
+                        ) : monthsAccumulated > 1 ? (
+                          <span className="text-[11px] text-emerald-400 font-medium">
+                            ✓ Montante acumulado de {monthsAccumulated} meses liberado para resgate!
+                          </span>
                         ) : (
-                          <>
-                            <Send className="w-4 h-4" />
-                            <span>Solicitar Repasse com 1 Clique</span>
-                          </>
+                          <span className="text-[11px] text-zinc-400">
+                            ✓ 1 solicitação permitida neste mês civil ({currentMonthRef}).
+                          </span>
                         )}
-                      </button>
-
-                      {hasPendingRequest && (
-                        <span className="text-[11px] text-amber-400 font-medium">
-                          Solicitação de {mesReferencia} em processamento.
-                        </span>
-                      )}
-                      {saldoLiquidoRepasse <= 0 && !hasPendingRequest && (
-                        <span className="text-[11px] text-zinc-500">
-                          Saldo a repassar no momento: R$ 0,00
-                        </span>
-                      )}
+                      </div>
                     </div>
+
+                    {/* Mensagem de Feedback */}
+                    {payoutSuccess && (
+                      <div className="mt-4 p-3 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-emerald-300 text-xs flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span>{payoutSuccess}</span>
+                      </div>
+                    )}
+                    {payoutError && (
+                      <div className="mt-4 p-3 rounded-xl bg-rose-950/60 border border-rose-800/60 text-rose-300 text-xs flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                        <span>{payoutError}</span>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Mensagem de Feedback */}
-                  {payoutSuccess && (
-                    <div className="mt-4 p-3 rounded-xl bg-emerald-950/60 border border-emerald-800/60 text-emerald-300 text-xs flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                      <span>{payoutSuccess}</span>
+                  {/* Card de Regras Oficiais Explícitas para o Operador */}
+                  <div className="p-5 rounded-2xl bg-[#0e131d] border border-white/[0.08] space-y-3">
+                    <div className="flex items-center gap-2 text-white font-bold text-xs uppercase tracking-wider">
+                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                      <span>Regulamento & Regras Oficiais de Repasse de Comissões</span>
                     </div>
-                  )}
-                  {payoutError && (
-                    <div className="mt-4 p-3 rounded-xl bg-rose-950/60 border border-rose-800/60 text-rose-300 text-xs flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-                      <span>{payoutError}</span>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
+                      {/* Regra 1: Valor Fixo */}
+                      <div className="p-3.5 rounded-xl bg-black/40 border border-white/[0.06] space-y-1.5">
+                        <div className="flex items-center gap-2 text-emerald-400 font-bold">
+                          <DollarSign className="w-4 h-4 shrink-0" />
+                          <span>R$ 10,00 por Plano de R$ 29,90</span>
+                        </div>
+                        <p className="text-zinc-400 leading-relaxed">
+                          Para cada comércio que você colocar no ar pelo plano oficial de <strong>R$ 29,90/mês</strong>, você recebe <strong>R$ 10,00 todos os meses</strong> de comissão líquida recorrente enquanto o cliente estiver ativo.
+                        </p>
+                      </div>
+
+                      {/* Regra 2: 1x por Mês */}
+                      <div className="p-3.5 rounded-xl bg-black/40 border border-white/[0.06] space-y-1.5">
+                        <div className="flex items-center gap-2 text-sky-400 font-bold">
+                          <Calendar className="w-4 h-4 shrink-0" />
+                          <span>Apenas 1 Solicitação por Mês</span>
+                        </div>
+                        <p className="text-zinc-400 leading-relaxed">
+                          O repasse pode ser solicitado <strong>apenas uma vez a cada mês civil</strong>. Uma vez enviada a solicitação, o próximo repasse só será liberado automaticamente após o <strong>1º dia do mês seguinte</strong>.
+                        </p>
+                      </div>
+
+                      {/* Regra 3: Acúmulo Contínuo */}
+                      <div className="p-3.5 rounded-xl bg-black/40 border border-white/[0.06] space-y-1.5">
+                        <div className="flex items-center gap-2 text-amber-400 font-bold">
+                          <TrendingUp className="w-4 h-4 shrink-0" />
+                          <span>Saldo 100% Acumulativo</span>
+                        </div>
+                        <p className="text-zinc-400 leading-relaxed">
+                          Caso você não solicite o repasse em determinado mês, o seu saldo <strong>não expira</strong>. Ele continua acumulando mês a mês (R$ 10/plano) para você resgatar o valor total quando desejar.
+                        </p>
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               );
             })()}
