@@ -5,7 +5,8 @@ import { sendOperatorApplicationEmail } from '@/lib/mailer';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, email, whatsapp, city, state, pixType, pixKey, resumeUrl, experience, termsAccepted, instagram } = body;
+    const { name, email, whatsapp, city, state, pixType, pixKey, resumeUrl, experience, termsAccepted, instagram, refCode, affiliateCode, ref } = body;
+    const rawRef = (refCode || affiliateCode || ref || '').trim().toUpperCase();
 
     if (!name || !email || !whatsapp) {
       return NextResponse.json(
@@ -33,6 +34,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    let sponsorId: string | null = null;
+    let usedCode: string | null = null;
+    if (rawRef) {
+      const sponsor = (db.operators || []).find(
+        o => (o.affiliate_code || '').trim().toUpperCase() === rawRef && o.status === 'ATIVO'
+      );
+      if (sponsor) {
+        sponsorId = sponsor.id;
+        usedCode = sponsor.affiliate_code || rawRef;
+      }
+    }
+
     const newCandidate: Candidate = {
       id: `cand-${Date.now().toString(36)}`,
       name: name.trim(),
@@ -46,7 +59,9 @@ export async function POST(req: NextRequest) {
       experience: (experience || '').trim(),
       instagram: (instagram || '').trim(),
       status: 'PENDENTE',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      referred_by_operator_id: sponsorId,
+      affiliate_code_used: usedCode
     };
 
     db.candidates.unshift(newCandidate);

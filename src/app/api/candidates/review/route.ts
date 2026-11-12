@@ -55,7 +55,8 @@ export async function POST(req: NextRequest) {
         lastSync: null,
         dailyLimit: db.adminSettings.defaultDailyLimit || 50,
         todayGenerations: 0,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        referred_by_operator_id: candidate.referred_by_operator_id || null
       };
 
       const newLicense: LicenseRecord = {

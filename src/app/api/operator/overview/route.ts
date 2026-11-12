@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDb } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
-import { calculateOperatorGamification, getLeaderboard } from '@/lib/gamification';
+import { calculateOperatorGamification, getLeaderboard, isOperatorEligibleForAffiliates, maskOperatorName } from '@/lib/gamification';
 
 export async function GET(req: NextRequest) {
   try {
@@ -84,8 +84,82 @@ export async function GET(req: NextRequest) {
     // REGRA 5: R$ 10,00 por plano vendido de R$ 29,90
     const planPrice = 29.90;
     const commissionPerPlan = operatorCommissionMonthly; // R$ 10,00
+    const recurringCommission = activeSubscriptionsCount * commissionPerPlan * (hasRequestedThisMonth ? 1 : monthsAccumulated);
     const accumulatedBilling = activeSubscriptionsCount * planPrice * (hasRequestedThisMonth ? 1 : monthsAccumulated);
-    const accumulatedRepasse = (activeSubscriptionsCount * commissionPerPlan * (hasRequestedThisMonth ? 1 : monthsAccumulated)) + pendingCommissions;
+
+    // BILLY AFILIADOS: Dados do programa de indicação (5% sobre R$ 490,00 = R$ 24,50)
+    const affiliateEligibility = isOperatorEligibleForAffiliates(operator, db, now);
+    const myInvitedOperators = (db.operators || []).filter(o => o.referred_by_operator_id === operator.id);
+    const allAffComms = Array.isArray(db.affiliateCommissions) ? db.affiliateCommissions : [];
+    const myAffiliateCommissions = allAffComms.filter(ac => ac.affiliate_operator_id === operator.id);
+    const availableAffiliateCommissions = myAffiliateCommissions.filter(ac => ac.payout_status === 'available');
+    const availableAffiliateTotal = availableAffiliateCommissions.reduce((acc, ac) => acc + (Number(ac.commission_amount) || 24.50), 0);
+    const totalAffiliateEarned = myAffiliateCommissions.reduce((acc, ac) => acc + (Number(ac.commission_amount) || 24.50), 0);
+
+    const invitedList = myInvitedOperators.map(inv => {
+      const invDomainSalesThisMonth = (db.sales || []).filter(s => {
+        if (s.operatorId !== inv.id || s.pixStatus !== 'PAGO') return false;
+        const d = new Date(s.createdAt);
+        return d.getFullYear() === currentYear && d.getMonth() === currentMonth && ((s.saleValue && s.saleValue >= 400) || Boolean(s.domainRegistered));
+      }).length;
+
+      const commsFromInv = myAffiliateCommissions.filter(ac => ac.invited_operator_id === inv.id);
+      const commsAmount = commsFromInv.reduce((acc, c) => acc + (Number(c.commission_amount) || 24.50), 0);
+
+      return {
+        id: inv.id,
+        name: inv.name,
+        displayName: maskOperatorName(inv.name),
+        whatsapp: inv.whatsapp,
+        status: inv.status,
+        createdAt: inv.createdAt,
+        isSellingThisMonth: invDomainSalesThisMonth > 0,
+        monthlyDomainSales: invDomainSalesThisMonth,
+        totalCommissionsGenerated: commsAmount
+      };
+    });
+
+    const activeSellingThisMonth = invitedList.filter(i => i.isSellingThisMonth).length;
+    const monthlyDomainSalesFromNetwork = invitedList.reduce((acc, i) => acc + i.monthlyDomainSales, 0);
+
+    // Gráfico de Evolução (Últimos 6 meses)
+    const shortMonths = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    const evolutionChart: Array<{
+      month: string;
+      monthRef: string;
+      activeRecruits: number;
+      domainSales: number;
+      commissionAmount: number;
+    }> = [];
+
+    for (let i = 5; i >= 0; i--) {
+      const targetDate = new Date(currentYear, currentMonth - i, 1);
+      const tYear = targetDate.getFullYear();
+      const tMonth = targetDate.getMonth();
+      const monthKey = `${tYear}-${String(tMonth + 1).padStart(2, '0')}`;
+      const label = `${shortMonths[tMonth]}/${String(tYear).slice(-2)}`;
+
+      const endOfTargetMonth = new Date(tYear, tMonth + 1, 0, 23, 59, 59);
+      const recruitsUpToMonth = myInvitedOperators.filter(o => new Date(o.createdAt).getTime() <= endOfTargetMonth.getTime()).length;
+
+      const monthComms = myAffiliateCommissions.filter(ac => ac.month_ref === monthKey);
+      const domainSalesCount = monthComms.length;
+      const commAmount = monthComms.reduce((acc, c) => acc + (Number(c.commission_amount) || 24.50), 0);
+
+      evolutionChart.push({
+        month: label,
+        monthRef: monthKey,
+        activeRecruits: recruitsUpToMonth,
+        domainSales: domainSalesCount,
+        commissionAmount: commAmount
+      });
+    }
+
+    // Gamificação em tempo real: Medalha, Pontuação e Bônus de +20%
+    const gamification = calculateOperatorGamification(operator, db, now, true);
+    const medalBonusAmount = (gamification.hasMedalUpgradeBonus && gamification.medalUpgradeBonusAmount > 0) ? gamification.medalUpgradeBonusAmount : 0;
+
+    const accumulatedRepasse = recurringCommission + pendingCommissions + availableAffiliateTotal + medalBonusAmount;
 
     const trainingModules = [
       {
@@ -123,7 +197,6 @@ export async function GET(req: NextRequest) {
     ];
 
     // Gamificação em tempo real: Medalha, Pontuação e Bônus de +20%
-    const gamification = calculateOperatorGamification(operator, db, now, true);
     const { leaderboard } = getLeaderboard(db, operator.id, now);
     const myRankEntry = leaderboard.find(l => l.operatorId === operator.id);
     const myRank = myRankEntry?.rank || 1;
@@ -145,7 +218,25 @@ export async function GET(req: NextRequest) {
         lastSync: operator.lastSync,
         dailyLimit: operator.dailyLimit,
         todayGenerations: operator.todayGenerations,
-        mustChangePassword: operator.mustChangePassword ?? false
+        mustChangePassword: operator.mustChangePassword ?? false,
+        affiliate_enabled: Boolean(operator.affiliate_enabled),
+        affiliate_code: operator.affiliate_code || null,
+        referred_by_operator_id: operator.referred_by_operator_id || null
+      },
+      affiliates: {
+        enabled: Boolean(operator.affiliate_enabled),
+        code: operator.affiliate_code || null,
+        inviteUrl: operator.affiliate_code ? `https://webbilly.com.br/?ref=${operator.affiliate_code}#trabalhe-aqui` : null,
+        eligibility: affiliateEligibility,
+        invitedOperators: invitedList,
+        metrics: {
+          totalInvited: invitedList.length,
+          activeSellingThisMonth,
+          monthlyDomainSalesFromNetwork,
+          totalAffiliateEarned,
+          availableAffiliateTotal
+        },
+        evolutionChart
       },
       gamification: {
         ...gamification,
@@ -180,7 +271,14 @@ export async function GET(req: NextRequest) {
         planPrice,
         currentMonthRef,
         activePlansCount: activeSubscriptionsCount,
-        lastPayout
+        lastPayout,
+        breakdown: {
+          recurring: recurringCommission,
+          direct: pendingCommissions,
+          medalBonus: medalBonusAmount,
+          affiliates: availableAffiliateTotal,
+          total: accumulatedRepasse
+        }
       },
       trainingModules,
       installer: {

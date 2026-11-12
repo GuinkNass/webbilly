@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { Send, CheckCircle2, AlertCircle, Sparkles, ArrowRight, User, Phone, Mail, MapPin, Briefcase } from 'lucide-react';
+import { Send, CheckCircle2, AlertCircle, Sparkles, ArrowRight, User, Phone, Mail, MapPin, Briefcase, Gift, ShieldCheck } from 'lucide-react';
 
 export default function TrabalheAquiForm() {
   const [formData, setFormData] = useState({
@@ -12,9 +12,38 @@ export default function TrabalheAquiForm() {
     cidade: '',
     experiencia: ''
   });
+  const [refCode, setRefCode] = useState<string>('');
+  const [sponsorInfo, setSponsorInfo] = useState<{ sponsorName: string; affiliateCode: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlRef = urlParams.get('ref') || urlParams.get('affiliate');
+      const savedRef = urlRef || localStorage.getItem('billy_ref') || '';
+
+      if (savedRef) {
+        const cleanRef = savedRef.trim().toUpperCase();
+        setRefCode(cleanRef);
+        localStorage.setItem('billy_ref', cleanRef);
+
+        // Busca informações do padrinho
+        fetch(`/api/operators/affiliate-info?code=${encodeURIComponent(cleanRef)}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.valid) {
+              setSponsorInfo({
+                sponsorName: data.sponsorName,
+                affiliateCode: data.affiliateCode
+              });
+            }
+          })
+          .catch(() => {});
+      }
+    } catch {}
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -34,7 +63,10 @@ export default function TrabalheAquiForm() {
       const res = await fetch('/api/trabalhe-aqui', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          refCode: refCode || undefined
+        })
       });
 
       const data = await res.json();
@@ -72,6 +104,16 @@ export default function TrabalheAquiForm() {
         <p className="text-zinc-400 text-xs sm:text-sm max-w-xl mx-auto mt-2 leading-relaxed">
           Torne-se um operador licenciado Billy Suite e fature <strong className="text-emerald-400">50% (R$ 14,95/mês)</strong> no plano mensal e <strong className="text-emerald-400">30% (R$ 147,00)</strong> nas vendas de Domínio Próprio de R$ 490,00
         </p>
+
+        {sponsorInfo && (
+          <div className="mt-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold animate-fade-in shadow-md">
+            <Gift className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Convite indicado por: <strong className="text-white">{sponsorInfo.sponsorName}</strong></span>
+            <span className="font-mono text-[10px] bg-emerald-950/80 px-2 py-0.5 rounded text-emerald-400 border border-emerald-800/40">
+              {sponsorInfo.affiliateCode}
+            </span>
+          </div>
+        )}
       </div>
 
       {success ? (

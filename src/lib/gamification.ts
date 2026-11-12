@@ -381,3 +381,64 @@ export function getLeaderboard(
     rules: MEDAL_CONFIGS
   };
 }
+
+/**
+ * Avalia elegibilidade para o programa Billy Afiliados (Exige no mínimo nível Bronze)
+ */
+export function isOperatorEligibleForAffiliates(
+  operator: Operator,
+  db: DatabaseSchema,
+  targetDate: Date = new Date()
+): {
+  isEligible: boolean;
+  isActivated: boolean;
+  affiliateCode: string | null;
+  currentMedal: MedalConfig;
+  activeRecurringCount: number;
+  monthlyDomainSalesCount: number;
+  recurringNeededForBronze: number;
+  domainNeededForBronze: number;
+  recurringProgressPercent: number;
+  domainProgressPercent: number;
+} {
+  const gamification = calculateOperatorGamification(operator, db, targetDate, false);
+  const isBronzeOrHigher = gamification.currentMedal.level >= 1; // Bronze (1), Prata (2), Ouro (3), Rubi (4)
+  const isMaster = operator.id === 'OP-0001' || operator.email?.toLowerCase() === 'admin@billysuite.com.br';
+  const isEligible = isBronzeOrHigher || isMaster || Boolean(operator.affiliate_enabled);
+
+  const recurringNeededForBronze = Math.max(0, 10 - gamification.activeRecurringCount);
+  const domainNeededForBronze = Math.max(0, 1 - gamification.monthlyDomainSalesCount);
+
+  const recurringProgressPercent = Math.min(100, Math.round((gamification.activeRecurringCount / 10) * 100));
+  const domainProgressPercent = Math.min(100, Math.round((gamification.monthlyDomainSalesCount / 1) * 100));
+
+  return {
+    isEligible,
+    isActivated: Boolean(operator.affiliate_enabled),
+    affiliateCode: operator.affiliate_code || null,
+    currentMedal: gamification.currentMedal,
+    activeRecurringCount: gamification.activeRecurringCount,
+    monthlyDomainSalesCount: gamification.monthlyDomainSalesCount,
+    recurringNeededForBronze,
+    domainNeededForBronze,
+    recurringProgressPercent,
+    domainProgressPercent
+  };
+}
+
+/**
+ * Gera um código de afiliado amigável e único: ex: BILLY-LUCAS-842
+ */
+export function generateAffiliateCode(fullName: string, operatorId: string): string {
+  const firstName = (fullName || 'OPERADOR')
+    .trim()
+    .split(/\s+/)[0]
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^A-Za-z0-9]/g, '')
+    .toUpperCase();
+
+  const idSuffix = (operatorId || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(-3) || '842';
+  const randomSuffix = Math.floor(100 + Math.random() * 900);
+  return `BILLY-${firstName}-${idSuffix || randomSuffix}`;
+}

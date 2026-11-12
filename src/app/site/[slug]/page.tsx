@@ -110,17 +110,12 @@ export default async function SiteViewerPage({
   }
 
   // 4. Regra de Renderização Única e Direta:
-  // Se isDirectlySuspended for true ou status === 'suspended': renderiza "Publicação Pausada"
-  // Caso contrário: renderiza o site oficial do cliente
-  let resolvedStatus = isDirectlySuspended ? 'suspended' : (site?.status || 'active').toLowerCase();
-  if (!isDirectlySuspended && resolvedStatus === 'suspended' && !cloudSuspended.has(slug)) {
-    // Se o banco local tinha marcado suspenso mas na nuvem já foi reativado
-    resolvedStatus = 'active';
-  }
+  // Se isDirectlySuspended for true ou o status do banco/registro for suspended: renderiza "Publicação Pausada"
+  const isSuspended = isDirectlySuspended || (site?.status === 'suspended') || (site?.status === 'cancelled');
 
   const status = (queryStatus === 'suspended' || queryStatus === 'active')
     ? queryStatus
-    : resolvedStatus;
+    : (isSuspended ? 'suspended' : (site?.status || 'active').toLowerCase());
 
   const clientName = site?.clientName || formatSlugToTitle(slug);
   const deployedUrl = site?.deployedUrl || `https://${slug}.vercel.app`;

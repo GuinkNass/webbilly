@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readDb, writeDb, Sale } from '@/lib/db';
+import { readDb, writeDb, Sale, AffiliateCommissionRecord } from '@/lib/db';
 
 const fallbackWebhookToken = Buffer.from(
   'd2hzZWNfS19KS1p0MTZ4SWUyN0ZRSWgzczlObU1FTVk5TEtNTmN0RGdhUGpWb0FUSQ==',
@@ -120,6 +120,42 @@ export async function POST(req: NextRequest) {
             createdAt: nowIso
           };
           db.sales.unshift(newSale);
+
+          // BILLY AFILIADOS: 5% (R$ 24,50) para o padrinho sobre venda de Domínio Próprio (R$ 490,00)
+          if (val >= 450 && operator.referred_by_operator_id) {
+            const sponsor = db.operators.find(
+              o => o.id === operator.referred_by_operator_id && o.status === 'ATIVO'
+            );
+            if (sponsor) {
+              if (!Array.isArray(db.affiliateCommissions)) {
+                db.affiliateCommissions = [];
+              }
+              const leadOrSaleKey = String(payment.id || saleId);
+              const alreadyHasAffComm = db.affiliateCommissions.some(
+                ac => ac.lead_or_sale_id === leadOrSaleKey
+              );
+
+              if (!alreadyHasAffComm) {
+                const saleDate = new Date();
+                const monthRef = `${saleDate.getFullYear()}-${String(saleDate.getMonth() + 1).padStart(2, '0')}`;
+                const affComm: AffiliateCommissionRecord = {
+                  id: `AFF-COMM-${payment.id || Date.now().toString(36)}`,
+                  affiliate_operator_id: sponsor.id,
+                  invited_operator_id: operator.id,
+                  invited_operator_name: operator.name,
+                  lead_or_sale_id: leadOrSaleKey,
+                  sale_amount: val,
+                  commission_rate: 0.05,
+                  commission_amount: 24.50, // 5% de R$ 490,00
+                  month_ref: monthRef,
+                  payout_status: 'available',
+                  created_at: nowIso
+                };
+                db.affiliateCommissions.unshift(affComm);
+                console.log(`[Asaas Webhook] Comissão de afiliado gerada: R$ 24,50 para ${sponsor.name} (venda de ${operator.name})`);
+              }
+            }
+          }
         }
         break;
       }

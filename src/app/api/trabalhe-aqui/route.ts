@@ -5,7 +5,7 @@ import { sendOperatorEmail } from '@/lib/lark-mailer';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { nome, name, whatsapp, email, cidade, city, experiencia, experience, instagram } = body;
+    const { nome, name, whatsapp, email, cidade, city, experiencia, experience, instagram, refCode, affiliateCode, ref } = body;
 
     const candidateName = (nome || name || '').trim();
     const candidateWhatsapp = (whatsapp || '').trim();
@@ -13,6 +13,7 @@ export async function POST(req: Request) {
     const candidateCity = (cidade || city || '').trim();
     const candidateExperience = (experiencia || experience || '').trim();
     const candidateInstagram = (instagram || '').trim();
+    const rawRef = (refCode || affiliateCode || ref || '').trim().toUpperCase();
 
     if (!candidateName || !candidateWhatsapp || !candidateEmail) {
       return NextResponse.json(
@@ -25,8 +26,21 @@ export async function POST(req: Request) {
     try {
       const db = readDb();
       const existing = db.candidates.find(c => c.email.toLowerCase() === candidateEmail);
+
+      let sponsorId: string | null = null;
+      let usedCode: string | null = null;
+      if (rawRef) {
+        const sponsor = (db.operators || []).find(
+          o => (o.affiliate_code || '').trim().toUpperCase() === rawRef && o.status === 'ATIVO'
+        );
+        if (sponsor) {
+          sponsorId = sponsor.id;
+          usedCode = sponsor.affiliate_code || rawRef;
+        }
+      }
+
       const candidateData: Candidate = {
-        id: `cand-${Date.now().toString(36)}`,
+        id: existing?.id || `cand-${Date.now().toString(36)}`,
         name: candidateName,
         email: candidateEmail,
         whatsapp: candidateWhatsapp,
@@ -38,7 +52,9 @@ export async function POST(req: Request) {
         pixType: 'cpf',
         pixKey: '',
         status: 'PENDENTE',
-        createdAt: new Date().toISOString(),
+        createdAt: existing?.createdAt || new Date().toISOString(),
+        referred_by_operator_id: sponsorId || existing?.referred_by_operator_id || null,
+        affiliate_code_used: usedCode || existing?.affiliate_code_used || null
       };
 
       if (!existing) {

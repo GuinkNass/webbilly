@@ -42,6 +42,8 @@ export interface Candidate {
   createdAt: string;
   reviewedAt?: string;
   notes?: string;
+  referred_by_operator_id?: string | null;
+  affiliate_code_used?: string | null;
 }
 
 export interface Operator {
@@ -65,6 +67,9 @@ export interface Operator {
   dailyLimit: number;
   todayGenerations: number;
   createdAt: string;
+  affiliate_enabled?: boolean;
+  affiliate_code?: string;
+  referred_by_operator_id?: string | null;
 }
 
 export interface LicenseRecord {
@@ -221,6 +226,22 @@ export interface MedalUpgradeRecord {
   payoutApplied?: boolean;
 }
 
+export interface AffiliateCommissionRecord {
+  id: string;
+  affiliate_operator_id: string; // Operador padrinho que recebe os 5% (R$ 24,50)
+  invited_operator_id: string;   // Operador convidado que realizou a venda
+  invited_operator_name?: string;
+  lead_or_sale_id: string;       // Identificador único/idempotente
+  sale_amount: number;           // 490.00
+  commission_rate: number;       // 0.05
+  commission_amount: number;     // 24.50
+  month_ref: string;             // 'YYYY-MM'
+  payout_status: 'available' | 'requested' | 'paid';
+  created_at: string;
+  paid_at?: string;
+  payout_request_id?: string;
+}
+
 export interface DatabaseSchema {
   candidates: Candidate[];
   operators: Operator[];
@@ -233,6 +254,7 @@ export interface DatabaseSchema {
   subscriptions: SubscriptionRecord[];
   payoutRequests?: PayoutRequest[];
   medalUpgrades?: MedalUpgradeRecord[];
+  affiliateCommissions?: AffiliateCommissionRecord[];
 }
 
 export function getDefaultSubscriptions(): SubscriptionRecord[] {
@@ -717,6 +739,11 @@ export function readDb(): DatabaseSchema {
           }
         }
       }
+    }
+
+    if (!Array.isArray(data.affiliateCommissions)) {
+      data.affiliateCommissions = [];
+      needsWrite = true;
     }
 
     if (needsWrite) {

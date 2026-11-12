@@ -54,18 +54,21 @@ export async function fetchCloudSuspendedSlugs(): Promise<Set<string>> {
   const now = Date.now();
   const lastFetch = globalThis.__webbillyLastCloudFetch || 0;
 
-  // Cache em memória de apenas 1 segundo por processo para evitar múltiplos fetches na mesma renderização
+  // Cache em memória de 1 segundo por processo para evitar múltiplos fetches na mesma renderização
   if (globalThis.__webbillySuspendedSlugs && (now - lastFetch) < 1000 && globalThis.__webbillySuspendedSlugs.size > 0) {
     return globalThis.__webbillySuspendedSlugs;
   }
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 2500);
+    const timeoutId = setTimeout(() => controller.abort(), 4500);
 
     const res = await fetch(CLOUD_SUSPENDED_URL, {
       cache: 'no-store',
-      headers: { Accept: 'application/json' },
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'Webbilly-Cloud-Registry/2.0'
+      },
       signal: controller.signal
     });
     clearTimeout(timeoutId);
@@ -125,11 +128,15 @@ export async function syncSlugSuspension(rawSlug: string, suspended: boolean): P
   try {
     const slugs = Array.from(currentSet);
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    await fetch(CLOUD_SUSPENDED_URL, {
+    const res = await fetch(CLOUD_SUSPENDED_URL, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'Webbilly-Cloud-Registry/2.0'
+      },
       body: JSON.stringify({
         name: 'webbilly_suspended_registry',
         data: { slugs }
@@ -137,6 +144,10 @@ export async function syncSlugSuspension(rawSlug: string, suspended: boolean): P
       signal: controller.signal
     });
     clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      console.warn('[SiteStorage] Erro ao sincronizar cloud registry - status:', res.status);
+    }
   } catch (cloudErr) {
     console.warn('[SiteStorage] Erro ao sincronizar cloud registry:', cloudErr);
   }

@@ -44,7 +44,7 @@ import {
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'subscriptions' | 'licenses' | 'financial' | 'apis' | 'domains'>('subscriptions');
+  const [activeTab, setActiveTab] = useState<'subscriptions' | 'licenses' | 'financial' | 'apis' | 'domains' | 'affiliates'>('subscriptions');
   const [selectedDomainProject, setSelectedDomainProject] = useState<string>('');
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -451,6 +451,25 @@ export default function AdminDashboardPage() {
                   <DollarSign className={`w-4 h-4 ${activeTab === 'financial' ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`} />
                   <span>Extrato & Repasses</span>
                 </div>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('affiliates')}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
+                  activeTab === 'affiliates'
+                    ? 'bg-indigo-600/90 text-white font-medium border border-indigo-500/30'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Users className={`w-4 h-4 ${activeTab === 'affiliates' ? 'text-white' : 'text-[#84cc16] group-hover:text-lime-300'}`} />
+                  <span>Billy Afiliados</span>
+                </div>
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
+                  activeTab === 'affiliates' ? 'bg-white/20 text-white' : 'bg-[#84cc16]/20 text-[#a3e635] border border-[#84cc16]/40'
+                }`}>
+                  5%
+                </span>
               </button>
 
               <button
@@ -982,6 +1001,24 @@ export default function AdminDashboardPage() {
                                   <span className="text-zinc-500 text-[10px]">E-mail não cadastrado</span>
                                 )}
                               </div>
+                              <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                {lic.referred_by_name && (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                                    <span>Padrinho:</span>
+                                    <strong className="text-white">{lic.referred_by_name}</strong>
+                                  </span>
+                                )}
+                                {lic.affiliate_enabled ? (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#84cc16]/15 text-[#a3e635] border border-[#84cc16]/30">
+                                    <span>Afiliados:</span>
+                                    <span className="font-mono">{lic.affiliate_code || 'Ativo'}</span>
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium bg-zinc-800 text-zinc-500">
+                                    Afiliados: Inativo
+                                  </span>
+                                )}
+                              </div>
                             </td>
                             {/* Medalha & Ranking do Operador */}
                             <td className="py-4 px-4 text-center">
@@ -1260,6 +1297,248 @@ export default function AdminDashboardPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* =====================================================================
+            TAB 5: RANKING & EVOLUÇÃO BILLY AFILIADOS (AUDITORIA DE REDES)
+           ===================================================================== */}
+        {activeTab === 'affiliates' && (
+          <div className="space-y-6">
+            {/* Header da Aba */}
+            <div className="bg-[#11141c] p-6 rounded-2xl border border-white/[0.06] shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#84cc16]/15 border border-[#84cc16]/30 text-[#a3e635] text-xs font-bold mb-2">
+                  <Users className="w-3.5 h-3.5" />
+                  Módulo Executivo • Billy Afiliados
+                </div>
+                <h2 className="text-xl font-bold text-white tracking-tight">
+                  Ranking & Evolução da Rede de Afiliados
+                </h2>
+                <p className="text-xs text-zinc-400 mt-1">
+                  Auditoria de padrinhos, taxa de ativação de indicados, volume de vendas de domínio da rede e repasses de 5% (R$ 24,50).
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1.5 rounded-xl text-xs font-mono font-bold bg-[#84cc16]/20 text-[#a3e635] border border-[#84cc16]/30">
+                  Comissão Rede: 5% (R$ 24,50)
+                </span>
+              </div>
+            </div>
+
+            {/* 4 Cards de Resumo Executivo */}
+            {(() => {
+              const sponsors = data?.affiliateSponsors || [];
+              const totalRecruits = sponsors.reduce((acc: number, s: any) => acc + (s.totalRecruits || 0), 0);
+              const totalMonthlySales = sponsors.reduce((acc: number, s: any) => acc + (s.monthlyNetworkDomainSales || 0), 0);
+              const totalCommissions = sponsors.reduce((acc: number, s: any) => acc + (s.totalEarnedCommissions || 0), 0);
+
+              return (
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="p-5 rounded-2xl bg-[#11141c] border border-white/[0.06]">
+                    <span className="text-[10px] uppercase font-bold text-zinc-400 block">Padrinhos Ativos</span>
+                    <span className="text-2xl font-black text-white font-mono">{sponsors.length}</span>
+                    <span className="text-[11px] text-zinc-500 block mt-0.5">Operadores com rede</span>
+                  </div>
+                  <div className="p-5 rounded-2xl bg-[#11141c] border border-white/[0.06]">
+                    <span className="text-[10px] uppercase font-bold text-zinc-400 block">Indicados na Base</span>
+                    <span className="text-2xl font-black text-sky-400 font-mono">{totalRecruits}</span>
+                    <span className="text-[11px] text-zinc-500 block mt-0.5">Cadastrados via convite</span>
+                  </div>
+                  <div className="p-5 rounded-2xl bg-[#11141c] border border-white/[0.06]">
+                    <span className="text-[10px] uppercase font-bold text-zinc-400 block">Vendas Domínio (Mês)</span>
+                    <span className="text-2xl font-black text-amber-400 font-mono">{totalMonthlySales}</span>
+                    <span className="text-[11px] text-zinc-500 block mt-0.5">Pacotes R$ 490 pela rede</span>
+                  </div>
+                  <div className="p-5 rounded-2xl bg-[#11141c] border border-[#84cc16]/30">
+                    <span className="text-[10px] uppercase font-bold text-[#a3e635] block">Comissões 5% Acumuladas</span>
+                    <span className="text-2xl font-black text-[#a3e635] font-mono">
+                      R$ {totalCommissions.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </span>
+                    <span className="text-[11px] text-zinc-500 block mt-0.5">Geradas para padrinhos</span>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Gráfico Comparativo dos Maiores Padrinhos */}
+            <div className="p-6 rounded-2xl bg-[#11141c] border border-white/[0.06] shadow-xl space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-[#84cc16]" />
+                    <span>Ranking dos Maiores Padrinhos (Volume de Rede & Comissões)</span>
+                  </h3>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
+                    Classificação baseada em indicados ativos vendendo e volume de comissões geradas.
+                  </p>
+                </div>
+              </div>
+
+              {(() => {
+                const sponsors = data?.affiliateSponsors || [];
+                if (sponsors.length === 0) {
+                  return (
+                    <div className="p-8 rounded-xl bg-black/30 border border-white/[0.04] text-center text-xs text-zinc-500">
+                      Nenhum padrinho com indicados ou comissões registradas até o momento.
+                    </div>
+                  );
+                }
+
+                const maxCommissions = Math.max(100, ...sponsors.map((s: any) => s.totalEarnedCommissions || 0));
+
+                return (
+                  <div className="space-y-3 pt-2">
+                    {sponsors.map((s: any, idx: number) => {
+                      const pct = Math.max(8, Math.round(((s.totalEarnedCommissions || 0) / maxCommissions) * 100));
+                      return (
+                        <div key={s.sponsorId || idx} className="p-4 rounded-xl bg-black/40 border border-white/[0.04] space-y-2 group hover:border-[#84cc16]/40 transition">
+                          <div className="flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-2.5">
+                              <span className="w-6 h-6 rounded-full bg-zinc-800 text-zinc-300 font-bold font-mono text-[11px] flex items-center justify-center">
+                                #{idx + 1}
+                              </span>
+                              <div>
+                                <span className="font-bold text-white block">{s.sponsorName}</span>
+                                <span className="text-[10px] text-zinc-500 font-mono">Código: {s.affiliateCode} • {s.sponsorEmail}</span>
+                              </div>
+                            </div>
+
+                            <div className="text-right">
+                              <span className="font-mono font-bold text-[#a3e635] text-sm block">
+                                R$ {(s.totalEarnedCommissions || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </span>
+                              <span className="text-[10px] text-zinc-500 font-mono">
+                                {s.totalRecruits} indicados ({s.recruitsSellingThisMonthCount} vendendo no mês)
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Barra de Progresso Visual */}
+                          <div className="w-full h-2 rounded-full bg-zinc-900 overflow-hidden">
+                            <div
+                              className="h-full bg-gradient-to-r from-[#84cc16] to-[#a3e635] rounded-full transition-all duration-500"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Tabela de Auditoria de Redes Billy Afiliados */}
+            <div className="p-6 rounded-2xl bg-[#11141c] border border-white/[0.06] shadow-xl space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Users className="w-4 h-4 text-[#84cc16]" />
+                    <span>Tabela de Auditoria Completa de Redes</span>
+                  </h3>
+                  <p className="text-[11px] text-zinc-400 mt-0.5">
+                    Detalhamento de cada padrinho, rede de indicados, taxa de ativação e status dos repasses de 5%.
+                  </p>
+                </div>
+
+                <span className="text-xs font-mono px-2.5 py-1 rounded-full bg-zinc-900 text-zinc-300 border border-white/[0.08]">
+                  {(data?.affiliateSponsors || []).length} redes cadastradas
+                </span>
+              </div>
+
+              {(() => {
+                const sponsors = data?.affiliateSponsors || [];
+                if (sponsors.length === 0) {
+                  return (
+                    <div className="p-8 rounded-xl bg-black/30 border border-white/[0.04] text-center text-xs text-zinc-500">
+                      Nenhuma rede de afiliados para auditar no momento.
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs text-left">
+                      <thead>
+                        <tr className="border-b border-white/[0.08] text-zinc-400 uppercase text-[10px]">
+                          <th className="py-3 px-4 font-bold">Padrinho (Patrocinador)</th>
+                          <th className="py-3 px-4 font-bold">Indicados Cadastrados</th>
+                          <th className="py-3 px-4 font-bold text-center">Taxa de Ativação</th>
+                          <th className="py-3 px-4 font-bold text-center">Vendas Domínio (Mês)</th>
+                          <th className="py-3 px-4 font-bold text-right">Repasses 5% (R$)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/[0.04]">
+                        {sponsors.map((s: any, idx: number) => {
+                          const recruits = s.recruits || [];
+                          return (
+                            <tr key={s.sponsorId || idx} className="hover:bg-white/[0.02] transition">
+                              <td className="py-4 px-4">
+                                <div className="font-semibold text-white">{s.sponsorName}</div>
+                                <div className="text-[10px] text-zinc-400 font-mono">{s.sponsorEmail}</div>
+                                <div className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-[#84cc16]/15 text-[#a3e635] border border-[#84cc16]/30">
+                                  <span>Código: {s.affiliateCode}</span>
+                                </div>
+                              </td>
+
+                              <td className="py-4 px-4">
+                                <div className="font-medium text-zinc-200">
+                                  {s.totalRecruits} {s.totalRecruits === 1 ? 'indicado' : 'indicados'}
+                                </div>
+                                {recruits.length > 0 && (
+                                  <div className="text-[10px] text-zinc-400 mt-1 space-y-0.5 max-w-xs truncate">
+                                    {recruits.slice(0, 3).map((r: any, rIdx: number) => (
+                                      <div key={rIdx} className="truncate">
+                                        • {r.name} ({r.createdAt ? new Date(r.createdAt).toLocaleDateString('pt-BR') : '-'})
+                                      </div>
+                                    ))}
+                                    {recruits.length > 3 && (
+                                      <div className="text-zinc-500 italic">+ {recruits.length - 3} outros</div>
+                                    )}
+                                  </div>
+                                )}
+                              </td>
+
+                              <td className="py-4 px-4 text-center">
+                                <div className="inline-flex flex-col items-center">
+                                  <span className={`font-mono font-bold text-sm ${
+                                    s.activationRate >= 50 ? 'text-emerald-400' : s.activationRate > 0 ? 'text-amber-400' : 'text-zinc-500'
+                                  }`}>
+                                    {s.activationRate}%
+                                  </span>
+                                  <span className="text-[10px] text-zinc-500">
+                                    {s.activeRecruitsCount}/{s.totalRecruits} ativos
+                                  </span>
+                                </div>
+                              </td>
+
+                              <td className="py-4 px-4 text-center font-mono font-bold text-amber-400">
+                                {s.monthlyNetworkDomainSales}
+                              </td>
+
+                              <td className="py-4 px-4 text-right">
+                                <div className="font-mono font-bold text-[#a3e635] text-sm">
+                                  R$ {(s.totalEarnedCommissions || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                </div>
+                                <div className="text-[10px] text-zinc-400 space-x-1.5 mt-0.5">
+                                  <span title="Disponível para saque">Disp: <strong className="text-emerald-400 font-mono">R${(s.availableCommissions || 0).toFixed(0)}</strong></span>
+                                  <span>•</span>
+                                  <span title="Solicitado neste mês">Sol: <strong className="text-amber-300 font-mono">R${(s.requestedCommissions || 0).toFixed(0)}</strong></span>
+                                  <span>•</span>
+                                  <span title="Já pago">Pago: <strong className="text-zinc-300 font-mono">R${(s.paidCommissionsAmount || 0).toFixed(0)}</strong></span>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}

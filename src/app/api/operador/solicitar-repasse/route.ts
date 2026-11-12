@@ -116,6 +116,23 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // BILLY AFILIADOS: 5% (R$ 24,50) sobre vendas de domínio dos convidados
+    const allAffComms = Array.isArray(db.affiliateCommissions) ? db.affiliateCommissions : [];
+    const availableAffiliateCommissions = allAffComms.filter(
+      ac => ac.affiliate_operator_id === operator.id && ac.payout_status === 'available'
+    );
+    const valorAfiliados = availableAffiliateCommissions.reduce(
+      (acc, ac) => acc + (Number(ac.commission_amount) || 24.50),
+      0
+    );
+    if (valorAfiliados > 0) {
+      valorRepasse += valorAfiliados;
+      valorTotalFaturado += availableAffiliateCommissions.reduce(
+        (acc, ac) => acc + (Number(ac.sale_amount) || 490.00),
+        0
+      );
+    }
+
     if (valorRepasse <= 0) {
       return NextResponse.json(
         { error: 'Não há saldo disponível para repasse no momento (mínimo R$ 0,01).' },
@@ -133,7 +150,13 @@ export async function POST(req: NextRequest) {
       : `${operator.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '')}@webbilly.com.br`;
 
     const payoutId = `rep_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
-    const totalVendasCount = paidDirectSales.length + activeSubs.length;
+    const totalVendasCount = paidDirectSales.length + activeSubs.length + availableAffiliateCommissions.length;
+
+    // Atualiza status das comissões de afiliados para 'requested'
+    availableAffiliateCommissions.forEach(ac => {
+      ac.payout_status = 'requested';
+      ac.payout_request_id = payoutId;
+    });
 
     const newPayoutRequest: PayoutRequest = {
       id: payoutId,
@@ -169,7 +192,13 @@ export async function POST(req: NextRequest) {
         vendasResumo: [
           ...paidDirectSales.map(s => ({ cliente: s.clientName || 'Cliente Direto', plano: 'Site Definitivo', valor: s.saleValue, data: s.createdAt })),
           ...activeSubs.map(s => ({ cliente: s.clientName, plano: 'Assinatura R$ 29,90/mês', valor: s.monthlyPrice, data: s.createdAt })),
-          ...(valorBonusMedalha > 0 ? [{ cliente: `Bônus Performance (+20% Conquista Medalha ${gamification.currentMedal.name})`, plano: 'Bônus Gamificação', valor: valorBonusMedalha, data: new Date().toISOString() }] : [])
+          ...(valorBonusMedalha > 0 ? [{ cliente: `Bônus Performance (+20% Conquista Medalha ${gamification.currentMedal.name})`, plano: 'Bônus Gamificação', valor: valorBonusMedalha, data: new Date().toISOString() }] : []),
+          ...availableAffiliateCommissions.map(ac => ({
+            cliente: `Billy Afiliados: Venda de ${ac.invited_operator_name || 'Convidado'} (Lead: ${ac.lead_or_sale_id})`,
+            plano: 'Comissão Afiliado 5%',
+            valor: Number(ac.commission_amount) || 24.50,
+            data: ac.created_at
+          }))
         ]
       });
       console.log(`[Repasse API] Solicitação de repasse de ${operator.name} enviada para financeiro@webbilly.com.br`);
