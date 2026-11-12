@@ -642,49 +642,13 @@ export default function WebbillyHomePage() {
               </div>
             </div>
 
-            {/* Mockup visual de celular com site */}
-            <div className="relative mx-auto w-full max-w-md lg:max-w-none flex justify-center">
-              <div className="relative w-72 sm:w-80 h-[520px] bg-zinc-950 rounded-[40px] border-4 border-zinc-800 p-3 shadow-2xl shadow-[#7abf18]/20">
-                <div className="w-full h-full bg-[#111722] rounded-[30px] overflow-hidden flex flex-col border border-white/[0.08]">
-                  
-                  {/* Top notch do celular */}
-                  <div className="h-6 bg-[#0c1017] flex items-center justify-center">
-                    <div className="w-20 h-3 bg-zinc-800 rounded-full" />
-                  </div>
-
-                  {/* Browser bar */}
-                  <div className="px-3 py-1.5 bg-[#0e131d] border-b border-zinc-800 flex items-center justify-between text-[9px] font-mono text-zinc-400">
-                    <span className="truncate">seunegocio.webbilly.com.br</span>
-                    <span className="text-[#7abf18]">● SSL Seguro</span>
-                  </div>
-
-                  {/* Conteúdo simulado do site */}
-                  <div className="p-4 space-y-3 flex-1 overflow-y-auto text-xs">
-                    <div className="w-full h-28 rounded-xl bg-gradient-to-tr from-[#7abf18]/30 via-zinc-800 to-zinc-900 border border-white/[0.08] p-3 flex flex-col justify-end">
-                      <span className="text-[10px] font-bold text-[#7abf18] uppercase">Seu Negócio Local</span>
-                      <span className="text-xs font-bold text-white font-heading">O melhor atendimento da sua região</span>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[10px]">
-                        <span className="font-bold text-white block">Serviço Principal</span>
-                        <span className="text-zinc-400">R$ 50,00</span>
-                      </div>
-                      <div className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 text-[10px]">
-                        <span className="font-bold text-white block">Combo Especial</span>
-                        <span className="text-[#7abf18] font-bold">R$ 89,90</span>
-                      </div>
-                    </div>
-
-                    <div className="p-2.5 rounded-lg bg-[#7abf18]/15 border border-[#7abf18]/30 text-center">
-                      <span className="text-[11px] font-bold text-white flex items-center justify-center gap-1">
-                        <MessageCircle className="w-3.5 h-3.5 text-[#7abf18]" />
-                        Fale Conosco no WhatsApp
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            {/* GIF Presença Digital Simplificada com fundo transparente */}
+            <div className="relative mx-auto w-full max-w-md lg:max-w-none flex justify-center items-center">
+              <img
+                src="/images/presenca-digital-simplificada.gif"
+                alt="Presença Digital Simplificada - Demonstração no Celular"
+                className="w-full max-w-[360px] sm:max-w-[420px] lg:max-w-[460px] h-auto object-contain drop-shadow-[0_20px_50px_rgba(122,191,24,0.22)] select-none pointer-events-none"
+              />
             </div>
 
           </div>
