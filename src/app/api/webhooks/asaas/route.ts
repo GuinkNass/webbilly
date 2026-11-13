@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
 
         if (!alreadyCredited && operator) {
           const val = Number(payment.value) || 29.90;
-          let comm = 14.95; // 50% de R$ 29,90 padrão
+          let comm = 10.00; // R$ 10,00 por assinatura ativa no plano mensal
           let niche = 'Assinatura Recorrente Mensal';
 
           if (val >= 450) {
@@ -100,7 +100,7 @@ export async function POST(req: NextRequest) {
             comm = 21.00;
             niche = 'Renovação Anual Domínio Próprio';
           } else if (val >= 25 && val <= 35) {
-            comm = 14.95;
+            comm = 10.00;
             niche = 'Assinatura Recorrente Mensal';
           }
 
