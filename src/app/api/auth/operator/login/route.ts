@@ -47,7 +47,26 @@ export async function POST(req: NextRequest) {
       return res;
     }
 
-    let operator = db.operators.find(o => o.email.toLowerCase() === cleanEmail);
+    // Busca o operador por e-mail pessoal, novo e-mail corporativo (@webbilly.com.br) ou chave serial
+    let operator = db.operators.find(
+      o => o.email.toLowerCase() === cleanEmail ||
+           (o.corporate_email && o.corporate_email.toLowerCase() === cleanEmail) ||
+           (o.corporateEmail && o.corporateEmail.toLowerCase() === cleanEmail) ||
+           (o.serialToken && o.serialToken.toUpperCase() === cleanEmail.toUpperCase())
+    );
+
+    // Se não encontrou no db local, consulta no Supabase (Fonte de Verdade)
+    if (!operator) {
+      try {
+        const { fetchAllOperatorsFromSupabase } = await import('@/lib/supabase');
+        const supaOps = await fetchAllOperatorsFromSupabase();
+        operator = supaOps.find(
+          o => o.email.toLowerCase() === cleanEmail ||
+               (o.corporate_email && o.corporate_email.toLowerCase() === cleanEmail) ||
+               (o.corporateEmail && o.corporateEmail.toLowerCase() === cleanEmail)
+        );
+      } catch {}
+    }
 
     const isCarlosDefault = cleanEmail === 'carlos.operador@billysuite.com.br' && password === 'operador123';
     if (!operator && isCarlosDefault) {
@@ -88,23 +107,26 @@ export async function POST(req: NextRequest) {
 
     const token = signToken({
       userId: operator.id,
-      email: operator.email,
+      email: operator.corporate_email || operator.corporateEmail || operator.email,
       name: operator.name,
       role: 'OPERATOR',
       serialToken: operator.serialToken
     });
+
+    const mustChange = operator.mustChangePassword ?? (operator as any).must_change_password ?? false;
 
     const res = NextResponse.json({
       success: true,
       user: {
         id: operator.id,
         email: operator.email,
+        corporateEmail: operator.corporate_email || operator.corporateEmail,
         name: operator.name,
         role: 'OPERATOR',
         serialToken: operator.serialToken,
-        mustChangePassword: operator.mustChangePassword ?? false
+        mustChangePassword: mustChange
       },
-      mustChangePassword: operator.mustChangePassword ?? false,
+      mustChangePassword: mustChange,
       redirectUrl: '/operador',
       token
     });

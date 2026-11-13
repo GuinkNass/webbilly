@@ -34,6 +34,9 @@ export async function GET(req: NextRequest) {
         pixKey: op?.pixKey || (lic as any).pixKey || null,
         tempPasswordPlain: op?.tempPasswordPlain || null,
         mustChangePassword: op?.mustChangePassword ?? false,
+        corporate_email: op?.corporate_email || op?.corporateEmail || null,
+        corporateEmail: op?.corporate_email || op?.corporateEmail || null,
+        lark_provisioned: op?.lark_provisioned ?? op?.larkProvisioned ?? false,
         machineId: lic.machineId || op?.machineId || null,
         lastSync: lic.lastSync || op?.lastSync || null,
         status: isActive ? 'active' : lic.status

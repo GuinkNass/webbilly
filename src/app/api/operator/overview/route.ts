@@ -219,6 +219,9 @@ export async function GET(req: NextRequest) {
         dailyLimit: operator.dailyLimit,
         todayGenerations: operator.todayGenerations,
         mustChangePassword: operator.mustChangePassword ?? false,
+        corporate_email: operator.corporate_email || operator.corporateEmail || null,
+        corporateEmail: operator.corporate_email || operator.corporateEmail || null,
+        lark_provisioned: operator.lark_provisioned ?? operator.larkProvisioned ?? false,
         affiliate_enabled: Boolean(operator.affiliate_enabled),
         affiliate_code: operator.affiliate_code || null,
         referred_by_operator_id: operator.referred_by_operator_id || null

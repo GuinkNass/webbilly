@@ -23,6 +23,7 @@ import {
   Award,
   Globe,
   Lock,
+  Mail,
   KeyRound,
   AlertTriangle,
   X,
@@ -128,8 +129,8 @@ export default function OperatorDashboardPage() {
     e.preventDefault();
     setPasswordError(null);
 
-    if (!newPassword || newPassword.length < 6) {
-      setPasswordError('A nova senha deve ter no mínimo 6 caracteres.');
+    if (!newPassword || newPassword.length < 8) {
+      setPasswordError('A nova senha deve ter no mínimo 8 caracteres.');
       return;
     }
 
@@ -494,6 +495,19 @@ export default function OperatorDashboardPage() {
               <HelpCircle className="w-3.5 h-3.5 text-[#84cc16]" />
               <span>? Tour Guiado</span>
             </button>
+
+            {/* Abrir Meu Webmail (@webbilly) */}
+            <a
+              href="https://mail.larksuite.com"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition shadow-sm cursor-pointer"
+              title="Acessar webmail corporativo no Lark Suite"
+            >
+              <Mail className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Abrir Meu Webmail (@webbilly)</span>
+              <ExternalLink className="w-3 h-3 opacity-60" />
+            </a>
 
             {/* Status Asaas */}
             <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 text-xs font-semibold">
@@ -2293,11 +2307,11 @@ export default function OperatorDashboardPage() {
 
             <div className="text-center mb-6">
               <h3 className="text-lg font-black text-white">
-                {data?.operator?.mustChangePassword ? 'Troca Obrigatória de Senha' : 'Minha Conta • Alterar Senha'}
+                {data?.operator?.mustChangePassword ? 'Primeiro Acesso — Defina sua Nova Senha Pessoal' : 'Minha Conta • Alterar Senha'}
               </h3>
               <p className="text-xs text-zinc-400 mt-1">
                 {data?.operator?.mustChangePassword
-                  ? `Olá, ${data?.operator?.name}! Por questões de segurança no primeiro acesso com senha provisória, defina sua senha definitiva.`
+                  ? `Olá, ${data?.operator?.name}! Por questões de segurança no primeiro acesso com senha provisória, defina sua nova senha pessoal definitiva (mínimo 8 caracteres).`
                   : 'Atualize sua senha de acesso ao portal do operador corporativo.'}
               </p>
             </div>
@@ -2342,10 +2356,10 @@ export default function OperatorDashboardPage() {
                   <input
                     type="password"
                     required
-                    minLength={6}
+                    minLength={8}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Mínimo 6 caracteres"
+                    placeholder="Mínimo 8 caracteres"
                     className="w-full px-4 py-2.5 rounded-xl bg-[#141824] border border-white/[0.08] text-white text-xs focus:outline-none focus:border-emerald-500 font-mono"
                   />
                 </div>
@@ -2357,10 +2371,10 @@ export default function OperatorDashboardPage() {
                   <input
                     type="password"
                     required
-                    minLength={6}
+                    minLength={8}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Repita a nova senha"
+                    placeholder="Repita a nova senha (mínimo 8 caracteres)"
                     className="w-full px-4 py-2.5 rounded-xl bg-[#141824] border border-white/[0.08] text-white text-xs focus:outline-none focus:border-emerald-500 font-mono"
                   />
                 </div>

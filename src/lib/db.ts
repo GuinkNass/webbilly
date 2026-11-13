@@ -58,6 +58,11 @@ export interface Operator {
   passwordHash: string;
   tempPasswordPlain?: string;
   mustChangePassword?: boolean;
+  must_change_password?: boolean;
+  corporate_email?: string;
+  corporateEmail?: string;
+  lark_provisioned?: boolean;
+  larkProvisioned?: boolean;
   whatsapp: string;
   pixType: string;
   pixKey: string;

@@ -63,6 +63,23 @@ export default function AdminDashboardPage() {
   const [changePasswordLoading, setChangePasswordLoading] = useState(false);
   const [changePasswordError, setChangePasswordError] = useState<string | null>(null);
   const [changePasswordSuccess, setChangePasswordSuccess] = useState<string | null>(null);
+
+  // Modal de Provisionamento de E-mail Corporativo @webbilly.com.br
+  const [provisionModal, setProvisionModal] = useState<{
+    isOpen: boolean;
+    operatorId: string;
+    operatorName: string;
+    suggestedPrefix: string;
+    customPrefix: string;
+    loading: boolean;
+    result?: {
+      corporateEmail: string;
+      tempPassword?: string;
+      larkProvisioned: boolean;
+      message: string;
+    };
+    error?: string;
+  } | null>(null);
   const [apiSettings, setApiSettings] = useState<any>({
     geminiApiKey: '',
     geminiModel: 'gemini-3.8-flash',
@@ -251,6 +268,71 @@ export default function AdminDashboardPage() {
       await loadData();
     } catch (err: any) {
       alert(err.message || 'Erro ao aprovar operador.');
+    }
+  };
+
+  // Abrir Modal de Provisionamento de E-mail Corporativo @webbilly
+  const handleOpenProvisionModal = (lic: any) => {
+    const op = (data?.operators || []).find((o: any) =>
+      (lic.operatorId && o.id === lic.operatorId) ||
+      (lic.serialToken && (o.serialToken || '').trim().toUpperCase() === lic.serialToken.trim().toUpperCase())
+    );
+    const targetId = op?.id || lic.operatorId || lic.id;
+    const targetName = op?.name || lic.operatorName || 'Operador';
+
+    const cleanPrefix = targetName
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s]/g, '')
+      .replace(/\s+/g, '.');
+
+    setProvisionModal({
+      isOpen: true,
+      operatorId: targetId,
+      operatorName: targetName,
+      suggestedPrefix: cleanPrefix,
+      customPrefix: cleanPrefix,
+      loading: false
+    });
+  };
+
+  // Confirmar Provisionamento via API
+  const handleConfirmProvisionEmail = async () => {
+    if (!provisionModal) return;
+    setProvisionModal(prev => prev ? { ...prev, loading: true, error: undefined } : null);
+
+    try {
+      const res = await fetch('/api/admin/operators/provision-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          operatorId: provisionModal.operatorId,
+          customPrefix: provisionModal.customPrefix
+        })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Falha ao provisionar e-mail corporativo.');
+
+      setProvisionModal(prev => prev ? {
+        ...prev,
+        loading: false,
+        result: {
+          corporateEmail: json.corporateEmail,
+          tempPassword: json.tempPassword,
+          larkProvisioned: json.larkProvisioned,
+          message: json.message
+        }
+      } : null);
+
+      await loadData();
+    } catch (err: any) {
+      setProvisionModal(prev => prev ? {
+        ...prev,
+        loading: false,
+        error: err.message || 'Erro ao provisionar e-mail corporativo.'
+      } : null);
     }
   };
 
@@ -1036,6 +1118,37 @@ export default function AdminDashboardPage() {
                                   <span className="text-zinc-500 text-[10px]">E-mail não cadastrado</span>
                                 )}
                               </div>
+
+                              {/* E-mail Corporativo @webbilly */}
+                              <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                                {lic.corporate_email ? (
+                                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[11px] font-mono">
+                                    <Mail className="w-3 h-3 text-cyan-400" />
+                                    <span>{lic.corporate_email}</span>
+                                    <button
+                                      onClick={() => copyToClipboard(lic.corporate_email)}
+                                      className="text-cyan-400 hover:text-white p-0.5 cursor-pointer"
+                                      title="Copiar e-mail corporativo"
+                                    >
+                                      <Copy className="w-3 h-3" />
+                                    </button>
+                                    {lic.lark_provisioned && (
+                                      <span className="text-[9px] text-emerald-400 bg-emerald-950/50 px-1 py-0.2 rounded border border-emerald-800/40">
+                                        Lark OK
+                                      </span>
+                                    )}
+                                  </div>
+                                ) : !isVirgin ? (
+                                  <button
+                                    onClick={() => handleOpenProvisionModal(lic)}
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-[10px] font-semibold transition cursor-pointer"
+                                    title="Criar e-mail corporativo oficial @webbilly.com.br"
+                                  >
+                                    <Mail className="w-3 h-3 text-emerald-400" />
+                                    <span>+ Gerar E-mail @webbilly</span>
+                                  </button>
+                                ) : null}
+                              </div>
                               <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
                                 {lic.referred_by_name && (
                                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
@@ -1146,10 +1259,18 @@ export default function AdminDashboardPage() {
 
                                 <button
                                   onClick={() => handleResetOperatorPassword(lic.serialToken, lic.operatorId)}
-                                  className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#161a26] text-zinc-300 border border-white/[0.08] hover:bg-white/[0.06] transition"
-                                  title="Gerar nova senha provisória de acesso web"
+                                  className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
+                                    lic.corporate_email
+                                      ? 'bg-cyan-950/40 text-cyan-300 border-cyan-800/40 hover:bg-cyan-900/50'
+                                      : 'bg-[#161a26] text-zinc-300 border-white/[0.08] hover:bg-white/[0.06]'
+                                  }`}
+                                  title={
+                                    lic.corporate_email
+                                      ? 'Resetar senha corporativa e enviar credenciais provisórias'
+                                      : 'Gerar nova senha provisória de acesso web'
+                                  }
                                 >
-                                  Resetar Senha
+                                  {lic.corporate_email ? 'Resetar Senha Corporativa' : 'Resetar Senha'}
                                 </button>
 
                                 <button
@@ -1664,6 +1785,177 @@ export default function AdminDashboardPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: PROVISIONAR E-MAIL CORPORATIVO (@webbilly.com.br)
+         ========================================================================= */}
+      {provisionModal && provisionModal.isOpen && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="max-w-lg w-full bg-[#11141c] border border-white/[0.08] rounded-3xl p-6 sm:p-7 shadow-2xl relative space-y-5 animate-scale-up">
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center">
+                  <Mail className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-sm">Provisionar E-mail Corporativo</h3>
+                  <p className="text-[11px] text-zinc-400">Operador: <strong className="text-white">{provisionModal.operatorName}</strong></p>
+                </div>
+              </div>
+              <button
+                onClick={() => setProvisionModal(null)}
+                className="text-zinc-400 hover:text-white p-1 rounded-lg hover:bg-white/[0.05] transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {provisionModal.error && (
+              <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{provisionModal.error}</span>
+              </div>
+            )}
+
+            {provisionModal.result ? (
+              <div className="space-y-4 py-2">
+                <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs space-y-2">
+                  <div className="flex items-center gap-2 font-bold text-sm text-emerald-400">
+                    <CheckCircle2 className="w-5 h-5" />
+                    <span>E-mail Corporativo Gerado com Sucesso!</span>
+                  </div>
+                  <p className="text-zinc-300 text-[11px]">
+                    {provisionModal.result.message}
+                  </p>
+                </div>
+
+                <div className="bg-[#08090d] border border-white/[0.08] rounded-2xl p-4 space-y-3 font-mono text-xs">
+                  <div>
+                    <span className="text-zinc-400 text-[10px] block uppercase font-sans">E-mail Corporativo (@webbilly.com.br)</span>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-cyan-300 font-bold text-sm">{provisionModal.result.corporateEmail}</span>
+                      <button
+                        onClick={() => copyToClipboard(provisionModal.result!.corporateEmail)}
+                        className="text-zinc-400 hover:text-white px-2 py-1 rounded bg-zinc-800 text-[10px] font-sans flex items-center gap-1 cursor-pointer"
+                      >
+                        <Copy className="w-3 h-3" />
+                        <span>Copiar</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {provisionModal.result.tempPassword && (
+                    <div className="pt-2 border-t border-white/[0.06]">
+                      <span className="text-zinc-400 text-[10px] block uppercase font-sans">Senha Provisória (Troca Obrigatória no 1º Acesso)</span>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-amber-300 font-bold text-sm">{provisionModal.result.tempPassword}</span>
+                        <button
+                          onClick={() => copyToClipboard(provisionModal.result!.tempPassword!)}
+                          className="text-zinc-400 hover:text-white px-2 py-1 rounded bg-zinc-800 text-[10px] font-sans flex items-center gap-1 cursor-pointer"
+                        >
+                          <Copy className="w-3 h-3" />
+                          <span>Copiar</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="pt-2 border-t border-white/[0.06] text-[10px] font-sans">
+                    <span className="text-zinc-400 block uppercase font-sans mb-1">Status Lark Suite</span>
+                    {provisionModal.result.larkProvisioned ? (
+                      <span className="text-emerald-400 font-medium flex items-center gap-1">
+                        <Check className="w-3.5 h-3.5" />
+                        Caixa postal provisionada via Lark API com sucesso.
+                      </span>
+                    ) : (
+                      <span className="text-amber-400 font-medium">
+                        Modo Seguro / Manual: Crie o usuário no console do Lark Suite (<code className="text-zinc-300">mail.larksuite.com</code>) usando o endereço e a senha acima.
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <button
+                    onClick={() => setProvisionModal(null)}
+                    className="px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 transition cursor-pointer"
+                  >
+                    Concluir e Fechar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                    Prefixo do E-mail Corporativo
+                  </label>
+                  <div className="flex items-center rounded-xl bg-[#08090d] border border-white/[0.08] focus-within:border-cyan-500 px-3 py-2 transition">
+                    <input
+                      type="text"
+                      value={provisionModal.customPrefix}
+                      onChange={(e) => setProvisionModal({ ...provisionModal, customPrefix: e.target.value.toLowerCase().replace(/[^a-z0-9.]/g, '') })}
+                      placeholder="nome.sobrenome"
+                      className="bg-transparent text-white text-xs focus:outline-none flex-1 font-mono"
+                    />
+                    <span className="text-cyan-400 font-mono text-xs font-bold pl-1">
+                      @webbilly.com.br
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-zinc-500 mt-1">
+                    Endereço final: <span className="font-mono text-cyan-300">{provisionModal.customPrefix || 'nome.sobrenome'}@webbilly.com.br</span>
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-zinc-900/80 border border-white/[0.05] text-[11px] text-zinc-400 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-zinc-300 font-semibold">
+                    <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Automação Integrada</span>
+                  </div>
+                  <p>
+                    1. Salva o e-mail oficial no cadastro do operador no Supabase.
+                  </p>
+                  <p>
+                    2. Cria a senha temporária inicial (<code className="text-amber-300 font-mono">Billy@2026#XXXX</code>) com troca obrigatória no primeiro acesso.
+                  </p>
+                  <p>
+                    3. Notifica o operador por e-mail com as credenciais de acesso corporativo.
+                  </p>
+                </div>
+
+                <div className="pt-2 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setProvisionModal(null)}
+                    disabled={provisionModal.loading}
+                    className="px-4 py-2 rounded-xl text-xs text-zinc-400 hover:text-white transition cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmProvisionEmail}
+                    disabled={provisionModal.loading || !provisionModal.customPrefix}
+                    className="px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 transition border border-cyan-500/30 flex items-center gap-2 cursor-pointer shadow-lg shadow-cyan-600/20"
+                  >
+                    {provisionModal.loading ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Provisionando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="w-3.5 h-3.5" />
+                        <span>Confirmar e Criar E-mail</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

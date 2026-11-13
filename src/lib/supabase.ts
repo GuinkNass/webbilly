@@ -109,7 +109,12 @@ export function mapRowToOperator(row: any): Operator {
     email: row.email || '',
     passwordHash: row.password_hash || row.passwordHash || '',
     tempPasswordPlain: row.temp_password_plain || row.tempPasswordPlain,
-    mustChangePassword: row.must_change_password ?? row.mustChangePassword,
+    mustChangePassword: row.must_change_password ?? row.mustChangePassword ?? true,
+    must_change_password: row.must_change_password ?? row.mustChangePassword ?? true,
+    corporate_email: row.corporate_email || row.corporateEmail || undefined,
+    corporateEmail: row.corporate_email || row.corporateEmail || undefined,
+    lark_provisioned: Boolean(row.lark_provisioned ?? row.larkProvisioned ?? false),
+    larkProvisioned: Boolean(row.lark_provisioned ?? row.larkProvisioned ?? false),
     whatsapp: row.whatsapp || '',
     pixType: row.pix_type || row.pixType || 'cpf',
     pixKey: row.pix_key || row.pixKey || '',
@@ -407,6 +412,10 @@ export async function upsertOperatorInSupabase(op: Partial<Operator>): Promise<b
     affiliate_enabled: Boolean(op.affiliate_enabled),
     affiliate_code: op.affiliate_code || null,
     referred_by_operator_id: op.referred_by_operator_id || null,
+    corporate_email: op.corporate_email || (op as any).corporateEmail || null,
+    password_hash: op.passwordHash || (op as any).password_hash || null,
+    must_change_password: op.mustChangePassword ?? (op as any).must_change_password ?? true,
+    lark_provisioned: Boolean(op.lark_provisioned ?? (op as any).larkProvisioned ?? false),
     updated_at: nowIso
   };
 

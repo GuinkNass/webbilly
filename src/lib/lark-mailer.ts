@@ -54,6 +54,104 @@ export interface SacData {
   mensagem: string;
 }
 
+export interface CorporateCredentialsEmailData {
+  operadorNome: string;
+  operadorEmailPessoal: string;
+  corporateEmail: string;
+  temporaryPassword: string;
+  serialToken?: string;
+  webmailUrl?: string;
+  painelUrl?: string;
+}
+
+// -------------------------------------------------------------------------------------------------
+// 6. ENVIO DE CREDENCIAIS DE E-MAIL CORPORATIVO (@webbilly.com.br) AO OPERADOR
+// -------------------------------------------------------------------------------------------------
+export async function sendCorporateCredentialsEmail(data: CorporateCredentialsEmailData): Promise<boolean> {
+  const fromAddress = `"Webbilly Tecnologia" <${process.env.LARK_SMTP_USER || 'comercial@webbilly.com.br'}>`;
+  const webmailUrl = data.webmailUrl || 'https://mail.larksuite.com';
+  const painelUrl = data.painelUrl || 'https://webbilly.com.br/operador';
+
+  const html = `
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head><meta charset="utf-8"></head>
+    <body style="margin:0;padding:24px;background-color:#0b0e14;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#e2e8f0;">
+      <div style="max-width:600px;margin:0 auto;background-color:#141824;border:1px solid #232d42;border-radius:16px;overflow:hidden;box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+        <div style="background:linear-gradient(135deg,#0f141d 0%,#172033 100%);padding:28px 24px;border-bottom:1px solid #232d42;text-align:center;">
+          <div style="font-size:26px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">Web<span style="color:#7abf18;">billy</span></div>
+          <div style="display:inline-block;padding:4px 14px;background:rgba(122,191,24,0.15);border:1px solid rgba(122,191,24,0.35);border-radius:9999px;color:#7abf18;font-size:11px;font-weight:700;text-transform:uppercase;margin-top:10px;letter-spacing:0.5px;">
+            Boas-vindas à Equipe Comercial
+          </div>
+        </div>
+        <div style="padding:28px 24px;">
+          <h2 style="font-size:18px;font-weight:800;color:#ffffff;margin:0 0 14px 0;border-left:4px solid #7abf18;padding-left:10px;">
+            Seu E-mail Corporativo Oficial foi Gerado!
+          </h2>
+          <p style="font-size:13px;color:#94a3b8;margin:0 0 20px 0;line-height:1.6;">
+            Olá, <strong>${data.operadorNome}</strong>! A administração da Webbilly gerou sua caixa postal corporativa oficial e seus acessos ao ecossistema comercial Billy Suite.
+          </p>
+
+          <table style="width:100%;border-collapse:collapse;margin-bottom:24px;">
+            <tr>
+              <td style="padding:10px 12px;border-bottom:1px solid #1f2738;color:#94a3b8;font-size:13px;width:40%;">E-mail Corporativo:</td>
+              <td style="padding:10px 12px;border-bottom:1px solid #1f2738;color:#7abf18;font-family:monospace;font-size:14px;font-weight:800;">
+                ${data.corporateEmail}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:10px 12px;border-bottom:1px solid #1f2738;color:#94a3b8;font-size:13px;">Senha Provisória:</td>
+              <td style="padding:10px 12px;border-bottom:1px solid #1f2738;color:#ffffff;font-family:monospace;font-size:14px;font-weight:800;background:#0d111a;border-radius:6px;">
+                ${data.temporaryPassword}
+              </td>
+            </tr>
+            ${data.serialToken ? `
+            <tr>
+              <td style="padding:10px 12px;border-bottom:1px solid #1f2738;color:#94a3b8;font-size:13px;">Chave Serial Billy:</td>
+              <td style="padding:10px 12px;border-bottom:1px solid #1f2738;color:#38bdf8;font-family:monospace;font-size:13px;font-weight:700;">
+                ${data.serialToken}
+              </td>
+            </tr>` : ''}
+          </table>
+
+          <div style="background:#161c28;border:1px solid #334155;border-radius:10px;padding:14px;margin-bottom:24px;font-size:12px;color:#94a3b8;line-height:1.6;">
+            <strong style="color:#ffffff;">Segurança no Primeiro Acesso:</strong><br/>
+            Ao fazer login no Painel do Operador com este e-mail e senha provisória, o sistema solicitará que você <strong>defina sua nova senha pessoal definitiva</strong>.
+          </div>
+
+          <div style="display:flex;gap:12px;text-align:center;">
+            <a href="${painelUrl}" target="_blank" style="flex:1;display:inline-block;padding:12px 20px;background-color:#7abf18;color:#052e16;text-decoration:none;font-weight:800;font-size:13px;border-radius:10px;margin-right:8px;">
+              Acessar Painel Operador &rarr;
+            </a>
+            <a href="${webmailUrl}" target="_blank" style="flex:1;display:inline-block;padding:12px 20px;background-color:#1e293b;color:#f8fafc;border:1px solid #334155;text-decoration:none;font-weight:700;font-size:13px;border-radius:10px;">
+              Abrir Webmail Lark &rarr;
+            </a>
+          </div>
+
+          <p style="font-size:11px;color:#64748b;margin:24px 0 0 0;text-align:center;">
+            Webbilly Tecnologia • Suporte Operadores: operadores@webbilly.com.br
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  try {
+    await larkTransporter.sendMail({
+      from: fromAddress,
+      to: data.operadorEmailPessoal,
+      cc: 'operadores@webbilly.com.br',
+      subject: `[Webbilly] Seu E-mail Corporativo e Acesso ao Painel — ${data.corporateEmail}`,
+      html,
+    });
+    return true;
+  } catch (err) {
+    console.warn('[LarkMailer] Erro ao enviar credenciais corporativas:', err);
+    return false;
+  }
+}
+
 export interface PayoutRequestEmailData {
   operadorNome: string;
   operadorId: string;

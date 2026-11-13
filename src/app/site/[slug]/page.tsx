@@ -12,7 +12,7 @@ import {
 import Link from 'next/link';
 import { resolveSiteBySlug, sanitizeSlug, fetchCloudSuspendedSlugs, formatSlugToTitle } from '@/lib/site-storage';
 import { resolveTemplateBySlug } from '@/lib/templates-data';
-import { fetchSiteFromSupabase } from '@/lib/supabase';
+import { fetchSiteFromSupabase, fetchAllOperatorsFromSupabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -121,16 +121,44 @@ export default async function SiteViewerPage({
   const deployedUrl = site?.deployedUrl || `https://${slug}.vercel.app`;
   const checkoutUrl = site?.checkoutUrl || `/api/subscription/create-checkout?slug=${slug}`;
 
+  // 5. Busca dados do operador responsável para suporte direto e reativação
+  let operatorInfo: { name: string; email: string; isCorporate: boolean } | null = null;
+  if (site) {
+    try {
+      const allOps = await fetchAllOperatorsFromSupabase();
+      const op = allOps.find(o => 
+        ((site as any).operatorId && o.id === (site as any).operatorId) ||
+        (site.operatorToken && (o.serialToken || '').trim().toUpperCase() === site.operatorToken.trim().toUpperCase())
+      );
+      if (op) {
+        const email = op.corporate_email || op.corporateEmail || op.email || 'contato@webbilly.com.br';
+        operatorInfo = {
+          name: op.name,
+          email,
+          isCorporate: Boolean(op.corporate_email || op.corporateEmail)
+        };
+      } else if (site.operatorName) {
+        operatorInfo = {
+          name: site.operatorName,
+          email: 'contato@webbilly.com.br',
+          isCorporate: false
+        };
+      }
+    } catch (e) {
+      console.warn('Erro ao buscar operador do site suspenso:', e);
+    }
+  }
+
   // =========================================================================
   // CASO 1: SITE SUSPENSO OU CANCELADO (INADIMPLENTE OU CANCELADO)
   // =========================================================================
   if (status === 'suspended' || status === 'inactive' || status === 'paused' || status === 'cancelled') {
-    const contactEmail = 'contato@webbilly.com.br';
-    const emailSubject = encodeURIComponent(`Reativação de Site - ${clientName} (${slug}.webbilly.com.br)`);
+    const targetEmail = operatorInfo?.email || 'contato@webbilly.com.br';
+    const emailSubject = encodeURIComponent(`Regularização do site ${clientName} (${slug}.webbilly.com.br)`);
     const emailBody = encodeURIComponent(
-      `Olá equipe Webbilly,\n\nSou o proprietário do estabelecimento "${clientName}" (subdomínio: ${slug}.webbilly.com.br).\n\nIdentifiquei que meu site está fora do ar e gostaria de solicitar informações para regularização e reativação imediata da publicação.\n\nAguardo retorno!`
+      `Olá ${operatorInfo?.name || 'equipe Webbilly'},\n\nSou o proprietário do estabelecimento "${clientName}" (subdomínio: ${slug}.webbilly.com.br).\n\nIdentifiquei que meu site está com a publicação pausada e gostaria de informações para regularização e reativação imediata.\n\nAguardo retorno!`
     );
-    const mailtoUrl = `mailto:${contactEmail}?subject=${emailSubject}&body=${emailBody}`;
+    const mailtoUrl = `mailto:${targetEmail}?subject=${emailSubject}&cc=sac@webbilly.com.br&body=${emailBody}`;
     const whatsappUrl = `https://wa.me/5511943168939?text=${encodeURIComponent(
       `Olá! Sou o responsável pelo comércio "${clientName}" (${slug}.webbilly.com.br). Meu site consta como fora do ar e gostaria de regularizar a assinatura para reativação imediata.`
     )}`;
@@ -170,18 +198,38 @@ export default async function SiteViewerPage({
             </p>
           </div>
 
+          {/* Identificação do Consultor Responsável */}
+          {operatorInfo && (
+            <div className="p-3 sm:p-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 text-left flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0">
+                  {operatorInfo.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[10px] sm:text-[11px] text-zinc-400 uppercase font-semibold tracking-wider">Consultor Responsável</div>
+                  <div className="text-xs sm:text-sm font-bold text-white truncate">{operatorInfo.name}</div>
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 px-2 py-0.5 rounded-full">
+                  {operatorInfo.email}
+                </span>
+              </div>
+            </div>
+          )}
+
           {/* Box de instrução ao dono do comércio */}
           <div className="p-4 sm:p-5 rounded-2xl bg-zinc-900/80 border border-zinc-800 text-left space-y-2.5">
             <div className="flex items-start gap-2.5">
               <Mail className="w-5 h-5 text-[#7abf18] shrink-0 mt-0.5" />
               <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
                 <span className="font-bold text-white block mb-1">Atenção ao Proprietário:</span>
-                Caso você seja o dono deste comércio, entre em contato imediatamente com nossa administração para reativação do seu site através do e-mail:
+                Caso você seja o dono deste comércio, entre em contato diretamente com o seu consultor responsável ou com nossa central de regularização:
                 <a
                   href={mailtoUrl}
                   className="block mt-1.5 font-mono font-bold text-[#7abf18] hover:underline text-sm break-all"
                 >
-                  {contactEmail}
+                  {targetEmail}
                 </a>
               </div>
             </div>
@@ -191,10 +239,10 @@ export default async function SiteViewerPage({
           <div className="space-y-3 pt-2">
             <a
               href={mailtoUrl}
-              className="w-full py-3.5 px-6 rounded-2xl font-bold text-white bg-[#7abf18] hover:bg-[#68a414] transition shadow-lg shadow-[#7abf18]/25 flex items-center justify-center gap-2 text-sm sm:text-base"
+              className="w-full py-3.5 px-6 rounded-2xl font-bold text-white bg-[#7abf18] hover:bg-[#68a414] transition shadow-lg shadow-[#7abf18]/25 flex items-center justify-center gap-2 text-sm sm:text-base cursor-pointer"
             >
               <Mail className="w-4 h-4" />
-              <span>Enviar E-mail para contato@webbilly.com.br</span>
+              <span>Falar com o Consultor Responsável</span>
             </a>
 
             <a
@@ -204,7 +252,7 @@ export default async function SiteViewerPage({
               className="w-full py-3 px-5 rounded-xl text-xs sm:text-sm font-semibold text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 transition flex items-center justify-center gap-2"
             >
               <MessageCircle className="w-4 h-4 text-emerald-400" />
-              <span>Falar no WhatsApp Oficial (+55 11 94316-8939)</span>
+              <span>WhatsApp Oficial de Suporte (+55 11 94316-8939)</span>
             </a>
 
             {checkoutUrl && (

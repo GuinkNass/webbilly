@@ -32,14 +32,46 @@ export async function POST(req: NextRequest) {
     operator.passwordHash = passwordHash;
     operator.tempPasswordPlain = newTempPassword;
     operator.mustChangePassword = true;
+    operator.must_change_password = true;
 
     writeDb(db);
+
+    // Sincroniza com Supabase
+    try {
+      const { upsertOperatorInSupabase } = await import('@/lib/supabase');
+      await upsertOperatorInSupabase({
+        id: operator.id,
+        name: operator.name,
+        email: operator.email,
+        corporate_email: operator.corporate_email || operator.corporateEmail,
+        passwordHash,
+        mustChangePassword: true,
+        status: operator.status
+      });
+    } catch {}
+
+    // Notifica operador via e-mail pessoal
+    try {
+      const { sendCorporateCredentialsEmail } = await import('@/lib/lark-mailer');
+      if (operator.email) {
+        await sendCorporateCredentialsEmail({
+          operadorNome: operator.name,
+          operadorEmailPessoal: operator.email,
+          corporateEmail: operator.corporate_email || operator.corporateEmail || operator.email,
+          temporaryPassword: newTempPassword,
+          serialToken: operator.serialToken,
+          webmailUrl: 'https://mail.larksuite.com',
+          painelUrl: 'https://webbilly.com.br/operador'
+        });
+      }
+    } catch {}
 
     return NextResponse.json({
       success: true,
       operatorId: operator.id,
       operatorName: operator.name,
       operatorEmail: operator.email,
+      corporateEmail: operator.corporate_email || operator.corporateEmail,
       tempPassword: newTempPassword,
       message: `Senha provisória do operador ${operator.name} resetada para: ${newTempPassword}`
     });

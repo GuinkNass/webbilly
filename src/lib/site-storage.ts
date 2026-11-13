@@ -12,6 +12,7 @@ export interface SiteRecord {
   checkoutUrl: string;
   clientPhone?: string;
   clientEmail?: string;
+  operatorId?: string;
   operatorToken?: string;
   operatorName?: string;
   nextRenewalDate?: string;

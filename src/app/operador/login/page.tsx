@@ -72,13 +72,13 @@ export default function OperatorLoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-zinc-300 mb-1.5">E-mail do Operador</label>
+            <label className="block text-xs font-semibold text-zinc-300 mb-1.5">E-mail Corporativo ou Pessoal</label>
             <div className="relative">
               <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-zinc-500" />
               <input
-                type="email"
+                type="text"
                 required
-                placeholder="operador@webbilly.com.br"
+                placeholder="nome.sobrenome@webbilly.com.br ou e-mail"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#0d0f14] border border-white/[0.08] text-white text-xs focus:outline-none focus:border-emerald-500 placeholder-zinc-600 transition"
