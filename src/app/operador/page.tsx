@@ -2016,15 +2016,29 @@ export default function OperatorDashboardPage() {
               </div>
             </div>
 
-            {/* 4. Totens do Pódio dos Campeões (Top 3 Olímpico / Gamer) */}
+            {/* 4. Totens do Pódio dos Campeões (Top 3 Olímpico / Profissional) */}
             {rankingData?.leaderboard && rankingData.leaderboard.length >= 2 && (() => {
               const top1 = rankingData.leaderboard.find((r: any) => r.rank === 1);
               const top2 = rankingData.leaderboard.find((r: any) => r.rank === 2);
               const top3 = rankingData.leaderboard.find((r: any) => r.rank === 3);
 
               return (
-                <div className="bg-[#11141c] p-6 rounded-2xl border border-white/[0.06] space-y-6">
-                  <div className="flex items-center justify-between">
+                <div className="relative bg-[#11141c] p-6 rounded-2xl border border-white/[0.06] space-y-6 overflow-hidden">
+                  {/* Vídeo de Fundo do Pódio dos Campeões */}
+                  <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload="auto"
+                    className="absolute inset-0 w-full h-full object-cover opacity-35 pointer-events-none z-0"
+                  >
+                    <source src="/videos/fundo-trofeus.mp4" type="video/mp4" />
+                  </video>
+                  {/* Overlay escuro em gradiente para garantir leitura cristalina */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#090D16] via-[#090D16]/60 to-[#090D16]/80 pointer-events-none z-0" />
+
+                  <div className="relative z-10 flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       <Trophy className="w-5 h-5 text-amber-400" />
                       <div>
@@ -2042,7 +2056,7 @@ export default function OperatorDashboardPage() {
                   </div>
 
                   {/* Pódio Visual: 2º Lugar (Esquerda), 1º Lugar (Centro Mais Alto), 3º Lugar (Direita) */}
-                  <div className="pt-8 pb-2 flex flex-col md:flex-row items-end justify-center gap-4 lg:gap-8 max-w-4xl mx-auto">
+                  <div className="relative z-10 pt-8 pb-2 flex flex-col md:flex-row items-end justify-center gap-4 lg:gap-8 max-w-4xl mx-auto">
                     {/* #2 Lugar - PRATA */}
                     {top2 && (
                       <div className="w-full md:w-1/3 flex flex-col items-center order-2 md:order-1">

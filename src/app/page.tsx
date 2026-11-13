@@ -733,6 +733,20 @@ export default function WebbillyHomePage() {
           7. BANNER CTA DE ALTA CONVERSÃO (Inspirado em eco_start_wrapper)
          ===================================================================== */}
       <section className="py-16 px-4 sm:px-8 bg-gradient-to-r from-[#141b27] via-[#1a2536] to-[#141b27] border-y border-[#7abf18]/30 relative overflow-hidden text-center">
+        {/* Vídeo de Fundo da Seção CTA */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none z-0"
+        >
+          <source src="/videos/fundo001.mp4" type="video/mp4" />
+        </video>
+        {/* Máscara/Overlay escuro com vinheta superior e inferior para suavizar bordas */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#090D16] via-[#090D16]/65 to-[#090D16] pointer-events-none z-0" />
+
         <div className="max-w-4xl mx-auto relative z-10 space-y-4">
           <span className="text-xs font-bold uppercase tracking-widest text-[#7abf18] block">
             Comece Hoje Mesmo Sem Riscos
