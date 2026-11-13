@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readDb } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
 import { calculateOperatorGamification, getLeaderboard, isOperatorEligibleForAffiliates, maskOperatorName } from '@/lib/gamification';
+import { fetchAllOperatorsFromSupabase } from '@/lib/supabase';
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,14 +12,46 @@ export async function GET(req: NextRequest) {
     }
 
     const db = readDb();
-    let operator = db.operators.find(o => o.id === user.userId || o.email.toLowerCase() === user.email.toLowerCase());
+
+    // Sincroniza operadores com o Supabase em tempo real (Fonte Única de Verdade)
+    let supaOperators: any[] = [];
+    try {
+      supaOperators = await fetchAllOperatorsFromSupabase();
+    } catch (e) {
+      console.warn('Erro ao carregar operadores do Supabase:', e);
+    }
+
+    let operator = supaOperators.find(
+      (o: any) => o.id === user.userId || o.email?.toLowerCase() === user.email?.toLowerCase()
+    ) || db.operators.find(
+      (o: any) => o.id === user.userId || o.email?.toLowerCase() === user.email?.toLowerCase()
+    );
 
     if (!operator && user.role === 'MASTER') {
-      operator = db.operators.find(o => o.id === 'OP-0001') || db.operators[0];
+      operator = supaOperators.find(
+        (o: any) => o.id === 'OP-0001' || o.email?.toLowerCase() === 'admin@billysuite.com.br'
+      ) || db.operators.find(
+        (o: any) => o.id === 'OP-0001'
+      ) || db.operators[0];
     }
 
     if (!operator) {
       return NextResponse.json({ error: 'Operador não encontrado.' }, { status: 404 });
+    }
+
+    // Se houver dados no Supabase, mescla avatar_config e avatar_svg mais recentes
+    const matchedSupa = supaOperators.find(
+      (o: any) => o.id === operator.id || o.email?.toLowerCase() === operator.email?.toLowerCase()
+    );
+    if (matchedSupa) {
+      if (matchedSupa.avatar_config || matchedSupa.avatarConfig) {
+        operator.avatar_config = matchedSupa.avatar_config || matchedSupa.avatarConfig;
+        operator.avatarConfig = matchedSupa.avatar_config || matchedSupa.avatarConfig;
+      }
+      if (matchedSupa.avatar_svg || matchedSupa.avatarSvg) {
+        operator.avatar_svg = matchedSupa.avatar_svg || matchedSupa.avatarSvg;
+        operator.avatarSvg = matchedSupa.avatar_svg || matchedSupa.avatarSvg;
+      }
     }
 
     const license = db.licenses.find(l => l.serialToken === operator.serialToken);

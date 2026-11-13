@@ -795,59 +795,122 @@ export async function completeSiteChangeRequestInSupabase(
 }
 
 /**
- * Salva avatar gamer (configuração JSONB e SVG gerado) do operador ou admin no Supabase
+ * Salva avatar (configuração JSONB e SVG gerado) do operador ou admin no Supabase
+ * Utiliza update com fallback de upsert/insert caso a linha ainda não exista
  */
 export async function saveOperatorAvatarInSupabase(
   identifier: string,
   avatarConfig: any,
-  avatarSvg: string
+  avatarSvg: string,
+  extra?: { email?: string; name?: string }
 ): Promise<boolean> {
   if (!identifier) return false;
   const cleanId = identifier.trim();
+  const cleanEmail = extra?.email?.trim().toLowerCase() || (cleanId.includes('@') ? cleanId.toLowerCase() : '');
+  const cleanName = extra?.name?.trim() || cleanId;
+  let persistedInSupabase = false;
 
   try {
     const supabase = getSupabaseAdmin();
-    const { error } = await supabase
+    const nowIso = new Date().toISOString();
+
+    // 1. Tenta atualizar registro existente por id, email ou serial_token
+    let updateQuery = supabase
       .from('operators')
       .update({
         avatar_config: avatarConfig,
-        avatar_svg: avatarSvg
-      })
-      .or(`id.eq.${cleanId},email.eq.${cleanId},serial_token.eq.${cleanId}`);
+        avatar_svg: avatarSvg,
+        updated_at: nowIso
+      });
 
-    if (!error) return true;
-  } catch (err) {
-    console.warn('[Supabase Avatar] Erro ao salvar avatar no Supabase:', err);
+    if (cleanEmail) {
+      updateQuery = updateQuery.or(`id.eq.${cleanId},email.eq.${cleanEmail},serial_token.eq.${cleanId}`);
+    } else {
+      updateQuery = updateQuery.or(`id.eq.${cleanId},serial_token.eq.${cleanId}`);
+    }
+
+    const { data: updatedRows, error: updateErr } = await updateQuery.select('id');
+
+    if (!updateErr && updatedRows && updatedRows.length > 0) {
+      persistedInSupabase = true;
+    } else {
+      // 2. Se nenhuma linha foi atualizada, tenta realizar upsert/insert com os dados do operador
+      const db = readDb();
+      const localOp = (db.operators || []).find(
+        o => o.id === cleanId || (cleanEmail && o.email?.toLowerCase() === cleanEmail)
+      );
+      const localAdmin = (db.adminUsers || []).find(
+        a => a.id === cleanId || (cleanEmail && a.email?.toLowerCase() === cleanEmail)
+      );
+
+      const effectiveId = localOp?.id || (cleanId === 'admin' ? 'OP-0001' : cleanId);
+      const effectiveEmail = localOp?.email || localAdmin?.email || cleanEmail || (effectiveId === 'OP-0001' ? 'admin@billysuite.com.br' : `${cleanId.toLowerCase()}@webbilly.com.br`);
+      const effectiveName = localOp?.name || localAdmin?.name || cleanName;
+      const effectiveToken = localOp?.serialToken || (effectiveId === 'OP-0001' ? 'BILLY-OP-ADMIN-MASTER-2026' : `BILLY-OP-${cleanId}`);
+
+      const upsertPayload: any = {
+        id: effectiveId,
+        name: effectiveName,
+        email: effectiveEmail,
+        serial_token: effectiveToken,
+        status: 'ATIVO',
+        avatar_config: avatarConfig,
+        avatar_svg: avatarSvg,
+        updated_at: nowIso,
+        created_at: localOp?.createdAt || nowIso
+      };
+
+      if (localOp?.whatsapp) upsertPayload.whatsapp = localOp.whatsapp;
+      if (localOp?.pixKey) upsertPayload.pix_key = localOp.pixKey;
+      if (localOp?.pixType) upsertPayload.pix_type = localOp.pixType;
+      if (localOp?.passwordHash) upsertPayload.password_hash = localOp.passwordHash;
+
+      const { error: upsertErr } = await supabase
+        .from('operators')
+        .upsert(upsertPayload, { onConflict: 'id' });
+
+      if (!upsertErr) {
+        persistedInSupabase = true;
+      } else {
+        console.warn('[Supabase Avatar] Aviso ao realizar upsert:', upsertErr.message);
+      }
+    }
+  } catch (err: any) {
+    console.warn('[Supabase Avatar] Erro de conexão com Supabase:', err?.message || err);
   }
 
-  // Fallback db.json
+  // 3. Fallback e redundância em db.json
+  let persistedInDb = false;
   try {
     const db = readDb();
     if (Array.isArray(db.operators)) {
       const op = db.operators.find(
-        o => o.id === cleanId || o.email?.toLowerCase() === cleanId.toLowerCase() || o.serialToken === cleanId
+        o => o.id === cleanId || (cleanEmail && o.email?.toLowerCase() === cleanEmail) || o.serialToken === cleanId
       );
       if (op) {
         op.avatar_config = avatarConfig;
         op.avatarConfig = avatarConfig;
         op.avatar_svg = avatarSvg;
         op.avatarSvg = avatarSvg;
-        writeDb(db);
-        return true;
+        persistedInDb = true;
       }
     }
     // Caso seja admin master
-    if (cleanId === 'admin' || cleanId.includes('admin@')) {
+    if (cleanId === 'admin' || cleanId === 'OP-0001' || cleanEmail.includes('admin@')) {
       if (Array.isArray(db.adminUsers) && db.adminUsers.length > 0) {
         db.adminUsers[0].avatar_config = avatarConfig;
         db.adminUsers[0].avatarConfig = avatarConfig;
         db.adminUsers[0].avatar_svg = avatarSvg;
         db.adminUsers[0].avatarSvg = avatarSvg;
-        writeDb(db);
-        return true;
+        persistedInDb = true;
       }
     }
-  } catch {}
+    if (persistedInDb) {
+      writeDb(db);
+    }
+  } catch (dbErr) {
+    console.warn('[Avatar Save] Erro ao gravar no db.json:', dbErr);
+  }
 
-  return false;
+  return persistedInSupabase || persistedInDb;
 }

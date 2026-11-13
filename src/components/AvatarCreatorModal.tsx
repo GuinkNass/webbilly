@@ -14,18 +14,17 @@ import {
   Smile,
   Glasses,
   Briefcase,
-  Palette,
-  Layers
+  Palette
 } from 'lucide-react';
 
 /* =========================================================================
    CATÁLOGO PROFISSIONAL DE OPÇÕES AVATAAARS (COM NOMES EM PORTUGUÊS)
    ========================================================================= */
 
-// 1. Tom de Pele
+// 1. Tom de Pele (Rótulos limpos e completos sem corte)
 const SKIN_COLORS = [
   { id: 'ffdbb4', name: 'Clara', hex: '#ffdbb4' },
-  { id: 'edb98a', name: 'Média Clara', hex: '#edb98a' },
+  { id: 'edb98a', name: 'Média', hex: '#edb98a' },
   { id: 'd08b5b', name: 'Morena', hex: '#d08b5b' },
   { id: 'ae5d29', name: 'Bronzeada', hex: '#ae5d29' },
   { id: '614335', name: 'Negra', hex: '#614335' },
@@ -175,6 +174,7 @@ interface AvatarCreatorModalProps {
   canClose?: boolean;
   operatorId: string;
   operatorName?: string;
+  operatorEmail?: string;
   initialConfig?: any;
   onSaved?: (config: any, svg: string) => void;
   onSaveSuccess?: (config: any, svg: string) => void;
@@ -186,6 +186,7 @@ export default function AvatarCreatorModal({
   canClose = true,
   operatorId,
   operatorName,
+  operatorEmail,
   initialConfig,
   onSaved,
   onSaveSuccess
@@ -329,6 +330,8 @@ export default function AvatarCreatorModal({
     try {
       const payload = {
         operatorId,
+        email: operatorEmail || '',
+        name: operatorName || '',
         style: 'avataaars',
         seed,
         options: currentOptions,
@@ -351,6 +354,14 @@ export default function AvatarCreatorModal({
         updatedAt: new Date().toISOString()
       };
 
+      // Persistência imediata local para evitar reabertura no F5 mesmo com oscilações de rede
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`webbilly_avatar_${operatorId}`, JSON.stringify({ config: finalConfig, svg: currentSvg }));
+          localStorage.setItem('webbilly_avatar_configured', 'true');
+        }
+      } catch {}
+
       if (onSaved) onSaved(finalConfig, currentSvg);
       if (onSaveSuccess) onSaveSuccess(finalConfig, currentSvg);
       onClose();
@@ -365,11 +376,11 @@ export default function AvatarCreatorModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-4xl bg-[#090D16] border border-white/[0.1] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-        {/* Cabeçalho Limpo e Profissional */}
-        <div className="p-5 sm:px-8 border-b border-white/[0.08] flex items-center justify-between bg-[#0e121d]">
+      <div className="relative w-full max-w-4xl bg-[#090D16] border border-white/[0.1] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] h-[85vh]">
+        {/* Cabeçalho Limpo e Profissional (Fixo shrink-0) */}
+        <div className="shrink-0 p-4 sm:p-5 sm:px-8 border-b border-white/[0.08] flex items-center justify-between bg-[#0e121d]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center justify-center shrink-0">
               <User className="w-5 h-5" />
             </div>
             <div>
@@ -393,19 +404,19 @@ export default function AvatarCreatorModal({
           )}
         </div>
 
-        {/* Corpo: Duas Colunas (Preview Fixo à Esquerda + Painel de Controles com Scroll à Direita) */}
-        <div className="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-white/[0.08]">
-          {/* Coluna Esquerda: Preview do Avatar */}
-          <div className="lg:col-span-5 p-6 flex flex-col items-center justify-between bg-gradient-to-b from-[#0c101a] to-[#090D16]">
-            <div className="w-full flex flex-col items-center">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-500 mb-4">
+        {/* Corpo: Duas Colunas (Coluna Esquerda Fixa + Coluna Direita com Scroll Independente) */}
+        <div className="flex-1 min-h-0 grid grid-cols-1 md:grid-cols-12 divide-y md:divide-y-0 md:divide-x divide-white/[0.08] overflow-hidden">
+          {/* Coluna Esquerda: Preview do Avatar Fixo / Estático */}
+          <div className="md:col-span-5 p-5 sm:p-6 flex flex-col items-center justify-between bg-gradient-to-b from-[#0c101a] to-[#090D16] overflow-y-auto md:overflow-hidden h-full">
+            <div className="w-full flex flex-col items-center justify-center">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-500 mb-3">
                 Pré-visualização em Tempo Real
               </span>
 
               {/* Moldura do Avatar */}
               <div className="relative group">
                 <div
-                  className="w-48 h-48 sm:w-56 sm:h-56 rounded-3xl overflow-hidden border-2 border-white/15 shadow-2xl flex items-center justify-center transition-all duration-200"
+                  className="w-40 h-40 sm:w-48 sm:h-48 rounded-3xl overflow-hidden border-2 border-white/15 shadow-2xl flex items-center justify-center transition-all duration-200"
                   style={{
                     backgroundColor: `#${backgroundColor}`
                   }}
@@ -414,7 +425,7 @@ export default function AvatarCreatorModal({
               </div>
 
               {/* Informações de Perfil */}
-              <div className="mt-4 text-center">
+              <div className="mt-3 text-center">
                 <div className="text-sm font-bold text-white">
                   {operatorName || seed}
                 </div>
@@ -424,10 +435,10 @@ export default function AvatarCreatorModal({
               </div>
             </div>
 
-            {/* Campo de Identificador / Seed */}
-            <div className="w-full mt-6 space-y-3">
+            {/* Campo de Identificador / Seed e Fundo */}
+            <div className="w-full mt-3 space-y-3">
               <div>
-                <label className="block text-[11px] font-semibold text-zinc-400 mb-1.5">
+                <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
                   Identificador / Seed
                 </label>
                 <div className="flex items-center gap-2">
@@ -436,11 +447,11 @@ export default function AvatarCreatorModal({
                     value={seed}
                     onChange={(e) => setSeed(e.target.value)}
                     placeholder="Ex: João Silva"
-                    className="flex-1 px-3.5 py-2 rounded-xl bg-[#141824] border border-white/[0.08] text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-emerald-500 font-mono"
+                    className="flex-1 px-3 py-1.5 rounded-xl bg-[#141824] border border-white/[0.08] text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-emerald-500 font-mono"
                   />
                   <button
                     onClick={handleRandomize}
-                    className="px-3 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white border border-white/[0.08] text-xs font-medium transition flex items-center gap-1.5 shrink-0"
+                    className="px-2.5 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white border border-white/[0.08] text-xs font-medium transition flex items-center gap-1.5 shrink-0"
                     title="Sortear combinação aleatória"
                   >
                     <Dices className="w-4 h-4 text-emerald-400" />
@@ -451,7 +462,7 @@ export default function AvatarCreatorModal({
 
               {/* Seletor de Fundo do Avatar */}
               <div>
-                <label className="block text-[11px] font-semibold text-zinc-400 mb-1.5">
+                <label className="block text-[11px] font-semibold text-zinc-400 mb-1">
                   Fundo do Avatar
                 </label>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -460,7 +471,7 @@ export default function AvatarCreatorModal({
                       key={bg.id}
                       onClick={() => setBackgroundColor(bg.id)}
                       style={{ backgroundColor: bg.hex }}
-                      className={`w-7 h-7 rounded-full border transition-transform ${
+                      className={`w-6 h-6 rounded-full border transition-transform ${
                         backgroundColor === bg.id
                           ? 'ring-2 ring-emerald-400 scale-110 border-white'
                           : 'border-white/20 hover:scale-105 opacity-80 hover:opacity-100'
@@ -473,30 +484,30 @@ export default function AvatarCreatorModal({
             </div>
           </div>
 
-          {/* Coluna Direita: Controles Granulares por Seção */}
-          <div className="lg:col-span-7 p-6 sm:p-7 space-y-6">
-            {/* 1. Tom de Pele */}
+          {/* Coluna Direita: Controles Granulares com Scroll Vertical Independente */}
+          <div className="md:col-span-7 p-5 sm:p-7 space-y-6 overflow-y-auto pr-3 h-full">
+            {/* 1. Tom de Pele (Rótulos completos sem corte) */}
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs font-bold text-white">
                 <Palette className="w-4 h-4 text-emerald-400" />
                 <span>1. Tom de Pele</span>
               </div>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 sm:gap-2">
                 {SKIN_COLORS.map((s) => (
                   <button
                     key={s.id}
                     onClick={() => setSkinColor(s.id)}
-                    className={`flex items-center gap-2 p-2 rounded-xl border text-xs transition ${
+                    className={`flex items-center justify-center gap-1.5 py-2 px-1.5 rounded-xl border text-xs transition ${
                       skinColor === s.id
                         ? 'bg-emerald-950/40 border-emerald-500 text-white font-bold'
                         : 'bg-[#141824] border-white/[0.06] text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                     }`}
                   >
                     <span
-                      className="w-4 h-4 rounded-full border border-black/20 shrink-0"
+                      className="w-3.5 h-3.5 rounded-full border border-black/20 shrink-0"
                       style={{ backgroundColor: s.hex }}
                     />
-                    <span className="truncate text-[11px]">{s.name}</span>
+                    <span className="text-[11px] whitespace-nowrap">{s.name}</span>
                   </button>
                 ))}
               </div>
@@ -504,12 +515,12 @@ export default function AvatarCreatorModal({
 
             {/* 2. Formato do Rosto & Corte de Cabelo */}
             <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2 text-xs font-bold text-white">
                   <Scissors className="w-4 h-4 text-emerald-400" />
                   <span>2. Corte de Cabelo / Topo</span>
                 </div>
-                <div className="flex items-center gap-1 bg-[#141824] p-0.5 rounded-lg border border-white/[0.08] text-[10px]">
+                <div className="flex items-center gap-1 bg-[#141824] p-0.5 rounded-lg border border-white/[0.08] text-[10px] flex-wrap">
                   <button
                     onClick={() => setHairCategory('curto')}
                     className={`px-2 py-0.5 rounded-md transition ${
@@ -716,9 +727,9 @@ export default function AvatarCreatorModal({
               </div>
             </div>
 
-            {/* 5. Óculos */}
+            {/* 5. Óculos / Acessórios */}
             <div className="space-y-2 pt-2 border-t border-white/[0.08]">
-              <div className="flex items-center gap-2 text-xs font-bold text-white">
+              <div className="text-xs font-bold text-white flex items-center gap-2">
                 <Glasses className="w-4 h-4 text-emerald-400" />
                 <span>5. Óculos</span>
               </div>
@@ -739,9 +750,9 @@ export default function AvatarCreatorModal({
               </div>
             </div>
 
-            {/* 6. Vestimenta & Cores da Roupa */}
-            <div className="space-y-2.5 pt-2 border-t border-white/[0.08]">
-              <div className="flex items-center gap-2 text-xs font-bold text-white">
+            {/* 6. Vestimenta / Roupa */}
+            <div className="space-y-2 pt-2 border-t border-white/[0.08]">
+              <div className="text-xs font-bold text-white flex items-center gap-2">
                 <Briefcase className="w-4 h-4 text-emerald-400" />
                 <span>6. Vestimenta / Roupa</span>
               </div>
@@ -788,8 +799,8 @@ export default function AvatarCreatorModal({
           </div>
         </div>
 
-        {/* Rodapé Limpo com Botão Salvar e Fechar */}
-        <div className="p-4 sm:px-8 border-t border-white/[0.08] bg-[#0e121d] flex flex-col sm:flex-row items-center justify-between gap-3">
+        {/* Rodapé Limpo com Botão Salvar e Fechar (Fixo shrink-0) */}
+        <div className="shrink-0 p-4 sm:px-8 border-t border-white/[0.08] bg-[#0e121d] flex flex-col sm:flex-row items-center justify-between gap-3">
           {saveError && (
             <div className="text-xs text-rose-400 font-medium">
               {saveError}

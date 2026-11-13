@@ -87,7 +87,14 @@ export default function OperatorDashboardPage() {
           avatarSvg: newSvg
         }
       });
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`webbilly_avatar_${data.operator.id}`, JSON.stringify({ config: newConfig, svg: newSvg }));
+          localStorage.setItem('webbilly_avatar_configured', 'true');
+        }
+      } catch {}
     }
+    setShowAvatarModal(false);
   };
 
   // Estados de Solicitação de Encerramento/Cancelamento de Cliente
@@ -245,11 +252,46 @@ export default function OperatorDashboardPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
 
+      // Checa persistência local de avatar para evitar que o modal reabra indevidamente no F5
+      let localAvatarConfig: any = null;
+      let localAvatarSvg: string | null = null;
+      try {
+        if (typeof window !== 'undefined') {
+          const stored = localStorage.getItem(`webbilly_avatar_${json.operator?.id}`) || localStorage.getItem('webbilly_avatar_configured');
+          if (stored && stored !== 'true') {
+            const parsed = JSON.parse(stored);
+            localAvatarConfig = parsed.config;
+            localAvatarSvg = parsed.svg;
+          }
+        }
+      } catch {}
+
+      const hasAvatar = Boolean(
+        json.operator?.avatar_config || 
+        json.operator?.avatarConfig || 
+        json.operator?.avatar_svg || 
+        json.operator?.avatarSvg ||
+        localAvatarConfig ||
+        localAvatarSvg ||
+        (typeof window !== 'undefined' && localStorage.getItem('webbilly_avatar_configured') === 'true')
+      );
+
+      if (json.operator && (localAvatarConfig || localAvatarSvg)) {
+        if (!json.operator.avatar_config && !json.operator.avatarConfig) {
+          json.operator.avatar_config = localAvatarConfig;
+          json.operator.avatarConfig = localAvatarConfig;
+        }
+        if (!json.operator.avatar_svg && !json.operator.avatarSvg) {
+          json.operator.avatar_svg = localAvatarSvg;
+          json.operator.avatarSvg = localAvatarSvg;
+        }
+      }
+
       setData(json);
       if (json.operator?.mustChangePassword) {
         setShowPasswordModal(true);
-      } else if (!json.operator?.avatar_config && !json.operator?.avatarConfig && !json.operator?.avatar_svg && !json.operator?.avatarSvg) {
-        // Primeiro acesso sem avatar definido: abre criador gamer obrigatório
+      } else if (!hasAvatar) {
+        // Primeiro acesso sem avatar definido: abre criador obrigatório
         setShowAvatarModal(true);
         setAvatarModalCanClose(false);
       }
@@ -2956,26 +2998,17 @@ export default function OperatorDashboardPage() {
         </div>
       )}
 
-      {/* MODAL DO CRIADOR DE AVATAR GAMER (DICEBEAR) */}
+      {/* MODAL DE PERSONALIZAÇÃO DE AVATAR */}
       <AvatarCreatorModal
         isOpen={showAvatarModal}
         onClose={() => setShowAvatarModal(false)}
         canClose={avatarModalCanClose}
         operatorId={data?.operator?.id}
         operatorName={data?.operator?.name}
+        operatorEmail={data?.operator?.email || data?.operator?.corporateEmail}
         initialConfig={data?.operator?.avatar_config || data?.operator?.avatarConfig}
-        onSaved={(newConfig: any, newSvg: string) => {
-          setData((prev: any) => ({
-            ...prev,
-            operator: {
-              ...prev?.operator,
-              avatar_config: newConfig,
-              avatarConfig: newConfig,
-              avatar_svg: newSvg,
-              avatarSvg: newSvg
-            }
-          }));
-        }}
+        onSaved={handleAvatarSaveSuccess}
+        onSaveSuccess={handleAvatarSaveSuccess}
       />
     </div>
   );

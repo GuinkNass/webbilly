@@ -165,6 +165,20 @@ export default function AdminDashboardPage() {
         console.warn('Falha ao sincronizar /api/admin/licenses:', licErr);
       }
 
+      // Hidrata avatar local do admin caso já tenha sido personalizado nesta máquina
+      try {
+        if (typeof window !== 'undefined') {
+          const stored = localStorage.getItem('webbilly_avatar_admin') || localStorage.getItem('webbilly_avatar_OP-0001');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            if (json.adminUser && (!json.adminUser.avatar_config || !json.adminUser.avatar_svg)) {
+              json.adminUser.avatar_config = json.adminUser.avatar_config || parsed.config;
+              json.adminUser.avatar_svg = json.adminUser.avatar_svg || parsed.svg;
+            }
+          }
+        }
+      } catch {}
+
       setData(json);
       setApiSettings(json.settings);
     } catch (err: any) {
@@ -2538,13 +2552,14 @@ export default function AdminDashboardPage() {
         </div>
       )}
 
-      {/* MODAL DO CRIADOR DE AVATAR GAMER (ADMIN MASTER) */}
+      {/* MODAL DE PERSONALIZAÇÃO DE AVATAR (ADMIN MASTER) */}
       <AvatarCreatorModal
         isOpen={showAdminAvatarModal}
         onClose={() => setShowAdminAvatarModal(false)}
         canClose={true}
-        operatorId="admin"
+        operatorId="OP-0001"
         operatorName="Administrador Master"
+        operatorEmail="admin@billysuite.com.br"
         initialConfig={data?.adminUser?.avatar_config || data?.adminUser?.avatarConfig}
         onSaved={(newConfig: any, newSvg: string) => {
           setData((prev: any) => ({
@@ -2557,6 +2572,12 @@ export default function AdminDashboardPage() {
               avatarSvg: newSvg
             }
           }));
+          try {
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('webbilly_avatar_admin', JSON.stringify({ config: newConfig, svg: newSvg }));
+              localStorage.setItem('webbilly_avatar_OP-0001', JSON.stringify({ config: newConfig, svg: newSvg }));
+            }
+          } catch {}
         }}
       />
 

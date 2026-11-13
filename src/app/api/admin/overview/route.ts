@@ -138,6 +138,10 @@ export async function GET(req: NextRequest) {
       })
       .sort((a, b) => b.totalEarnedCommissions - a.totalEarnedCommissions || b.totalRecruits - a.totalRecruits);
 
+    const masterOp = combinedOperators.find(
+      o => o.id === 'OP-0001' || o.email?.toLowerCase() === 'admin@billysuite.com.br'
+    );
+
     return NextResponse.json({
       metrics: {
         totalActiveSites,
@@ -244,12 +248,13 @@ export async function GET(req: NextRequest) {
           avatar_svg: op?.avatar_svg || op?.avatarSvg || null
         };
       }),
+
       adminUser: {
         id: db.adminUsers?.[0]?.id || 'admin',
         name: db.adminUsers?.[0]?.name || 'Administrador Master',
         email: db.adminUsers?.[0]?.email || 'admin@billysuite.com.br',
-        avatar_config: db.adminUsers?.[0]?.avatar_config || null,
-        avatar_svg: db.adminUsers?.[0]?.avatar_svg || null
+        avatar_config: masterOp?.avatar_config || masterOp?.avatarConfig || db.adminUsers?.[0]?.avatar_config || null,
+        avatar_svg: masterOp?.avatar_svg || masterOp?.avatarSvg || db.adminUsers?.[0]?.avatar_svg || null
       },
       sales: db.sales,
       settings: {
