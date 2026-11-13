@@ -199,8 +199,22 @@ export interface SubscriptionRecord {
   status: 'active' | 'pending' | 'suspended' | 'cancelled';
   deployedUrl?: string;
   asaasCustomerId?: string;
+  asaas_customer_id?: string;
   asaasSubscriptionId?: string;
+  asaas_subscription_id?: string;
   asaasInvoiceUrl?: string;
+  vercelProjectId?: string;
+  vercel_project_id?: string;
+  cancellationRequested?: boolean;
+  cancellation_requested?: boolean;
+  cancellationReason?: string;
+  cancellation_reason?: string;
+  cancellationRequestedAt?: string;
+  cancellation_requested_at?: string;
+  cancelledAt?: string;
+  cancelled_at?: string;
+  siteStatus?: string;
+  site_status?: string;
   mpPreferenceId?: string;
   mpPreapprovalId?: string;
   mpPaymentId?: string;
@@ -220,6 +234,43 @@ export interface SubscriptionRecord {
   accepted_terms_version?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface SiteChangeRequestRecord {
+  id: string;
+  siteSlug: string;
+  site_slug?: string;
+  clientName?: string;
+  client_name?: string;
+  clientWhatsapp?: string;
+  client_whatsapp?: string;
+  operatorId?: string;
+  operator_id?: string;
+  status: 'pending' | 'completed' | 'rejected';
+  changesPayload: {
+    logoUrl?: string;
+    newPhone?: string;
+    newWhatsapp?: string;
+    newAddress?: string;
+    newHours?: string;
+    businessUpdates?: string;
+    ownerOrTeamPhoto?: {
+      url: string;
+      description: string;
+    };
+    galleryPhotos?: Array<{
+      url: string;
+      description: string;
+      placementHint?: string;
+    }>;
+    generalNotes?: string;
+    [key: string]: any;
+  };
+  changes_payload?: any;
+  createdAt: string;
+  created_at?: string;
+  completedAt?: string;
+  completed_at?: string;
 }
 
 export interface PayoutRequest {
@@ -281,6 +332,7 @@ export interface DatabaseSchema {
   payoutRequests?: PayoutRequest[];
   medalUpgrades?: MedalUpgradeRecord[];
   affiliateCommissions?: AffiliateCommissionRecord[];
+  siteChangeRequests?: SiteChangeRequestRecord[];
 }
 
 export function getDefaultSubscriptions(): SubscriptionRecord[] {

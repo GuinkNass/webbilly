@@ -43,7 +43,8 @@ import {
   Share2,
   Check,
   HelpCircle,
-  Puzzle
+  Puzzle,
+  ImageIcon
 } from 'lucide-react';
 import { startOperadorTour } from '@/lib/tours';
 
@@ -66,6 +67,44 @@ export default function OperatorDashboardPage() {
   const [payoutLoading, setPayoutLoading] = useState(false);
   const [payoutSuccess, setPayoutSuccess] = useState<string | null>(null);
   const [payoutError, setPayoutError] = useState<string | null>(null);
+
+  // Estados de Solicitação de Encerramento/Cancelamento de Cliente
+  const [cancelModalSub, setCancelModalSub] = useState<any | null>(null);
+  const [cancelReason, setCancelReason] = useState<string>('');
+  const [cancelSubmitting, setCancelSubmitting] = useState<boolean>(false);
+  const [cancelSuccessMsg, setCancelSuccessMsg] = useState<string | null>(null);
+  const [cancelErrorMsg, setCancelErrorMsg] = useState<string | null>(null);
+
+  const handleConfirmCancellation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!cancelModalSub || !cancelReason.trim()) return;
+    setCancelSubmitting(true);
+    setCancelErrorMsg(null);
+    setCancelSuccessMsg(null);
+    try {
+      const res = await fetch('/api/operador/request-cancellation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          siteSlug: cancelModalSub.slug || cancelModalSub.siteSlug,
+          reason: cancelReason.trim(),
+          operatorId: data?.operator?.id
+        })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Erro ao solicitar encerramento.');
+      setCancelSuccessMsg('Solicitação registrada com sucesso! O Admin Master fará o cancelamento definitivo no Asaas e Vercel.');
+      await loadData();
+      setTimeout(() => {
+        setCancelModalSub(null);
+        setCancelSuccessMsg(null);
+      }, 2000);
+    } catch (err: any) {
+      setCancelErrorMsg(err.message || 'Falha ao enviar solicitação.');
+    } finally {
+      setCancelSubmitting(false);
+    }
+  };
 
   const handleSolicitarRepasse = async () => {
     if (!confirm('Deseja enviar a solicitação formal de repasse Pix deste mês para o departamento financeiro?')) return;
@@ -782,8 +821,8 @@ export default function OperatorDashboardPage() {
                 </div>
               </div>
 
-              {/* 3 Botões / Cards Oficiais de Download */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {/* 4 Botões / Cards Oficiais de Download */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {/* 1. Programa Desktop Billy */}
                 <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06] flex flex-col justify-between space-y-4 hover:border-emerald-500/30 transition group relative overflow-hidden">
                   <div className="space-y-3">
@@ -881,7 +920,37 @@ export default function OperatorDashboardPage() {
                   </a>
                 </div>
 
-                {/* 3. Lark Mail Corporativo */}
+                {/* 3. Extensão Image Downloader (Chrome) */}
+                <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06] flex flex-col justify-between space-y-4 hover:border-amber-500/30 transition group">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center justify-center group-hover:scale-105 transition">
+                        <ImageIcon className="w-6 h-6" />
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                        Chrome Web Store
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-white text-base">Extensão Image Downloader (Chrome)</h3>
+                      <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                        Baixe fotos, cardápios e imagens de clientes em alta resolução com 1 clique.
+                      </p>
+                    </div>
+                  </div>
+
+                  <a
+                    href="https://chromewebstore.google.com/detail/image-downloader/cnpniohnfphhjihaiiggeabnkjhpaldj"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-amber-300 hover:text-zinc-950 bg-amber-500/15 hover:bg-amber-400 transition border border-amber-500/40 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-amber-950/30"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span>Instalar no Chrome</span>
+                  </a>
+                </div>
+
+                {/* 4. Lark Mail Corporativo */}
                 <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06] flex flex-col justify-between space-y-4 hover:border-cyan-500/30 transition group">
                   <div className="space-y-3">
                     <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 text-cyan-400 flex items-center justify-center group-hover:scale-105 transition">
@@ -1033,21 +1102,53 @@ export default function OperatorDashboardPage() {
                             <span className="text-white font-bold">R$ {sub.monthlyPrice?.toFixed(2) || '29.90'}/mês</span>
                             <span className="text-[10px] text-emerald-400 block font-semibold">+R$ {(sub.operatorCommissionMonthly ?? 10.00).toFixed(2)} repasse</span>
                           </td>
-                          <td className="py-3.5 px-4">
-                            <span
-                              className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border ${
-                                sub.status === 'active'
-                                  ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/40'
-                                  : sub.status === 'suspended'
-                                  ? 'bg-rose-950/40 text-rose-400 border-rose-800/40'
-                                  : 'bg-amber-950/40 text-amber-400 border-amber-800/40'
-                              }`}
-                            >
-                              {sub.status === 'active' ? '● No Ar (Ativo)' : sub.status === 'suspended' ? '● Suspenso (Inadimplente)' : '● Pendente'}
-                            </span>
+                          <td className="py-3.5 px-4 space-y-1">
+                            <div>
+                              <span
+                                className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border ${
+                                  sub.status === 'active'
+                                    ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/40'
+                                    : sub.status === 'suspended'
+                                    ? 'bg-rose-950/40 text-rose-400 border-rose-800/40'
+                                    : 'bg-amber-950/40 text-amber-400 border-amber-800/40'
+                                }`}
+                              >
+                                {sub.status === 'active' ? '● No Ar (Ativo)' : sub.status === 'suspended' ? '● Suspenso (Inadimplente)' : sub.status === 'cancelled' ? '● Cancelado' : '● Pendente'}
+                              </span>
+                            </div>
+                            {(sub.cancellationRequested || sub.cancellation_requested) && (
+                              <div className="pt-0.5">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse">
+                                  <AlertTriangle className="w-2.5 h-2.5" />
+                                  <span>Cancelamento Solicitado (Aguardando Admin)</span>
+                                </span>
+                              </div>
+                            )}
                           </td>
                           <td className="py-3.5 px-4 text-right">
                             <div className="flex items-center justify-end gap-2">
+                              {sub.status !== 'cancelled' && (
+                                <>
+                                  {sub.cancellationRequested || sub.cancellation_requested ? (
+                                    <span className="px-2 py-1 rounded-lg bg-amber-500/10 text-amber-400 text-[10px] font-semibold border border-amber-500/30">
+                                      Cancelamento Solicitado
+                                    </span>
+                                  ) : (
+                                    <button
+                                      onClick={() => {
+                                        setCancelModalSub(sub);
+                                        setCancelReason('');
+                                        setCancelErrorMsg(null);
+                                        setCancelSuccessMsg(null);
+                                      }}
+                                      className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-semibold text-[10px] border border-rose-500/30 transition flex items-center gap-1 cursor-pointer"
+                                      title="Solicitar encerramento deste cliente"
+                                    >
+                                      <span>Solicitar Encerramento</span>
+                                    </button>
+                                  )}
+                                </>
+                              )}
                               <a
                                 href={`https://webbilly.com.br/api/subscription/create-checkout?slug=${sub.slug}`}
                                 target="_blank"
@@ -2506,6 +2607,97 @@ export default function OperatorDashboardPage() {
                 </div>
               </form>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: SOLICITAÇÃO DE ENCERRAMENTO DE CLIENTE (OPERADOR -> ADMIN)
+         ========================================================================= */}
+      {cancelModalSub && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md p-6 rounded-3xl bg-[#11141c] border border-rose-500/30 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+              <div className="flex items-center gap-2 text-rose-400">
+                <AlertTriangle className="w-5 h-5 shrink-0" />
+                <h3 className="font-bold text-white text-base">Solicitar Encerramento de Assinatura</h3>
+              </div>
+              <button
+                onClick={() => setCancelModalSub(null)}
+                className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="text-xs text-zinc-300 space-y-2">
+              <p>
+                Cliente: <strong className="text-white">{cancelModalSub.clientName}</strong>
+              </p>
+              <p className="font-mono text-zinc-400">
+                Subdomínio: <strong className="text-sky-400">{cancelModalSub.slug || cancelModalSub.siteSlug}.webbilly.com.br</strong>
+              </p>
+              <p className="text-[11px] text-zinc-400 bg-rose-500/10 p-3 rounded-xl border border-rose-500/20">
+                Ao enviar este pedido, o Administrador Master receberá o alerta para cancelar definitivamente a cobrança no Asaas e desativar o subdomínio na Vercel.
+              </p>
+            </div>
+
+            {cancelErrorMsg && (
+              <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{cancelErrorMsg}</span>
+              </div>
+            )}
+
+            {cancelSuccessMsg && (
+              <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
+                <Check className="w-4 h-4 shrink-0" />
+                <span>{cancelSuccessMsg}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleConfirmCancellation} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                  Motivo do Encerramento informado pelo cliente *
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  placeholder="Ex: O cliente encerrou as atividades da loja ou solicitou o cancelamento definitivo do plano."
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#141824] border border-white/[0.08] text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-rose-500 resize-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setCancelModalSub(null)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] transition"
+                >
+                  Voltar
+                </button>
+                <button
+                  type="submit"
+                  disabled={cancelSubmitting || !cancelReason.trim()}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 transition border border-rose-500/40 flex items-center gap-2 disabled:opacity-50 cursor-pointer shadow-lg shadow-rose-950/40"
+                >
+                  {cancelSubmitting ? (
+                    <>
+                      <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Enviando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      <span>Confirmar Solicitação de Encerramento</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

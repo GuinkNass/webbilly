@@ -228,3 +228,28 @@ export async function createSubscription(params: SubscriptionParams): Promise<{
     'Erro ao gerar link de pagamento recorrente no Asaas.';
   throw new Error(errorMsg);
 }
+
+/**
+ * Cancela definitivamente uma assinatura recorrente no Asaas (DELETE /v3/subscriptions/{id})
+ */
+export async function cancelAsaasSubscription(subscriptionId: string): Promise<boolean> {
+  if (!subscriptionId) return false;
+  try {
+    const res = await fetch(`${getApiUrl()}/subscriptions/${encodeURIComponent(subscriptionId)}`, {
+      method: 'DELETE',
+      headers: getHeaders()
+    });
+    if (res.ok) {
+      console.log(`[Asaas] Assinatura ${subscriptionId} cancelada com sucesso.`);
+      return true;
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      console.warn(`[Asaas] Resposta ao deletar assinatura ${subscriptionId}:`, errData);
+      // Se já estava cancelada ou não encontrada, consideramos ok
+      if (res.status === 404) return true;
+    }
+  } catch (err) {
+    console.warn(`[Asaas] Exceção ao cancelar assinatura ${subscriptionId}:`, err);
+  }
+  return false;
+}

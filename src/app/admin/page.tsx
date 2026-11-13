@@ -52,8 +52,44 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
-  const [subFilter, setSubFilter] = useState<'TODOS' | 'ACTIVE' | 'SUSPENDED' | 'PENDING'>('TODOS');
+  const [subFilter, setSubFilter] = useState<'TODOS' | 'ACTIVE' | 'SUSPENDED' | 'PENDING' | 'CANCELLATION_REQUESTED'>('TODOS');
   const [subSearch, setSubSearch] = useState('');
+
+  // Estados de Cancelamento Definitivo (Asaas + Vercel + Supabase)
+  const [cancelDefinitiveSub, setCancelDefinitiveSub] = useState<any | null>(null);
+  const [cancelDefinitiveLoading, setCancelDefinitiveLoading] = useState(false);
+  const [cancelDefinitiveSuccess, setCancelDefinitiveSuccess] = useState<string | null>(null);
+  const [cancelDefinitiveError, setCancelDefinitiveError] = useState<string | null>(null);
+
+  const handleExecuteDefinitiveCancellation = async () => {
+    if (!cancelDefinitiveSub) return;
+    setCancelDefinitiveLoading(true);
+    setCancelDefinitiveError(null);
+    setCancelDefinitiveSuccess(null);
+    try {
+      const res = await fetch('/api/admin/subscriptions/cancel-definitive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subscriptionId: cancelDefinitiveSub.id,
+          siteSlug: cancelDefinitiveSub.siteSlug || cancelDefinitiveSub.slug
+        })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Erro ao executar cancelamento definitivo.');
+
+      setCancelDefinitiveSuccess('Cancelamento definitivo executado com sucesso no Asaas, Vercel e Supabase.');
+      await loadData();
+      setTimeout(() => {
+        setCancelDefinitiveSub(null);
+        setCancelDefinitiveSuccess(null);
+      }, 2000);
+    } catch (err: any) {
+      setCancelDefinitiveError(err.message || 'Falha ao executar cancelamento.');
+    } finally {
+      setCancelDefinitiveLoading(false);
+    }
+  };
 
   // Estados de formulário e modal
   const [approvalModalData, setApprovalModalData] = useState<any>(null);
@@ -490,10 +526,15 @@ export default function AdminDashboardPage() {
   }
 
   // Filtragem de Assinaturas
+  const pendingCancellationsCount = (data?.subscriptions || []).filter(
+    (s: any) => (s.cancellationRequested || s.cancellation_requested) && s.status !== 'cancelled'
+  ).length;
+
   const subscriptionsList = (data?.subscriptions || []).filter((sub: any) => {
     if (subFilter === 'ACTIVE' && sub.status !== 'active') return false;
     if (subFilter === 'SUSPENDED' && sub.status !== 'suspended') return false;
     if (subFilter === 'PENDING' && sub.status !== 'pending') return false;
+    if (subFilter === 'CANCELLATION_REQUESTED' && !sub.cancellationRequested && !sub.cancellation_requested) return false;
     if (subSearch) {
       const q = subSearch.toLowerCase();
       const matchSlug = (sub.siteSlug || '').toLowerCase().includes(q);
@@ -931,6 +972,24 @@ export default function AdminDashboardPage() {
                   <span className="w-2 h-2 rounded-full bg-amber-400"></span>
                   Aguardando Pagamento
                 </button>
+                <button
+                  onClick={() => setSubFilter('CANCELLATION_REQUESTED')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 ${
+                    subFilter === 'CANCELLATION_REQUESTED'
+                      ? 'bg-rose-950/70 text-rose-300 border border-rose-600/50'
+                      : pendingCancellationsCount > 0
+                      ? 'text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 animate-pulse'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+                  <span>Cancelamento Solicitado</span>
+                  {pendingCancellationsCount > 0 && (
+                    <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-black bg-rose-500 text-white font-mono">
+                      {pendingCancellationsCount}
+                    </span>
+                  )}
+                </button>
               </div>
 
               {/* Busca na Tabela */}
@@ -969,8 +1028,13 @@ export default function AdminDashboardPage() {
                         </td>
                       </tr>
                     ) : (
-                      subscriptionsList.map((sub: any) => (
-                        <tr key={sub.id} className="hover:bg-white/[0.02] transition">
+                      subscriptionsList.map((sub: any) => {
+                        const hasCancellationRequest = Boolean(sub.cancellationRequested || sub.cancellation_requested);
+                        return (
+                        <tr
+                          key={sub.id}
+                          className={`${hasCancellationRequest ? 'bg-rose-500/[0.05] border-l-4 border-l-rose-500' : ''} hover:bg-white/[0.02] transition`}
+                        >
                           <td className="py-4 px-5">
                             <span className="font-bold text-white text-sm block">{sub.clientName}</span>
                             <div className="flex flex-col gap-1 mt-0.5">
@@ -1002,22 +1066,43 @@ export default function AdminDashboardPage() {
                             <div>{sub.clientName}</div>
                             <div className="text-[11px] text-zinc-400">{sub.clientPhone || 'Sem telefone'}</div>
                           </td>
-                          <td className="py-4 px-4">
-                            {sub.status === 'active' ? (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-950/40 text-emerald-400 border border-emerald-800/40">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                                Ativo (Online)
-                              </span>
-                            ) : sub.status === 'suspended' ? (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-rose-950/40 text-rose-400 border border-rose-800/40">
-                                <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-                                Suspenso (Inadimplente)
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-950/40 text-amber-400 border border-amber-800/40">
-                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                                Aguardando Pagamento
-                              </span>
+                          <td className="py-4 px-4 space-y-1">
+                            <div>
+                              {sub.status === 'active' ? (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-950/40 text-emerald-400 border border-emerald-800/40">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                  Ativo (Online)
+                                </span>
+                              ) : sub.status === 'suspended' ? (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-rose-950/40 text-rose-400 border border-rose-800/40">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                                  Suspenso (Inadimplente)
+                                </span>
+                              ) : sub.status === 'cancelled' ? (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-zinc-900 text-zinc-400 border border-zinc-700">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
+                                  Cancelado Definitivo
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-amber-950/40 text-amber-400 border border-amber-800/40">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                  Aguardando Pagamento
+                                </span>
+                              )}
+                            </div>
+
+                            {hasCancellationRequest && sub.status !== 'cancelled' && (
+                              <div className="pt-0.5">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">
+                                  <AlertTriangle className="w-3 h-3 text-rose-400" />
+                                  <span>Cancelamento Solicitado</span>
+                                </span>
+                                {(sub.cancellationReason || sub.cancellation_reason) && (
+                                  <div className="text-[10px] text-zinc-300 mt-0.5 max-w-xs break-words">
+                                    Motivo: &ldquo;{sub.cancellationReason || sub.cancellation_reason}&rdquo;
+                                  </div>
+                                )}
+                              </div>
                             )}
                           </td>
                           <td className="py-4 px-4 font-mono">
@@ -1033,7 +1118,27 @@ export default function AdminDashboardPage() {
                             <span className="text-[10px] text-zinc-400 font-mono">Comissão: R$ 10,00/mês</span>
                           </td>
                           <td className="py-4 px-5 text-right">
-                            <div className="flex items-center justify-end gap-2">
+                            <div className="flex items-center justify-end gap-2 flex-wrap">
+                              {/* Botão Cancelamento Definitivo */}
+                              {sub.status !== 'cancelled' && (
+                                <button
+                                  onClick={() => {
+                                    setCancelDefinitiveSub(sub);
+                                    setCancelDefinitiveError(null);
+                                    setCancelDefinitiveSuccess(null);
+                                  }}
+                                  className={`px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 cursor-pointer ${
+                                    hasCancellationRequest
+                                      ? 'bg-rose-600 text-white hover:bg-rose-500 shadow-md shadow-rose-950/50'
+                                      : 'bg-rose-500/15 text-rose-300 border border-rose-500/30 hover:bg-rose-500/25'
+                                  }`}
+                                  title="Cancelar cobrança no Asaas e excluir subdomínio na Vercel"
+                                >
+                                  <AlertTriangle className="w-3 h-3" />
+                                  <span>Cancelar Definitivo</span>
+                                </button>
+                              )}
+
                               {sub.status === 'active' ? (
                                 <button
                                   onClick={() => handleToggleSubscription(sub.id, sub.status)}
@@ -1043,7 +1148,7 @@ export default function AdminDashboardPage() {
                                   <Lock className="w-3 h-3" />
                                   <span>Suspender</span>
                                 </button>
-                              ) : (
+                              ) : sub.status === 'suspended' ? (
                                 <button
                                   onClick={() => handleToggleSubscription(sub.id, sub.status)}
                                   className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition flex items-center gap-1"
@@ -1052,7 +1157,7 @@ export default function AdminDashboardPage() {
                                   <Unlock className="w-3 h-3" />
                                   <span>Reativar</span>
                                 </button>
-                              )}
+                              ) : null}
 
                               {sub.checkoutUrl && (
                                 <button
@@ -1079,7 +1184,8 @@ export default function AdminDashboardPage() {
                             </div>
                           </td>
                         </tr>
-                      ))
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -2261,6 +2367,109 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* =========================================================================
+          MODAL: CANCELAMENTO DEFINITIVO 1-CLIQUE (ASAAS + VERCEL + SUPABASE)
+         ========================================================================= */}
+      {cancelDefinitiveSub && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg p-6 rounded-3xl bg-[#11141c] border border-rose-500/40 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-white/[0.08]">
+              <div className="flex items-center gap-2 text-rose-400">
+                <AlertTriangle className="w-5 h-5 shrink-0" />
+                <h3 className="font-bold text-white text-base">Confirmar Cancelamento Definitivo</h3>
+              </div>
+              <button
+                onClick={() => setCancelDefinitiveSub(null)}
+                className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="text-xs text-zinc-300 space-y-3">
+              <div className="p-3.5 rounded-2xl bg-[#141824] border border-white/[0.06] space-y-1.5">
+                <div className="flex justify-between">
+                  <span className="text-zinc-400">Cliente:</span>
+                  <span className="font-bold text-white">{cancelDefinitiveSub.clientName}</span>
+                </div>
+                <div className="flex justify-between font-mono">
+                  <span className="text-zinc-400">Subdomínio:</span>
+                  <span className="text-sky-400 font-bold">{cancelDefinitiveSub.siteSlug || cancelDefinitiveSub.slug}.webbilly.com.br</span>
+                </div>
+                {cancelDefinitiveSub.asaasSubscriptionId && (
+                  <div className="flex justify-between font-mono text-[11px]">
+                    <span className="text-zinc-400">ID Assinatura Asaas:</span>
+                    <span className="text-emerald-400">{cancelDefinitiveSub.asaasSubscriptionId}</span>
+                  </div>
+                )}
+                {(cancelDefinitiveSub.cancellationReason || cancelDefinitiveSub.cancellation_reason) && (
+                  <div className="pt-1.5 border-t border-white/[0.06]">
+                    <span className="text-amber-400 font-semibold block text-[11px]">Motivo informado pelo Operador:</span>
+                    <p className="text-zinc-300 italic text-[11px] mt-0.5">
+                      &ldquo;{cancelDefinitiveSub.cancellationReason || cancelDefinitiveSub.cancellation_reason}&rdquo;
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-[11px] space-y-1 text-rose-300">
+                <div className="font-bold uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  <span>Ações Irreversíveis que Serão Executadas:</span>
+                </div>
+                <ul className="list-disc pl-4 space-y-0.5 text-zinc-300">
+                  <li><strong>Asaas:</strong> exclusão imediata da assinatura recorrente (DELETE /v3/subscriptions) para cessar qualquer cobrança futura.</li>
+                  <li><strong>Vercel:</strong> exclusão do subdomínio e projeto na infraestrutura Vercel + suspensão no Edge Config.</li>
+                  <li><strong>Supabase:</strong> status marcado como &quot;cancelled&quot; e site_status como &quot;deleted&quot;.</li>
+                </ul>
+              </div>
+            </div>
+
+            {cancelDefinitiveError && (
+              <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{cancelDefinitiveError}</span>
+              </div>
+            )}
+
+            {cancelDefinitiveSuccess && (
+              <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
+                <Check className="w-4 h-4 shrink-0" />
+                <span>{cancelDefinitiveSuccess}</span>
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setCancelDefinitiveSub(null)}
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] transition"
+              >
+                Voltar
+              </button>
+              <button
+                type="button"
+                onClick={handleExecuteDefinitiveCancellation}
+                disabled={cancelDefinitiveLoading}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 transition border border-rose-500/40 flex items-center gap-2 disabled:opacity-50 cursor-pointer shadow-lg shadow-rose-950/40"
+              >
+                {cancelDefinitiveLoading ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Cancelando no Asaas e Vercel...</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    <span>Confirmar Cancelamento Definitivo</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

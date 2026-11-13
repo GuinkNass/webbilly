@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDb, writeDb, Sale, AffiliateCommissionRecord } from '@/lib/db';
+import { getSupabaseAdmin } from '@/lib/supabase';
 
 const fallbackWebhookToken = Buffer.from(
   'd2hzZWNfS19KS1p0MTZ4SWUyN0ZRSWgzczlObU1FTVk5TEtNTmN0RGdhUGpWb0FUSQ==',
@@ -50,8 +51,22 @@ export async function POST(req: NextRequest) {
     let sub = db.subscriptions.find(
       s =>
         (siteSlug && s.siteSlug === siteSlug) ||
-        (payment.subscription && s.asaasSubscriptionId === payment.subscription)
+        (payment.subscription && (s.asaasSubscriptionId === payment.subscription || s.asaas_subscription_id === payment.subscription))
     );
+
+    const asaasSubId = payment.subscription || payload.subscription || sub?.asaasSubscriptionId || sub?.asaas_subscription_id;
+    const asaasCustId = payment.customer || payload.customer || sub?.asaasCustomerId || sub?.asaas_customer_id;
+
+    if (sub) {
+      if (asaasSubId) {
+        sub.asaasSubscriptionId = asaasSubId;
+        sub.asaas_subscription_id = asaasSubId;
+      }
+      if (asaasCustId) {
+        sub.asaasCustomerId = asaasCustId;
+        sub.asaas_customer_id = asaasCustId;
+      }
+    }
 
     const nowIso = new Date().toISOString();
 
@@ -189,6 +204,32 @@ export async function POST(req: NextRequest) {
     }
 
     writeDb(db);
+
+    // Sincroniza em tempo real com o Supabase
+    if (sub || siteSlug) {
+      try {
+        const supabase = getSupabaseAdmin();
+        const updatePayload: Record<string, any> = {
+          updated_at: nowIso
+        };
+        if (sub?.status) {
+          updatePayload.status = sub.status;
+          updatePayload.site_status = sub.status;
+        }
+        if (asaasSubId) updatePayload.asaas_subscription_id = asaasSubId;
+        if (asaasCustId) updatePayload.asaas_customer_id = asaasCustId;
+        if (sub?.lastPaymentDate) updatePayload.last_payment_date = sub.lastPaymentDate;
+        if (sub?.nextRenewalDate) updatePayload.next_renewal_date = sub.nextRenewalDate;
+        if (sub?.asaasInvoiceUrl) updatePayload.checkout_url = sub.asaasInvoiceUrl;
+
+        await supabase
+          .from('subscriptions')
+          .update(updatePayload)
+          .or(`site_slug.eq.${siteSlug || sub?.siteSlug},id.eq.${sub?.id}`);
+      } catch (sbErr) {
+        console.warn('[Asaas Webhook] Aviso ao sincronizar com Supabase:', sbErr);
+      }
+    }
 
     return NextResponse.json({
       received: true,

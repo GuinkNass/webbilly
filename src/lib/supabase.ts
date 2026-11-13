@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { readDb, writeDb, SubscriptionRecord, Operator, AffiliateCommissionRecord } from './db';
+import { readDb, writeDb, SubscriptionRecord, Operator, AffiliateCommissionRecord, SiteChangeRequestRecord } from './db';
 
 // Supabase URL & Service Role Key
 const supabaseUrl =
@@ -89,11 +89,60 @@ export function mapRowToSubscription(row: any): SubscriptionRecord {
     domainStatus: row.domain_status || row.domainStatus || 'subdomain_only',
     domain_purchased_at: row.domain_purchased_at || row.domainPurchasedAt || undefined,
     domainPurchasedAt: row.domain_purchased_at || row.domainPurchasedAt || undefined,
+    asaasCustomerId: row.asaas_customer_id || row.asaasCustomerId || undefined,
+    asaas_customer_id: row.asaas_customer_id || row.asaasCustomerId || undefined,
+    asaasSubscriptionId: row.asaas_subscription_id || row.asaasSubscriptionId || undefined,
+    asaas_subscription_id: row.asaas_subscription_id || row.asaasSubscriptionId || undefined,
+    vercelProjectId: row.vercel_project_id || row.vercelProjectId || undefined,
+    vercel_project_id: row.vercel_project_id || row.vercelProjectId || undefined,
+    cancellationRequested: Boolean(row.cancellation_requested ?? row.cancellationRequested ?? false),
+    cancellation_requested: Boolean(row.cancellation_requested ?? row.cancellationRequested ?? false),
+    cancellationReason: row.cancellation_reason || row.cancellationReason || undefined,
+    cancellation_reason: row.cancellation_reason || row.cancellationReason || undefined,
+    cancellationRequestedAt: row.cancellation_requested_at || row.cancellationRequestedAt || undefined,
+    cancellation_requested_at: row.cancellation_requested_at || row.cancellationRequestedAt || undefined,
+    cancelledAt: row.cancelled_at || row.cancelledAt || undefined,
+    cancelled_at: row.cancelled_at || row.cancelledAt || undefined,
+    siteStatus: row.site_status || row.siteStatus || undefined,
+    site_status: row.site_status || row.siteStatus || undefined,
     accepted_terms_at: row.accepted_terms_at || undefined,
     accepted_terms_ip: row.accepted_terms_ip || undefined,
     accepted_terms_version: row.accepted_terms_version || undefined,
     createdAt: row.created_at || row.createdAt || new Date().toISOString(),
     updatedAt: row.updated_at || row.updatedAt || new Date().toISOString()
+  };
+}
+
+/**
+ * Converte linha do Supabase para SiteChangeRequestRecord
+ */
+export function mapRowToSiteChangeRequest(row: any): SiteChangeRequestRecord {
+  let parsedPayload = {};
+  try {
+    parsedPayload = typeof row.changes_payload === 'string'
+      ? JSON.parse(row.changes_payload)
+      : (row.changes_payload || row.changesPayload || {});
+  } catch {
+    parsedPayload = row.changes_payload || {};
+  }
+
+  return {
+    id: row.id,
+    siteSlug: row.site_slug || row.siteSlug || '',
+    site_slug: row.site_slug || row.siteSlug || '',
+    clientName: row.client_name || row.clientName || undefined,
+    client_name: row.client_name || row.clientName || undefined,
+    clientWhatsapp: row.client_whatsapp || row.clientWhatsapp || undefined,
+    client_whatsapp: row.client_whatsapp || row.clientWhatsapp || undefined,
+    operatorId: row.operator_id || row.operatorId || undefined,
+    operator_id: row.operator_id || row.operatorId || undefined,
+    status: (row.status || 'pending').toLowerCase() as any,
+    changesPayload: parsedPayload,
+    changes_payload: parsedPayload,
+    createdAt: row.created_at || row.createdAt || new Date().toISOString(),
+    created_at: row.created_at || row.createdAt || new Date().toISOString(),
+    completedAt: row.completed_at || row.completedAt || undefined,
+    completed_at: row.completed_at || row.completedAt || undefined
   };
 }
 
@@ -565,5 +614,178 @@ export async function recordTermsAcceptanceInSupabase({
     console.warn('[Supabase Terms] Aviso ao gravar aceite eletrônico no Supabase:', err);
   }
 
+  return false;
+}
+
+/**
+ * Registra solicitação de cancelamento de assinatura no Supabase (iniciada pelo operador)
+ */
+export async function requestCancellationInSupabase(
+  siteSlug: string,
+  reason: string
+): Promise<boolean> {
+  const clean = siteSlug.toLowerCase().trim();
+  const nowIso = new Date().toISOString();
+
+  try {
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from('subscriptions')
+      .update({
+        cancellation_requested: true,
+        cancellation_reason: reason,
+        cancellation_requested_at: nowIso,
+        updated_at: nowIso
+      })
+      .or(`site_slug.eq.${clean},id.eq.${clean}`);
+
+    if (!error) return true;
+  } catch (err) {
+    console.warn('[Supabase] Erro ao registrar solicitação de cancelamento:', err);
+  }
+
+  return false;
+}
+
+/**
+ * Conclui cancelamento definitivo de assinatura no Supabase (efetuado pelo Admin)
+ */
+export async function cancelDefinitiveInSupabase(
+  siteSlugOrId: string
+): Promise<boolean> {
+  const clean = siteSlugOrId.toLowerCase().trim();
+  const nowIso = new Date().toISOString();
+
+  try {
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from('subscriptions')
+      .update({
+        status: 'cancelled',
+        site_status: 'deleted',
+        cancellation_requested: false,
+        cancelled_at: nowIso,
+        updated_at: nowIso
+      })
+      .or(`site_slug.eq.${clean},id.eq.${clean}`);
+
+    if (!error) return true;
+  } catch (err) {
+    console.warn('[Supabase] Erro ao concluir cancelamento definitivo:', err);
+  }
+
+  return false;
+}
+
+/**
+ * Consulta solicitações de alteração de site
+ */
+export async function getSiteChangeRequestsFromSupabase(
+  filter?: { siteSlug?: string; status?: string }
+): Promise<SiteChangeRequestRecord[]> {
+  try {
+    const supabase = getSupabaseAdmin();
+    let query = supabase
+      .from('site_change_requests')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (filter?.siteSlug) {
+      query = query.eq('site_slug', filter.siteSlug.toLowerCase().trim());
+    }
+    if (filter?.status) {
+      query = query.eq('status', filter.status);
+    }
+
+    const { data, error } = await query;
+    if (!error && Array.isArray(data)) {
+      return data.map(mapRowToSiteChangeRequest);
+    }
+  } catch (err) {
+    console.warn('[Supabase] Erro ao buscar site_change_requests:', err);
+  }
+
+  // Fallback: lê do db.json
+  const db = readDb();
+  let list = db.siteChangeRequests || [];
+  if (filter?.siteSlug) {
+    list = list.filter(r => (r.siteSlug || '').toLowerCase() === filter.siteSlug!.toLowerCase());
+  }
+  if (filter?.status) {
+    list = list.filter(r => r.status === filter.status);
+  }
+  return list;
+}
+
+/**
+ * Cria nova solicitação de alteração de site
+ */
+export async function createSiteChangeRequestInSupabase(
+  record: SiteChangeRequestRecord
+): Promise<boolean> {
+  const nowIso = new Date().toISOString();
+  try {
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from('site_change_requests')
+      .insert({
+        id: record.id,
+        site_slug: record.siteSlug.toLowerCase().trim(),
+        client_name: record.clientName || null,
+        client_whatsapp: record.clientWhatsapp || null,
+        operator_id: record.operatorId || null,
+        status: record.status || 'pending',
+        changes_payload: record.changesPayload || {},
+        created_at: record.createdAt || nowIso
+      });
+
+    if (!error) return true;
+  } catch (err) {
+    console.warn('[Supabase] Erro ao inserir site_change_requests:', err);
+  }
+
+  // Fallback db.json
+  const db = readDb();
+  if (!Array.isArray(db.siteChangeRequests)) {
+    db.siteChangeRequests = [];
+  }
+  db.siteChangeRequests.unshift(record);
+  writeDb(db);
+  return true;
+}
+
+/**
+ * Marca solicitação de alteração como concluída
+ */
+export async function completeSiteChangeRequestInSupabase(
+  id: string
+): Promise<boolean> {
+  const nowIso = new Date().toISOString();
+  try {
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from('site_change_requests')
+      .update({
+        status: 'completed',
+        completed_at: nowIso
+      })
+      .eq('id', id);
+
+    if (!error) return true;
+  } catch (err) {
+    console.warn('[Supabase] Erro ao concluir site_change_requests:', err);
+  }
+
+  // Fallback db.json
+  const db = readDb();
+  if (Array.isArray(db.siteChangeRequests)) {
+    const target = db.siteChangeRequests.find(r => r.id === id);
+    if (target) {
+      target.status = 'completed';
+      target.completedAt = nowIso;
+      writeDb(db);
+      return true;
+    }
+  }
   return false;
 }
