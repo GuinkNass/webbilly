@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readDb } from '@/lib/db';
+import { readDb, Operator } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/auth';
 import { fetchCloudSuspendedSlugs, sanitizeSlug } from '@/lib/site-storage';
 import { getLeaderboard } from '@/lib/gamification';
+import { fetchAllOperatorsFromSupabase } from '@/lib/supabase';
 
 export async function GET(req: NextRequest) {
   try {
@@ -24,9 +25,29 @@ export async function GET(req: NextRequest) {
       .reduce((acc, s) => acc + (s.commissionValue || 0), 0);
     const netProfit = totalSold - totalCommissions;
 
-    const pendingCandidatesCount = db.candidates.filter(c => c.status === 'PENDENTE').length;
-    const activeOperatorsCount = db.operators.filter(o => o.status === 'ATIVO').length;
-    const blockedOperatorsCount = db.operators.filter(o => o.status === 'BLOQUEADO').length;
+    // Sincroniza operadores com o Supabase em tempo real
+    let combinedOperators: Operator[] = db.operators || [];
+    try {
+      const supabaseOperators = await fetchAllOperatorsFromSupabase();
+      const opMap = new Map<string, Operator>();
+      for (const op of db.operators || []) {
+        opMap.set(op.id, op);
+      }
+      for (const op of supabaseOperators) {
+        if (op.id && opMap.has(op.id)) {
+          opMap.set(op.id, { ...opMap.get(op.id)!, ...op });
+        } else {
+          opMap.set(op.id || op.email, op);
+        }
+      }
+      combinedOperators = Array.from(opMap.values());
+    } catch (e) {
+      console.warn('Erro ao mesclar operadores do Supabase:', e);
+    }
+
+    const pendingCandidatesCount = combinedOperators.filter(o => o.status === 'PENDENTE').length + db.candidates.filter(c => c.status === 'PENDENTE').length;
+    const activeOperatorsCount = combinedOperators.filter(o => o.status === 'ATIVO').length;
+    const blockedOperatorsCount = combinedOperators.filter(o => o.status === 'BLOQUEADO').length;
 
     // Assinaturas e sites da plataforma sincronizados em tempo real com a nuvem (Fonte Única de Verdade)
     const cloudSuspended = await fetchCloudSuspendedSlugs();
@@ -141,17 +162,25 @@ export async function GET(req: NextRequest) {
       affiliateSponsors,
       subscriptions,
       candidates: db.candidates,
-      operators: db.operators.map(op => {
+      operators: combinedOperators.map(op => {
         const lbItem = leaderboard.find(l => l.operatorId === op.id);
-        const sponsor = op.referred_by_operator_id ? db.operators.find(p => p.id === op.referred_by_operator_id) : null;
+        const sponsor = op.referred_by_operator_id ? combinedOperators.find(p => p.id === op.referred_by_operator_id) : null;
         return {
           id: op.id,
           name: op.name,
           cpf: op.cpf || null,
           email: op.email,
           whatsapp: op.whatsapp,
-          pixType: op.pixType,
-          pixKey: op.pixKey,
+          cep: op.cep || null,
+          address: op.address || null,
+          neighborhood: op.neighborhood || null,
+          city_state: op.city_state || (op as any).cityState || null,
+          cityState: op.city_state || (op as any).cityState || null,
+          experience: op.experience || null,
+          pixType: op.pixType || op.pix_type || null,
+          pixKey: op.pixKey || op.pix_key || null,
+          pix_type: op.pix_type || op.pixType || null,
+          pix_key: op.pix_key || op.pixKey || null,
           serialToken: op.serialToken,
           status: op.status,
           machineId: op.machineId,

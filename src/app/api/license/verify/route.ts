@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { readDb, writeDb } from '@/lib/db';
+import { readDb, writeDb, LicenseRecord } from '@/lib/db';
+import { fetchAllOperatorsFromSupabase } from '@/lib/supabase';
 import crypto from 'crypto';
 
 export async function POST(req: NextRequest) {
@@ -17,7 +18,38 @@ export async function POST(req: NextRequest) {
     const cleanedSerial = serialToken.trim().toUpperCase();
     const db = readDb();
 
-    const license = db.licenses.find(l => (l.serialToken || '').trim().toUpperCase() === cleanedSerial);
+    let license = db.licenses.find(l => (l.serialToken || '').trim().toUpperCase() === cleanedSerial);
+    if (!license) {
+      try {
+        const supabaseOps = await fetchAllOperatorsFromSupabase();
+        const supOp = supabaseOps.find(o => (o.serialToken || '').trim().toUpperCase() === cleanedSerial);
+        if (supOp && supOp.status === 'ATIVO') {
+          const newLic: LicenseRecord = {
+            serialToken: cleanedSerial,
+            operatorId: supOp.id,
+            operatorName: supOp.name,
+            operatorEmail: supOp.corporate_email || supOp.email,
+            email: supOp.email,
+            status: 'active',
+            machineId: null,
+            osInfo: null,
+            dailyLimit: 50,
+            createdAt: supOp.createdAt || new Date().toISOString(),
+            lastSync: new Date().toISOString(),
+            activatedAt: new Date().toISOString()
+          };
+          license = newLic;
+          db.licenses.unshift(newLic);
+          if (!db.operators.some(o => o.id === supOp.id)) {
+            db.operators.push(supOp);
+          }
+          writeDb(db);
+        }
+      } catch (e) {
+        console.warn('Erro ao consultar Supabase em license/verify:', e);
+      }
+    }
+
     if (!license) {
       return NextResponse.json(
         { valid: false, error: 'Chave Serial não encontrada ou inválida no sistema Billy Suite.' },

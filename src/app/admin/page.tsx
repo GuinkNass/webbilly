@@ -39,13 +39,14 @@ import {
   CheckCircle2,
   FileText,
   Clock,
-  Sparkles
+  Sparkles,
+  Phone
 } from 'lucide-react';
 import { startAdminTour } from '@/lib/tours';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'subscriptions' | 'licenses' | 'financial' | 'apis' | 'domains' | 'affiliates'>('subscriptions');
+  const [activeTab, setActiveTab] = useState<'subscriptions' | 'licenses' | 'candidates' | 'financial' | 'apis' | 'domains' | 'affiliates'>('subscriptions');
   const [selectedDomainProject, setSelectedDomainProject] = useState<string>('');
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -97,6 +98,9 @@ export default function AdminDashboardPage() {
   });
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [candidateSearch, setCandidateSearch] = useState('');
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
 
   const loadData = async () => {
     try {
@@ -336,6 +340,54 @@ export default function AdminDashboardPage() {
     }
   };
 
+  // Aprovação Oficial de Candidatura (Gera Serial, E-mail Corporativo e Senha Provisória)
+  const handleApproveCandidate = async (operatorId: string, candidateName: string) => {
+    if (!confirm(`Deseja aprovar a candidatura de ${candidateName}? O sistema gerará o e-mail corporativo (@webbilly.com.br), senha provisória e chave serial do programa desktop, disparando automaticamente para o e-mail pessoal.`)) return;
+
+    setApprovingId(operatorId);
+    try {
+      const res = await fetch('/api/admin/operators/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ operatorId })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Erro ao aprovar candidato.');
+
+      setActionSuccess(`✓ ${json.message}`);
+      setTimeout(() => setActionSuccess(null), 8000);
+      await loadData();
+    } catch (err: any) {
+      alert(err.message || 'Erro ao aprovar operador.');
+    } finally {
+      setApprovingId(null);
+    }
+  };
+
+  // Recusa Cordial por Contingência Operacional (Banco de Talentos)
+  const handleRejectCandidate = async (operatorId: string, candidateName: string) => {
+    if (!confirm(`Deseja recusar a candidatura de ${candidateName} por contingência operacional? O candidato receberá um e-mail cordial informando que seu perfil permanecerá no banco de talentos.`)) return;
+
+    setRejectingId(operatorId);
+    try {
+      const res = await fetch('/api/admin/operators/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ operatorId })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Erro ao recusar candidatura.');
+
+      setActionSuccess(`✕ ${json.message}`);
+      setTimeout(() => setActionSuccess(null), 8000);
+      await loadData();
+    } catch (err: any) {
+      alert(err.message || 'Erro ao recusar operador.');
+    } finally {
+      setRejectingId(null);
+    }
+  };
+
   // Alterar Senha Master
   const handleChangeAdminPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -538,6 +590,27 @@ export default function AdminDashboardPage() {
                 }`}>
                   {data?.licenses?.length || 0}
                 </span>
+              </button>
+
+              {/* Fila de Triagem de Candidaturas */}
+              <button
+                id="tour-admin-nav-candidates"
+                onClick={() => setActiveTab('candidates')}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition group ${
+                  activeTab === 'candidates'
+                    ? 'bg-amber-600/90 text-white font-medium border border-amber-500/30'
+                    : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Users className={`w-4 h-4 ${activeTab === 'candidates' ? 'text-white' : 'text-amber-400 group-hover:text-amber-300'}`} />
+                  <span>Candidaturas Pendentes</span>
+                </div>
+                {((data?.operators || []).filter((o: any) => o.status === 'PENDENTE').length > 0) && (
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-zinc-950 font-mono">
+                    {(data?.operators || []).filter((o: any) => o.status === 'PENDENTE').length}
+                  </span>
+                )}
               </button>
 
               <button
@@ -1289,6 +1362,238 @@ export default function AdminDashboardPage() {
                         );
                       })
                     )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* =====================================================================
+            TAB: FILA DE TRIAGEM & ADMISSÃO DE CANDIDATURAS PENDENTES
+           ===================================================================== */}
+        {activeTab === 'candidates' && (
+          <div className="space-y-4">
+            <div className="bg-[#11141c] p-6 rounded-2xl border border-white/[0.06] shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                    Triagem & Admissão
+                  </span>
+                  <h3 className="text-base font-bold text-white">Candidaturas de Novos Operadores</h3>
+                </div>
+                <p className="text-xs text-zinc-400 max-w-2xl leading-relaxed">
+                  Candidatos que submeteram a ficha oficial em <code className="text-cyan-300 font-mono">/trabalheconosco/candidatura</code>. Ao aprovar, o sistema gera automaticamente a <strong>Chave Serial Billy Desktop</strong>, a caixa postal corporativa <strong>@webbilly.com.br</strong>, a <strong>senha provisória</strong> e notifica o candidato por e-mail pessoal.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-zinc-500" />
+                  <input
+                    type="text"
+                    value={candidateSearch}
+                    onChange={(e) => setCandidateSearch(e.target.value)}
+                    placeholder="Buscar por nome, CPF, cidade ou e-mail..."
+                    className="w-64 pl-9 pr-3 py-2 bg-[#08090d] border border-white/[0.08] rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 transition"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-[#11141c] rounded-2xl border border-white/[0.06] shadow-xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#0b0e14] text-zinc-400 uppercase text-[10px] tracking-wider border-b border-white/[0.06]">
+                    <tr>
+                      <th className="py-3.5 px-5">Candidato / Identificação</th>
+                      <th className="py-3.5 px-4">Contato Oficial</th>
+                      <th className="py-3.5 px-4">Região & Endereço</th>
+                      <th className="py-3.5 px-4">Recebimento Pix</th>
+                      <th className="py-3.5 px-4">Experiência Comercial</th>
+                      <th className="py-3.5 px-5 text-right">Ações de Triagem</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.04]">
+                    {(() => {
+                      const pendingList = (data?.operators || []).filter((o: any) => {
+                        const isPending = o.status === 'PENDENTE' || o.status === 'pending';
+                        if (!isPending) return false;
+                        if (!candidateSearch) return true;
+                        const term = candidateSearch.toLowerCase();
+                        return (
+                          (o.name || '').toLowerCase().includes(term) ||
+                          (o.email || '').toLowerCase().includes(term) ||
+                          (o.cpf || '').includes(term) ||
+                          (o.city_state || '').toLowerCase().includes(term)
+                        );
+                      });
+
+                      if (pendingList.length === 0) {
+                        return (
+                          <tr>
+                            <td colSpan={6} className="py-12 text-center text-zinc-400 text-xs">
+                              <div className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-2 text-zinc-500">
+                                <Users className="w-6 h-6" />
+                              </div>
+                              <p className="font-semibold text-zinc-300">Nenhuma candidatura pendente no momento.</p>
+                              <p className="text-[11px] text-zinc-500 mt-0.5">Todas as fichas de operadores já foram triadas ou aprovadas.</p>
+                            </td>
+                          </tr>
+                        );
+                      }
+
+                      return pendingList.map((cand: any) => {
+                        const cleanDigits = (cand.whatsapp || '').replace(/\D/g, '');
+                        const formattedPhone = cleanDigits.startsWith('55') ? cleanDigits : '55' + cleanDigits;
+                        const waUrl = cleanDigits ? `https://wa.me/${formattedPhone}` : null;
+                        const isApproving = approvingId === cand.id;
+                        const isRejecting = rejectingId === cand.id;
+
+                        return (
+                          <tr key={cand.id || cand.email} className="hover:bg-white/[0.02] transition">
+                            {/* Candidato / Identificação */}
+                            <td className="py-4 px-5">
+                              <span className="font-bold text-white text-sm block">
+                                {cand.name}
+                              </span>
+                              <div className="flex items-center gap-2 mt-1">
+                                {cand.cpf && (
+                                  <span className="font-mono text-zinc-400 text-[11px]">
+                                    CPF: {cand.cpf}
+                                  </span>
+                                )}
+                                <span className="text-zinc-600">•</span>
+                                <span className="text-[10px] text-zinc-400 font-mono">
+                                  {cand.createdAt ? new Date(cand.createdAt).toLocaleDateString('pt-BR') : 'Data não registrada'}
+                                </span>
+                              </div>
+                              {cand.referred_by_name && (
+                                <div className="mt-1.5">
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-medium bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                                    <span>Padrinho:</span>
+                                    <strong className="text-white">{cand.referred_by_name}</strong>
+                                  </span>
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Contato Oficial */}
+                            <td className="py-4 px-4 space-y-1">
+                              <div>
+                                {waUrl ? (
+                                  <a
+                                    href={waUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-mono text-[11px] font-bold transition"
+                                    title="Chamar candidato no WhatsApp"
+                                  >
+                                    <Phone className="w-3 h-3" />
+                                    <span>{cand.whatsapp}</span>
+                                    <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                                  </a>
+                                ) : (
+                                  <span className="text-zinc-400 font-mono text-[11px]">{cand.whatsapp}</span>
+                                )}
+                              </div>
+                              <div>
+                                <a
+                                  href={`mailto:${cand.email}`}
+                                  className="text-zinc-300 hover:text-white font-mono text-[11px] hover:underline"
+                                >
+                                  {cand.email}
+                                </a>
+                              </div>
+                            </td>
+
+                            {/* Região & Endereço */}
+                            <td className="py-4 px-4">
+                              <span className="font-semibold text-white block">
+                                {cand.city_state || cand.cityState || 'Região não informada'}
+                              </span>
+                              <div className="text-[11px] text-zinc-400 mt-0.5 space-y-0.5">
+                                {cand.neighborhood && <div>Bairro: {cand.neighborhood}</div>}
+                                {cand.address && <div className="truncate max-w-[200px]" title={cand.address}>{cand.address}</div>}
+                                {cand.cep && <div className="font-mono text-[10px]">CEP: {cand.cep}</div>}
+                              </div>
+                            </td>
+
+                            {/* Recebimento Pix */}
+                            <td className="py-4 px-4">
+                              {cand.pixKey || cand.pix_key ? (
+                                <div className="space-y-0.5">
+                                  <span className="text-emerald-400 font-mono font-bold text-xs block">
+                                    {cand.pixKey || cand.pix_key}
+                                  </span>
+                                  <span className="text-[10px] text-zinc-400 uppercase font-semibold">
+                                    Tipo: {(cand.pixType || cand.pix_type || 'CPF')}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-zinc-500 italic text-[11px]">Não cadastrada</span>
+                              )}
+                            </td>
+
+                            {/* Experiência Comercial */}
+                            <td className="py-4 px-4 max-w-[240px]">
+                              {cand.experience ? (
+                                <p className="text-zinc-300 text-[11px] line-clamp-3 leading-relaxed" title={cand.experience}>
+                                  {cand.experience}
+                                </p>
+                              ) : (
+                                <span className="text-zinc-500 italic text-[11px]">Sem detalhes informados</span>
+                              )}
+                            </td>
+
+                            {/* Ações de Triagem */}
+                            <td className="py-4 px-5 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                {/* Botão Aprovar e Criar Conta @webbilly */}
+                                <button
+                                  onClick={() => handleApproveCandidate(cand.id, cand.name)}
+                                  disabled={isApproving || isRejecting}
+                                  className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#65a30d] text-zinc-950 transition flex items-center gap-1.5 shadow-md shadow-[#84cc16]/20 cursor-pointer disabled:opacity-50"
+                                  title="Aprovar candidato, gerar serial, e-mail @webbilly e enviar credenciais por e-mail"
+                                >
+                                  {isApproving ? (
+                                    <>
+                                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                      <span>Aprovando...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                      <span>Aprovar @webbilly</span>
+                                    </>
+                                  )}
+                                </button>
+
+                                {/* Botão Negar por Contingência */}
+                                <button
+                                  onClick={() => handleRejectCandidate(cand.id, cand.name)}
+                                  disabled={isApproving || isRejecting}
+                                  className="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 transition flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                                  title="Negar por contingência operacional e manter em banco de talentos"
+                                >
+                                  {isRejecting ? (
+                                    <>
+                                      <RefreshCw className="w-3 h-3 animate-spin" />
+                                      <span>Recusando...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <X className="w-3 h-3" />
+                                      <span>Contingência</span>
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      });
+                    })()}
                   </tbody>
                 </table>
               </div>

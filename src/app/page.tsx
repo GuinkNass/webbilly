@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import confetti from 'canvas-confetti';
-import TrabalheAquiForm from '@/components/TrabalheAquiForm';
+// TrabalheAquiForm migrado para /trabalheconosco/candidatura
 import ContatoForm from '@/components/ContatoForm';
 import { OFFICIAL_TEMPLATES } from '@/lib/templates-data';
 import {
@@ -1104,10 +1104,73 @@ export default function WebbillyHomePage() {
       </section>
 
       {/* =====================================================================
-          11.5. TRABALHE AQUI (CANDIDATURA DE OPERADOR - LARK SMTP)
+          11.5. TRABALHE AQUI (CHAMADA COMERCIAL OBJETIVA & LINK CANDIDATURA)
          ===================================================================== */}
-      <section id="trabalhe-aqui" className="py-20 px-4 sm:px-8 bg-[#0a0d14] border-t border-white/[0.06] relative">
-        <TrabalheAquiForm />
+      <section id="trabalhe-aqui" className="py-20 px-4 sm:px-8 bg-[#0a0d14] border-t border-white/[0.06] relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#84cc16]/5 rounded-full blur-[140px] pointer-events-none" />
+
+        <div className="max-w-4xl mx-auto relative z-10 text-center space-y-8">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#84cc16]/10 border border-[#84cc16]/30 text-[#84cc16] text-xs font-bold uppercase tracking-wider">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Oportunidade Comercial • Seja um Operador Parceiro</span>
+          </div>
+
+          <div className="space-y-3">
+            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
+              Construa sua Renda Recorrente com a Webbilly
+            </h2>
+            <p className="text-sm sm:text-base text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+              Leve presença digital de alta conversão para estabelecimentos da sua cidade. Você prospecta, nosso robô IA gera o site em 45 segundos e você fatura comissões recorrentes todo mês.
+            </p>
+          </div>
+
+          {/* Grid de Ganhos Objetivos */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
+            <div className="p-5 rounded-2xl bg-[#11141c] border border-white/[0.08] space-y-2">
+              <div className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">Recorrência Mensal</div>
+              <div className="text-2xl sm:text-3xl font-black text-[#84cc16] font-mono">R$ 10,00<span className="text-xs font-sans text-zinc-400">/mês</span></div>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Por cada assinatura ativa de R$ 29,90/mês mantida pelos clientes da sua carteira.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-[#11141c] border border-white/[0.08] space-y-2">
+              <div className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">Domínio Próprio</div>
+              <div className="text-2xl sm:text-3xl font-black text-white font-mono">30% <span className="text-sm text-emerald-400">(R$ 147)</span></div>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Comissão direta em cada pacote de Domínio Próprio (.com.br) de R$ 490,00 vendido.
+              </p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-[#11141c] border border-white/[0.08] space-y-2">
+              <div className="text-xs text-zinc-400 font-semibold uppercase tracking-wider">Gamificação & Afiliados</div>
+              <div className="text-2xl sm:text-3xl font-black text-amber-400 font-mono">+20% <span className="text-sm text-zinc-400">& 5%</span></div>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Bônus de +20% por promoção de medalhas (Bronze, Prata, Ouro, Rubi) e 5% sobre seus indicados.
+              </p>
+            </div>
+          </div>
+
+          {/* CTA Principal para a Página Dedicada */}
+          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/trabalheconosco/candidatura"
+              className="w-full sm:w-auto px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-wider text-zinc-950 bg-[#84cc16] hover:bg-[#65a30d] transition flex items-center justify-center gap-2.5 shadow-xl shadow-[#84cc16]/25 cursor-pointer"
+            >
+              <span>Preencher Ficha de Candidatura</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+
+            <Link
+              href="/contrato-operador"
+              target="_blank"
+              className="w-full sm:w-auto px-6 py-4 rounded-2xl font-semibold text-xs text-zinc-400 hover:text-white bg-[#11141c] hover:bg-white/[0.05] border border-white/[0.08] transition flex items-center justify-center gap-1.5"
+            >
+              <span>Consultar Termos do Contrato</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
       </section>
 
       {/* =====================================================================

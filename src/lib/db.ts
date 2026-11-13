@@ -66,8 +66,16 @@ export interface Operator {
   whatsapp: string;
   pixType: string;
   pixKey: string;
+  pix_type?: string;
+  pix_key?: string;
   serialToken: string;
-  status: 'PENDENTE_APROVACAO' | 'ATIVO' | 'BLOQUEADO';
+  status: 'PENDENTE' | 'PENDENTE_APROVACAO' | 'ATIVO' | 'BLOQUEADO' | 'RECUSADO';
+  cep?: string;
+  address?: string;
+  neighborhood?: string;
+  city_state?: string;
+  cityState?: string;
+  experience?: string;
   machineId?: string | null;
   osInfo?: string | null;
   operatorIp?: string | null;
@@ -94,6 +102,7 @@ export interface LicenseRecord {
   machineId?: string | null;
   osInfo?: string | null;
   operatorIp?: string | null;
+  dailyLimit?: number;
   lastSync?: string | null;
   createdAt: string;
   activatedAt?: string | null;

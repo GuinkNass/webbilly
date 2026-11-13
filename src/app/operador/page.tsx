@@ -228,9 +228,10 @@ export default function OperatorDashboardPage() {
     router.push('/operador/login');
   };
 
-  const handleCopySerial = () => {
-    if (!data?.operator?.serialToken) return;
-    navigator.clipboard.writeText(data.operator.serialToken);
+  const handleCopySerial = (tokenOrEvent?: any) => {
+    const textToCopy = (typeof tokenOrEvent === 'string' ? tokenOrEvent : null) || data?.operator?.serialToken;
+    if (!textToCopy) return;
+    navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
@@ -740,75 +741,130 @@ export default function OperatorDashboardPage() {
            ========================================================================= */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Card de Download 1: Desktop App (.exe) */}
-              <div className="p-6 rounded-2xl bg-[#11141c] border border-white/[0.06] flex flex-col justify-between">
-                <div>
-                  <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-emerald-400 flex items-center justify-center mb-4">
-                    <Laptop className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-lg font-bold text-white">Instalador Oficial Billy Suite Desktop</h3>
-                  <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-                    Versão atualizada v{data?.installer?.version || '2.0.4'} para Windows 10/11 64-bit. Inclui módulo scraper Google Maps, gerador de sites Gemini IA e servidor local integrado.
-                  </p>
+            {/* =========================================================================
+                CARD CENTRAL DE DOWNLOADS & FERRAMENTAS OFICIAIS
+               ========================================================================= */}
+            <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#11141c] via-[#141824] to-[#0d1017] border border-white/[0.08] shadow-2xl space-y-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-[#84cc16]/5 rounded-full blur-[100px] pointer-events-none" />
 
-                  <div className="mt-4 p-3.5 rounded-xl bg-[#141824] border border-white/[0.06] text-xs space-y-1.5 font-mono">
-                    <div className="flex justify-between text-zinc-400">
-                      <span>Arquivo:</span> <span className="text-zinc-200">{data?.installer?.fileName || 'Billy-Suite-Setup.exe'}</span>
-                    </div>
-                    <div className="flex justify-between text-zinc-400">
-                      <span>Tamanho:</span> <span className="text-zinc-200">{data?.installer?.fileSize || '348 MB'}</span>
-                    </div>
-                    <div className="flex justify-between text-zinc-400">
-                      <span>Compatibilidade:</span> <span className="text-zinc-200">Windows 10 / 11 64-bit</span>
-                    </div>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/[0.06]">
+                <div className="space-y-1">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#84cc16]/10 text-[#84cc16] border border-[#84cc16]/30">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Ferramentas de Trabalho do Operador</span>
                   </div>
+                  <h2 className="text-xl sm:text-2xl font-black text-white">Central Oficial de Downloads</h2>
+                  <p className="text-xs text-zinc-400">
+                    Seu ecossistema completo para prospecção, geração de sites IA e comunicação corporativa.
+                  </p>
                 </div>
 
-                <div className="mt-6">
-                  <a
-                    href={data?.installer?.downloadUrl || '/downloads/Billy-Suite-Setup.exe'}
-                    className="w-full py-3.5 rounded-xl font-medium text-white bg-emerald-600 hover:bg-emerald-500 transition border border-emerald-500/30 flex items-center justify-center gap-2 text-sm cursor-pointer shadow-lg shadow-emerald-950/40"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span>Baixar Billy Suite Desktop (.exe)</span>
-                  </a>
+                {/* Bloco de Chave Serial do Operador */}
+                <div className="p-4 rounded-2xl bg-[#0a0d14] border border-white/[0.08] flex items-center justify-between gap-4 shrink-0">
+                  <div>
+                    <span className="text-[10px] text-zinc-400 block font-semibold uppercase tracking-wider">
+                      Seu Serial de Ativação Desktop
+                    </span>
+                    <span className="text-sm sm:text-base font-black font-mono text-[#84cc16] tracking-wider block mt-0.5">
+                      {op?.serialToken || 'Carregando serial...'}
+                    </span>
+                  </div>
+                  {op?.serialToken && (
+                    <button
+                      onClick={() => handleCopySerial(op.serialToken)}
+                      className="px-3 py-2 rounded-xl text-xs font-bold bg-[#84cc16]/15 hover:bg-[#84cc16]/25 text-[#84cc16] border border-[#84cc16]/30 flex items-center gap-1.5 transition cursor-pointer"
+                      title="Copiar Chave Serial para Ativação no Programa Desktop"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>{copied ? 'Copiado!' : 'Copiar'}</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
-              {/* Card de Download 2: Extensão Chrome WhatsApp (.zip) */}
-              <div className="p-6 rounded-2xl bg-[#11141c] border border-white/[0.06] flex flex-col justify-between">
-                <div>
-                  <div className="w-12 h-12 rounded-xl bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 flex items-center justify-center mb-4">
-                    <Puzzle className="w-6 h-6" />
+              {/* 3 Botões / Cards Oficiais de Download */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {/* 1. Programa Desktop Billy */}
+                <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06] flex flex-col justify-between space-y-4 hover:border-emerald-500/30 transition group">
+                  <div className="space-y-3">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center justify-center group-hover:scale-105 transition">
+                      <Laptop className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-white text-base">Programa Desktop Billy</h3>
+                      <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                        Software Windows com Scraper Google Maps, Gemini IA e geração instantânea de sites. Ativação direta apenas com seu Serial.
+                      </p>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-bold text-white">Extensão Billy WhatsApp Web (Chrome)</h3>
-                  <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-                    Extensão oficial para Google Chrome com 60 respostas prontas e automações de fechamento de propostas no WhatsApp Web. Baixe o ZIP e carregue no Chrome em modo desenvolvedor.
-                  </p>
 
-                  <div className="mt-4 p-3.5 rounded-xl bg-[#141824] border border-white/[0.06] text-xs space-y-1.5 font-mono">
-                    <div className="flex justify-between text-zinc-400">
-                      <span>Arquivo:</span> <span className="text-zinc-200">Billy-Extensao-Chrome.zip</span>
-                    </div>
-                    <div className="flex justify-between text-zinc-400">
-                      <span>Tamanho:</span> <span className="text-zinc-200">342 KB</span>
-                    </div>
-                    <div className="flex justify-between text-zinc-400">
-                      <span>Compatibilidade:</span> <span className="text-zinc-200">Chrome / Brave / Edge</span>
-                    </div>
-                  </div>
+                  <a
+                    href={process.env.NEXT_PUBLIC_BILLY_DESKTOP_DOWNLOAD_URL || data?.installer?.downloadUrl || '/downloads/billy-setup.exe'}
+                    className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-emerald-600 hover:bg-emerald-500 transition border border-emerald-500/30 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-950/40"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Baixar Programa (.exe)</span>
+                  </a>
                 </div>
 
-                <div className="mt-6">
+                {/* 2. Extensão Chrome WhatsApp */}
+                <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06] flex flex-col justify-between space-y-4 hover:border-[#84cc16]/30 transition group">
+                  <div className="space-y-3">
+                    <div className="w-12 h-12 rounded-2xl bg-[#84cc16]/10 border border-[#84cc16]/25 text-[#84cc16] flex items-center justify-center group-hover:scale-105 transition">
+                      <Puzzle className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-white text-base">Extensão Chrome (WhatsApp)</h3>
+                      <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                        Extensão para WhatsApp Web com 60 scripts persuasivos e automação de envio de links de demonstração e propostas.
+                      </p>
+                    </div>
+                  </div>
+
                   <a
-                    href={data?.extension?.downloadUrl || '/downloads/Billy-Extensao-Chrome.zip'}
-                    download="Billy-Extensao-Chrome.zip"
-                    className="w-full py-3.5 rounded-xl font-medium text-emerald-300 hover:text-white bg-[#16201a] hover:bg-emerald-600 transition border border-emerald-500/40 flex items-center justify-center gap-2 text-sm cursor-pointer shadow-lg shadow-emerald-950/30"
+                    href={process.env.NEXT_PUBLIC_BILLY_EXTENSION_DOWNLOAD_URL || data?.extension?.downloadUrl || '/downloads/billy-extension.zip'}
+                    download="billy-extension.zip"
+                    className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-[#a3e635] hover:text-white bg-[#16201a] hover:bg-[#84cc16] hover:text-zinc-950 transition border border-[#84cc16]/40 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-lime-950/30"
                   >
-                    <Download className="w-4 h-4 text-emerald-400" />
-                    <span>Baixar Extensão Chrome (.zip)</span>
+                    <Download className="w-4 h-4" />
+                    <span>Baixar Extensão (.zip)</span>
                   </a>
+                </div>
+
+                {/* 3. Lark Mail Corporativo */}
+                <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06] flex flex-col justify-between space-y-4 hover:border-cyan-500/30 transition group">
+                  <div className="space-y-3">
+                    <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 text-cyan-400 flex items-center justify-center group-hover:scale-105 transition">
+                      <Mail className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-white text-base">Lark Mail (@webbilly)</h3>
+                      <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                        Sua caixa de e-mail corporativo oficial. Use seu endereço <strong className="text-cyan-300 font-mono text-[11px]">{op?.corporate_email || 'seu.nome@webbilly.com.br'}</strong> e sua senha pessoal.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <a
+                      href="https://mail.larksuite.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-full py-2.5 px-3 rounded-xl font-bold text-xs uppercase tracking-wider text-cyan-300 hover:text-white bg-cyan-950/40 hover:bg-cyan-900/50 transition border border-cyan-800/40 flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>Abrir Webmail Direto</span>
+                    </a>
+                    <a
+                      href="https://www.larksuite.com/download"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-full py-2 px-3 rounded-xl font-medium text-[11px] text-zinc-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] transition flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Download className="w-3 h-3" />
+                      <span>Baixar App Lark Desktop / Mobile</span>
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
