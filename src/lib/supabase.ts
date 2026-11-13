@@ -189,7 +189,11 @@ export function mapRowToOperator(row: any): Operator {
     referred_by_operator_id: row.referred_by_operator_id || null,
     accepted_terms_at: row.accepted_terms_at || undefined,
     accepted_terms_ip: row.accepted_terms_ip || undefined,
-    accepted_terms_version: row.accepted_terms_version || undefined
+    accepted_terms_version: row.accepted_terms_version || undefined,
+    avatar_config: row.avatar_config || row.avatarConfig || undefined,
+    avatarConfig: row.avatar_config || row.avatarConfig || undefined,
+    avatar_svg: row.avatar_svg || row.avatarSvg || undefined,
+    avatarSvg: row.avatar_svg || row.avatarSvg || undefined
   };
 }
 
@@ -787,5 +791,63 @@ export async function completeSiteChangeRequestInSupabase(
       return true;
     }
   }
+  return false;
+}
+
+/**
+ * Salva avatar gamer (configuração JSONB e SVG gerado) do operador ou admin no Supabase
+ */
+export async function saveOperatorAvatarInSupabase(
+  identifier: string,
+  avatarConfig: any,
+  avatarSvg: string
+): Promise<boolean> {
+  if (!identifier) return false;
+  const cleanId = identifier.trim();
+
+  try {
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from('operators')
+      .update({
+        avatar_config: avatarConfig,
+        avatar_svg: avatarSvg
+      })
+      .or(`id.eq.${cleanId},email.eq.${cleanId},serial_token.eq.${cleanId}`);
+
+    if (!error) return true;
+  } catch (err) {
+    console.warn('[Supabase Avatar] Erro ao salvar avatar no Supabase:', err);
+  }
+
+  // Fallback db.json
+  try {
+    const db = readDb();
+    if (Array.isArray(db.operators)) {
+      const op = db.operators.find(
+        o => o.id === cleanId || o.email?.toLowerCase() === cleanId.toLowerCase() || o.serialToken === cleanId
+      );
+      if (op) {
+        op.avatar_config = avatarConfig;
+        op.avatarConfig = avatarConfig;
+        op.avatar_svg = avatarSvg;
+        op.avatarSvg = avatarSvg;
+        writeDb(db);
+        return true;
+      }
+    }
+    // Caso seja admin master
+    if (cleanId === 'admin' || cleanId.includes('admin@')) {
+      if (Array.isArray(db.adminUsers) && db.adminUsers.length > 0) {
+        db.adminUsers[0].avatar_config = avatarConfig;
+        db.adminUsers[0].avatarConfig = avatarConfig;
+        db.adminUsers[0].avatar_svg = avatarSvg;
+        db.adminUsers[0].avatarSvg = avatarSvg;
+        writeDb(db);
+        return true;
+      }
+    }
+  } catch {}
+
   return false;
 }

@@ -47,6 +47,10 @@ export interface Candidate {
   accepted_terms_at?: string;
   accepted_terms_ip?: string;
   accepted_terms_version?: string;
+  avatar_config?: any;
+  avatarConfig?: any;
+  avatar_svg?: string;
+  avatarSvg?: string;
 }
 
 export interface Operator {
@@ -89,6 +93,10 @@ export interface Operator {
   accepted_terms_at?: string;
   accepted_terms_ip?: string;
   accepted_terms_version?: string;
+  avatar_config?: any;
+  avatarConfig?: any;
+  avatar_svg?: string;
+  avatarSvg?: string;
 }
 
 export interface LicenseRecord {
@@ -151,6 +159,10 @@ export interface AdminUser {
   name: string;
   passwordHash: string;
   role: 'MASTER';
+  avatar_config?: any;
+  avatarConfig?: any;
+  avatar_svg?: string;
+  avatarSvg?: string;
 }
 
 export interface BriefingRecord {
@@ -171,6 +183,10 @@ export interface BriefingRecord {
   accepted_terms_at?: string;
   accepted_terms_ip?: string;
   accepted_terms_version?: string;
+  avatar_config?: any;
+  avatarConfig?: any;
+  avatar_svg?: string;
+  avatarSvg?: string;
 }
 
 export interface DemoRecord {

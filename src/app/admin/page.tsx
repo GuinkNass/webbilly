@@ -43,6 +43,9 @@ import {
   Phone
 } from 'lucide-react';
 import { startAdminTour } from '@/lib/tours';
+import AvatarCreatorModal from '@/components/AvatarCreatorModal';
+import GamerAvatar from '@/components/GamerAvatar';
+import TrophyImage from '@/components/TrophyImage';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -94,6 +97,7 @@ export default function AdminDashboardPage() {
   // Estados de formulário e modal
   const [approvalModalData, setApprovalModalData] = useState<any>(null);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+  const [showAdminAvatarModal, setShowAdminAvatarModal] = useState(false);
   const [adminCurrentPassword, setAdminCurrentPassword] = useState('');
   const [adminNewPassword, setAdminNewPassword] = useState('');
   const [adminConfirmPassword, setAdminConfirmPassword] = useState('');
@@ -805,11 +809,24 @@ export default function AdminDashboardPage() {
               <RefreshCw className="w-4 h-4" />
             </button>
 
-            {/* Avatar / Perfil Admin */}
-            <div className="flex items-center gap-2 pl-2 border-l border-white/[0.08]">
-              <div className="w-8 h-8 rounded-full bg-indigo-900/80 border border-indigo-700/50 flex items-center justify-center text-white text-xs font-bold">
-                AD
-              </div>
+            {/* Avatar / Perfil Admin com GamerAvatar Clicável */}
+            <div className="flex items-center gap-2.5 pl-2.5 border-l border-white/[0.08]">
+              <button
+                onClick={() => setShowAdminAvatarModal(true)}
+                className="group relative cursor-pointer"
+                title="Clique para personalizar o Avatar Gamer do Administrador Master"
+              >
+                <GamerAvatar
+                  svg={data?.adminUser?.avatar_svg || data?.adminUser?.avatarSvg}
+                  config={data?.adminUser?.avatar_config || data?.adminUser?.avatarConfig}
+                  seed="Admin Master"
+                  size={36}
+                  className="ring-2 ring-indigo-500/50 group-hover:ring-indigo-400 group-hover:scale-105 transition"
+                />
+                <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-indigo-500 border-2 border-[#090D16] flex items-center justify-center text-[7px] text-white font-bold">
+                  🎮
+                </span>
+              </button>
               <div className="hidden lg:block text-left">
                 <div className="text-xs font-bold text-white leading-none">Administrador</div>
                 <div className="text-[10px] text-zinc-400 leading-tight">Master Billy</div>
@@ -1281,22 +1298,42 @@ export default function AdminDashboardPage() {
                               </div>
                             </td>
                             <td className="py-4 px-4">
-                              <span className="font-semibold text-white block">
-                                {lic.operatorName && lic.operatorName !== 'Aguardando Onboarding'
-                                  ? lic.operatorName
-                                  : isVirgin
-                                  ? 'Chave Virgem (Sem Nome)'
-                                  : 'Operador Não Identificado'}
-                              </span>
-                              <div className="text-[11px] mt-0.5">
-                                {(lic.operatorEmail || lic.email) ? (
-                                  <span className="text-zinc-300 font-mono text-[11px] font-medium">{lic.operatorEmail || lic.email}</span>
-                                ) : isVirgin ? (
-                                  <span className="text-amber-400/90 font-medium italic text-[10px]">Aguardando preenchimento no app</span>
-                                ) : (
-                                  <span className="text-zinc-500 text-[10px]">E-mail não cadastrado</span>
-                                )}
-                              </div>
+                              {(() => {
+                                const cleanSerial = (lic.serialToken || '').trim().toUpperCase();
+                                const op = (data?.operators || []).find((o: any) =>
+                                  (o.serialToken || '').trim().toUpperCase() === cleanSerial ||
+                                  (lic.operatorId && o.id === lic.operatorId)
+                                );
+                                return (
+                                  <div className="flex items-start gap-2.5">
+                                    <GamerAvatar
+                                      svg={op?.avatar_svg}
+                                      config={op?.avatar_config}
+                                      seed={lic.operatorName || lic.serialToken}
+                                      size={32}
+                                      className="ring-1 ring-white/10 shrink-0 mt-0.5"
+                                    />
+                                    <div>
+                                      <span className="font-semibold text-white block">
+                                        {lic.operatorName && lic.operatorName !== 'Aguardando Onboarding'
+                                          ? lic.operatorName
+                                          : isVirgin
+                                          ? 'Chave Virgem (Sem Nome)'
+                                          : 'Operador Não Identificado'}
+                                      </span>
+                                      <div className="text-[11px] mt-0.5">
+                                        {(lic.operatorEmail || lic.email) ? (
+                                          <span className="text-zinc-300 font-mono text-[11px] font-medium">{lic.operatorEmail || lic.email}</span>
+                                        ) : isVirgin ? (
+                                          <span className="text-amber-400/90 font-medium italic text-[10px]">Aguardando preenchimento no app</span>
+                                        ) : (
+                                          <span className="text-zinc-500 text-[10px]">E-mail não cadastrado</span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })()}
 
                               {/* E-mail Corporativo @webbilly */}
                               <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
@@ -1361,8 +1398,8 @@ export default function AdminDashboardPage() {
 
                                 return (
                                   <div className="inline-flex flex-col items-center gap-1">
-                                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${op.medal?.badgeBg || 'bg-zinc-800'} ${op.medal?.badgeText || 'text-zinc-400'} ${op.medal?.badgeBorder || 'border-zinc-700'}`}>
-                                      <span>{op.medal?.icon || '🌱'}</span>
+                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${op.medal?.badgeBg || 'bg-zinc-800'} ${op.medal?.badgeText || 'text-zinc-400'} ${op.medal?.badgeBorder || 'border-zinc-700'}`}>
+                                      <TrophyImage tier={op.medal?.tier || op.medal?.name} size="xs" />
                                       <span>{op.medal?.name || 'Iniciante'}</span>
                                     </span>
                                     <div className="flex items-center gap-1 text-[10px] text-zinc-400">
@@ -2133,6 +2170,33 @@ export default function AdminDashboardPage() {
               </button>
             </div>
 
+            {/* Seção: Meu Avatar Gamer (Admin Master) */}
+            <div className="p-3.5 rounded-2xl bg-[#141824] border border-white/[0.08] flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <GamerAvatar
+                  svg={data?.adminUser?.avatar_svg || data?.adminUser?.avatarSvg}
+                  config={data?.adminUser?.avatar_config || data?.adminUser?.avatarConfig}
+                  seed="Admin Master"
+                  size={44}
+                  className="ring-2 ring-indigo-500/50 shadow-md shadow-indigo-500/20"
+                />
+                <div>
+                  <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span>Meu Avatar Gamer</span>
+                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-mono font-bold">ADMIN</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400">Personalize seu avatar gamer com DiceBear.</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAdminAvatarModal(true)}
+                className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition flex items-center gap-1 shadow-md shadow-indigo-950/40 cursor-pointer"
+              >
+                <span>Personalizar</span>
+              </button>
+            </div>
+
             {changePasswordError && (
               <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs">
                 {changePasswordError}
@@ -2473,6 +2537,28 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* MODAL DO CRIADOR DE AVATAR GAMER (ADMIN MASTER) */}
+      <AvatarCreatorModal
+        isOpen={showAdminAvatarModal}
+        onClose={() => setShowAdminAvatarModal(false)}
+        canClose={true}
+        operatorId="admin"
+        operatorName="Administrador Master"
+        initialConfig={data?.adminUser?.avatar_config || data?.adminUser?.avatarConfig}
+        onSaved={(newConfig: any, newSvg: string) => {
+          setData((prev: any) => ({
+            ...prev,
+            adminUser: {
+              ...prev?.adminUser,
+              avatar_config: newConfig,
+              avatarConfig: newConfig,
+              avatar_svg: newSvg,
+              avatarSvg: newSvg
+            }
+          }));
+        }}
+      />
 
     </div>
   );

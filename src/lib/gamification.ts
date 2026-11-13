@@ -7,6 +7,7 @@ export interface MedalConfig {
   level: number;
   name: string;
   icon: string;
+  image: string;
   color: string;
   badgeBg: string;
   badgeBorder: string;
@@ -22,6 +23,7 @@ export const MEDAL_CONFIGS: Record<MedalTier, MedalConfig> = {
     level: 4,
     name: 'Rubi',
     icon: '💎',
+    image: '/trofeus/Rubi.png',
     color: '#e11d48',
     badgeBg: 'bg-rose-500/20',
     badgeBorder: 'border-rose-500/50',
@@ -35,6 +37,7 @@ export const MEDAL_CONFIGS: Record<MedalTier, MedalConfig> = {
     level: 3,
     name: 'Ouro',
     icon: '🥇',
+    image: '/trofeus/Ouro.png',
     color: '#eab308',
     badgeBg: 'bg-amber-500/20',
     badgeBorder: 'border-amber-500/50',
@@ -48,6 +51,7 @@ export const MEDAL_CONFIGS: Record<MedalTier, MedalConfig> = {
     level: 2,
     name: 'Prata',
     icon: '🥈',
+    image: '/trofeus/Prata.png',
     color: '#94a3b8',
     badgeBg: 'bg-slate-400/20',
     badgeBorder: 'border-slate-400/50',
@@ -61,6 +65,7 @@ export const MEDAL_CONFIGS: Record<MedalTier, MedalConfig> = {
     level: 1,
     name: 'Bronze',
     icon: '🥉',
+    image: '/trofeus/Bronze.png',
     color: '#d97706',
     badgeBg: 'bg-orange-600/20',
     badgeBorder: 'border-orange-600/50',
@@ -74,6 +79,7 @@ export const MEDAL_CONFIGS: Record<MedalTier, MedalConfig> = {
     level: 0,
     name: 'Iniciante',
     icon: '🌱',
+    image: '/trofeus/Bronze.png',
     color: '#71717a',
     badgeBg: 'bg-zinc-800',
     badgeBorder: 'border-zinc-700',
@@ -363,7 +369,10 @@ export function getLeaderboard(
       monthlyDomainSalesCount: item.metrics.monthlyDomainSalesCount,
       rankingScore: item.metrics.rankingScore,
       hasMedalUpgradeBonus: item.metrics.hasMedalUpgradeBonus,
-      medalUpgradeBonusAmount: item.metrics.medalUpgradeBonusAmount
+      medalUpgradeBonusAmount: item.metrics.medalUpgradeBonusAmount,
+      avatar_svg: item.operator.avatar_svg || item.operator.avatarSvg || null,
+      avatarSvg: item.operator.avatar_svg || item.operator.avatarSvg || null,
+      avatar_config: item.operator.avatar_config || item.operator.avatarConfig || null
     };
   });
 

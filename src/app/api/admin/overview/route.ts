@@ -239,9 +239,18 @@ export async function GET(req: NextRequest) {
           affiliate_enabled: op?.affiliate_enabled ?? false,
           affiliate_code: op?.affiliate_code || null,
           referred_by_operator_id: op?.referred_by_operator_id || null,
-          referred_by_name: sponsor ? sponsor.name : null
+          referred_by_name: sponsor ? sponsor.name : null,
+          avatar_config: op?.avatar_config || op?.avatarConfig || null,
+          avatar_svg: op?.avatar_svg || op?.avatarSvg || null
         };
       }),
+      adminUser: {
+        id: db.adminUsers?.[0]?.id || 'admin',
+        name: db.adminUsers?.[0]?.name || 'Administrador Master',
+        email: db.adminUsers?.[0]?.email || 'admin@billysuite.com.br',
+        avatar_config: db.adminUsers?.[0]?.avatar_config || null,
+        avatar_svg: db.adminUsers?.[0]?.avatar_svg || null
+      },
       sales: db.sales,
       settings: {
         geminiApiKey: settings.geminiApiKey,

@@ -224,7 +224,11 @@ export async function GET(req: NextRequest) {
         lark_provisioned: operator.lark_provisioned ?? operator.larkProvisioned ?? false,
         affiliate_enabled: Boolean(operator.affiliate_enabled),
         affiliate_code: operator.affiliate_code || null,
-        referred_by_operator_id: operator.referred_by_operator_id || null
+        referred_by_operator_id: operator.referred_by_operator_id || null,
+        avatar_config: operator.avatar_config || operator.avatarConfig || null,
+        avatarConfig: operator.avatar_config || operator.avatarConfig || null,
+        avatar_svg: operator.avatar_svg || operator.avatarSvg || null,
+        avatarSvg: operator.avatar_svg || operator.avatarSvg || null
       },
       affiliates: {
         enabled: Boolean(operator.affiliate_enabled),

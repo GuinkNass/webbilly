@@ -47,6 +47,9 @@ import {
   ImageIcon
 } from 'lucide-react';
 import { startOperadorTour } from '@/lib/tours';
+import AvatarCreatorModal from '@/components/AvatarCreatorModal';
+import GamerAvatar from '@/components/GamerAvatar';
+import TrophyImage from '@/components/TrophyImage';
 
 export default function OperatorDashboardPage() {
   const router = useRouter();
@@ -67,6 +70,25 @@ export default function OperatorDashboardPage() {
   const [payoutLoading, setPayoutLoading] = useState(false);
   const [payoutSuccess, setPayoutSuccess] = useState<string | null>(null);
   const [payoutError, setPayoutError] = useState<string | null>(null);
+
+  // Estados do Criador de Avatar Gamer (DiceBear)
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [avatarModalCanClose, setAvatarModalCanClose] = useState(true);
+
+  const handleAvatarSaveSuccess = (newConfig: any, newSvg: string) => {
+    if (data && data.operator) {
+      setData({
+        ...data,
+        operator: {
+          ...data.operator,
+          avatar_config: newConfig,
+          avatarConfig: newConfig,
+          avatar_svg: newSvg,
+          avatarSvg: newSvg
+        }
+      });
+    }
+  };
 
   // Estados de Solicitação de Encerramento/Cancelamento de Cliente
   const [cancelModalSub, setCancelModalSub] = useState<any | null>(null);
@@ -200,6 +222,11 @@ export default function OperatorDashboardPage() {
             operator: { ...data.operator, mustChangePassword: false }
           });
         }
+        // Se ainda não tiver avatar gamer configurado, abre o modal de avatar obrigatório!
+        if (!data?.operator?.avatar_config && !data?.operator?.avatarConfig && !data?.operator?.avatar_svg && !data?.operator?.avatarSvg) {
+          setShowAvatarModal(true);
+          setAvatarModalCanClose(false);
+        }
       }, 1500);
     } catch (err: any) {
       setPasswordError(err.message || 'Erro ao atualizar senha.');
@@ -221,6 +248,10 @@ export default function OperatorDashboardPage() {
       setData(json);
       if (json.operator?.mustChangePassword) {
         setShowPasswordModal(true);
+      } else if (!json.operator?.avatar_config && !json.operator?.avatarConfig && !json.operator?.avatar_svg && !json.operator?.avatarSvg) {
+        // Primeiro acesso sem avatar definido: abre criador gamer obrigatório
+        setShowAvatarModal(true);
+        setAvatarModalCanClose(false);
       }
       if (json.trainingModules?.length > 0) {
         setSelectedVideo(json.trainingModules[0]);
@@ -421,10 +452,10 @@ export default function OperatorDashboardPage() {
                   <Trophy className={`w-4 h-4 ${activeTab === 'ranking' ? 'text-amber-300' : 'text-amber-400 group-hover:text-amber-300'}`} />
                   <span>Ranking & Medalhas</span>
                 </div>
-                <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold flex items-center gap-1 ${
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold flex items-center gap-1.5 ${
                   data?.gamification?.currentMedal?.badgeBg || 'bg-amber-500/20'
                 } ${data?.gamification?.currentMedal?.badgeText || 'text-amber-300'} border ${data?.gamification?.currentMedal?.badgeBorder || 'border-amber-500/30'}`}>
-                  <span>{data?.gamification?.currentMedal?.icon || '🌱'}</span>
+                  <TrophyImage tier={data?.gamification?.currentMedal?.tier || data?.gamification?.currentMedal?.name} size="xs" />
                   <span>{data?.gamification?.currentMedal?.name || 'Iniciante'}</span>
                 </span>
               </button>
@@ -586,10 +617,10 @@ export default function OperatorDashboardPage() {
             {data?.gamification?.currentMedal && (
               <button
                 onClick={() => setActiveTab('ranking')}
-                className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-bold border transition ${data.gamification.currentMedal.badgeBg} ${data.gamification.currentMedal.badgeText} ${data.gamification.currentMedal.badgeBorder} hover:scale-105`}
+                className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold border transition ${data.gamification.currentMedal.badgeBg} ${data.gamification.currentMedal.badgeText} ${data.gamification.currentMedal.badgeBorder} hover:scale-105 shadow-sm`}
                 title="Ver seu progresso no Ranking e Medalhas"
               >
-                <span>{data.gamification.currentMedal.icon}</span>
+                <TrophyImage tier={data.gamification.currentMedal.tier || data.gamification.currentMedal.name} size="sm" />
                 <span>{data.gamification.currentMedal.name}</span>
                 <span className="text-[10px] opacity-80 font-mono">#{data.gamification.rank}</span>
               </button>
@@ -604,11 +635,27 @@ export default function OperatorDashboardPage() {
               <RefreshCw className="w-4 h-4" />
             </button>
 
-            {/* Perfil Operador */}
+            {/* Perfil Operador com Avatar Gamer */}
             <div className="flex items-center gap-2.5 pl-3 border-l border-white/[0.08]">
-              <div className="w-8 h-8 rounded-xl bg-emerald-950/60 border border-emerald-800/40 text-emerald-400 font-bold text-xs flex items-center justify-center">
-                {op?.name?.substring(0, 2)?.toUpperCase() || 'OP'}
-              </div>
+              <button
+                onClick={() => {
+                  setShowAvatarModal(true);
+                  setAvatarModalCanClose(true);
+                }}
+                className="group relative cursor-pointer"
+                title="Clique para personalizar seu Avatar Gamer"
+              >
+                <GamerAvatar
+                  svg={data?.operator?.avatar_svg || data?.operator?.avatarSvg}
+                  config={data?.operator?.avatar_config || data?.operator?.avatarConfig}
+                  seed={op?.name || op?.id || 'Operador'}
+                  size={36}
+                  className="ring-2 ring-emerald-500/40 group-hover:ring-emerald-400 group-hover:scale-105 transition"
+                />
+                <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-[#090D16] flex items-center justify-center text-[7px] text-black font-bold">
+                  🎮
+                </span>
+              </button>
               <div className="hidden md:block text-left">
                 <div className="text-xs font-bold text-white line-clamp-1">{op?.name || 'Operador'}</div>
                 <div className="text-[10px] text-zinc-400">{op?.email || 'operador@webbilly.com.br'}</div>
@@ -741,13 +788,13 @@ export default function OperatorDashboardPage() {
         {data?.gamification && (
           <div className="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#141824] via-[#11141c] to-[#141824] border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg">
             <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-2xl shrink-0 shadow-md">
-                {data.gamification.currentMedal?.icon || '🌱'}
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center shrink-0 shadow-md">
+                <TrophyImage tier={data.gamification.currentMedal?.tier || data.gamification.currentMedal?.name} size="md" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-white uppercase tracking-wider">
-                    Sua Medalha Oficial: <strong className="text-amber-300">{data.gamification.currentMedal?.name}</strong>
+                    Sua Patente Oficial: <strong className="text-amber-300">{data.gamification.currentMedal?.name}</strong>
                   </span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-black bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                     #{data.gamification.rank} no Ranking
@@ -1709,21 +1756,25 @@ export default function OperatorDashboardPage() {
 
                   {/* Grid de 3 Cards: Medalha Atual / Score & Posição / Próxima Conquista */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    {/* Card 1: Medalha Atual */}
-                    <div className={`p-5 rounded-2xl border ${medal.badgeBorder} ${medal.badgeBg} flex flex-col justify-between relative overflow-hidden backdrop-blur-sm`}>
+                    {/* Card 1: Medalha Atual / HUD de Patente */}
+                    <div className={`p-6 rounded-2xl border ${medal.badgeBorder} ${medal.badgeBg} flex flex-col justify-between relative overflow-hidden backdrop-blur-sm shadow-xl`}>
                       <div>
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">Sua Medalha Atual</span>
-                          <span className="text-2xl">{medal.icon}</span>
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-400">Sua Patente Oficial</span>
+                          <TrophyImage
+                            tier={medal.tier || medal.name}
+                            size="lg"
+                            showLockBadge={medal.level === 0}
+                          />
                         </div>
                         <div className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
                           <span>{medal.name}</span>
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${medal.badgeText} bg-black/40 border border-white/10`}>
-                            Nível {medal.level}
+                          <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider ${medal.badgeText} bg-black/40 border border-white/10`}>
+                            {medal.level === 0 ? 'Nível 0' : `Nível ${medal.level}`}
                           </span>
                         </div>
                         <p className="text-xs text-zinc-300 mt-2 leading-relaxed">
-                          {medal.description}
+                          {medal.level === 0 ? 'Em Construção de Carteira (Bloqueado — Rumo ao Bronze).' : medal.description}
                         </p>
                       </div>
 
@@ -1772,8 +1823,8 @@ export default function OperatorDashboardPage() {
 
                         {nextMedal ? (
                           <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">{nextMedal.icon}</span>
+                            <div className="flex items-center gap-2.5">
+                              <TrophyImage tier={nextMedal.tier || nextMedal.name} size="sm" />
                               <span className="text-sm font-bold text-white">Rumo à Medalha {nextMedal.name}</span>
                             </div>
 
@@ -1821,7 +1872,9 @@ export default function OperatorDashboardPage() {
                           </div>
                         ) : (
                           <div className="py-4 text-center">
-                            <div className="text-3xl mb-2">💎</div>
+                            <div className="mb-2 flex justify-center">
+                              <TrophyImage tier="Rubi" size="lg" />
+                            </div>
                             <div className="text-sm font-bold text-rose-400">Nível Máximo Conquistado!</div>
                             <p className="text-xs text-zinc-400 mt-1">Você é o topo da equipe com a Medalha de Rubi.</p>
                           </div>
@@ -1850,8 +1903,9 @@ export default function OperatorDashboardPage() {
                 {/* Bronze */}
                 <div className="p-4 rounded-xl bg-[#141824] border border-orange-600/30 hover:border-orange-500/50 transition">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-orange-400 flex items-center gap-1.5">
-                      <span>🥉</span> Bronze (Nível 1)
+                    <span className="text-xs font-bold text-orange-400 flex items-center gap-2">
+                      <TrophyImage tier="Bronze" size="sm" />
+                      <span>Bronze (Nível 1)</span>
                     </span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-orange-600/20 text-orange-300 font-mono font-bold">
                       Marco 1
@@ -1867,8 +1921,9 @@ export default function OperatorDashboardPage() {
                 {/* Prata */}
                 <div className="p-4 rounded-xl bg-[#141824] border border-slate-400/30 hover:border-slate-300/50 transition">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                      <span>🥈</span> Prata (Nível 2)
+                    <span className="text-xs font-bold text-slate-200 flex items-center gap-2">
+                      <TrophyImage tier="Prata" size="sm" />
+                      <span>Prata (Nível 2)</span>
                     </span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-400/20 text-slate-300 font-mono font-bold">
                       Consistência
@@ -1884,8 +1939,9 @@ export default function OperatorDashboardPage() {
                 {/* Ouro */}
                 <div className="p-4 rounded-xl bg-[#141824] border border-amber-500/30 hover:border-amber-400/50 transition">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
-                      <span>🥇</span> Ouro (Nível 3)
+                    <span className="text-xs font-bold text-amber-300 flex items-center gap-2">
+                      <TrophyImage tier="Ouro" size="sm" />
+                      <span>Ouro (Nível 3)</span>
                     </span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono font-bold">
                       Elite
@@ -1901,8 +1957,9 @@ export default function OperatorDashboardPage() {
                 {/* Rubi */}
                 <div className="p-4 rounded-xl bg-[#141824] border border-rose-500/30 hover:border-rose-400/50 transition">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-rose-400 flex items-center gap-1.5">
-                      <span>💎</span> Rubi (Nível 4)
+                    <span className="text-xs font-bold text-rose-400 flex items-center gap-2">
+                      <TrophyImage tier="Rubi" size="sm" />
+                      <span>Rubi (Nível 4)</span>
                     </span>
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-mono font-bold">
                       Máximo
@@ -1917,7 +1974,165 @@ export default function OperatorDashboardPage() {
               </div>
             </div>
 
-            {/* 4. Leaderboard Oficial em Tempo Real da Equipe */}
+            {/* 4. Totens do Pódio dos Campeões (Top 3 Olímpico / Gamer) */}
+            {rankingData?.leaderboard && rankingData.leaderboard.length >= 2 && (() => {
+              const top1 = rankingData.leaderboard.find((r: any) => r.rank === 1);
+              const top2 = rankingData.leaderboard.find((r: any) => r.rank === 2);
+              const top3 = rankingData.leaderboard.find((r: any) => r.rank === 3);
+
+              return (
+                <div className="bg-[#11141c] p-6 rounded-2xl border border-white/[0.06] space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <Trophy className="w-5 h-5 text-amber-400" />
+                      <div>
+                        <h3 className="text-base font-bold text-white tracking-tight">
+                          Pódio dos Campeões • Top 3 Webbilly
+                        </h3>
+                        <p className="text-xs text-zinc-400">
+                          Reconhecimento máximo aos operadores com melhor pontuação oficial no mês ativo.
+                        </p>
+                      </div>
+                    </div>
+                    <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                      🏆 Elite Operacional
+                    </span>
+                  </div>
+
+                  {/* Pódio Visual: 2º Lugar (Esquerda), 1º Lugar (Centro Mais Alto), 3º Lugar (Direita) */}
+                  <div className="pt-8 pb-2 flex flex-col md:flex-row items-end justify-center gap-4 lg:gap-8 max-w-4xl mx-auto">
+                    {/* #2 Lugar - PRATA */}
+                    {top2 && (
+                      <div className="w-full md:w-1/3 flex flex-col items-center order-2 md:order-1">
+                        <div className="relative mb-3 flex flex-col items-center">
+                          <TrophyImage tier="Prata" size="lg" className="mb-2" />
+                          <div className="relative">
+                            <GamerAvatar
+                              svg={top2.avatar_svg}
+                              config={top2.avatar_config}
+                              seed={top2.displayName || top2.operatorId}
+                              size={56}
+                              className="ring-4 ring-slate-400/50 shadow-lg shadow-slate-400/20"
+                            />
+                            <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-400 text-black font-mono shadow-md">
+                              #2
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="text-center mt-2 mb-2">
+                          <div className="text-xs font-bold text-white flex items-center justify-center gap-1">
+                            <span>{top2.displayName}</span>
+                            {top2.isCurrentUser && (
+                              <span className="px-1.5 py-0.2 rounded text-[8px] font-bold bg-emerald-500/20 text-emerald-300 uppercase">Você</span>
+                            )}
+                          </div>
+                          <div className="text-[11px] font-mono font-bold text-slate-300 mt-0.5">
+                            {top2.rankingScore} pts
+                          </div>
+                          <div className="text-[10px] text-zinc-400">
+                            {top2.activeRecurringCount} clientes • {top2.monthlyDomainSalesCount} domínios
+                          </div>
+                        </div>
+
+                        {/* Pedestal Prata */}
+                        <div className="w-full h-28 rounded-t-2xl bg-gradient-to-t from-slate-900/90 to-slate-800/80 border-t-4 border-l border-r border-slate-400/60 p-3 flex flex-col items-center justify-center shadow-lg shadow-slate-950/50">
+                          <span className="text-2xl font-black text-slate-300 font-mono">2º</span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Prata</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* #1 Lugar - OURO (DESTAQUE MÁXIMO) */}
+                    {top1 && (
+                      <div className="w-full md:w-1/3 flex flex-col items-center order-1 md:order-2 z-10">
+                        <div className="relative mb-3 flex flex-col items-center">
+                          <span className="text-xl animate-bounce mb-1">👑</span>
+                          <TrophyImage tier="Ouro" size="xl" className="mb-2" />
+                          <div className="relative">
+                            <GamerAvatar
+                              svg={top1.avatar_svg}
+                              config={top1.avatar_config}
+                              seed={top1.displayName || top1.operatorId}
+                              size={68}
+                              className="ring-4 ring-amber-400 shadow-xl shadow-amber-400/30"
+                            />
+                            <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-black font-mono shadow-md">
+                              #1
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="text-center mt-2 mb-2">
+                          <div className="text-sm font-black text-amber-300 flex items-center justify-center gap-1.5">
+                            <span>{top1.displayName}</span>
+                            {top1.isCurrentUser && (
+                              <span className="px-1.5 py-0.2 rounded text-[8px] font-bold bg-emerald-500/20 text-emerald-300 uppercase">Você</span>
+                            )}
+                          </div>
+                          <div className="text-xs font-mono font-black text-amber-400 mt-0.5">
+                            {top1.rankingScore} pts
+                          </div>
+                          <div className="text-[10px] text-zinc-300">
+                            {top1.activeRecurringCount} clientes • {top1.monthlyDomainSalesCount} domínios
+                          </div>
+                        </div>
+
+                        {/* Pedestal Ouro */}
+                        <div className="w-full h-36 rounded-t-2xl bg-gradient-to-t from-amber-950/90 to-amber-900/80 border-t-4 border-l border-r border-amber-400 p-3 flex flex-col items-center justify-center shadow-2xl shadow-amber-950/80">
+                          <span className="text-3xl font-black text-amber-300 font-mono">1º</span>
+                          <span className="text-[10px] font-bold text-amber-300 uppercase tracking-widest mt-1">Líder Ouro</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* #3 Lugar - BRONZE */}
+                    {top3 && (
+                      <div className="w-full md:w-1/3 flex flex-col items-center order-3">
+                        <div className="relative mb-3 flex flex-col items-center">
+                          <TrophyImage tier="Bronze" size="lg" className="mb-2" />
+                          <div className="relative">
+                            <GamerAvatar
+                              svg={top3.avatar_svg}
+                              config={top3.avatar_config}
+                              seed={top3.displayName || top3.operatorId}
+                              size={52}
+                              className="ring-4 ring-orange-600/50 shadow-lg shadow-orange-600/20"
+                            />
+                            <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] font-black bg-orange-600 text-white font-mono shadow-md">
+                              #3
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="text-center mt-2 mb-2">
+                          <div className="text-xs font-bold text-white flex items-center justify-center gap-1">
+                            <span>{top3.displayName}</span>
+                            {top3.isCurrentUser && (
+                              <span className="px-1.5 py-0.2 rounded text-[8px] font-bold bg-emerald-500/20 text-emerald-300 uppercase">Você</span>
+                            )}
+                          </div>
+                          <div className="text-[11px] font-mono font-bold text-orange-400 mt-0.5">
+                            {top3.rankingScore} pts
+                          </div>
+                          <div className="text-[10px] text-zinc-400">
+                            {top3.activeRecurringCount} clientes • {top3.monthlyDomainSalesCount} domínios
+                          </div>
+                        </div>
+
+                        {/* Pedestal Bronze */}
+                        <div className="w-full h-24 rounded-t-2xl bg-gradient-to-t from-orange-950/90 to-orange-900/80 border-t-4 border-l border-r border-orange-500/60 p-3 flex flex-col items-center justify-center shadow-lg shadow-orange-950/50">
+                          <span className="text-xl font-black text-orange-400 font-mono">3º</span>
+                          <span className="text-[10px] font-bold text-orange-400 uppercase tracking-widest mt-1">Bronze</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* 5. Leaderboard Oficial em Tempo Real da Equipe */}
             <div className="bg-[#11141c] rounded-2xl border border-white/[0.06] overflow-hidden">
               <div className="p-5 border-b border-white/[0.06] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
@@ -1962,7 +2177,7 @@ export default function OperatorDashboardPage() {
                           }`}
                         >
                           <td className="py-3.5 px-4 text-center">
-                            <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full font-black text-xs font-mono ${
+                            <span className={`inline-flex items-center justify-center gap-1 px-2 py-1 rounded-full font-black text-xs font-mono ${
                               isTop1
                                 ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40 shadow-sm shadow-amber-400/20'
                                 : isTop2
@@ -1971,12 +2186,20 @@ export default function OperatorDashboardPage() {
                                 ? 'bg-orange-600/20 text-orange-400 border border-orange-600/40'
                                 : 'bg-zinc-800 text-zinc-400'
                             }`}>
-                              {isTop1 ? '🥇' : isTop2 ? '🥈' : isTop3 ? '🥉' : `#${row.rank}`}
+                              {isTop1 ? <TrophyImage tier="Ouro" size="xs" /> : isTop2 ? <TrophyImage tier="Prata" size="xs" /> : isTop3 ? <TrophyImage tier="Bronze" size="xs" /> : null}
+                              <span>#{row.rank}</span>
                             </span>
                           </td>
 
                           <td className="py-3.5 px-4">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2.5">
+                              <GamerAvatar
+                                svg={row.avatar_svg}
+                                config={row.avatar_config}
+                                seed={row.displayName || row.operatorId}
+                                size={28}
+                                className="ring-1 ring-white/10"
+                              />
                               <span className={`font-medium ${isMe ? 'text-emerald-400 font-bold' : 'text-white'}`}>
                                 {row.displayName}
                               </span>
@@ -1989,8 +2212,8 @@ export default function OperatorDashboardPage() {
                           </td>
 
                           <td className="py-3.5 px-4">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${row.medal?.badgeBg || 'bg-zinc-800'} ${row.medal?.badgeText || 'text-zinc-400'} ${row.medal?.badgeBorder || 'border-zinc-700'}`}>
-                              <span>{row.medal?.icon || '🌱'}</span>
+                            <span className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[11px] font-bold border ${row.medal?.badgeBg || 'bg-zinc-800'} ${row.medal?.badgeText || 'text-zinc-400'} ${row.medal?.badgeBorder || 'border-zinc-700'}`}>
+                              <TrophyImage tier={row.medal?.tier || row.medal?.name} size="xs" />
                               <span>{row.medal?.name || 'Iniciante'}</span>
                             </span>
                           </td>
@@ -2523,6 +2746,37 @@ export default function OperatorDashboardPage() {
               </p>
             </div>
 
+            {!data?.operator?.mustChangePassword && (
+              <div className="p-4 rounded-2xl bg-[#141824] border border-white/[0.08] flex items-center justify-between gap-4 mb-5">
+                <div className="flex items-center gap-3">
+                  <GamerAvatar
+                    svg={data?.operator?.avatar_svg || data?.operator?.avatarSvg}
+                    config={data?.operator?.avatar_config || data?.operator?.avatarConfig}
+                    seed={data?.operator?.name || data?.operator?.id || 'Operador'}
+                    size={46}
+                    className="ring-2 ring-[#84cc16]/50 shadow-lg shadow-[#84cc16]/20"
+                  />
+                  <div>
+                    <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <span>Meu Avatar Gamer</span>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#84cc16]/20 text-[#a3e635] font-mono">DICEBEAR</span>
+                    </div>
+                    <p className="text-[11px] text-zinc-400">Personalize seu personagem no ranking da equipe.</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAvatarModal(true);
+                    setAvatarModalCanClose(true);
+                  }}
+                  className="px-3 py-2 rounded-xl bg-[#84cc16] hover:bg-[#65a30d] text-black font-black text-xs transition flex items-center gap-1 shadow-md shadow-[#84cc16]/25 cursor-pointer"
+                >
+                  <span>Personalizar</span>
+                </button>
+              </div>
+            )}
+
             {passwordError && (
               <div className="mb-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -2701,6 +2955,28 @@ export default function OperatorDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* MODAL DO CRIADOR DE AVATAR GAMER (DICEBEAR) */}
+      <AvatarCreatorModal
+        isOpen={showAvatarModal}
+        onClose={() => setShowAvatarModal(false)}
+        canClose={avatarModalCanClose}
+        operatorId={data?.operator?.id}
+        operatorName={data?.operator?.name}
+        initialConfig={data?.operator?.avatar_config || data?.operator?.avatarConfig}
+        onSaved={(newConfig: any, newSvg: string) => {
+          setData((prev: any) => ({
+            ...prev,
+            operator: {
+              ...prev?.operator,
+              avatar_config: newConfig,
+              avatarConfig: newConfig,
+              avatar_svg: newSvg,
+              avatarSvg: newSvg
+            }
+          }));
+        }}
+      />
     </div>
   );
 }
