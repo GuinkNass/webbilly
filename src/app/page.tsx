@@ -732,29 +732,29 @@ export default function WebbillyHomePage() {
       {/* =====================================================================
           7. BANNER CTA DE ALTA CONVERSÃO (Inspirado em eco_start_wrapper)
          ===================================================================== */}
-      <section className="py-16 px-4 sm:px-8 bg-gradient-to-r from-[#141b27] via-[#1a2536] to-[#141b27] border-y border-[#7abf18]/30 relative overflow-hidden text-center">
-        {/* Vídeo de Fundo da Seção CTA */}
+      <section className="py-16 px-4 sm:px-8 bg-black border-y border-[#7abf18]/30 relative overflow-hidden text-center">
+        {/* Vídeo de Fundo da Seção CTA (Cores Reais e Nitidez Máxima) */}
         <video
           autoPlay
           loop
           muted
           playsInline
           preload="auto"
-          className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none z-0"
+          className="absolute inset-0 w-full h-full object-cover opacity-85 pointer-events-none z-0"
         >
           <source src="/videos/fundo001.mp4" type="video/mp4" />
         </video>
-        {/* Máscara/Overlay escuro com vinheta superior e inferior para suavizar bordas */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#090D16] via-[#090D16]/65 to-[#090D16] pointer-events-none z-0" />
+        {/* Degrade preto neutro bem fino no topo e na base sem apagar o centro */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-transparent to-black/80 pointer-events-none z-0" />
 
-        <div className="max-w-4xl mx-auto relative z-10 space-y-4">
-          <span className="text-xs font-bold uppercase tracking-widest text-[#7abf18] block">
+        <div className="max-w-4xl mx-auto relative z-10 space-y-4 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
+          <span className="text-xs font-bold uppercase tracking-widest text-[#7abf18] block drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
             Comece Hoje Mesmo Sem Riscos
           </span>
-          <h2 className="text-3xl sm:text-5xl font-black text-white font-heading leading-tight">
+          <h2 className="text-3xl sm:text-5xl font-black text-white font-heading leading-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
             Pronto Para Colocar Seu Comércio no Mapa Digital?
           </h2>
-          <p className="text-sm sm:text-base text-zinc-300 max-w-xl mx-auto">
+          <p className="text-sm sm:text-base text-zinc-200 max-w-xl mx-auto drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
             Por apenas R$ 29,90 por mês você garante presença profissional e não perde mais nenhuma venda pelo WhatsApp.
           </p>
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">

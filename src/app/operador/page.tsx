@@ -2057,34 +2057,34 @@ export default function OperatorDashboardPage() {
               const top3 = rankingData.leaderboard.find((r: any) => r.rank === 3);
 
               return (
-                <div className="relative bg-[#11141c] p-6 rounded-2xl border border-white/[0.06] space-y-6 overflow-hidden">
-                  {/* Vídeo de Fundo do Pódio dos Campeões */}
+                <div className="relative bg-black p-6 rounded-2xl border border-white/[0.08] space-y-6 overflow-hidden">
+                  {/* Vídeo de Fundo do Pódio dos Campeões (100% Nitidez e Cores Reais) */}
                   <video
                     autoPlay
                     loop
                     muted
                     playsInline
                     preload="auto"
-                    className="absolute inset-0 w-full h-full object-cover opacity-35 pointer-events-none z-0"
+                    className="absolute inset-0 w-full h-full object-cover opacity-100 pointer-events-none z-0"
                   >
                     <source src="/videos/fundo-trofeus.mp4" type="video/mp4" />
                   </video>
-                  {/* Overlay escuro em gradiente para garantir leitura cristalina */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#090D16] via-[#090D16]/60 to-[#090D16]/80 pointer-events-none z-0" />
+                  {/* Vinheta preta sutil nas extremidades sem cobrir o centro */}
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_45%,rgba(0,0,0,0.65)_100%)] pointer-events-none z-0" />
 
-                  <div className="relative z-10 flex items-center justify-between">
+                  <div className="relative z-10 flex items-center justify-between drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
                     <div className="flex items-center gap-2.5">
-                      <Trophy className="w-5 h-5 text-amber-400" />
+                      <Trophy className="w-5 h-5 text-amber-400 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]" />
                       <div>
-                        <h3 className="text-base font-bold text-white tracking-tight">
+                        <h3 className="text-base font-bold text-white tracking-tight drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
                           Pódio dos Campeões • Top 3 Webbilly
                         </h3>
-                        <p className="text-xs text-zinc-400">
+                        <p className="text-xs text-zinc-300 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
                           Reconhecimento máximo aos operadores com melhor pontuação oficial no mês ativo.
                         </p>
                       </div>
                     </div>
-                    <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                    <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-black/60 backdrop-blur-sm text-amber-300 border border-amber-500/30 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
                       🏆 Elite Operacional
                     </span>
                   </div>
@@ -2094,8 +2094,8 @@ export default function OperatorDashboardPage() {
                     {/* #2 Lugar - PRATA */}
                     {top2 && (
                       <div className="w-full md:w-1/3 flex flex-col items-center order-2 md:order-1">
-                        <div className="relative mb-3 flex flex-col items-center">
-                          <TrophyImage tier="Prata" size="lg" className="mb-2" />
+                        <div className="relative mb-3 flex flex-col items-center drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
+                          <TrophyImage tier="Prata" size="lg" className="mb-2 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]" />
                           <div className="relative">
                             <GamerAvatar
                               svg={top2.avatar_svg}
@@ -2110,24 +2110,24 @@ export default function OperatorDashboardPage() {
                           </div>
                         </div>
 
-                        <div className="text-center mt-2 mb-2">
+                        <div className="text-center mt-2 mb-2 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
                           <div className="text-xs font-bold text-white flex items-center justify-center gap-1">
-                            <span>{top2.displayName}</span>
+                            <span className="drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">{top2.displayName}</span>
                             {top2.isCurrentUser && (
                               <span className="px-1.5 py-0.2 rounded text-[8px] font-bold bg-emerald-500/20 text-emerald-300 uppercase">Você</span>
                             )}
                           </div>
-                          <div className="text-[11px] font-mono font-bold text-slate-300 mt-0.5">
+                          <div className="text-[11px] font-mono font-bold text-slate-300 mt-0.5 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
                             {top2.rankingScore} pts
                           </div>
-                          <div className="text-[10px] text-zinc-400">
+                          <div className="text-[10px] text-zinc-300 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
                             {top2.activeRecurringCount} clientes • {top2.monthlyDomainSalesCount} domínios
                           </div>
                         </div>
 
                         {/* Pedestal Prata */}
-                        <div className="w-full h-28 rounded-t-2xl bg-gradient-to-t from-slate-900/90 to-slate-800/80 border-t-4 border-l border-r border-slate-400/60 p-3 flex flex-col items-center justify-center shadow-lg shadow-slate-950/50">
-                          <span className="text-2xl font-black text-slate-300 font-mono">2º</span>
+                        <div className="w-full h-28 rounded-t-2xl bg-black/60 backdrop-blur-sm border-t-4 border-l border-r border-slate-400/60 p-3 flex flex-col items-center justify-center shadow-lg shadow-black/80">
+                          <span className="text-2xl font-black text-slate-300 font-mono drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">2º</span>
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Prata</span>
                         </div>
                       </div>
@@ -2136,9 +2136,9 @@ export default function OperatorDashboardPage() {
                     {/* #1 Lugar - OURO (DESTAQUE MÁXIMO) */}
                     {top1 && (
                       <div className="w-full md:w-1/3 flex flex-col items-center order-1 md:order-2 z-10">
-                        <div className="relative mb-3 flex flex-col items-center">
+                        <div className="relative mb-3 flex flex-col items-center drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
                           <span className="text-xl animate-bounce mb-1">👑</span>
-                          <TrophyImage tier="Ouro" size="xl" className="mb-2" />
+                          <TrophyImage tier="Ouro" size="xl" className="mb-2 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]" />
                           <div className="relative">
                             <GamerAvatar
                               svg={top1.avatar_svg}
@@ -2153,24 +2153,24 @@ export default function OperatorDashboardPage() {
                           </div>
                         </div>
 
-                        <div className="text-center mt-2 mb-2">
+                        <div className="text-center mt-2 mb-2 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
                           <div className="text-sm font-black text-amber-300 flex items-center justify-center gap-1.5">
-                            <span>{top1.displayName}</span>
+                            <span className="drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">{top1.displayName}</span>
                             {top1.isCurrentUser && (
                               <span className="px-1.5 py-0.2 rounded text-[8px] font-bold bg-emerald-500/20 text-emerald-300 uppercase">Você</span>
                             )}
                           </div>
-                          <div className="text-xs font-mono font-black text-amber-400 mt-0.5">
+                          <div className="text-xs font-mono font-black text-amber-400 mt-0.5 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
                             {top1.rankingScore} pts
                           </div>
-                          <div className="text-[10px] text-zinc-300">
+                          <div className="text-[10px] text-zinc-200 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
                             {top1.activeRecurringCount} clientes • {top1.monthlyDomainSalesCount} domínios
                           </div>
                         </div>
 
                         {/* Pedestal Ouro */}
-                        <div className="w-full h-36 rounded-t-2xl bg-gradient-to-t from-amber-950/90 to-amber-900/80 border-t-4 border-l border-r border-amber-400 p-3 flex flex-col items-center justify-center shadow-2xl shadow-amber-950/80">
-                          <span className="text-3xl font-black text-amber-300 font-mono">1º</span>
+                        <div className="w-full h-36 rounded-t-2xl bg-black/60 backdrop-blur-sm border-t-4 border-l border-r border-amber-400 p-3 flex flex-col items-center justify-center shadow-2xl shadow-black/80">
+                          <span className="text-3xl font-black text-amber-300 font-mono drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">1º</span>
                           <span className="text-[10px] font-bold text-amber-300 uppercase tracking-widest mt-1">Líder Ouro</span>
                         </div>
                       </div>
@@ -2179,8 +2179,8 @@ export default function OperatorDashboardPage() {
                     {/* #3 Lugar - BRONZE */}
                     {top3 && (
                       <div className="w-full md:w-1/3 flex flex-col items-center order-3">
-                        <div className="relative mb-3 flex flex-col items-center">
-                          <TrophyImage tier="Bronze" size="lg" className="mb-2" />
+                        <div className="relative mb-3 flex flex-col items-center drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
+                          <TrophyImage tier="Bronze" size="lg" className="mb-2 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]" />
                           <div className="relative">
                             <GamerAvatar
                               svg={top3.avatar_svg}
@@ -2195,24 +2195,24 @@ export default function OperatorDashboardPage() {
                           </div>
                         </div>
 
-                        <div className="text-center mt-2 mb-2">
+                        <div className="text-center mt-2 mb-2 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
                           <div className="text-xs font-bold text-white flex items-center justify-center gap-1">
-                            <span>{top3.displayName}</span>
+                            <span className="drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">{top3.displayName}</span>
                             {top3.isCurrentUser && (
                               <span className="px-1.5 py-0.2 rounded text-[8px] font-bold bg-emerald-500/20 text-emerald-300 uppercase">Você</span>
                             )}
                           </div>
-                          <div className="text-[11px] font-mono font-bold text-orange-400 mt-0.5">
+                          <div className="text-[11px] font-mono font-bold text-orange-400 mt-0.5 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
                             {top3.rankingScore} pts
                           </div>
-                          <div className="text-[10px] text-zinc-400">
+                          <div className="text-[10px] text-zinc-300 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">
                             {top3.activeRecurringCount} clientes • {top3.monthlyDomainSalesCount} domínios
                           </div>
                         </div>
 
                         {/* Pedestal Bronze */}
-                        <div className="w-full h-24 rounded-t-2xl bg-gradient-to-t from-orange-950/90 to-orange-900/80 border-t-4 border-l border-r border-orange-500/60 p-3 flex flex-col items-center justify-center shadow-lg shadow-orange-950/50">
-                          <span className="text-xl font-black text-orange-400 font-mono">3º</span>
+                        <div className="w-full h-24 rounded-t-2xl bg-black/60 backdrop-blur-sm border-t-4 border-l border-r border-orange-500/60 p-3 flex flex-col items-center justify-center shadow-lg shadow-black/80">
+                          <span className="text-xl font-black text-orange-400 font-mono drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">3º</span>
                           <span className="text-[10px] font-bold text-orange-400 uppercase tracking-widest mt-1">Bronze</span>
                         </div>
                       </div>
