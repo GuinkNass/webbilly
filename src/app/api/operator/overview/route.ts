@@ -285,15 +285,27 @@ export async function GET(req: NextRequest) {
       },
       trainingModules,
       installer: {
-        version: '2.0.4',
-        releaseDate: '2026-11-07',
+        version: 'v2.0.4',
+        buildNumber: 'Build 13.11.2026',
+        releaseDate: '13/11/2026',
+        releaseTime: '09:32',
+        updatedAt: '13/11/2026 às 09:32',
         fileName: 'Billy-Suite-Setup.exe',
-        fileSize: '348 MB',
-        downloadUrl: '/downloads/Billy-Suite-Setup.exe'
+        fileSize: '361 MB',
+        downloadUrl: '/downloads/Billy-Suite-Setup.exe',
+        changelog: 'Templates Reais (/templates/) com HTML/CSS originais preservados, adaptação cirúrgica IA e WhatsApp flutuante',
+        highlights: [
+          'Templates Reais (/templates/) com HTML/CSS original preservado',
+          'Preservação integral do layout, classes CSS e Bootstrap',
+          'Adaptação cirúrgica de textos e fotos com Gemini IA',
+          'Botão flutuante oficial de WhatsApp integrado'
+        ]
       },
       extension: {
-        version: '1.0.2',
-        releaseDate: '2026-11-12',
+        version: 'v1.0.2',
+        buildNumber: 'Build 12.11.2026',
+        releaseDate: '12/11/2026',
+        updatedAt: '12/11/2026',
         fileName: 'Billy-Extensao-Chrome.zip',
         fileSize: '342 KB',
         downloadUrl: '/downloads/Billy-Extensao-Chrome.zip'

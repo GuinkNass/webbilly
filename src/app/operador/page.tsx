@@ -306,7 +306,7 @@ export default function OperatorDashboardPage() {
                 <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
                   activeTab === 'overview' ? 'bg-white/20 text-white' : 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/40'
                 }`}>
-                  v2.0.4
+                  {data?.installer?.version || 'v2.0.4'}
                 </span>
               </button>
 
@@ -785,33 +785,83 @@ export default function OperatorDashboardPage() {
               {/* 3 Botões / Cards Oficiais de Download */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 {/* 1. Programa Desktop Billy */}
-                <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06] flex flex-col justify-between space-y-4 hover:border-emerald-500/30 transition group">
+                <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06] flex flex-col justify-between space-y-4 hover:border-emerald-500/30 transition group relative overflow-hidden">
                   <div className="space-y-3">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center justify-center group-hover:scale-105 transition">
-                      <Laptop className="w-6 h-6" />
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center justify-center group-hover:scale-105 transition">
+                        <Laptop className="w-6 h-6" />
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        Atualizado {data?.installer?.updatedAt || '13/11/2026 às 09:32'}
+                      </span>
                     </div>
+
                     <div>
-                      <h3 className="font-bold text-white text-base">Programa Desktop Billy</h3>
-                      <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
-                        Software Windows com Scraper Google Maps, Gemini IA e geração instantânea de sites. Ativação direta apenas com seu Serial.
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-white text-base">Programa Desktop Billy</h3>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-md font-bold bg-emerald-950/80 text-emerald-300 border border-emerald-700/50">
+                          {data?.installer?.version || 'v2.0.4'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] text-zinc-400 font-mono mt-1">
+                        <span>{data?.installer?.buildNumber || 'Build 13.11.2026'}</span>
+                        <span>•</span>
+                        <span>{data?.installer?.fileSize || '361 MB'}</span>
+                      </div>
+                      <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+                        Software Windows com Scraper Google Maps, Gemini IA e geração com templates HTML/CSS reais.
                       </p>
+                    </div>
+
+                    {/* Destaques da Atualização */}
+                    <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06] space-y-1.5 text-[11px]">
+                      <div className="text-[10px] uppercase font-bold text-emerald-400 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" />
+                        <span>Novidades da Última Versão:</span>
+                      </div>
+                      <ul className="text-zinc-300 space-y-1 text-[11px] leading-tight">
+                        <li className="flex items-start gap-1.5">
+                          <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                          <span>Templates Reais (<code className="text-emerald-300 font-mono text-[10px]">/templates/</code>) com HTML/CSS originais</span>
+                        </li>
+                        <li className="flex items-start gap-1.5">
+                          <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                          <span>Adaptação cirúrgica IA mantendo 100% do design</span>
+                        </li>
+                        <li className="flex items-start gap-1.5">
+                          <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                          <span>Botão flutuante oficial de WhatsApp integrado</span>
+                        </li>
+                      </ul>
                     </div>
                   </div>
 
-                  <a
-                    href={process.env.NEXT_PUBLIC_BILLY_DESKTOP_DOWNLOAD_URL || data?.installer?.downloadUrl || '/downloads/billy-setup.exe'}
-                    className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-emerald-600 hover:bg-emerald-500 transition border border-emerald-500/30 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-950/40"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span>Baixar Programa (.exe)</span>
-                  </a>
+                  <div className="space-y-1.5">
+                    <a
+                      href={process.env.NEXT_PUBLIC_BILLY_DESKTOP_DOWNLOAD_URL || data?.installer?.downloadUrl || '/downloads/Billy-Suite-Setup.exe'}
+                      className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-emerald-600 hover:bg-emerald-500 transition border border-emerald-500/30 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-950/40"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Baixar Programa Atualizado (.exe)</span>
+                    </a>
+                    <div className="flex items-center justify-between px-1 text-[10px] text-zinc-500 font-mono">
+                      <span>Arquivo: {data?.installer?.fileName || 'Billy-Suite-Setup.exe'}</span>
+                      <span>{data?.installer?.fileSize || '361 MB'}</span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* 2. Extensão Chrome WhatsApp */}
                 <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06] flex flex-col justify-between space-y-4 hover:border-[#84cc16]/30 transition group">
                   <div className="space-y-3">
-                    <div className="w-12 h-12 rounded-2xl bg-[#84cc16]/10 border border-[#84cc16]/25 text-[#84cc16] flex items-center justify-center group-hover:scale-105 transition">
-                      <Puzzle className="w-6 h-6" />
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="w-12 h-12 rounded-2xl bg-[#84cc16]/10 border border-[#84cc16]/25 text-[#84cc16] flex items-center justify-center group-hover:scale-105 transition">
+                        <Puzzle className="w-6 h-6" />
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#84cc16]/15 text-[#a3e635] border border-[#84cc16]/30">
+                        {data?.extension?.version || 'v1.0.2'} • {data?.extension?.releaseDate || '12/11/2026'}
+                      </span>
                     </div>
                     <div>
                       <h3 className="font-bold text-white text-base">Extensão Chrome (WhatsApp)</h3>
@@ -822,8 +872,8 @@ export default function OperatorDashboardPage() {
                   </div>
 
                   <a
-                    href={process.env.NEXT_PUBLIC_BILLY_EXTENSION_DOWNLOAD_URL || data?.extension?.downloadUrl || '/downloads/billy-extension.zip'}
-                    download="billy-extension.zip"
+                    href={process.env.NEXT_PUBLIC_BILLY_EXTENSION_DOWNLOAD_URL || data?.extension?.downloadUrl || '/downloads/Billy-Extensao-Chrome.zip'}
+                    download="Billy-Extensao-Chrome.zip"
                     className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-[#a3e635] hover:text-white bg-[#16201a] hover:bg-[#84cc16] hover:text-zinc-950 transition border border-[#84cc16]/40 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-lime-950/30"
                   >
                     <Download className="w-4 h-4" />
