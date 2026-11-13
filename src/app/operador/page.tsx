@@ -793,7 +793,7 @@ export default function OperatorDashboardPage() {
                       </div>
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        Atualizado {data?.installer?.updatedAt || '13/11/2026 às 09:32'}
+                        Atualizado {data?.installer?.updatedAt || '13/11/2026 às 14:58'}
                       </span>
                     </div>
 
@@ -805,12 +805,12 @@ export default function OperatorDashboardPage() {
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-[11px] text-zinc-400 font-mono mt-1">
-                        <span>{data?.installer?.buildNumber || 'Build 13.11.2026'}</span>
+                        <span>{data?.installer?.buildNumber || 'Build 13.11.2026-1458'}</span>
                         <span>•</span>
                         <span>{data?.installer?.fileSize || '345 MB'}</span>
                       </div>
                       <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-                        Software Windows com Scraper Google Maps, Gemini IA e geração com templates HTML/CSS reais.
+                        Software Windows com OCR Multimodal de Cardápios em Lote, leitor de Word/TXT e templates HTML/CSS reais.
                       </p>
                     </div>
 
@@ -818,20 +818,20 @@ export default function OperatorDashboardPage() {
                     <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06] space-y-1.5 text-[11px]">
                       <div className="text-[10px] uppercase font-bold text-emerald-400 flex items-center gap-1">
                         <Sparkles className="w-3 h-3" />
-                        <span>Novidades da Última Versão:</span>
+                        <span>Novidades da Versão Atual:</span>
                       </div>
                       <ul className="text-zinc-300 space-y-1 text-[11px] leading-tight">
                         <li className="flex items-start gap-1.5">
                           <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                          <span>Templates Reais (<code className="text-emerald-300 font-mono text-[10px]">/templates/</code>) com HTML/CSS originais</span>
+                          <span>Anexo em lote de Fotos (.png, .jpg), Word (.docx) e TXT</span>
                         </li>
                         <li className="flex items-start gap-1.5">
                           <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                          <span>Adaptação cirúrgica IA mantendo 100% do design</span>
+                          <span>OCR Gemini: extração de pratos, itens e preços de cardápio</span>
                         </li>
                         <li className="flex items-start gap-1.5">
                           <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                          <span>Botão flutuante oficial de WhatsApp integrado</span>
+                          <span>Preenchimento cirúrgico no menu do template real</span>
                         </li>
                       </ul>
                     </div>

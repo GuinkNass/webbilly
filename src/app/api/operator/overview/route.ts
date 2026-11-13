@@ -286,19 +286,19 @@ export async function GET(req: NextRequest) {
       trainingModules,
       installer: {
         version: 'v2.0.4',
-        buildNumber: 'Build 13.11.2026',
+        buildNumber: 'Build 13.11.2026-1458',
         releaseDate: '13/11/2026',
-        releaseTime: '09:32',
-        updatedAt: '13/11/2026 às 09:32',
+        releaseTime: '14:58',
+        updatedAt: '13/11/2026 às 14:58',
         fileName: 'Billy-Suite-Setup.exe',
         fileSize: '345 MB',
         downloadUrl: '/downloads/Billy-Suite-Setup.exe',
-        changelog: 'Templates Reais (/templates/) com HTML/CSS originais preservados, adaptação cirúrgica IA e WhatsApp flutuante',
+        changelog: 'Cardápios em lote, OCR multimodal de imagens/PDF e leitura de Word (.docx) e TXT com transcrição cirúrgica de pratos e preços',
         highlights: [
-          'Templates Reais (/templates/) com HTML/CSS original preservado',
-          'Preservação integral do layout, classes CSS e Bootstrap',
-          'Adaptação cirúrgica de textos e fotos com Gemini IA',
-          'Botão flutuante oficial de WhatsApp integrado'
+          'Upload de documentos e cardápios múltiplos em lote (sem demora)',
+          'Suporte total a Imagens (.png, .jpg), Word (.docx), TXT e PDF',
+          'OCR multimodal com Gemini: extração fiel de pratos, categorias e preços',
+          'Preenchimento cirúrgico nas seções de menu do template preservando CSS'
         ]
       },
       extension: {
