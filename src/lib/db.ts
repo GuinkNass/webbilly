@@ -335,6 +335,25 @@ export interface AffiliateCommissionRecord {
   payout_request_id?: string;
 }
 
+export interface SystemAlertRecord {
+  id: string;
+  title: string;
+  message: string;
+  priority: 'info' | 'promo' | 'urgent';
+  action_label?: string;
+  action_url?: string;
+  is_active: boolean;
+  created_by?: string;
+  created_at: string;
+}
+
+export interface OperatorAlertReadRecord {
+  id: string;
+  operator_id: string;
+  alert_id: string;
+  read_at: string;
+}
+
 export interface DatabaseSchema {
   candidates: Candidate[];
   operators: Operator[];
@@ -349,6 +368,8 @@ export interface DatabaseSchema {
   medalUpgrades?: MedalUpgradeRecord[];
   affiliateCommissions?: AffiliateCommissionRecord[];
   siteChangeRequests?: SiteChangeRequestRecord[];
+  systemAlerts?: SystemAlertRecord[];
+  operatorAlertReads?: OperatorAlertReadRecord[];
 }
 
 export function getDefaultSubscriptions(): SubscriptionRecord[] {

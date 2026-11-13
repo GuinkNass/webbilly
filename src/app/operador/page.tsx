@@ -50,6 +50,7 @@ import { startOperadorTour } from '@/lib/tours';
 import AvatarCreatorModal from '@/components/AvatarCreatorModal';
 import GamerAvatar from '@/components/GamerAvatar';
 import TrophyImage from '@/components/TrophyImage';
+import OperatorAlertsBell from '@/components/OperatorAlertsBell';
 
 export default function OperatorDashboardPage() {
   const router = useRouter();
@@ -412,7 +413,12 @@ export default function OperatorDashboardPage() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Download className={`w-4 h-4 ${activeTab === 'overview' ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`} />
+                  <img
+                    src="/icones/op-download.svg"
+                    alt=""
+                    className={`w-4 h-4 object-contain transition ${activeTab === 'overview' ? 'brightness-200' : 'opacity-70 group-hover:opacity-100'}`}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
                   <span>Download do App & Guia</span>
                 </div>
                 <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
@@ -432,7 +438,12 @@ export default function OperatorDashboardPage() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Globe className={`w-4 h-4 ${activeTab === 'subscriptions' ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`} />
+                  <img
+                    src="/icones/op-sites.svg"
+                    alt=""
+                    className={`w-4 h-4 object-contain transition ${activeTab === 'subscriptions' ? 'brightness-200' : 'opacity-70 group-hover:opacity-100'}`}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
                   <span>Sites Ativos (SaaS)</span>
                 </div>
                 <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
@@ -451,7 +462,12 @@ export default function OperatorDashboardPage() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Video className={`w-4 h-4 ${activeTab === 'training' ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`} />
+                  <img
+                    src="/icones/op-training.svg"
+                    alt=""
+                    className={`w-4 h-4 object-contain transition ${activeTab === 'training' ? 'brightness-200' : 'opacity-70 group-hover:opacity-100'}`}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
                   <span>Área de Treinamento</span>
                 </div>
                 <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
@@ -471,7 +487,12 @@ export default function OperatorDashboardPage() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <TrendingUp className={`w-4 h-4 ${activeTab === 'sales' ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`} />
+                  <img
+                    src="/icones/op-sales.svg"
+                    alt=""
+                    className={`w-4 h-4 object-contain transition ${activeTab === 'sales' ? 'brightness-200' : 'opacity-70 group-hover:opacity-100'}`}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
                   <span>Minhas Vendas & Pix</span>
                 </div>
                 <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
@@ -491,7 +512,12 @@ export default function OperatorDashboardPage() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Trophy className={`w-4 h-4 ${activeTab === 'ranking' ? 'text-amber-300' : 'text-amber-400 group-hover:text-amber-300'}`} />
+                  <img
+                    src="/icones/op-ranking.svg"
+                    alt=""
+                    className={`w-4 h-4 object-contain transition ${activeTab === 'ranking' ? 'brightness-200' : 'opacity-70 group-hover:opacity-100'}`}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
                   <span>Ranking & Medalhas</span>
                 </div>
                 <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold flex items-center gap-1.5 ${
@@ -512,7 +538,12 @@ export default function OperatorDashboardPage() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Users className={`w-4 h-4 ${activeTab === 'affiliates' ? 'text-white' : 'text-[#84cc16] group-hover:text-lime-300'}`} />
+                  <img
+                    src="/icones/op-affiliates.svg"
+                    alt=""
+                    className={`w-4 h-4 object-contain transition ${activeTab === 'affiliates' ? 'brightness-200' : 'opacity-70 group-hover:opacity-100'}`}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
                   <span>Billy Afiliados</span>
                 </div>
                 {data?.affiliates?.enabled ? (
@@ -667,6 +698,9 @@ export default function OperatorDashboardPage() {
                 <span className="text-[10px] opacity-80 font-mono">#{data.gamification.rank}</span>
               </button>
             )}
+
+            {/* Sininho de Alertas Globais em Tempo Real */}
+            <OperatorAlertsBell operatorId={op?.id || ''} />
 
             {/* Atualizar Dados */}
             <button
@@ -917,7 +951,7 @@ export default function OperatorDashboardPage() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center justify-center group-hover:scale-105 transition">
-                        <Laptop className="w-6 h-6" />
+                        <img src="/icones/015-computer-monitor.svg" alt="" className="w-6 h-6 object-contain" />
                       </div>
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -985,7 +1019,7 @@ export default function OperatorDashboardPage() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="w-12 h-12 rounded-2xl bg-[#84cc16]/10 border border-[#84cc16]/25 text-[#84cc16] flex items-center justify-center group-hover:scale-105 transition">
-                        <Puzzle className="w-6 h-6" />
+                        <img src="/icones/001-plug.svg" alt="" className="w-6 h-6 object-contain" />
                       </div>
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#84cc16]/15 text-[#a3e635] border border-[#84cc16]/30">
                         {data?.extension?.version || 'v1.0.2'} • {data?.extension?.releaseDate || '12/11/2026'}
@@ -1014,7 +1048,7 @@ export default function OperatorDashboardPage() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between gap-2">
                       <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center justify-center group-hover:scale-105 transition">
-                        <ImageIcon className="w-6 h-6" />
+                        <img src="/icones/010-download.svg" alt="" className="w-6 h-6 object-contain" />
                       </div>
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
                         Chrome Web Store
@@ -1043,7 +1077,7 @@ export default function OperatorDashboardPage() {
                 <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06] flex flex-col justify-between space-y-4 hover:border-cyan-500/30 transition group">
                   <div className="space-y-3">
                     <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 text-cyan-400 flex items-center justify-center group-hover:scale-105 transition">
-                      <Mail className="w-6 h-6" />
+                      <img src="/icones/048-mail.svg" alt="" className="w-6 h-6 object-contain" />
                     </div>
                     <div>
                       <h3 className="font-bold text-white text-base">Lark Mail (@webbilly)</h3>

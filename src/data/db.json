@@ -274,5 +274,7 @@
       "createdAt": "2026-09-10T20:06:44.470Z",
       "updatedAt": "2026-11-09T20:06:44.470Z"
     }
-  ]
+  ],
+  "systemAlerts": [],
+  "operatorAlertReads": []
 }

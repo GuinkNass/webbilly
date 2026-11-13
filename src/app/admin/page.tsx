@@ -46,6 +46,7 @@ import { startAdminTour } from '@/lib/tours';
 import AvatarCreatorModal from '@/components/AvatarCreatorModal';
 import GamerAvatar from '@/components/GamerAvatar';
 import TrophyImage from '@/components/TrophyImage';
+import AdminAlertsModal from '@/components/AdminAlertsModal';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
@@ -95,6 +96,19 @@ export default function AdminDashboardPage() {
   };
 
   // Estados de formulário e modal
+  const [showAlertsModal, setShowAlertsModal] = useState(false);
+  const [activeAlertsCount, setActiveAlertsCount] = useState(0);
+
+  const refreshAdminAlertsCount = async () => {
+    try {
+      const res = await fetch('/api/admin/alerts', { cache: 'no-store' });
+      const json = await res.json();
+      if (json?.success && Array.isArray(json.alerts)) {
+        setActiveAlertsCount(json.alerts.filter((a: any) => a.is_active).length);
+      }
+    } catch {}
+  };
+
   const [approvalModalData, setApprovalModalData] = useState<any>(null);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [showAdminAvatarModal, setShowAdminAvatarModal] = useState(false);
@@ -190,6 +204,7 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     loadData();
+    refreshAdminAlertsCount();
   }, []);
 
   // Disparo automático do Tour Admin Master no primeiro acesso
@@ -603,7 +618,12 @@ export default function AdminDashboardPage() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <LayoutDashboard className={`w-4 h-4 ${activeTab === 'subscriptions' ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`} />
+                  <img
+                    src="/icones/021-browser.svg"
+                    alt=""
+                    className={`w-4 h-4 object-contain transition ${activeTab === 'subscriptions' ? 'brightness-200' : 'opacity-70 group-hover:opacity-100'}`}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
                   <span>Assinaturas SaaS</span>
                 </div>
                 <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
@@ -623,7 +643,12 @@ export default function AdminDashboardPage() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Globe className={`w-4 h-4 ${activeTab === 'domains' ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`} />
+                  <img
+                    src="/icones/040-cloud.svg"
+                    alt=""
+                    className={`w-4 h-4 object-contain transition ${activeTab === 'domains' ? 'brightness-200' : 'opacity-70 group-hover:opacity-100'}`}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
                   <span>Domínio Próprio</span>
                 </div>
                 <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-mono">
@@ -641,7 +666,12 @@ export default function AdminDashboardPage() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Key className={`w-4 h-4 ${activeTab === 'licenses' ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`} />
+                  <img
+                    src="/icones/088-key.svg"
+                    alt=""
+                    className={`w-4 h-4 object-contain transition ${activeTab === 'licenses' ? 'brightness-200' : 'opacity-70 group-hover:opacity-100'}`}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
                   <span>Licenças & Operadores</span>
                 </div>
                 <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
@@ -662,7 +692,12 @@ export default function AdminDashboardPage() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Users className={`w-4 h-4 ${activeTab === 'candidates' ? 'text-white' : 'text-amber-400 group-hover:text-amber-300'}`} />
+                  <img
+                    src="/icones/085-id-card.svg"
+                    alt=""
+                    className={`w-4 h-4 object-contain transition ${activeTab === 'candidates' ? 'brightness-200' : 'opacity-70 group-hover:opacity-100'}`}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
                   <span>Candidaturas Pendentes</span>
                 </div>
                 {((data?.operators || []).filter((o: any) => o.status === 'PENDENTE').length > 0) && (
@@ -682,7 +717,12 @@ export default function AdminDashboardPage() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <DollarSign className={`w-4 h-4 ${activeTab === 'financial' ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`} />
+                  <img
+                    src="/icones/045-money.svg"
+                    alt=""
+                    className={`w-4 h-4 object-contain transition ${activeTab === 'financial' ? 'brightness-200' : 'opacity-70 group-hover:opacity-100'}`}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
                   <span>Extrato & Repasses</span>
                 </div>
               </button>
@@ -696,7 +736,12 @@ export default function AdminDashboardPage() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Users className={`w-4 h-4 ${activeTab === 'affiliates' ? 'text-white' : 'text-[#84cc16] group-hover:text-lime-300'}`} />
+                  <img
+                    src="/icones/110-network.svg"
+                    alt=""
+                    className={`w-4 h-4 object-contain transition ${activeTab === 'affiliates' ? 'brightness-200' : 'opacity-70 group-hover:opacity-100'}`}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
                   <span>Billy Afiliados</span>
                 </div>
                 <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold ${
@@ -715,7 +760,12 @@ export default function AdminDashboardPage() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Sliders className={`w-4 h-4 ${activeTab === 'apis' ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`} />
+                  <img
+                    src="/icones/036-settings.svg"
+                    alt=""
+                    className={`w-4 h-4 object-contain transition ${activeTab === 'apis' ? 'brightness-200' : 'opacity-70 group-hover:opacity-100'}`}
+                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                  />
                   <span>Configurações & APIs</span>
                 </div>
               </button>
@@ -815,8 +865,29 @@ export default function AdminDashboardPage() {
               <span className="hidden md:inline">Alterar Senha Master</span>
             </button>
 
+            {/* Botão Sininho de Alertas Globais (Push para Operadores) */}
             <button
-              onClick={loadData}
+              onClick={() => setShowAlertsModal(true)}
+              className="relative p-2 text-zinc-300 hover:text-white rounded-xl hover:bg-white/[0.06] border border-white/[0.08] transition flex items-center justify-center cursor-pointer group"
+              title="Central de Disparo de Alertas Globais (Push)"
+            >
+              <img
+                src="/icones/029-megaphone.svg"
+                alt="Alertas"
+                className="w-4 h-4 object-contain group-hover:scale-110 transition-transform"
+              />
+              {activeAlertsCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-[#84cc16] text-[#090D16] text-[9px] font-black font-mono flex items-center justify-center shadow-md animate-pulse">
+                  {activeAlertsCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => {
+                loadData();
+                refreshAdminAlertsCount();
+              }}
               className="p-2 text-zinc-400 hover:text-white rounded-xl hover:bg-white/[0.06] border border-white/[0.08] transition"
               title="Atualizar dados em tempo real"
             >
@@ -2551,6 +2622,13 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* MODAL DE ALERTAS GLOBAIS (ADMIN MASTER) */}
+      <AdminAlertsModal
+        isOpen={showAlertsModal}
+        onClose={() => setShowAlertsModal(false)}
+        onAlertsUpdated={refreshAdminAlertsCount}
+      />
 
       {/* MODAL DE PERSONALIZAÇÃO DE AVATAR (ADMIN MASTER) */}
       <AvatarCreatorModal

@@ -676,7 +676,7 @@ export default function WebbillyHomePage() {
             {/* Serviço 1 */}
             <div className="eco-service-box">
               <div className="eco-service-icon">
-                <Smartphone className="w-8 h-8" />
+                <img src="/icones/lp-webdesign.svg" alt="Landing Page" className="w-8 h-8 object-contain drop-shadow" />
               </div>
               <h3 className="text-lg font-bold text-white font-heading mb-2">
                 Landing Page Ultra Rápida
@@ -689,7 +689,7 @@ export default function WebbillyHomePage() {
             {/* Serviço 2 */}
             <div className="eco-service-box">
               <div className="eco-service-icon">
-                <MessageCircle className="w-8 h-8" />
+                <img src="/icones/lp-whatsapp.svg" alt="WhatsApp" className="w-8 h-8 object-contain drop-shadow" />
               </div>
               <h3 className="text-lg font-bold text-white font-heading mb-2">
                 Botão Direto de WhatsApp
@@ -702,7 +702,7 @@ export default function WebbillyHomePage() {
             {/* Serviço 3 */}
             <div className="eco-service-box">
               <div className="eco-service-icon">
-                <Globe className="w-8 h-8" />
+                <img src="/icones/lp-hosting.svg" alt="Subdomínio Seguro" className="w-8 h-8 object-contain drop-shadow" />
               </div>
               <h3 className="text-lg font-bold text-white font-heading mb-2">
                 Subdomínio Oficial Seguro
@@ -715,7 +715,7 @@ export default function WebbillyHomePage() {
             {/* Serviço 4 */}
             <div className="eco-service-box">
               <div className="eco-service-icon">
-                <Sparkles className="w-8 h-8" />
+                <img src="/icones/098-magic.svg" alt="Manutenção e IA" className="w-8 h-8 object-contain drop-shadow" />
               </div>
               <h3 className="text-lg font-bold text-white font-heading mb-2">
                 Manutenção & Atualizações
