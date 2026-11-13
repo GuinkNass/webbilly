@@ -814,7 +814,7 @@ export default function AdminDashboardPage() {
               <button
                 onClick={() => setShowAdminAvatarModal(true)}
                 className="group relative cursor-pointer"
-                title="Clique para personalizar o Avatar Gamer do Administrador Master"
+                title="Clique para personalizar o Avatar do Administrador Master"
               >
                 <GamerAvatar
                   svg={data?.adminUser?.avatar_svg || data?.adminUser?.avatarSvg}
@@ -824,7 +824,7 @@ export default function AdminDashboardPage() {
                   className="ring-2 ring-indigo-500/50 group-hover:ring-indigo-400 group-hover:scale-105 transition"
                 />
                 <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-indigo-500 border-2 border-[#090D16] flex items-center justify-center text-[7px] text-white font-bold">
-                  🎮
+                  ✨
                 </span>
               </button>
               <div className="hidden lg:block text-left">
@@ -2182,10 +2182,10 @@ export default function AdminDashboardPage() {
                 />
                 <div>
                   <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <span>Meu Avatar Gamer</span>
+                    <span>Meu Avatar</span>
                     <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-mono font-bold">ADMIN</span>
                   </div>
-                  <p className="text-[11px] text-zinc-400">Personalize seu avatar gamer com DiceBear.</p>
+                  <p className="text-[11px] text-zinc-400">Personalize seu avatar de exibição oficial.</p>
                 </div>
               </div>
               <button

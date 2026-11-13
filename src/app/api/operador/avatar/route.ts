@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAvatar } from '@dicebear/core';
-import { adventurer, lorelei, pixelArt, bottts } from '@dicebear/collection';
+import { avataaars, adventurer, lorelei, pixelArt, bottts } from '@dicebear/collection';
 import { saveOperatorAvatarInSupabase, getSupabaseAdmin } from '@/lib/supabase';
 import { readDb, writeDb } from '@/lib/db';
 
 const STYLES_MAP: Record<string, any> = {
+  avataaars,
   adventurer,
   lorelei,
   pixelArt,
@@ -15,7 +16,7 @@ const STYLES_MAP: Record<string, any> = {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { operatorId, style = 'adventurer', seed, options = {}, svg } = body;
+    const { operatorId, style = 'avataaars', seed, options = {}, svg } = body;
 
     if (!operatorId) {
       return NextResponse.json(

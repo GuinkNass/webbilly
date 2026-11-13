@@ -1,36 +1,172 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { createAvatar } from '@dicebear/core';
-import { adventurer, lorelei, pixelArt, bottts } from '@dicebear/collection';
+import { avataaars } from '@dicebear/collection';
 import {
-  Sparkles,
-  Dices,
   Check,
   X,
-  Palette,
+  Dices,
+  User,
+  Sparkles,
+  Scissors,
   Eye,
   Smile,
-  Shield,
-  Layers,
-  Save,
-  RotateCcw,
-  Zap
+  Glasses,
+  Briefcase,
+  Palette,
+  Layers
 } from 'lucide-react';
 
-const STYLES = [
-  { id: 'adventurer', name: 'RPG Aventureiro', icon: '⚔️', collection: adventurer, desc: 'Personagem de RPG / Fantasia' },
-  { id: 'lorelei', name: 'Ilustração Moderna', icon: '✨', collection: lorelei, desc: 'Estilo Artístico e Elegante' },
-  { id: 'pixelArt', name: 'Retro Pixel Game', icon: '👾', collection: pixelArt, desc: 'Nostalgia 8-bit / 16-bit' },
-  { id: 'bottts', name: 'Mecha Ciborgue', icon: '🤖', collection: bottts, desc: 'Robôs, Androides e Tecnologias' }
+/* =========================================================================
+   CATÁLOGO PROFISSIONAL DE OPÇÕES AVATAAARS (COM NOMES EM PORTUGUÊS)
+   ========================================================================= */
+
+// 1. Tom de Pele
+const SKIN_COLORS = [
+  { id: 'ffdbb4', name: 'Clara', hex: '#ffdbb4' },
+  { id: 'edb98a', name: 'Média Clara', hex: '#edb98a' },
+  { id: 'd08b5b', name: 'Morena', hex: '#d08b5b' },
+  { id: 'ae5d29', name: 'Bronzeada', hex: '#ae5d29' },
+  { id: '614335', name: 'Negra', hex: '#614335' },
+  { id: 'f8d25c', name: 'Dourada', hex: '#f8d25c' }
 ];
 
-const AURAS = [
-  { id: 'neon-green', name: 'Verde Billy', bg: 'from-lime-500/20 via-emerald-950/40 to-black', glow: 'shadow-[0_0_30px_rgba(132,204,22,0.4)]', border: 'border-lime-500/40', accent: '#84cc16' },
-  { id: 'cyber-cyan', name: 'Cyber Cyan', bg: 'from-cyan-500/20 via-sky-950/40 to-black', glow: 'shadow-[0_0_30px_rgba(6,182,212,0.4)]', border: 'border-cyan-500/40', accent: '#06b6d4' },
-  { id: 'plasma-purple', name: 'Plasma Roxo', bg: 'from-purple-500/20 via-indigo-950/40 to-black', glow: 'shadow-[0_0_30px_rgba(168,85,247,0.4)]', border: 'border-purple-500/40', accent: '#a855f7' },
-  { id: 'inferno-amber', name: 'Fogo Místico', bg: 'from-amber-500/20 via-orange-950/40 to-black', glow: 'shadow-[0_0_30px_rgba(245,158,11,0.4)]', border: 'border-amber-500/40', accent: '#f59e0b' },
-  { id: 'dark-obsidian', name: 'Obsidiana Sombria', bg: 'from-zinc-700/20 via-zinc-950 to-black', glow: 'shadow-[0_0_20px_rgba(255,255,255,0.1)]', border: 'border-white/10', accent: '#71717a' }
+// 2. Cortes de Cabelo / Topo do Rosto
+const TOP_OPTIONS = [
+  // Curtos / Masculinos
+  { id: 'shortFlat', name: 'Curto Executivo', category: 'curto' },
+  { id: 'shortRound', name: 'Curto Clássico', category: 'curto' },
+  { id: 'shortWaved', name: 'Curto Ondulado', category: 'curto' },
+  { id: 'shortCurly', name: 'Curto Cacheado', category: 'curto' },
+  { id: 'theCaesar', name: 'Corte César', category: 'curto' },
+  { id: 'theCaesarAndSidePart', name: 'César com Risca', category: 'curto' },
+  { id: 'sides', name: 'Raspado nas Laterais', category: 'curto' },
+  { id: 'shavedSides', name: 'Degradê / Undercut', category: 'curto' },
+  { id: 'shaggy', name: 'Despojado Casual', category: 'curto' },
+  { id: 'shaggyMullet', name: 'Mullet Moderno', category: 'curto' },
+  { id: 'frizzle', name: 'Crespo Curto', category: 'curto' },
+
+  // Médios e Longos
+  { id: 'bob', name: 'Chanel / Bob Cut', category: 'longo' },
+  { id: 'bun', name: 'Coque Elegante', category: 'longo' },
+  { id: 'curly', name: 'Cachos Volumosos', category: 'longo' },
+  { id: 'curvy', name: 'Ondulado Longo', category: 'longo' },
+  { id: 'straight01', name: 'Liso Longo', category: 'longo' },
+  { id: 'straight02', name: 'Liso com Franja', category: 'longo' },
+  { id: 'straightAndStrand', name: 'Liso com Mechas', category: 'longo' },
+  { id: 'longButNotTooLong', name: 'Médio Natural', category: 'longo' },
+  { id: 'miaWallace', name: 'Chanel Reto com Franja', category: 'longo' },
+  { id: 'bigHair', name: 'Volume Alto', category: 'longo' },
+
+  // Afro & Dreads
+  { id: 'fro', name: 'Black Power', category: 'afro' },
+  { id: 'froBand', name: 'Black Power com Faixa', category: 'afro' },
+  { id: 'dreads01', name: 'Dreadlocks Curtos', category: 'afro' },
+  { id: 'dreads02', name: 'Dreadlocks Médios', category: 'afro' },
+  { id: 'dreads', name: 'Dreadlocks Longos', category: 'afro' },
+  { id: 'frida', name: 'Trança Frida', category: 'afro' },
+
+  // Careca & Coberturas
+  { id: 'bald', name: 'Careca / Raspado', category: 'outros' },
+  { id: 'hat', name: 'Chapéu Casual', category: 'outros' },
+  { id: 'winterHat1', name: 'Gorro de Inverno', category: 'outros' },
+  { id: 'turban', name: 'Turbante', category: 'outros' },
+  { id: 'hijab', name: 'Hijab', category: 'outros' }
+];
+
+// 3. Cor do Cabelo
+const HAIR_COLORS = [
+  { id: '2c1b18', name: 'Preto', hex: '#2c1b18' },
+  { id: '4a312c', name: 'Castanho Escuro', hex: '#4a312c' },
+  { id: '724133', name: 'Castanho Médio', hex: '#724133' },
+  { id: 'b58143', name: 'Castanho Claro', hex: '#b58143' },
+  { id: 'd6b370', name: 'Loiro Dourado', hex: '#d6b370' },
+  { id: 'ecdcbf', name: 'Loiro Platinado', hex: '#ecdcbf' },
+  { id: 'c93305', name: 'Ruivo / Cobre', hex: '#c93305' },
+  { id: 'e8e1e1', name: 'Grisalho / Prata', hex: '#e8e1e1' }
+];
+
+// 4. Barba e Bigode
+const FACIAL_HAIR_OPTIONS = [
+  { id: 'none', name: 'Sem Barba' },
+  { id: 'beardLight', name: 'Barba Curta / Aparada' },
+  { id: 'beardMedium', name: 'Barba Média' },
+  { id: 'beardMajestic', name: 'Barba Cheia' },
+  { id: 'moustacheFancy', name: 'Bigode Clássico' },
+  { id: 'moustacheMagnum', name: 'Bigode Grosso' }
+];
+
+// 5. Olhos
+const EYE_OPTIONS = [
+  { id: 'default', name: 'Padrão Atento' },
+  { id: 'happy', name: 'Felizes / Sorridentes' },
+  { id: 'side', name: 'Focado de Lado' },
+  { id: 'squint', name: 'Observador' },
+  { id: 'wink', name: 'Piscando Confiante' },
+  { id: 'surprised', name: 'Expressivo' },
+  { id: 'closed', name: 'Tranquilo' }
+];
+
+// 6. Sobrancelhas
+const EYEBROW_OPTIONS = [
+  { id: 'defaultNatural', name: 'Naturais' },
+  { id: 'flatNatural', name: 'Retas' },
+  { id: 'raisedExcitedNatural', name: 'Arqueadas' },
+  { id: 'upDownNatural', name: 'Confiantes' },
+  { id: 'unibrowNatural', name: 'Marcantes' },
+  { id: 'angryNatural', name: 'Sérias' }
+];
+
+// 7. Boca & Sorriso
+const MOUTH_OPTIONS = [
+  { id: 'smile', name: 'Sorriso Amigável' },
+  { id: 'twinkle', name: 'Alegre / Confiante' },
+  { id: 'default', name: 'Tranquilo / Neutro' },
+  { id: 'serious', name: 'Sério / Focado' },
+  { id: 'concerned', name: 'Atento / Reflexivo' }
+];
+
+// 8. Óculos / Acessórios
+const ACCESSORY_OPTIONS = [
+  { id: 'none', name: 'Sem Óculos' },
+  { id: 'prescription02', name: 'Óculos Executivo' },
+  { id: 'prescription01', name: 'Óculos de Grau Moderno' },
+  { id: 'round', name: 'Óculos de Grau Redondo' },
+  { id: 'wayfarers', name: 'Óculos Wayfarer' },
+  { id: 'sunglasses', name: 'Óculos de Sol' }
+];
+
+// 9. Vestimenta / Roupa
+const CLOTHING_OPTIONS = [
+  { id: 'blazerAndShirt', name: 'Blazer e Camisa' },
+  { id: 'blazerAndSweater', name: 'Blazer e Suéter' },
+  { id: 'collarAndSweater', name: 'Camisa Social com Suéter' },
+  { id: 'shirtCrewNeck', name: 'Camiseta Básica' },
+  { id: 'shirtVNeck', name: 'Camiseta Gola V' },
+  { id: 'hoodie', name: 'Moletom Casual' }
+];
+
+const CLOTHES_COLORS = [
+  { id: '262e33', name: 'Preto', hex: '#262e33' },
+  { id: '25557c', name: 'Azul Marinho', hex: '#25557c' },
+  { id: '5199e4', name: 'Azul Royal', hex: '#5199e4' },
+  { id: '3c4f5c', name: 'Grafite', hex: '#3c4f5c' },
+  { id: '929598', name: 'Cinza Claro', hex: '#929598' },
+  { id: 'a7ffc4', name: 'Verde Webbilly', hex: '#16a34a' },
+  { id: 'ffffff', name: 'Branco', hex: '#ffffff' },
+  { id: 'ff5c5c', name: 'Vinho / Bordô', hex: '#991b1b' }
+];
+
+// 10. Cores de Fundo (Circulares Neutras & Institucionais)
+const BACKGROUND_COLORS = [
+  { id: '090d16', name: 'Obsidiana', hex: '#090D16' },
+  { id: '0f172a', name: 'Azul Petróleo', hex: '#0F172A' },
+  { id: '1e293b', name: 'Ardósia', hex: '#1E293B' },
+  { id: '111827', name: 'Grafite', hex: '#111827' },
+  { id: '14532d', name: 'Verde Webbilly', hex: '#14532D' },
+  { id: '1e1b4b', name: 'Índigo', hex: '#1E1B4B' },
+  { id: '27272a', name: 'Cinza Neutro', hex: '#27272A' }
 ];
 
 interface AvatarCreatorModalProps {
@@ -54,137 +190,169 @@ export default function AvatarCreatorModal({
   onSaved,
   onSaveSuccess
 }: AvatarCreatorModalProps) {
-  const [selectedStyleId, setSelectedStyleId] = useState<string>(initialConfig?.style || 'adventurer');
-  const [seed, setSeed] = useState<string>(initialConfig?.seed || operatorId || 'BillyGamer');
-  const [selectedAuraId, setSelectedAuraId] = useState<string>(initialConfig?.options?.aura || 'neon-green');
+  const opts = initialConfig?.options || {};
 
-  // Customizações granulares
-  const [skinColor, setSkinColor] = useState<string>(initialConfig?.options?.skinColor?.[0] || '');
-  const [hairColor, setHairColor] = useState<string>(initialConfig?.options?.hairColor?.[0] || '');
-  const [hairStyle, setHairStyle] = useState<string>(initialConfig?.options?.hair?.[0] || initialConfig?.options?.top?.[0] || '');
-  const [eyesStyle, setEyesStyle] = useState<string>(initialConfig?.options?.eyes?.[0] || '');
-  const [mouthStyle, setMouthStyle] = useState<string>(initialConfig?.options?.mouth?.[0] || '');
-  const [glassesActive, setGlassesActive] = useState<boolean>(initialConfig?.options?.glassesProbability === 100);
+  // Estados dos Controles Individuais
+  const [seed, setSeed] = useState<string>(initialConfig?.seed || operatorName || operatorId || 'WebbillyUser');
+  const [skinColor, setSkinColor] = useState<string>(opts.skinColor?.[0] || 'edb98a');
+  const [top, setTop] = useState<string>(opts.top?.[0] || 'shortFlat');
+  const [isBald, setIsBald] = useState<boolean>(opts.topProbability === 0 || opts.top?.[0] === 'bald');
+  const [hairColor, setHairColor] = useState<string>(opts.hairColor?.[0] || '2c1b18');
 
+  // Barba
+  const hasFacial = opts.facialHairProbability !== 0 && opts.facialHair?.[0] && opts.facialHair?.[0] !== 'none';
+  const [facialHair, setFacialHair] = useState<string>(hasFacial ? opts.facialHair[0] : 'none');
+  const [facialHairColor, setFacialHairColor] = useState<string>(opts.facialHairColor?.[0] || '2c1b18');
+
+  // Expressão Facial
+  const [eyes, setEyes] = useState<string>(opts.eyes?.[0] || 'default');
+  const [eyebrows, setEyebrows] = useState<string>(opts.eyebrows?.[0] || 'defaultNatural');
+  const [mouth, setMouth] = useState<string>(opts.mouth?.[0] || 'smile');
+
+  // Óculos
+  const hasAccessory = opts.accessoriesProbability !== 0 && opts.accessories?.[0] && opts.accessories?.[0] !== 'none';
+  const [accessory, setAccessory] = useState<string>(hasAccessory ? opts.accessories[0] : 'none');
+
+  // Roupas
+  const [clothing, setClothing] = useState<string>(opts.clothing?.[0] || 'blazerAndShirt');
+  const [clothesColor, setClothesColor] = useState<string>(opts.clothesColor?.[0] || '262e33');
+
+  // Fundo
+  const [backgroundColor, setBackgroundColor] = useState<string>(opts.backgroundColor?.[0] || '0f172a');
+
+  // Categoria ativa no seletor de cabelo para facilitar navegação
+  const [hairCategory, setHairCategory] = useState<'curto' | 'longo' | 'afro' | 'outros'>('curto');
+
+  // Estados de Salvamento
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Localiza a coleção ativa
-  const currentStyle = useMemo(() => {
-    return STYLES.find(s => s.id === selectedStyleId) || STYLES[0];
-  }, [selectedStyleId]);
+  // Constrói o objeto de opções do Avataaars
+  const currentOptions = useMemo(() => {
+    return {
+      seed,
+      radius: 50,
+      backgroundColor: [backgroundColor],
+      skinColor: [skinColor],
+      top: isBald ? [] : [top],
+      topProbability: isBald ? 0 : 100,
+      hairColor: [hairColor],
+      facialHair: facialHair === 'none' ? [] : [facialHair],
+      facialHairProbability: facialHair === 'none' ? 0 : 100,
+      facialHairColor: [facialHairColor],
+      eyes: [eyes],
+      eyebrows: [eyebrows],
+      mouth: [mouth],
+      accessories: accessory === 'none' ? [] : [accessory],
+      accessoriesProbability: accessory === 'none' ? 0 : 100,
+      accessoriesColor: ['262e33'],
+      clothing: [clothing],
+      clothesColor: [clothesColor]
+    };
+  }, [
+    seed,
+    backgroundColor,
+    skinColor,
+    top,
+    isBald,
+    hairColor,
+    facialHair,
+    facialHairColor,
+    eyes,
+    eyebrows,
+    mouth,
+    accessory,
+    clothing,
+    clothesColor
+  ]);
 
-  const currentAura = useMemo(() => {
-    return AURAS.find(a => a.id === selectedAuraId) || AURAS[0];
-  }, [selectedAuraId]);
-
-  // Gera o SVG do DiceBear em tempo real
+  // Renderiza instantaneamente o SVG ao vivo
   const currentSvg = useMemo(() => {
     try {
-      const options: any = {
-        seed: seed || 'BillyGamer',
-        radius: 50
-      };
-
-      if (skinColor) options.skinColor = [skinColor];
-      if (hairColor) options.hairColor = [hairColor];
-
-      if (hairStyle) {
-        if (selectedStyleId === 'bottts') {
-          options.top = [hairStyle];
-        } else {
-          options.hair = [hairStyle];
-        }
-      }
-
-      if (eyesStyle) options.eyes = [eyesStyle];
-      if (mouthStyle) options.mouth = [mouthStyle];
-
-      if (glassesActive) {
-        options.glassesProbability = 100;
-      } else {
-        options.glassesProbability = 0;
-      }
-
-      const avatar = createAvatar(currentStyle.collection as any, options);
+      const avatar = createAvatar(avataaars, currentOptions as any);
       return avatar.toString();
-    } catch (err) {
-      console.warn('[DiceBear] Erro ao criar preview:', err);
+    } catch (e) {
+      console.error('Erro ao renderizar avataaars:', e);
       return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="#141824"/></svg>`;
     }
-  }, [currentStyle, seed, skinColor, hairColor, hairStyle, eyesStyle, mouthStyle, glassesActive, selectedStyleId]);
+  }, [currentOptions]);
 
-  // Sorteia aleatoriamente
+  // Função para Gerar Combinação Aleatória
   const handleRandomize = () => {
-    const randomSeed = `Hero_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-    setSeed(randomSeed);
+    const randomItem = (arr: any[]) => arr[Math.floor(Math.random() * arr.length)];
+    const randomBool = (chance = 0.5) => Math.random() < chance;
 
-    // Sorteia Aura
-    const randomAura = AURAS[Math.floor(Math.random() * AURAS.length)];
-    setSelectedAuraId(randomAura.id);
+    setSeed(`User_${Math.floor(Math.random() * 90000 + 10000)}`);
+    setSkinColor(randomItem(SKIN_COLORS).id);
 
-    // Reseta overrides granulares para que o DiceBear gere variações nativas baseadas no seed
-    setSkinColor('');
-    setHairColor('');
-    setHairStyle('');
-    setEyesStyle('');
-    setMouthStyle('');
-    setGlassesActive(Math.random() > 0.5);
+    const randomTop = randomItem(TOP_OPTIONS);
+    if (randomTop.id === 'bald') {
+      setIsBald(true);
+    } else {
+      setIsBald(false);
+      setTop(randomTop.id);
+      setHairCategory(randomTop.category as any);
+    }
+
+    setHairColor(randomItem(HAIR_COLORS).id);
+
+    // 40% de chance de ter barba
+    if (randomBool(0.4)) {
+      const beards = FACIAL_HAIR_OPTIONS.filter(f => f.id !== 'none');
+      setFacialHair(randomItem(beards).id);
+      setFacialHairColor(randomItem(HAIR_COLORS).id);
+    } else {
+      setFacialHair('none');
+    }
+
+    setEyes(randomItem(EYE_OPTIONS).id);
+    setEyebrows(randomItem(EYEBROW_OPTIONS).id);
+    setMouth(randomItem(MOUTH_OPTIONS).id);
+
+    // 35% de chance de usar óculos
+    if (randomBool(0.35)) {
+      const glasses = ACCESSORY_OPTIONS.filter(a => a.id !== 'none');
+      setAccessory(randomItem(glasses).id);
+    } else {
+      setAccessory('none');
+    }
+
+    setClothing(randomItem(CLOTHING_OPTIONS).id);
+    setClothesColor(randomItem(CLOTHES_COLORS).id);
+    setBackgroundColor(randomItem(BACKGROUND_COLORS).id);
   };
 
-  // Salvar avatar
+  // Salvar Avatar via API
   const handleSave = async () => {
     setSaving(true);
     setSaveError(null);
-
-    const options: any = {
-      aura: selectedAuraId,
-      glassesProbability: glassesActive ? 100 : 0
-    };
-    if (skinColor) options.skinColor = [skinColor];
-    if (hairColor) options.hairColor = [hairColor];
-    if (hairStyle) {
-      if (selectedStyleId === 'bottts') options.top = [hairStyle];
-      else options.hair = [hairStyle];
-    }
-    if (eyesStyle) options.eyes = [eyesStyle];
-    if (mouthStyle) options.mouth = [mouthStyle];
-
-    const payload = {
-      operatorId,
-      style: selectedStyleId,
-      seed,
-      options,
-      svg: currentSvg
-    };
-
     try {
+      const payload = {
+        operatorId,
+        style: 'avataaars',
+        seed,
+        options: currentOptions,
+        svg: currentSvg
+      };
+
       const res = await fetch('/api/operador/avatar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Falha ao salvar avatar.');
 
-      const finalConfig = data.avatarConfig || {
-        style: selectedStyleId,
+      const finalConfig = {
+        style: 'avataaars',
         seed,
-        options: {
-          aura: selectedAuraId,
-          skinColor: skinColor ? [skinColor] : undefined,
-          hairColor: hairColor ? [hairColor] : undefined,
-          hair: hairStyle ? [hairStyle] : undefined,
-          top: hairStyle ? [hairStyle] : undefined,
-          eyes: eyesStyle ? [eyesStyle] : undefined,
-          mouth: mouthStyle ? [mouthStyle] : undefined,
-          glassesProbability: glassesActive ? 100 : 0
-        }
+        options: currentOptions,
+        updatedAt: new Date().toISOString()
       };
-      const finalSvg = data.avatarSvg || currentSvg;
 
-      if (onSaved) onSaved(finalConfig, finalSvg);
-      if (onSaveSuccess) onSaveSuccess(finalConfig, finalSvg);
+      if (onSaved) onSaved(finalConfig, currentSvg);
+      if (onSaveSuccess) onSaveSuccess(finalConfig, currentSvg);
       onClose();
     } catch (err: any) {
       setSaveError(err.message || 'Erro ao salvar avatar.');
@@ -196,26 +364,20 @@ export default function AvatarCreatorModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 select-none">
-      <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-3xl bg-[#090D16] border border-[#84cc16]/30 shadow-2xl shadow-lime-950/40 overflow-hidden">
-        
-        {/* HEADER MODAL */}
-        <div className="px-6 py-4 bg-[#0d121f] border-b border-white/[0.08] flex items-center justify-between shrink-0">
+    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 animate-in fade-in duration-200">
+      <div className="relative w-full max-w-4xl bg-[#090D16] border border-white/[0.1] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+        {/* Cabeçalho Limpo e Profissional */}
+        <div className="p-5 sm:px-8 border-b border-white/[0.08] flex items-center justify-between bg-[#0e121d]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#84cc16]/10 border border-[#84cc16]/30 flex items-center justify-center text-xl text-[#84cc16] shadow-md shadow-lime-950/40">
-              <Sparkles className="w-5 h-5 text-[#84cc16]" />
+            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center justify-center">
+              <User className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black text-white tracking-tight uppercase">
-                  Criador de Avatar Gamer
-                </h2>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#84cc16]/15 text-[#a3e635] border border-[#84cc16]/30 font-mono">
-                  DICEBEAR ENGINE
-                </span>
-              </div>
+              <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
+                Personalizar Avatar do Perfil
+              </h2>
               <p className="text-xs text-zinc-400">
-                {canClose ? 'Personalize seu personagem oficial do ranking, topbar e identificação corporativa.' : '⚡ Primeiro Acesso: crie seu avatar gamer oficial para liberar seu painel!'}
+                Escolha as características do seu avatar para exibição no painel e no ranking.
               </p>
             </div>
           </div>
@@ -223,331 +385,451 @@ export default function AvatarCreatorModal({
           {canClose && (
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/[0.06] transition cursor-pointer"
+              className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/[0.06] transition"
+              title="Fechar"
             >
               <X className="w-5 h-5" />
             </button>
           )}
         </div>
 
-        {/* ABAS DE ESTILO NO TOPO */}
-        <div className="px-6 py-3 bg-[#0a0f1c] border-b border-white/[0.06] flex items-center gap-2 overflow-x-auto shrink-0">
-          {STYLES.map(style => {
-            const isSelected = selectedStyleId === style.id;
-            return (
-              <button
-                key={style.id}
-                onClick={() => setSelectedStyleId(style.id)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-                  isSelected
-                    ? 'bg-[#84cc16] text-zinc-950 shadow-lg shadow-lime-950/50 scale-[1.02]'
-                    : 'bg-[#141a29] text-zinc-300 hover:bg-[#1a2337] hover:text-white border border-white/[0.06]'
-                }`}
-              >
-                <span>{style.icon}</span>
-                <span>{style.name}</span>
-              </button>
-            );
-          })}
-        </div>
+        {/* Corpo: Duas Colunas (Preview Fixo à Esquerda + Painel de Controles com Scroll à Direita) */}
+        <div className="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-white/[0.08]">
+          {/* Coluna Esquerda: Preview do Avatar */}
+          <div className="lg:col-span-5 p-6 flex flex-col items-center justify-between bg-gradient-to-b from-[#0c101a] to-[#090D16]">
+            <div className="w-full flex flex-col items-center">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-500 mb-4">
+                Pré-visualização em Tempo Real
+              </span>
 
-        {/* CORPO: 2 COLUNAS (PREVIEW À ESQUERDA + CONTROLES À DIREITA) */}
-        <div className="flex-1 flex flex-col md:flex-row overflow-y-auto">
-          
-          {/* COLUNA ESQUERDA: PREVIEW DO PERSONAGEM COM AURA */}
-          <div className="w-full md:w-80 p-6 bg-[#0c101c] border-b md:border-b-0 md:border-r border-white/[0.06] flex flex-col items-center justify-between gap-5 shrink-0">
-            <div className="w-full space-y-4 flex flex-col items-center">
-              
-              {/* Card com Aura Gamer */}
-              <div
-                className={`relative w-52 h-52 sm:w-60 sm:h-60 rounded-3xl bg-gradient-to-br ${currentAura.bg} border-2 ${currentAura.border} ${currentAura.glow} flex items-center justify-center p-4 transition-all duration-300 overflow-hidden group`}
-              >
+              {/* Moldura do Avatar */}
+              <div className="relative group">
                 <div
-                  className="w-full h-full drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]"
+                  className="w-48 h-48 sm:w-56 sm:h-56 rounded-3xl overflow-hidden border-2 border-white/15 shadow-2xl flex items-center justify-center transition-all duration-200"
+                  style={{
+                    backgroundColor: `#${backgroundColor}`
+                  }}
                   dangerouslySetInnerHTML={{ __html: currentSvg }}
                 />
-
-                <span className="absolute bottom-2 px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-black/60 backdrop-blur-md text-zinc-300 border border-white/10 uppercase tracking-wider">
-                  {currentStyle.name}
-                </span>
               </div>
 
-              {/* Input Nome de Guerra / Seed */}
-              <div className="w-full space-y-1">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block">
-                  Nome de Guerra (Seed Gerador):
+              {/* Informações de Perfil */}
+              <div className="mt-4 text-center">
+                <div className="text-sm font-bold text-white">
+                  {operatorName || seed}
+                </div>
+                <div className="text-[11px] text-zinc-400 font-mono mt-0.5">
+                  ID: {operatorId}
+                </div>
+              </div>
+            </div>
+
+            {/* Campo de Identificador / Seed */}
+            <div className="w-full mt-6 space-y-3">
+              <div>
+                <label className="block text-[11px] font-semibold text-zinc-400 mb-1.5">
+                  Identificador / Seed
                 </label>
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
                     value={seed}
                     onChange={(e) => setSeed(e.target.value)}
-                    placeholder="Digite seu apelido..."
-                    className="flex-1 px-3 py-2 rounded-xl bg-[#141a29] border border-white/[0.08] text-xs font-mono text-white placeholder-zinc-500 focus:outline-none focus:border-[#84cc16]"
+                    placeholder="Ex: João Silva"
+                    className="flex-1 px-3.5 py-2 rounded-xl bg-[#141824] border border-white/[0.08] text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-emerald-500 font-mono"
                   />
                   <button
                     onClick={handleRandomize}
-                    className="px-3 py-2 rounded-xl bg-[#84cc16]/15 hover:bg-[#84cc16]/25 text-[#a3e635] border border-[#84cc16]/30 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shrink-0"
-                    title="Sortear combinação aleatória instantânea"
+                    className="px-3 py-2 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white border border-white/[0.08] text-xs font-medium transition flex items-center gap-1.5 shrink-0"
+                    title="Sortear combinação aleatória"
                   >
-                    <Dices className="w-4 h-4" />
-                    <span>Sortear</span>
+                    <Dices className="w-4 h-4 text-emerald-400" />
+                    <span className="hidden sm:inline">Aleatório</span>
                   </button>
+                </div>
+              </div>
+
+              {/* Seletor de Fundo do Avatar */}
+              <div>
+                <label className="block text-[11px] font-semibold text-zinc-400 mb-1.5">
+                  Fundo do Avatar
+                </label>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {BACKGROUND_COLORS.map((bg) => (
+                    <button
+                      key={bg.id}
+                      onClick={() => setBackgroundColor(bg.id)}
+                      style={{ backgroundColor: bg.hex }}
+                      className={`w-7 h-7 rounded-full border transition-transform ${
+                        backgroundColor === bg.id
+                          ? 'ring-2 ring-emerald-400 scale-110 border-white'
+                          : 'border-white/20 hover:scale-105 opacity-80 hover:opacity-100'
+                      }`}
+                      title={bg.name}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Coluna Direita: Controles Granulares por Seção */}
+          <div className="lg:col-span-7 p-6 sm:p-7 space-y-6">
+            {/* 1. Tom de Pele */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs font-bold text-white">
+                <Palette className="w-4 h-4 text-emerald-400" />
+                <span>1. Tom de Pele</span>
+              </div>
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                {SKIN_COLORS.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setSkinColor(s.id)}
+                    className={`flex items-center gap-2 p-2 rounded-xl border text-xs transition ${
+                      skinColor === s.id
+                        ? 'bg-emerald-950/40 border-emerald-500 text-white font-bold'
+                        : 'bg-[#141824] border-white/[0.06] text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    <span
+                      className="w-4 h-4 rounded-full border border-black/20 shrink-0"
+                      style={{ backgroundColor: s.hex }}
+                    />
+                    <span className="truncate text-[11px]">{s.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 2. Formato do Rosto & Corte de Cabelo */}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-bold text-white">
+                  <Scissors className="w-4 h-4 text-emerald-400" />
+                  <span>2. Corte de Cabelo / Topo</span>
+                </div>
+                <div className="flex items-center gap-1 bg-[#141824] p-0.5 rounded-lg border border-white/[0.08] text-[10px]">
+                  <button
+                    onClick={() => setHairCategory('curto')}
+                    className={`px-2 py-0.5 rounded-md transition ${
+                      hairCategory === 'curto' ? 'bg-emerald-600 text-white font-bold' : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    Curtos
+                  </button>
+                  <button
+                    onClick={() => setHairCategory('longo')}
+                    className={`px-2 py-0.5 rounded-md transition ${
+                      hairCategory === 'longo' ? 'bg-emerald-600 text-white font-bold' : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    Médios / Longos
+                  </button>
+                  <button
+                    onClick={() => setHairCategory('afro')}
+                    className={`px-2 py-0.5 rounded-md transition ${
+                      hairCategory === 'afro' ? 'bg-emerald-600 text-white font-bold' : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    Afro / Dreads
+                  </button>
+                  <button
+                    onClick={() => setHairCategory('outros')}
+                    className={`px-2 py-0.5 rounded-md transition ${
+                      hairCategory === 'outros' ? 'bg-emerald-600 text-white font-bold' : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    Careca / Acessórios
+                  </button>
+                </div>
+              </div>
+
+              {/* Grade de Cortes da Categoria Ativa */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {TOP_OPTIONS.filter((t) => t.category === hairCategory).map((t) => {
+                  const isSelected = t.id === 'bald' ? isBald : !isBald && top === t.id;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => {
+                        if (t.id === 'bald') {
+                          setIsBald(true);
+                        } else {
+                          setIsBald(false);
+                          setTop(t.id);
+                        }
+                      }}
+                      className={`px-3 py-2 rounded-xl text-left border text-xs transition ${
+                        isSelected
+                          ? 'bg-emerald-950/40 border-emerald-500 text-emerald-300 font-bold'
+                          : 'bg-[#141824] border-white/[0.06] text-zinc-300 hover:text-white hover:bg-white/[0.04]'
+                      }`}
+                    >
+                      <div className="truncate text-[11px]">{t.name}</div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Seletor de Cor do Cabelo (desabilitado se careca) */}
+              {!isBald && (
+                <div className="pt-1.5 space-y-1.5">
+                  <span className="text-[11px] font-semibold text-zinc-400">Cor do Cabelo</span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {HAIR_COLORS.map((hc) => (
+                      <button
+                        key={hc.id}
+                        onClick={() => setHairColor(hc.id)}
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[11px] transition ${
+                          hairColor === hc.id
+                            ? 'bg-emerald-950/40 border-emerald-500 text-white font-bold'
+                            : 'bg-[#141824] border-white/[0.06] text-zinc-400 hover:text-white'
+                        }`}
+                      >
+                        <span
+                          className="w-3.5 h-3.5 rounded-full border border-black/20"
+                          style={{ backgroundColor: hc.hex }}
+                        />
+                        <span>{hc.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 3. Barba e Bigode */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-xs font-bold text-white">
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+                <span>3. Barba e Bigode</span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {FACIAL_HAIR_OPTIONS.map((f) => (
+                  <button
+                    key={f.id}
+                    onClick={() => setFacialHair(f.id)}
+                    className={`px-3 py-2 rounded-xl text-left border text-xs transition ${
+                      facialHair === f.id
+                        ? 'bg-emerald-950/40 border-emerald-500 text-emerald-300 font-bold'
+                        : 'bg-[#141824] border-white/[0.06] text-zinc-300 hover:text-white hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    <div className="truncate text-[11px]">{f.name}</div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Cor da Barba se ativa */}
+              {facialHair !== 'none' && (
+                <div className="pt-1.5 space-y-1.5">
+                  <span className="text-[11px] font-semibold text-zinc-400">Cor da Barba</span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {HAIR_COLORS.map((hc) => (
+                      <button
+                        key={`beard-${hc.id}`}
+                        onClick={() => setFacialHairColor(hc.id)}
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[11px] transition ${
+                          facialHairColor === hc.id
+                            ? 'bg-emerald-950/40 border-emerald-500 text-white font-bold'
+                            : 'bg-[#141824] border-white/[0.06] text-zinc-400 hover:text-white'
+                        }`}
+                      >
+                        <span
+                          className="w-3.5 h-3.5 rounded-full border border-black/20"
+                          style={{ backgroundColor: hc.hex }}
+                        />
+                        <span>{hc.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 4. Expressão Facial (Olhos, Sobrancelhas, Boca) */}
+            <div className="space-y-3.5 pt-2 border-t border-white/[0.08]">
+              <div className="text-xs font-bold text-white flex items-center gap-2">
+                <Smile className="w-4 h-4 text-emerald-400" />
+                <span>4. Expressão Facial</span>
+              </div>
+
+              {/* Olhos */}
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-semibold text-zinc-400">Olhar</span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                  {EYE_OPTIONS.map((e) => (
+                    <button
+                      key={e.id}
+                      onClick={() => setEyes(e.id)}
+                      className={`px-2.5 py-1.5 rounded-lg border text-[11px] text-center transition ${
+                        eyes === e.id
+                          ? 'bg-emerald-950/40 border-emerald-500 text-emerald-300 font-bold'
+                          : 'bg-[#141824] border-white/[0.06] text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      {e.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sobrancelhas */}
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-semibold text-zinc-400">Sobrancelhas</span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                  {EYEBROW_OPTIONS.map((eb) => (
+                    <button
+                      key={eb.id}
+                      onClick={() => setEyebrows(eb.id)}
+                      className={`px-2.5 py-1.5 rounded-lg border text-[11px] text-center transition ${
+                        eyebrows === eb.id
+                          ? 'bg-emerald-950/40 border-emerald-500 text-emerald-300 font-bold'
+                          : 'bg-[#141824] border-white/[0.06] text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      {eb.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Boca / Sorriso */}
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-semibold text-zinc-400">Boca / Sorriso</span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                  {MOUTH_OPTIONS.map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => setMouth(m.id)}
+                      className={`px-2.5 py-1.5 rounded-lg border text-[11px] text-center transition ${
+                        mouth === m.id
+                          ? 'bg-emerald-950/40 border-emerald-500 text-emerald-300 font-bold'
+                          : 'bg-[#141824] border-white/[0.06] text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      {m.name}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* Aura Selecionada */}
-            <div className="w-full p-3 rounded-2xl bg-[#141a29] border border-white/[0.06] text-center">
-              <span className="text-[10px] text-zinc-400 uppercase font-semibold block mb-2">
-                Aura do Card: <strong className="text-white">{currentAura.name}</strong>
-              </span>
-              <div className="flex items-center justify-center gap-2">
-                {AURAS.map(aura => (
-                  <button
-                    key={aura.id}
-                    onClick={() => setSelectedAuraId(aura.id)}
-                    className={`w-7 h-7 rounded-full border-2 transition cursor-pointer ${
-                      selectedAuraId === aura.id
-                        ? 'border-white scale-110 shadow-lg'
-                        : 'border-transparent opacity-60 hover:opacity-100'
-                    }`}
-                    style={{ backgroundColor: aura.accent }}
-                    title={aura.name}
-                  />
-                ))}
+            {/* 5. Óculos */}
+            <div className="space-y-2 pt-2 border-t border-white/[0.08]">
+              <div className="flex items-center gap-2 text-xs font-bold text-white">
+                <Glasses className="w-4 h-4 text-emerald-400" />
+                <span>5. Óculos</span>
               </div>
-            </div>
-          </div>
-
-          {/* COLUNA DIREITA: CONTROLES GRANULARES */}
-          <div className="flex-1 p-6 space-y-5 overflow-y-auto">
-
-            {saveError && (
-              <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
-                <X className="w-4 h-4 shrink-0" />
-                <span>{saveError}</span>
-              </div>
-            )}
-
-            {/* 1. SELEÇÃO DE TOM DE PELE / CHASSI */}
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
-                  <Palette className="w-3.5 h-3.5 text-lime-400" />
-                  <span>Tom de Pele / Cor da Base</span>
-                </label>
-                {skinColor && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {ACCESSORY_OPTIONS.map((a) => (
                   <button
-                    onClick={() => setSkinColor('')}
-                    className="text-[10px] text-zinc-400 hover:text-white"
-                  >
-                    Resetar
-                  </button>
-                )}
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { label: 'Clara', hex: 'ffd299' },
-                  { label: 'Média Clara', hex: 'f2d3b1' },
-                  { label: 'Morena', hex: 'cb8e56' },
-                  { label: 'Negra', hex: '9e5622' },
-                  { label: 'Escura', hex: '5b3517' },
-                  { label: 'Mecha Aço', hex: '94a3b8' },
-                  { label: 'Cyber Verde', hex: '84cc16' }
-                ].map(c => (
-                  <button
-                    key={c.hex}
-                    onClick={() => setSkinColor(c.hex)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 border transition cursor-pointer ${
-                      skinColor === c.hex
-                        ? 'bg-white/10 text-white border-lime-400'
-                        : 'bg-[#141a29] text-zinc-300 border-white/[0.06] hover:bg-[#1a2337]'
+                    key={a.id}
+                    onClick={() => setAccessory(a.id)}
+                    className={`px-3 py-2 rounded-xl text-left border text-xs transition ${
+                      accessory === a.id
+                        ? 'bg-emerald-950/40 border-emerald-500 text-emerald-300 font-bold'
+                        : 'bg-[#141824] border-white/[0.06] text-zinc-300 hover:text-white hover:bg-white/[0.04]'
                     }`}
                   >
-                    <span className="w-3.5 h-3.5 rounded-full border border-black/30" style={{ backgroundColor: `#${c.hex}` }} />
-                    <span>{c.label}</span>
+                    <div className="truncate text-[11px]">{a.name}</div>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* 2. COR DO CABELO / CAPACETE */}
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
-                  <Palette className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Cor do Cabelo / Topo</span>
-                </label>
-                {hairColor && (
-                  <button
-                    onClick={() => setHairColor('')}
-                    className="text-[10px] text-zinc-400 hover:text-white"
-                  >
-                    Resetar
-                  </button>
-                )}
+            {/* 6. Vestimenta & Cores da Roupa */}
+            <div className="space-y-2.5 pt-2 border-t border-white/[0.08]">
+              <div className="flex items-center gap-2 text-xs font-bold text-white">
+                <Briefcase className="w-4 h-4 text-emerald-400" />
+                <span>6. Vestimenta / Roupa</span>
               </div>
-
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { label: 'Preto', hex: '0e0e0e' },
-                  { label: 'Castanho', hex: '4a3728' },
-                  { label: 'Loiro', hex: 'e5d7a3' },
-                  { label: 'Ruivo', hex: 'b93c3c' },
-                  { label: 'Azul Neon', hex: '06b6d4' },
-                  { label: 'Roxo Cyber', hex: 'a855f7' },
-                  { label: 'Verde Gamer', hex: '84cc16' },
-                  { label: 'Prateado', hex: 'e2e8f0' }
-                ].map(c => (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {CLOTHING_OPTIONS.map((c) => (
                   <button
-                    key={c.hex}
-                    onClick={() => setHairColor(c.hex)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 border transition cursor-pointer ${
-                      hairColor === c.hex
-                        ? 'bg-white/10 text-white border-emerald-400'
-                        : 'bg-[#141a29] text-zinc-300 border-white/[0.06] hover:bg-[#1a2337]'
+                    key={c.id}
+                    onClick={() => setClothing(c.id)}
+                    className={`px-3 py-2 rounded-xl text-left border text-xs transition ${
+                      clothing === c.id
+                        ? 'bg-emerald-950/40 border-emerald-500 text-emerald-300 font-bold'
+                        : 'bg-[#141824] border-white/[0.06] text-zinc-300 hover:text-white hover:bg-white/[0.04]'
                     }`}
                   >
-                    <span className="w-3.5 h-3.5 rounded-full border border-black/30" style={{ backgroundColor: `#${c.hex}` }} />
-                    <span>{c.label}</span>
+                    <div className="truncate text-[11px]">{c.name}</div>
                   </button>
                 ))}
               </div>
-            </div>
 
-            {/* 3. ESTILO DE CABELO / TOPO */}
-            <div className="space-y-2.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Estilo do Cabelo / Topo</span>
-              </label>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {selectedStyleId === 'bottts' ? (
-                  ['antenna', 'horns', 'lights', 'pyramid', 'radar', 'bulb01', 'bulb02'].map(style => (
+              {/* Cores da Roupa */}
+              <div className="pt-1.5 space-y-1.5">
+                <span className="text-[11px] font-semibold text-zinc-400">Cor da Roupa</span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {CLOTHES_COLORS.map((cc) => (
                     <button
-                      key={style}
-                      onClick={() => setHairStyle(style)}
-                      className={`p-2 rounded-xl text-xs font-semibold text-center capitalize border transition cursor-pointer ${
-                        hairStyle === style
-                          ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50'
-                          : 'bg-[#141a29] text-zinc-300 border-white/[0.06] hover:bg-[#1a2337]'
+                      key={cc.id}
+                      onClick={() => setClothesColor(cc.id)}
+                      className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[11px] transition ${
+                        clothesColor === cc.id
+                          ? 'bg-emerald-950/40 border-emerald-500 text-white font-bold'
+                          : 'bg-[#141824] border-white/[0.06] text-zinc-400 hover:text-white'
                       }`}
                     >
-                      {style}
+                      <span
+                        className="w-3.5 h-3.5 rounded-full border border-black/20"
+                        style={{ backgroundColor: cc.hex }}
+                      />
+                      <span>{cc.name}</span>
                     </button>
-                  ))
-                ) : (
-                  ['short01', 'short02', 'short03', 'short04', 'long01', 'long02', 'variant01', 'variant02'].map(style => (
-                    <button
-                      key={style}
-                      onClick={() => setHairStyle(style)}
-                      className={`p-2 rounded-xl text-xs font-semibold text-center capitalize border transition cursor-pointer ${
-                        hairStyle === style
-                          ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50'
-                          : 'bg-[#141a29] text-zinc-300 border-white/[0.06] hover:bg-[#1a2337]'
-                      }`}
-                    >
-                      {style}
-                    </button>
-                  ))
-                )}
+                  ))}
+                </div>
               </div>
             </div>
-
-            {/* 4. OLHOS E EXPRESSÃO */}
-            <div className="space-y-2.5">
-              <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
-                <Eye className="w-3.5 h-3.5 text-amber-400" />
-                <span>Olhos & Expressão</span>
-              </label>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {['variant01', 'variant02', 'variant03', 'variant04', 'variant05', 'glow', 'happy', 'sensor'].map(eye => (
-                  <button
-                    key={eye}
-                    onClick={() => setEyesStyle(eye)}
-                    className={`p-2 rounded-xl text-xs font-semibold text-center capitalize border transition cursor-pointer ${
-                      eyesStyle === eye
-                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/50'
-                        : 'bg-[#141a29] text-zinc-300 border-white/[0.06] hover:bg-[#1a2337]'
-                    }`}
-                  >
-                    {eye}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 5. ACESSÓRIOS (ÓCULOS GAMER) */}
-            <div className="p-3.5 rounded-2xl bg-[#141a29] border border-white/[0.06] flex items-center justify-between">
-              <div>
-                <span className="text-xs font-bold text-white block">Equipar Óculos Gamer</span>
-                <span className="text-[11px] text-zinc-400">Adiciona óculos de sol / visor de combate cibernético</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setGlassesActive(!glassesActive)}
-                className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer ${
-                  glassesActive ? 'bg-[#84cc16]' : 'bg-zinc-700'
-                }`}
-              >
-                <span
-                  className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-black transition-transform ${
-                    glassesActive ? 'translate-x-6' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-            </div>
-
           </div>
         </div>
 
-        {/* FOOTER: BOTÕES DE AÇÃO */}
-        <div className="px-6 py-4 bg-[#0d121f] border-t border-white/[0.08] flex items-center justify-between shrink-0">
-          <button
-            type="button"
-            onClick={handleRandomize}
-            className="px-4 py-2.5 rounded-xl text-xs font-bold text-zinc-300 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] flex items-center gap-2 transition cursor-pointer"
-          >
-            <Dices className="w-4 h-4 text-[#84cc16]" />
-            <span>Sortear Outro</span>
-          </button>
+        {/* Rodapé Limpo com Botão Salvar e Fechar */}
+        <div className="p-4 sm:px-8 border-t border-white/[0.08] bg-[#0e121d] flex flex-col sm:flex-row items-center justify-between gap-3">
+          {saveError && (
+            <div className="text-xs text-rose-400 font-medium">
+              {saveError}
+            </div>
+          )}
+          <div className="text-xs text-zinc-400 font-medium hidden sm:block">
+            As alterações são salvas e refletidas imediatamente no seu perfil.
+          </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-end gap-2.5 w-full sm:w-auto">
             {canClose && (
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white transition cursor-pointer"
+                disabled={saving}
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white bg-white/[0.04] hover:bg-white/[0.08] transition"
               >
                 Cancelar
               </button>
             )}
-
             <button
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-zinc-950 bg-[#84cc16] hover:bg-[#a3e635] transition flex items-center gap-2 shadow-lg shadow-lime-950/50 cursor-pointer disabled:opacity-50"
+              className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 transition border border-emerald-500/40 flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/50 cursor-pointer disabled:opacity-50"
             >
               {saving ? (
                 <>
-                  <span className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-                  <span>Salvando Avatar...</span>
+                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Salvando...</span>
                 </>
               ) : (
                 <>
-                  <Save className="w-4 h-4" />
-                  <span>Salvar Avatar Gamer</span>
+                  <Check className="w-4 h-4" />
+                  <span>Salvar Avatar</span>
                 </>
               )}
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );

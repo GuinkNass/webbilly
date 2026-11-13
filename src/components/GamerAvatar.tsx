@@ -2,9 +2,10 @@
 
 import React, { useMemo } from 'react';
 import { createAvatar } from '@dicebear/core';
-import { adventurer, lorelei, pixelArt, bottts } from '@dicebear/collection';
+import { avataaars, adventurer, lorelei, pixelArt, bottts } from '@dicebear/collection';
 
 const STYLES_MAP: Record<string, any> = {
+  avataaars,
   adventurer,
   lorelei,
   pixelArt,
@@ -35,7 +36,7 @@ export default function GamerAvatar({
   onClick,
   title
 }: GamerAvatarProps) {
-  const effectiveStyle = style || config?.style || 'adventurer';
+  const effectiveStyle = style || config?.style || 'avataaars';
   const effectiveSeed = seed || config?.seed || 'BillyHero';
 
   const renderedSvg = useMemo(() => {
@@ -43,7 +44,7 @@ export default function GamerAvatar({
       return svg;
     }
     try {
-      const collection = STYLES_MAP[effectiveStyle] || adventurer;
+      const collection = STYLES_MAP[effectiveStyle] || avataaars;
       const avatar = createAvatar(collection, {
         seed: effectiveSeed,
         radius: 50,

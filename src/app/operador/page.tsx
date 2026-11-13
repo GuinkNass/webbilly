@@ -635,7 +635,7 @@ export default function OperatorDashboardPage() {
               <RefreshCw className="w-4 h-4" />
             </button>
 
-            {/* Perfil Operador com Avatar Gamer */}
+            {/* Perfil Operador com Avatar */}
             <div className="flex items-center gap-2.5 pl-3 border-l border-white/[0.08]">
               <button
                 onClick={() => {
@@ -643,7 +643,7 @@ export default function OperatorDashboardPage() {
                   setAvatarModalCanClose(true);
                 }}
                 className="group relative cursor-pointer"
-                title="Clique para personalizar seu Avatar Gamer"
+                title="Clique para personalizar seu Avatar"
               >
                 <GamerAvatar
                   svg={data?.operator?.avatar_svg || data?.operator?.avatarSvg}
@@ -653,7 +653,7 @@ export default function OperatorDashboardPage() {
                   className="ring-2 ring-emerald-500/40 group-hover:ring-emerald-400 group-hover:scale-105 transition"
                 />
                 <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-[#090D16] flex items-center justify-center text-[7px] text-black font-bold">
-                  🎮
+                  ✨
                 </span>
               </button>
               <div className="hidden md:block text-left">
@@ -2754,14 +2754,14 @@ export default function OperatorDashboardPage() {
                     config={data?.operator?.avatar_config || data?.operator?.avatarConfig}
                     seed={data?.operator?.name || data?.operator?.id || 'Operador'}
                     size={46}
-                    className="ring-2 ring-[#84cc16]/50 shadow-lg shadow-[#84cc16]/20"
+                    className="ring-2 ring-emerald-500/50 shadow-lg shadow-emerald-500/20"
                   />
                   <div>
                     <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <span>Meu Avatar Gamer</span>
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-[#84cc16]/20 text-[#a3e635] font-mono">DICEBEAR</span>
+                      <span>Meu Avatar</span>
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 font-mono">PERFIL</span>
                     </div>
-                    <p className="text-[11px] text-zinc-400">Personalize seu personagem no ranking da equipe.</p>
+                    <p className="text-[11px] text-zinc-400">Personalize seu avatar de exibição no painel e no ranking.</p>
                   </div>
                 </div>
                 <button
@@ -2770,7 +2770,7 @@ export default function OperatorDashboardPage() {
                     setShowAvatarModal(true);
                     setAvatarModalCanClose(true);
                   }}
-                  className="px-3 py-2 rounded-xl bg-[#84cc16] hover:bg-[#65a30d] text-black font-black text-xs transition flex items-center gap-1 shadow-md shadow-[#84cc16]/25 cursor-pointer"
+                  className="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center gap-1 shadow-md shadow-emerald-950/40 cursor-pointer"
                 >
                   <span>Personalizar</span>
                 </button>
