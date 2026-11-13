@@ -291,7 +291,7 @@ export async function GET(req: NextRequest) {
         releaseTime: '09:32',
         updatedAt: '13/11/2026 às 09:32',
         fileName: 'Billy-Suite-Setup.exe',
-        fileSize: '361 MB',
+        fileSize: '345 MB',
         downloadUrl: '/downloads/Billy-Suite-Setup.exe',
         changelog: 'Templates Reais (/templates/) com HTML/CSS originais preservados, adaptação cirúrgica IA e WhatsApp flutuante',
         highlights: [

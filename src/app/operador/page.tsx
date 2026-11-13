@@ -807,7 +807,7 @@ export default function OperatorDashboardPage() {
                       <div className="flex items-center gap-2 text-[11px] text-zinc-400 font-mono mt-1">
                         <span>{data?.installer?.buildNumber || 'Build 13.11.2026'}</span>
                         <span>•</span>
-                        <span>{data?.installer?.fileSize || '361 MB'}</span>
+                        <span>{data?.installer?.fileSize || '345 MB'}</span>
                       </div>
                       <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
                         Software Windows com Scraper Google Maps, Gemini IA e geração com templates HTML/CSS reais.
@@ -847,7 +847,7 @@ export default function OperatorDashboardPage() {
                     </a>
                     <div className="flex items-center justify-between px-1 text-[10px] text-zinc-500 font-mono">
                       <span>Arquivo: {data?.installer?.fileName || 'Billy-Suite-Setup.exe'}</span>
-                      <span>{data?.installer?.fileSize || '361 MB'}</span>
+                      <span>{data?.installer?.fileSize || '345 MB'}</span>
                     </div>
                   </div>
                 </div>
