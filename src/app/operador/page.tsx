@@ -41,7 +41,8 @@ import {
   Users,
   Share2,
   Check,
-  HelpCircle
+  HelpCircle,
+  Puzzle
 } from 'lucide-react';
 import { startOperadorTour } from '@/lib/tours';
 
@@ -726,7 +727,7 @@ export default function OperatorDashboardPage() {
         {activeTab === 'overview' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Card de Download */}
+              {/* Card de Download 1: Desktop App (.exe) */}
               <div className="p-6 rounded-2xl bg-[#11141c] border border-white/[0.06] flex flex-col justify-between">
                 <div>
                   <div className="w-12 h-12 rounded-xl bg-white/[0.04] border border-white/[0.08] text-emerald-400 flex items-center justify-center mb-4">
@@ -745,7 +746,7 @@ export default function OperatorDashboardPage() {
                       <span>Tamanho:</span> <span className="text-zinc-200">{data?.installer?.fileSize || '348 MB'}</span>
                     </div>
                     <div className="flex justify-between text-zinc-400">
-                      <span>Atualização:</span> <span className="text-zinc-200">{data?.installer?.releaseDate || 'Produção Oficial'}</span>
+                      <span>Compatibilidade:</span> <span className="text-zinc-200">Windows 10 / 11 64-bit</span>
                     </div>
                   </div>
                 </div>
@@ -753,51 +754,95 @@ export default function OperatorDashboardPage() {
                 <div className="mt-6">
                   <a
                     href={data?.installer?.downloadUrl || '/downloads/Billy-Suite-Setup.exe'}
-                    className="w-full py-3.5 rounded-xl font-medium text-white bg-emerald-600 hover:bg-emerald-500 transition border border-emerald-500/30 flex items-center justify-center gap-2 text-sm cursor-pointer"
+                    className="w-full py-3.5 rounded-xl font-medium text-white bg-emerald-600 hover:bg-emerald-500 transition border border-emerald-500/30 flex items-center justify-center gap-2 text-sm cursor-pointer shadow-lg shadow-emerald-950/40"
                   >
                     <Download className="w-4 h-4" />
-                    Baixar Billy Suite Desktop (.exe)
+                    <span>Baixar Billy Suite Desktop (.exe)</span>
                   </a>
                 </div>
               </div>
 
-              {/* Guia Rápido de Instalação */}
-              <div className="p-6 rounded-2xl bg-[#11141c] border border-white/[0.06]">
-                <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                  Passo a Passo de Instalação & Ativação
-                </h3>
+              {/* Card de Download 2: Extensão Chrome WhatsApp (.zip) */}
+              <div className="p-6 rounded-2xl bg-[#11141c] border border-white/[0.06] flex flex-col justify-between">
+                <div>
+                  <div className="w-12 h-12 rounded-xl bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 flex items-center justify-center mb-4">
+                    <Puzzle className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-lg font-bold text-white">Extensão Billy WhatsApp Web (Chrome)</h3>
+                  <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+                    Extensão oficial para Google Chrome com 60 respostas prontas e automações de fechamento de propostas no WhatsApp Web. Baixe o ZIP e carregue no Chrome em modo desenvolvedor.
+                  </p>
 
-                <ol className="space-y-4 text-xs text-zinc-300">
-                  <li className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-zinc-800 text-emerald-400 font-bold flex items-center justify-center shrink-0 border border-zinc-700">1</span>
-                    <div>
-                      <strong className="text-white block font-semibold">Baixe e execute o instalador Billy Suite:</strong>
-                      Faça o download do aplicativo oficial para Windows 10/11 e conclua a instalação no seu computador.
+                  <div className="mt-4 p-3.5 rounded-xl bg-[#141824] border border-white/[0.06] text-xs space-y-1.5 font-mono">
+                    <div className="flex justify-between text-zinc-400">
+                      <span>Arquivo:</span> <span className="text-zinc-200">Billy-Extensao-Chrome.zip</span>
                     </div>
-                  </li>
-
-                  <li className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-zinc-800 text-teal-400 font-bold flex items-center justify-center shrink-0 border border-zinc-700">2</span>
-                    <div>
-                      <strong className="text-white block font-semibold">Insira o Token Serial recebido:</strong>
-                      Cole sua chave de ativação oficial <code className="text-emerald-300 font-bold font-mono">{op?.serialToken}</code> para desbloquear o sistema.
+                    <div className="flex justify-between text-zinc-400">
+                      <span>Tamanho:</span> <span className="text-zinc-200">342 KB</span>
                     </div>
-                  </li>
-
-                  <li className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-zinc-800 text-sky-400 font-bold flex items-center justify-center shrink-0 border border-zinc-700">3</span>
-                    <div>
-                      <strong className="text-white block font-semibold">Gere e publique o site instantaneamente:</strong>
-                      Cada site do cliente fica online no subdomínio oficial <code className="text-sky-300 font-mono font-bold">slug.webbilly.com.br</code> com assinatura de R$ 29,90/mês e comissão recorrente de R$ 10,00/mês para você.
+                    <div className="flex justify-between text-zinc-400">
+                      <span>Compatibilidade:</span> <span className="text-zinc-200">Chrome / Brave / Edge</span>
                     </div>
-                  </li>
-                </ol>
-
-                <div className="mt-6 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-300 flex items-center gap-2">
-                  <Award className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Dúvidas técnicas? Acesse a aba de <strong>Treinamento</strong> para assistir à aula em vídeo.</span>
+                  </div>
                 </div>
+
+                <div className="mt-6">
+                  <a
+                    href={data?.extension?.downloadUrl || '/downloads/Billy-Extensao-Chrome.zip'}
+                    download="Billy-Extensao-Chrome.zip"
+                    className="w-full py-3.5 rounded-xl font-medium text-emerald-300 hover:text-white bg-[#16201a] hover:bg-emerald-600 transition border border-emerald-500/40 flex items-center justify-center gap-2 text-sm cursor-pointer shadow-lg shadow-emerald-950/30"
+                  >
+                    <Download className="w-4 h-4 text-emerald-400" />
+                    <span>Baixar Extensão Chrome (.zip)</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Guia Rápido de Instalação */}
+            <div className="p-6 rounded-2xl bg-[#11141c] border border-white/[0.06]">
+              <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                Passo a Passo de Instalação & Ativação
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-zinc-300">
+                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-[#141824] border border-white/[0.04]">
+                  <span className="w-6 h-6 rounded-full bg-zinc-800 text-emerald-400 font-bold flex items-center justify-center shrink-0 border border-zinc-700">1</span>
+                  <div>
+                    <strong className="text-white block font-semibold mb-0.5">Baixe e execute o instalador Desktop:</strong>
+                    Faça o download do <code className="text-emerald-300 font-mono">Billy-Suite-Setup.exe</code> e conclua a instalação no Windows 10/11.
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-[#141824] border border-white/[0.04]">
+                  <span className="w-6 h-6 rounded-full bg-zinc-800 text-teal-400 font-bold flex items-center justify-center shrink-0 border border-zinc-700">2</span>
+                  <div>
+                    <strong className="text-white block font-semibold mb-0.5">Insira o Token Serial recebido:</strong>
+                    Cole sua chave de ativação oficial <code className="text-emerald-300 font-bold font-mono">{op?.serialToken}</code> para desbloquear o sistema.
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-[#141824] border border-white/[0.04]">
+                  <span className="w-6 h-6 rounded-full bg-zinc-800 text-amber-400 font-bold flex items-center justify-center shrink-0 border border-zinc-700">3</span>
+                  <div>
+                    <strong className="text-white block font-semibold mb-0.5">Instale a Extensão no WhatsApp Web:</strong>
+                    Baixe o <code className="text-amber-300 font-mono">Billy-Extensao-Chrome.zip</code>, descompacte a pasta, abra <code className="text-zinc-200 font-mono">chrome://extensions</code>, ative o Modo Desenvolvedor e clique em "Carregar sem compactação".
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3 p-3.5 rounded-xl bg-[#141824] border border-white/[0.04]">
+                  <span className="w-6 h-6 rounded-full bg-zinc-800 text-sky-400 font-bold flex items-center justify-center shrink-0 border border-zinc-700">4</span>
+                  <div>
+                    <strong className="text-white block font-semibold mb-0.5">Gere sites e fature suas comissões:</strong>
+                    Cada site fica online no subdomínio oficial <code className="text-sky-300 font-mono font-bold">slug.webbilly.com.br</code> com R$ 10,00/mês de comissão recorrente e 30% (R$ 147) nas vendas de Domínio Próprio.
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-300 flex items-center gap-2">
+                <Award className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>Dúvidas técnicas? Acesse a aba de <strong>Treinamento</strong> para assistir à aula em vídeo.</span>
               </div>
             </div>
           </div>

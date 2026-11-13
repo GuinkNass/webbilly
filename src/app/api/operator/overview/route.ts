@@ -287,6 +287,13 @@ export async function GET(req: NextRequest) {
         fileName: 'Billy-Suite-Setup.exe',
         fileSize: '348 MB',
         downloadUrl: '/downloads/Billy-Suite-Setup.exe'
+      },
+      extension: {
+        version: '1.0.2',
+        releaseDate: '2026-11-12',
+        fileName: 'Billy-Extensao-Chrome.zip',
+        fileSize: '342 KB',
+        downloadUrl: '/downloads/Billy-Extensao-Chrome.zip'
       }
     });
   } catch (err: any) {
