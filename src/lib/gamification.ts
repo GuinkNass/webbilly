@@ -305,6 +305,8 @@ export interface LeaderboardEntry {
   operatorId: string;
   displayName: string;
   fullName: string;
+  email?: string;
+  corporateEmail?: string;
   isCurrentUser: boolean;
   medal: MedalConfig;
   activeRecurringCount: number;
@@ -312,6 +314,9 @@ export interface LeaderboardEntry {
   rankingScore: number;
   hasMedalUpgradeBonus: boolean;
   medalUpgradeBonusAmount: number;
+  avatar_svg?: string | null;
+  avatarSvg?: string | null;
+  avatar_config?: any;
 }
 
 /**
@@ -363,6 +368,8 @@ export function getLeaderboard(
       operatorId: item.operator.id,
       displayName: isCurrent ? `${item.operator.name} (Você)` : maskOperatorName(item.operator.name),
       fullName: item.operator.name,
+      email: item.operator.email,
+      corporateEmail: item.operator.corporate_email || item.operator.corporateEmail || item.operator.email,
       isCurrentUser: isCurrent,
       medal: item.metrics.currentMedal,
       activeRecurringCount: item.metrics.activeRecurringCount,

@@ -70,42 +70,48 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
     {
       href: '/operador',
       label: 'Dashboard',
-      iconSrc: '/icones/015-computer-monitor.svg',
+      iconSrc: '/icones/dashboard.svg',
+      isTrophy: false,
       badge: stats?.activeSubscriptionsCount ? `${stats.activeSubscriptionsCount} sites` : null,
       badgeColor: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
     },
     {
       href: '/operador/sites',
       label: 'Sites Ativos (SaaS)',
-      iconSrc: '/icones/op-sites.svg',
+      iconSrc: '/icones/sites.svg',
+      isTrophy: false,
       badge: stats?.activeSubscriptionsCount || (data?.subscriptions || []).length || 0,
       badgeColor: 'bg-zinc-800 text-zinc-300'
     },
     {
       href: '/operador/treinamento',
       label: 'Área de Treinamento',
-      iconSrc: '/icones/op-training.svg',
+      iconSrc: '/icones/treinamento.svg',
+      isTrophy: false,
       badge: '4 Aulas',
       badgeColor: 'bg-indigo-950/40 text-indigo-300 border border-indigo-800/40'
     },
     {
       href: '/operador/vendas',
       label: 'Minhas Vendas & Pix',
-      iconSrc: '/icones/op-sales.svg',
+      iconSrc: '/icones/vendas.svg',
+      isTrophy: false,
       badge: `R$ ${(stats?.monthlyCommissionMRR ?? ((stats?.activeSubscriptionsCount ?? 0) * 10)).toLocaleString('pt-BR')}`,
       badgeColor: 'bg-emerald-950/40 text-emerald-400'
     },
     {
       href: '/operador/ranking',
       label: 'Ranking & Medalhas',
-      iconSrc: '/icones/op-ranking.svg',
+      iconSrc: '/trofeus/Ouro.png',
+      isTrophy: true,
       badge: data?.gamification?.currentMedal?.name || 'Iniciante',
       badgeColor: `${data?.gamification?.currentMedal?.badgeBg || 'bg-amber-500/20'} ${data?.gamification?.currentMedal?.badgeText || 'text-amber-300'} border ${data?.gamification?.currentMedal?.badgeBorder || 'border-amber-500/30'}`
     },
     {
       href: '/operador/afiliados',
       label: 'Billy Afiliados',
-      iconSrc: '/icones/op-affiliates.svg',
+      iconSrc: '/icones/afiliados.svg',
+      isTrophy: false,
       badge: data?.affiliates?.enabled ? '5% Ativo' : data?.affiliates?.eligibility?.eligible ? 'Liberado!' : 'Bronze',
       badgeColor: data?.affiliates?.enabled ? 'bg-[#84cc16]/20 text-[#a3e635] border border-[#84cc16]/40' : 'bg-zinc-800 text-zinc-400'
     }
@@ -207,22 +213,31 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`w-full flex items-center rounded-xl transition-all duration-200 group relative ${
-                    isExpanded ? 'px-3.5 py-2.5 justify-between' : 'h-14 justify-center px-0'
+                  className={`w-full flex items-center rounded-2xl transition-all duration-200 group relative ${
+                    isExpanded ? 'px-3 py-2 justify-between' : 'h-14 justify-center px-0'
                   } ${
                     isActive
-                      ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold shadow-lg shadow-emerald-600/30 border border-emerald-400/40'
-                      : 'text-zinc-400 hover:text-white hover:bg-white/[0.05]'
+                      ? 'bg-gradient-to-r from-emerald-600/30 via-emerald-500/20 to-transparent text-white font-bold border border-[#84cc16]/40 shadow-lg shadow-[#84cc16]/10'
+                      : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                   }`}
                   title={!isExpanded ? item.label : undefined}
                 >
                   <div className={`flex items-center gap-3.5 ${!isExpanded ? 'justify-center w-full' : ''}`}>
-                    <div className="relative shrink-0 flex items-center justify-center">
+                    {/* Container Estilizado com Glow / Sombra Neon Verde */}
+                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+                      isActive
+                        ? 'bg-[#84cc16]/20 border border-[#84cc16]/60 shadow-[0_0_24px_rgba(132,204,22,0.55)]'
+                        : 'bg-[#84cc16]/10 border border-[#84cc16]/25 shadow-[0_0_16px_rgba(132,204,22,0.28)] group-hover:bg-[#84cc16]/20 group-hover:border-[#84cc16]/50 group-hover:shadow-[0_0_20px_rgba(132,204,22,0.45)]'
+                    }`}>
                       <img
                         src={item.iconSrc}
                         alt=""
                         className={`w-7 h-7 object-contain transition-transform duration-200 group-hover:scale-110 ${
-                          isActive ? 'brightness-200 drop-shadow-[0_0_8px_rgba(132,204,22,0.8)]' : 'opacity-80 group-hover:opacity-100'
+                          item.isTrophy
+                            ? 'drop-shadow-[0_2px_8px_rgba(245,158,11,0.6)]'
+                            : isActive
+                            ? 'brightness-0 invert [filter:invert(81%)_sepia(47%)_saturate(746%)_hue-rotate(36deg)_brightness(98%)_contrast(92%)] drop-shadow-[0_0_8px_rgba(132,204,22,0.8)]'
+                            : 'brightness-0 invert opacity-85 group-hover:opacity-100'
                         }`}
                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
                       />
@@ -232,7 +247,7 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
                       )}
                     </div>
                     {isExpanded && (
-                      <span className="text-xs font-semibold whitespace-nowrap overflow-hidden">
+                      <span className={`text-xs font-semibold whitespace-nowrap overflow-hidden ${isActive ? 'text-[#a3e635]' : 'text-zinc-200'}`}>
                         {item.label}
                       </span>
                     )}
@@ -240,7 +255,7 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
 
                   {isExpanded && item.badge && (
                     <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold truncate max-w-[90px] ${
-                      isActive ? 'bg-white/20 text-white' : item.badgeColor
+                      isActive ? 'bg-[#84cc16]/25 text-[#a3e635] border border-[#84cc16]/40' : item.badgeColor
                     }`}>
                       {item.badge}
                     </span>
@@ -321,14 +336,20 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
                     key={item.href}
                     href={item.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center justify-between px-3.5 py-3 rounded-xl text-xs font-bold ${
+                    className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold ${
                       pathname === item.href
-                        ? 'bg-emerald-600 text-white'
+                        ? 'bg-emerald-600/40 text-white border border-[#84cc16]/40'
                         : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <img src={item.iconSrc} alt="" className="w-6 h-6 object-contain" />
+                      <div className="w-9 h-9 rounded-lg bg-[#84cc16]/10 border border-[#84cc16]/25 flex items-center justify-center shrink-0">
+                        <img
+                          src={item.iconSrc}
+                          alt=""
+                          className={`w-5 h-5 object-contain ${item.isTrophy ? '' : 'brightness-0 invert'}`}
+                        />
+                      </div>
                       <span>{item.label}</span>
                     </div>
                   </Link>

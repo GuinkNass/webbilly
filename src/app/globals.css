@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,600;0,700;0,800;0,900;1,700&display=swap');
 @import "tailwindcss";
 @import "driver.js/dist/driver.css";
 
@@ -287,4 +288,39 @@ h1, h2, h3, h4, h5, h6, .font-heading {
 .driver-popover.webbilly-tour-popover .driver-popover-arrow-side-bottom.driver-popover-arrow {
   border-bottom-color: #0f172a !important;
 }
+
+/* =========================================================================
+   TEMPLATE RANKING (MYKD eSports & WebBilly Gaming HUD)
+   ========================================================================= */
+
+.font-barlow {
+  font-family: 'Barlow', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.clip-chamfer {
+  clip-path: polygon(
+    14px 0%, 100% 0%, 100% calc(100% - 14px), calc(100% - 14px) 100%,
+    0% 100%, 0% 14px
+  );
+}
+
+.clip-chamfer-sm {
+  clip-path: polygon(
+    8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%,
+    0% 100%, 0% 8px
+  );
+}
+
+.clip-badge {
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+}
+
+.glow-neon-green {
+  box-shadow: 0 0 20px rgba(69, 248, 130, 0.35);
+}
+
+.glow-gold {
+  box-shadow: 0 0 24px rgba(255, 190, 24, 0.4);
+}
+
 

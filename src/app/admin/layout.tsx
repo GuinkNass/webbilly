@@ -66,28 +66,40 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     {
       href: '/admin',
       label: 'Dashboard Executivo',
-      iconSrc: '/icones/015-computer-monitor.svg',
+      iconSrc: '/icones/dashboard.svg',
+      isTrophy: false,
       badge: 'Geral',
       badgeColor: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
     },
     {
       href: '/admin/sites',
       label: 'Gestão de Sites (SaaS)',
-      iconSrc: '/icones/op-sites.svg',
+      iconSrc: '/icones/sites.svg',
+      isTrophy: false,
       badge: (data?.subscriptions || []).length ? `${(data?.subscriptions || []).length}` : null,
       badgeColor: 'bg-zinc-800 text-zinc-300'
     },
     {
       href: '/admin/operadores',
       label: 'Operadores & Licenças',
-      iconSrc: '/icones/085-id-card.svg',
+      iconSrc: '/icones/operadores.svg',
+      isTrophy: false,
       badge: (data?.operators || []).length ? `${(data?.operators || []).length}` : null,
       badgeColor: 'bg-indigo-950/40 text-indigo-300 border border-indigo-800/40'
     },
     {
+      href: '/admin/ranking',
+      label: 'Ranking & Medalhas',
+      iconSrc: '/trofeus/Ouro.png',
+      isTrophy: true,
+      badge: 'Top 3',
+      badgeColor: 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+    },
+    {
       href: '/admin/financeiro',
       label: 'Financeiro & APIs',
-      iconSrc: '/icones/045-money.svg',
+      iconSrc: '/icones/financeiro.svg',
+      isTrophy: false,
       badge: 'Caixa 70/30',
       badgeColor: 'bg-emerald-950/40 text-emerald-400'
     }
@@ -294,7 +306,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
             </button>
           </div>
 
-          {/* Links de Navegação com Ícones Maiores (w-7 h-7 / 28px) */}
+          {/* Links de Navegação com Ícones Maiores e Container Glow Neon */}
           <nav className="flex-1 py-4 px-2 space-y-1.5 overflow-y-auto">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
@@ -303,7 +315,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                   key={item.href}
                   href={item.href}
                   className={`group relative flex items-center rounded-2xl transition duration-150 cursor-pointer ${
-                    isExpanded ? 'px-3 py-3 gap-3.5' : 'justify-center p-3'
+                    isExpanded ? 'px-3 py-2 gap-3.5' : 'justify-center p-2'
                   } ${
                     isActive
                       ? 'bg-[#84cc16]/10 text-white border border-[#84cc16]/30 shadow-lg shadow-lime-950/40'
@@ -311,17 +323,25 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                   }`}
                   title={!isExpanded ? item.label : undefined}
                 >
-                  {/* Ícone Maior (w-7 h-7 / 28px) */}
-                  <div className="relative shrink-0 flex items-center justify-center w-7 h-7">
+                  {/* Container Estilizado com Glow / Sombra Neon Verde */}
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+                    isActive
+                      ? 'bg-[#84cc16]/20 border border-[#84cc16]/60 shadow-[0_0_24px_rgba(132,204,22,0.55)]'
+                      : 'bg-[#84cc16]/10 border border-[#84cc16]/25 shadow-[0_0_16px_rgba(132,204,22,0.28)] group-hover:bg-[#84cc16]/20 group-hover:border-[#84cc16]/50 group-hover:shadow-[0_0_20px_rgba(132,204,22,0.45)]'
+                  }`}>
                     <img
                       src={item.iconSrc}
                       alt=""
-                      className={`w-7 h-7 object-contain transition duration-200 group-hover:scale-110 ${
-                        isActive ? 'brightness-125 drop-shadow-[0_0_8px_rgba(132,204,22,0.5)]' : 'opacity-70 group-hover:opacity-100'
+                      className={`w-7 h-7 object-contain transition-transform duration-200 group-hover:scale-110 ${
+                        item.isTrophy
+                          ? 'drop-shadow-[0_2px_8px_rgba(245,158,11,0.6)]'
+                          : isActive
+                          ? 'brightness-0 invert [filter:invert(81%)_sepia(47%)_saturate(746%)_hue-rotate(36deg)_brightness(98%)_contrast(92%)] drop-shadow-[0_0_8px_rgba(132,204,22,0.8)]'
+                          : 'brightness-0 invert opacity-85 group-hover:opacity-100'
                       }`}
                     />
                     {isActive && (
-                      <span className="absolute -left-3 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#84cc16] rounded-r-full" />
+                      <span className="absolute -left-2 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#84cc16] rounded-r-full" />
                     )}
                   </div>
 
@@ -383,13 +403,19 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                         key={item.href}
                         href={item.href}
                         onClick={() => setMobileMenuOpen(false)}
-                        className={`flex items-center gap-3 p-3 rounded-xl text-xs font-bold ${
+                        className={`flex items-center gap-3 p-2.5 rounded-xl text-xs font-bold ${
                           isActive
                             ? 'bg-[#84cc16]/15 text-[#a3e635] border border-[#84cc16]/30'
                             : 'text-zinc-400 hover:bg-white/[0.04] hover:text-white'
                         }`}
                       >
-                        <img src={item.iconSrc} alt="" className="w-6 h-6 object-contain" />
+                        <div className="w-9 h-9 rounded-lg bg-[#84cc16]/10 border border-[#84cc16]/25 flex items-center justify-center shrink-0">
+                          <img
+                            src={item.iconSrc}
+                            alt=""
+                            className={`w-5 h-5 object-contain ${item.isTrophy ? '' : 'brightness-0 invert'}`}
+                          />
+                        </div>
                         <span>{item.label}</span>
                       </Link>
                     );
