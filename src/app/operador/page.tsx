@@ -210,8 +210,8 @@ export default function OperatorDashboardPage() {
           <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06] flex flex-col justify-between space-y-4 hover:border-emerald-500/30 transition group relative overflow-hidden">
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-2">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center justify-center group-hover:scale-105 transition">
-                  <img src="/icones/015-computer-monitor.svg" alt="" className="w-6 h-6 object-contain" />
+                <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center p-2 group-hover:scale-105 transition shrink-0">
+                  <img src="/billy-logo.png" alt="Programa Desktop Billy" className="w-10 h-10 object-contain" />
                 </div>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -275,13 +275,13 @@ export default function OperatorDashboardPage() {
           </div>
 
           {/* 2. Extensão Chrome WhatsApp */}
-          <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06] flex flex-col justify-between space-y-4 hover:border-[#84cc16]/30 transition group">
+          <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06] flex flex-col justify-between space-y-4 hover:border-sky-500/30 transition group">
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-2">
-                <div className="w-12 h-12 rounded-2xl bg-[#84cc16]/10 border border-[#84cc16]/25 text-[#84cc16] flex items-center justify-center group-hover:scale-105 transition">
-                  <img src="/icones/001-plug.svg" alt="" className="w-6 h-6 object-contain" />
+                <div className="w-14 h-14 rounded-2xl bg-sky-500/10 border border-sky-500/25 flex items-center justify-center p-2 group-hover:scale-105 transition shrink-0">
+                  <img src="/icone-marca/dino-azul.png" alt="Extensão Chrome Billy WhatsApp" className="w-10 h-10 object-contain" />
                 </div>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#84cc16]/15 text-[#a3e635] border border-[#84cc16]/30">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-500/15 text-sky-300 border border-sky-500/30">
                   {data?.extension?.version || 'v1.0.2'} • {data?.extension?.releaseDate || '12/11/2026'}
                 </span>
               </div>
@@ -296,7 +296,7 @@ export default function OperatorDashboardPage() {
             <a
               href={process.env.NEXT_PUBLIC_BILLY_EXTENSION_DOWNLOAD_URL || data?.extension?.downloadUrl || '/downloads/Billy-Extensao-Chrome.zip'}
               download="Billy-Extensao-Chrome.zip"
-              className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-[#a3e635] hover:text-white bg-[#16201a] hover:bg-[#84cc16] hover:text-zinc-950 transition border border-[#84cc16]/40 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-lime-950/30"
+              className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-sky-300 hover:text-white bg-sky-950/40 hover:bg-sky-600 hover:text-white transition border border-sky-500/40 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-sky-950/30"
             >
               <Download className="w-4 h-4" />
               <span>Baixar Extensão (.zip)</span>
@@ -307,8 +307,8 @@ export default function OperatorDashboardPage() {
           <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06] flex flex-col justify-between space-y-4 hover:border-amber-500/30 transition group">
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-2">
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center justify-center group-hover:scale-105 transition">
-                  <img src="/icones/010-download.svg" alt="" className="w-6 h-6 object-contain" />
+                <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center p-2 group-hover:scale-105 transition shrink-0">
+                  <img src="/icone-marca/image-downloader.png" alt="Extensão Image Downloader" className="w-10 h-10 object-contain rounded-lg" />
                 </div>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
                   Chrome Web Store
@@ -336,8 +336,8 @@ export default function OperatorDashboardPage() {
           {/* 4. Lark Mail Corporativo */}
           <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06] flex flex-col justify-between space-y-4 hover:border-cyan-500/30 transition group">
             <div className="space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 text-cyan-400 flex items-center justify-center group-hover:scale-105 transition">
-                <img src="/icones/048-mail.svg" alt="" className="w-6 h-6 object-contain" />
+              <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 flex items-center justify-center p-2 group-hover:scale-105 transition shrink-0">
+                <img src="/icone-marca/lark.png" alt="Lark Mail" className="w-10 h-10 object-contain rounded-xl" />
               </div>
               <div>
                 <h3 className="font-bold text-white text-base">Lark Mail (@webbilly)</h3>

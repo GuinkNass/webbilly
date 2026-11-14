@@ -225,8 +225,8 @@ export default function OperatorSitesPage() {
       {/* Ferramentas de Trabalho e Image Downloader */}
       <div className="p-6 rounded-2xl bg-[#0f121a] border border-white/[0.08] flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
-            <img src="/icones/010-download.svg" alt="" className="w-6 h-6 object-contain" />
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center p-2 shrink-0">
+            <img src="/icone-marca/image-downloader.png" alt="Extensão Image Downloader" className="w-10 h-10 object-contain rounded-lg" />
           </div>
           <div>
             <h4 className="text-sm font-bold text-white">Extensão Image Downloader para Chrome</h4>
