@@ -28,7 +28,7 @@ export async function GET(
   }
 
   // Redirecionamento oficial e seguro com cabeçalhos anti-cache para o instalador desktop
-  const targetUrl = 'https://github.com/GuinkNass/webbilly/releases/download/v2.0.4/Billy-Suite-Setup.exe';
+  const targetUrl = 'https://github.com/GuinkNass/webbilly/releases/download/v2.0.5/Billy-Suite-Setup.exe';
   const response = NextResponse.redirect(targetUrl, 307);
   response.headers.set('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate');
   response.headers.set('Pragma', 'no-cache');

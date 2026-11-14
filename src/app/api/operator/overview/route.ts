@@ -322,20 +322,21 @@ export async function GET(req: NextRequest) {
       },
       trainingModules,
       installer: {
-        version: 'v2.0.4',
-        buildNumber: 'Build 13.11.2026-1458',
+        version: 'v2.0.5',
+        buildNumber: 'Build 13.11.2026-2150',
         releaseDate: '13/11/2026',
-        releaseTime: '14:58',
-        updatedAt: '13/11/2026 às 14:58',
+        releaseTime: '21:50',
+        updatedAt: '13/11/2026 às 21:50',
         fileName: 'Billy-Suite-Setup.exe',
         fileSize: '345 MB',
         downloadUrl: '/downloads/Billy-Suite-Setup.exe',
-        changelog: 'Cardápios em lote, OCR multimodal de imagens/PDF e leitura de Word (.docx) e TXT com transcrição cirúrgica de pratos e preços',
+        changelog: 'Ícones temáticos no app desktop, vídeo de loading integrado, aba de Modificações com IA e OCR multimodal de cardápios',
         highlights: [
-          'Upload de documentos e cardápios múltiplos em lote (sem demora)',
-          'Suporte total a Imagens (.png, .jpg), Word (.docx), TXT e PDF',
-          'OCR multimodal com Gemini: extração fiel de pratos, categorias e preços',
-          'Preenchimento cirúrgico nas seções de menu do template preservando CSS'
+          'Interface Desktop com novos ícones temáticos na barra lateral e nas pastas públicas',
+          'Vídeo de loading em alta definição durante a geração e preview de sites',
+          'Nova aba Modificações com IA para ajustes automáticos solicitados pelos clientes',
+          'Upload de cardápios e documentos múltiplos em lote com OCR multimodal via Gemini',
+          'Sincronização em tempo real com briefing e demos em webbilly.com.br/demo/:token'
         ]
       },
       extension: {
