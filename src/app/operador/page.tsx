@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useOperator } from '@/contexts/OperatorContext';
 import DashboardCharts from '@/components/DashboardCharts';
 import TrophyImage from '@/components/TrophyImage';
+import { ActionTooltip } from '@/components/ui/ActionTooltip';
 import {
   Key,
   Copy,
@@ -152,14 +153,16 @@ export default function OperatorDashboardPage() {
             </div>
           </div>
 
-          <Link
-            href="/operador/ranking"
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition flex items-center gap-2 shrink-0 group"
-          >
-            <Trophy className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition" />
-            <span>Ver Ranking Completo</span>
-            <ChevronRight className="w-3.5 h-3.5 opacity-70" />
-          </Link>
+          <ActionTooltip title="Ranking & Medalhas" description="Visualizar a classificação geral dos operadores, patentes e metas de pontuação." side="left">
+            <Link
+              href="/operador/ranking"
+              className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition flex items-center gap-2 shrink-0 group"
+            >
+              <Trophy className="w-3.5 h-3.5 text-amber-400 group-hover:scale-110 transition" />
+              <span>Ver Ranking Completo</span>
+              <ChevronRight className="w-3.5 h-3.5 opacity-70" />
+            </Link>
+          </ActionTooltip>
         </div>
       )}
 
@@ -192,14 +195,15 @@ export default function OperatorDashboardPage() {
               </span>
             </div>
             {op?.serialToken && (
-              <button
-                onClick={copySerial}
-                className="px-3 py-2 rounded-xl text-xs font-bold bg-[#84cc16]/15 hover:bg-[#84cc16]/25 text-[#84cc16] border border-[#84cc16]/30 flex items-center gap-1.5 transition cursor-pointer"
-                title="Copiar Chave Serial para Ativação no Programa Desktop"
-              >
-                <Copy className="w-3.5 h-3.5" />
-                <span>{copiedSerial ? 'Copiado!' : 'Copiar'}</span>
-              </button>
+              <ActionTooltip title="Copiar Serial" description="Copia sua chave exclusiva de ativação para desbloquear o Programa Desktop Billy." side="left">
+                <button
+                  onClick={copySerial}
+                  className="px-3 py-2 rounded-xl text-xs font-bold bg-[#84cc16]/15 hover:bg-[#84cc16]/25 text-[#84cc16] border border-[#84cc16]/30 flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>{copiedSerial ? 'Copiado!' : 'Copiar'}</span>
+                </button>
+              </ActionTooltip>
             )}
           </div>
         </div>
@@ -260,13 +264,20 @@ export default function OperatorDashboardPage() {
             </div>
 
             <div className="space-y-1.5">
-              <a
-                href={process.env.NEXT_PUBLIC_BILLY_DESKTOP_DOWNLOAD_URL || data?.installer?.downloadUrl || '/downloads/Billy-Suite-Setup.exe'}
-                className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-emerald-600 hover:bg-emerald-500 transition border border-emerald-500/30 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-950/40"
+              <ActionTooltip
+                title="Baixar Programa Desktop (.EXE)"
+                description="Faz o download do instalador oficial do Billy Suite para Windows."
+                side="top"
+                className="w-full block"
               >
-                <Download className="w-4 h-4" />
-                <span>Baixar Programa Atualizado (.exe)</span>
-              </a>
+                <a
+                  href={process.env.NEXT_PUBLIC_BILLY_DESKTOP_DOWNLOAD_URL || data?.installer?.downloadUrl || '/downloads/Billy-Suite-Setup.exe'}
+                  className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-white bg-emerald-600 hover:bg-emerald-500 transition border border-emerald-500/30 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-950/40"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Baixar Programa Atualizado (.exe)</span>
+                </a>
+              </ActionTooltip>
               <div className="flex items-center justify-between px-1 text-[10px] text-zinc-500 font-mono">
                 <span>Arquivo: {data?.installer?.fileName || 'Billy-Suite-Setup.exe'}</span>
                 <span>{data?.installer?.fileSize || '345 MB'}</span>
@@ -293,14 +304,21 @@ export default function OperatorDashboardPage() {
               </div>
             </div>
 
-            <a
-              href={process.env.NEXT_PUBLIC_BILLY_EXTENSION_DOWNLOAD_URL || data?.extension?.downloadUrl || '/downloads/Billy-Extensao-Chrome.zip'}
-              download="Billy-Extensao-Chrome.zip"
-              className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-sky-300 hover:text-white bg-sky-950/40 hover:bg-sky-600 hover:text-white transition border border-sky-500/40 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-sky-950/30"
+            <ActionTooltip
+              title="Baixar Extensão Chrome (WhatsApp)"
+              description="Baixa o pacote da extensão de scripts e automação para WhatsApp Web."
+              side="top"
+              className="w-full block"
             >
-              <Download className="w-4 h-4" />
-              <span>Baixar Extensão (.zip)</span>
-            </a>
+              <a
+                href={process.env.NEXT_PUBLIC_BILLY_EXTENSION_DOWNLOAD_URL || data?.extension?.downloadUrl || '/downloads/Billy-Extensao-Chrome.zip'}
+                download="Billy-Extensao-Chrome.zip"
+                className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-sky-300 hover:text-white bg-sky-950/40 hover:bg-sky-600 hover:text-white transition border border-sky-500/40 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-sky-950/30"
+              >
+                <Download className="w-4 h-4" />
+                <span>Baixar Extensão (.zip)</span>
+              </a>
+            </ActionTooltip>
           </div>
 
           {/* 3. Extensão Image Downloader (Chrome) */}
@@ -322,15 +340,22 @@ export default function OperatorDashboardPage() {
               </div>
             </div>
 
-            <a
-              href="https://chromewebstore.google.com/detail/image-downloader/cnpniohnfphhjihaiiggeabnkjhpaldj"
-              target="_blank"
-              rel="noreferrer"
-              className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-amber-300 hover:text-zinc-950 bg-amber-500/15 hover:bg-amber-400 transition border border-amber-500/40 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-amber-950/30"
+            <ActionTooltip
+              title="Instalar Image Downloader"
+              description="Abre a Chrome Web Store oficial para instalar a extensão de captura de fotos."
+              side="top"
+              className="w-full block"
             >
-              <ExternalLink className="w-4 h-4" />
-              <span>Instalar no Chrome</span>
-            </a>
+              <a
+                href="https://chromewebstore.google.com/detail/image-downloader/cnpniohnfphhjihaiiggeabnkjhpaldj"
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider text-amber-300 hover:text-zinc-950 bg-amber-500/15 hover:bg-amber-400 transition border border-amber-500/40 flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-amber-950/30"
+              >
+                <ExternalLink className="w-4 h-4" />
+                <span>Instalar no Chrome</span>
+              </a>
+            </ActionTooltip>
           </div>
 
           {/* 4. Lark Mail Corporativo */}
@@ -348,24 +373,38 @@ export default function OperatorDashboardPage() {
             </div>
 
             <div className="space-y-2">
-              <a
-                href="https://mail.larksuite.com"
-                target="_blank"
-                rel="noreferrer"
-                className="w-full py-2.5 px-3 rounded-xl font-bold text-xs uppercase tracking-wider text-cyan-300 hover:text-white bg-cyan-950/40 hover:bg-cyan-900/50 transition border border-cyan-800/40 flex items-center justify-center gap-1.5 cursor-pointer"
+              <ActionTooltip
+                title="Abrir Webmail Lark"
+                description="Acessa sua caixa de e-mail corporativo @webbilly.com.br no navegador."
+                side="top"
+                className="w-full block"
               >
-                <ExternalLink className="w-3.5 h-3.5" />
-                <span>Abrir Webmail Direto</span>
-              </a>
-              <a
-                href="https://www.larksuite.com/download"
-                target="_blank"
-                rel="noreferrer"
-                className="w-full py-2 px-3 rounded-xl font-medium text-[11px] text-zinc-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] transition flex items-center justify-center gap-1.5 cursor-pointer"
+                <a
+                  href="https://mail.larksuite.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full py-2.5 px-3 rounded-xl font-bold text-xs uppercase tracking-wider text-cyan-300 hover:text-white bg-cyan-950/40 hover:bg-cyan-900/50 transition border border-cyan-800/40 flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Abrir Webmail Direto</span>
+                </a>
+              </ActionTooltip>
+              <ActionTooltip
+                title="Baixar Aplicativo Lark"
+                description="Abre a central de download oficial do aplicativo Lark Suite para Windows e smartphone."
+                side="top"
+                className="w-full block"
               >
-                <Download className="w-3 h-3" />
-                <span>Baixar App Lark Desktop / Mobile</span>
-              </a>
+                <a
+                  href="https://www.larksuite.com/download"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full py-2 px-3 rounded-xl font-medium text-[11px] text-zinc-400 hover:text-white bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.06] transition flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Download className="w-3 h-3" />
+                  <span>Baixar App Lark Desktop / Mobile</span>
+                </a>
+              </ActionTooltip>
             </div>
           </div>
         </div>

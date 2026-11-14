@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAdmin } from '@/contexts/AdminContext';
+import { ActionTooltip } from '@/components/ui/ActionTooltip';
 import {
   Users,
   Key,
@@ -285,13 +286,19 @@ export default function AdminOperatorsPage() {
           </div>
 
           {activeTabSub === 'licenses' && (
-            <button
-              onClick={handleGenerateSerial}
-              className="px-4 py-2 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#a3e635] text-black transition flex items-center gap-1.5 shadow-md shadow-lime-950/40 cursor-pointer"
+            <ActionTooltip
+              title="Gerar Nova Licença"
+              description="Cria uma nova chave serial virgem pronta para ser repassada a um operador."
+              side="bottom"
             >
-              <Plus className="w-4 h-4" />
-              <span>Gerar Nova Licença</span>
-            </button>
+              <button
+                onClick={handleGenerateSerial}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#a3e635] text-black transition flex items-center gap-1.5 shadow-md shadow-lime-950/40 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Gerar Nova Licença</span>
+              </button>
+            </ActionTooltip>
           )}
         </div>
       </div>
@@ -324,16 +331,17 @@ export default function AdminOperatorsPage() {
                       <td className="py-3.5 px-4 font-mono">
                         <div className="flex items-center gap-2">
                           <span className="font-bold text-[#84cc16]">{lic.serialToken}</span>
-                          <button
-                            onClick={() => {
-                              copyToClipboard(lic.serialToken);
-                              alert('Serial copiado!');
-                            }}
-                            className="p-1 rounded text-zinc-400 hover:text-white hover:bg-white/[0.06]"
-                            title="Copiar Serial"
-                          >
-                            <Copy className="w-3 h-3" />
-                          </button>
+                          <ActionTooltip title="Copiar Serial" description="Copia a chave serial de ativação desktop." side="top">
+                            <button
+                              onClick={() => {
+                                copyToClipboard(lic.serialToken);
+                                alert('Serial copiado!');
+                              }}
+                              className="p-1 rounded text-zinc-400 hover:text-white hover:bg-white/[0.06] cursor-pointer"
+                            >
+                              <Copy className="w-3 h-3" />
+                            </button>
+                          </ActionTooltip>
                         </div>
                         <span className="text-[10px] text-zinc-500 block">Tipo: {lic.licenseType || 'PRO'}</span>
                       </td>
@@ -373,50 +381,59 @@ export default function AdminOperatorsPage() {
                             {lic.corporateEmail || lic.corporate_email}
                           </span>
                         ) : (
-                          <button
-                            onClick={() => handleOpenProvisionModal(lic)}
-                            className="px-2.5 py-1 rounded-lg bg-cyan-950/50 hover:bg-cyan-900/60 text-cyan-300 border border-cyan-800/50 text-[10px] font-bold transition flex items-center gap-1 cursor-pointer"
-                          >
-                            <Mail className="w-3 h-3" />
-                            <span>Provisionar @webbilly</span>
-                          </button>
+                          <ActionTooltip title="Provisionar E-mail Lark" description="Cria a caixa postal corporativa oficial @webbilly.com.br deste operador." side="top">
+                            <button
+                              onClick={() => handleOpenProvisionModal(lic)}
+                              className="px-2.5 py-1 rounded-lg bg-cyan-950/50 hover:bg-cyan-900/60 text-cyan-300 border border-cyan-800/50 text-[10px] font-bold transition flex items-center gap-1 cursor-pointer"
+                            >
+                              <Mail className="w-3 h-3" />
+                              <span>Provisionar @webbilly</span>
+                            </button>
+                          </ActionTooltip>
                         )}
                       </td>
 
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
                           {/* Bloquear / Desbloquear */}
-                          <button
-                            onClick={() => handleToggleLicense(lic.serialToken, lic.status)}
-                            className={`p-1.5 rounded-lg border transition cursor-pointer ${
-                              lic.status === 'BLOQUEADO'
-                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
-                                : 'bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20'
-                            }`}
+                          <ActionTooltip
                             title={lic.status === 'BLOQUEADO' ? 'Desbloquear Licença' : 'Bloquear Licença'}
+                            description={lic.status === 'BLOQUEADO' ? 'Reativa o acesso do operador ao software desktop Billy.' : 'Bloqueia imediatamente a execução do app desktop para esta licença.'}
+                            side="top"
                           >
-                            {lic.status === 'BLOQUEADO' ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                          </button>
+                            <button
+                              onClick={() => handleToggleLicense(lic.serialToken, lic.status)}
+                              className={`p-1.5 rounded-lg border transition cursor-pointer ${
+                                lic.status === 'BLOQUEADO'
+                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
+                                  : 'bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20'
+                              }`}
+                            >
+                              {lic.status === 'BLOQUEADO' ? <Unlock className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                            </button>
+                          </ActionTooltip>
 
                           {/* Reset Machine ID */}
                           {lic.machineId && (
-                            <button
-                              onClick={() => handleResetMachine(lic.serialToken)}
-                              className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition cursor-pointer"
-                              title="Resetar Machine ID (Liberar computador)"
-                            >
-                              <RotateCcw className="w-3.5 h-3.5" />
-                            </button>
+                            <ActionTooltip title="Resetar HWID / Machine ID" description="Desvincula o computador atual desta chave, permitindo ativar em uma nova máquina." side="top">
+                              <button
+                                onClick={() => handleResetMachine(lic.serialToken)}
+                                className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition cursor-pointer"
+                              >
+                                <RotateCcw className="w-3.5 h-3.5" />
+                              </button>
+                            </ActionTooltip>
                           )}
 
                           {/* Reset Senha Web */}
-                          <button
-                            onClick={() => handleResetOperatorPassword(lic.serialToken, lic.operatorId)}
-                            className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/20 transition cursor-pointer"
-                            title="Gerar nova senha provisória de acesso web"
-                          >
-                            <KeyRound className="w-3.5 h-3.5" />
-                          </button>
+                          <ActionTooltip title="Resetar Senha Web" description="Gera uma senha provisória de acesso web para este operador." side="top">
+                            <button
+                              onClick={() => handleResetOperatorPassword(lic.serialToken, lic.operatorId)}
+                              className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/20 transition cursor-pointer"
+                            >
+                              <KeyRound className="w-3.5 h-3.5" />
+                            </button>
+                          </ActionTooltip>
                         </div>
                       </td>
                     </tr>
@@ -490,12 +507,14 @@ export default function AdminOperatorsPage() {
                             Aprovado
                           </span>
                         ) : (
-                          <button
-                            onClick={() => handleApproveOperator(cand.serialToken || 'NOVO', cand.id)}
-                            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-md shadow-emerald-950/40 cursor-pointer"
-                          >
-                            Aprovar & Emitir Serial
-                          </button>
+                          <ActionTooltip title="Aprovar Candidato" description="Aprova a inscrição, gera a licença desktop e ativa o acesso do operador." side="left">
+                            <button
+                              onClick={() => handleApproveOperator(cand.serialToken || 'NOVO', cand.id)}
+                              className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-md shadow-emerald-950/40 cursor-pointer"
+                            >
+                              Aprovar & Emitir Serial
+                            </button>
+                          </ActionTooltip>
                         )}
                       </td>
                     </tr>

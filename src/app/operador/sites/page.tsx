@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useOperator } from '@/contexts/OperatorContext';
+import { ActionTooltip } from '@/components/ui/ActionTooltip';
 import {
   ExternalLink,
   AlertTriangle,
@@ -125,16 +126,18 @@ export default function OperatorSitesPage() {
                 filteredSubscriptions.map((sub: any) => (
                   <tr key={sub.id} className="hover:bg-white/[0.02] transition duration-150">
                     <td className="py-3.5 px-4 font-mono">
-                      <a
-                        href={`https://${sub.slug}.webbilly.com.br`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="font-bold text-sky-400 hover:underline flex items-center gap-1.5"
-                      >
-                        <span>{sub.slug}.webbilly.com.br</span>
-                        <ExternalLink className="w-3 h-3 text-sky-400" />
-                      </a>
-                      <span className="text-[10px] text-zinc-500">ID: {sub.id}</span>
+                      <ActionTooltip title="Abrir Subdomínio" description="Acessa o site público do cliente hospedado no subdomínio oficial." side="top">
+                        <a
+                          href={`https://${sub.slug}.webbilly.com.br`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-bold text-sky-400 hover:underline inline-flex items-center gap-1.5"
+                        >
+                          <span>{sub.slug}.webbilly.com.br</span>
+                          <ExternalLink className="w-3 h-3 text-sky-400" />
+                        </a>
+                      </ActionTooltip>
+                      <span className="text-[10px] text-zinc-500 block">ID: {sub.id}</span>
                     </td>
                     <td className="py-3.5 px-4">
                       <span className="font-semibold text-white block">{sub.clientName}</span>
@@ -149,17 +152,19 @@ export default function OperatorSitesPage() {
                     </td>
                     <td className="py-3.5 px-4 space-y-1">
                       <div>
-                        <span
-                          className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border ${
-                            sub.status === 'active'
-                              ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/40'
-                              : sub.status === 'suspended'
-                              ? 'bg-rose-950/40 text-rose-400 border-rose-800/40'
-                              : 'bg-amber-950/40 text-amber-400 border-amber-800/40'
-                          }`}
-                        >
-                          {sub.status === 'active' ? '● No Ar (Ativo)' : sub.status === 'suspended' ? '● Suspenso (Inadimplente)' : sub.status === 'cancelled' ? '● Cancelado' : '● Pendente'}
-                        </span>
+                        <ActionTooltip title="Status da Assinatura" description="Indica a situação da recorrência mensal e funcionamento do site." side="top">
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border inline-block cursor-default ${
+                              sub.status === 'active'
+                                ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/40'
+                                : sub.status === 'suspended'
+                                ? 'bg-rose-950/40 text-rose-400 border-rose-800/40'
+                                : 'bg-amber-950/40 text-amber-400 border-amber-800/40'
+                            }`}
+                          >
+                            {sub.status === 'active' ? '● No Ar (Ativo)' : sub.status === 'suspended' ? '● Suspenso (Inadimplente)' : sub.status === 'cancelled' ? '● Cancelado' : '● Pendente'}
+                          </span>
+                        </ActionTooltip>
                       </div>
                       {(sub.cancellationRequested || sub.cancellation_requested) && (
                         <div className="pt-0.5">
@@ -179,39 +184,42 @@ export default function OperatorSitesPage() {
                                 Cancelamento Solicitado
                               </span>
                             ) : (
-                              <button
-                                onClick={() => {
-                                  setCancelModalSub(sub);
-                                  setCancelReason('');
-                                  setCancelErrorMsg(null);
-                                  setCancelSuccessMsg(null);
-                                }}
-                                className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-semibold text-[10px] border border-rose-500/30 transition flex items-center gap-1 cursor-pointer"
-                                title="Solicitar encerramento deste cliente"
-                              >
-                                <span>Solicitar Encerramento</span>
-                              </button>
+                              <ActionTooltip title="Solicitar Encerramento" description="Abre o formulário para enviar ao Admin Master o pedido de cancelamento deste cliente." side="top">
+                                <button
+                                  onClick={() => {
+                                    setCancelModalSub(sub);
+                                    setCancelReason('');
+                                    setCancelErrorMsg(null);
+                                    setCancelSuccessMsg(null);
+                                  }}
+                                  className="px-2.5 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-semibold text-[10px] border border-rose-500/30 transition flex items-center gap-1 cursor-pointer"
+                                >
+                                  <span>Solicitar Encerramento</span>
+                                </button>
+                              </ActionTooltip>
                             )}
                           </>
                         )}
-                        <a
-                          href={`https://webbilly.com.br/api/subscription/create-checkout?slug=${sub.slug}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="px-2.5 py-1.5 rounded-lg bg-[#141824] hover:bg-zinc-800 text-white font-medium text-[11px] transition border border-white/[0.08]"
-                          title="Link de Pagamento / Assinatura"
-                        >
-                          Link Checkout
-                        </a>
-                        <a
-                          href={`https://${sub.slug}.webbilly.com.br`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="p-1.5 rounded-lg bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 border border-sky-500/30"
-                          title="Ver Site Online"
-                        >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
+                        <ActionTooltip title="Link de Checkout" description="Abre o link oficial do Asaas para conferir ou assinar a cobrança." side="top">
+                          <a
+                            href={`https://webbilly.com.br/api/subscription/create-checkout?slug=${sub.slug}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-2.5 py-1.5 rounded-lg bg-[#141824] hover:bg-zinc-800 text-white font-medium text-[11px] transition border border-white/[0.08] inline-block"
+                          >
+                            Link Checkout
+                          </a>
+                        </ActionTooltip>
+                        <ActionTooltip title="Ver Site Online" description="Abre o site gerado em nova aba para conferir o visual e dados." side="top">
+                          <a
+                            href={`https://${sub.slug}.webbilly.com.br`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="p-1.5 rounded-lg bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 border border-sky-500/30 inline-flex items-center justify-center"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </ActionTooltip>
                       </div>
                     </td>
                   </tr>
@@ -233,15 +241,17 @@ export default function OperatorSitesPage() {
             <p className="text-xs text-zinc-400">Baixe fotos e cardápios de clientes com um clique para carregar no gerador desktop Billy.</p>
           </div>
         </div>
-        <a
-          href="https://chromewebstore.google.com/detail/image-downloader/cnpniohnfphhjihaiiggeabnkjhpaldj"
-          target="_blank"
-          rel="noreferrer"
-          className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition flex items-center gap-1.5 shrink-0"
-        >
-          <ExternalLink className="w-3.5 h-3.5" />
-          <span>Acessar Chrome Web Store</span>
-        </a>
+        <ActionTooltip title="Instalar Image Downloader" description="Abre a Chrome Web Store para instalar a extensão de download rápido de imagens." side="left">
+          <a
+            href="https://chromewebstore.google.com/detail/image-downloader/cnpniohnfphhjihaiiggeabnkjhpaldj"
+            target="_blank"
+            rel="noreferrer"
+            className="px-4 py-2 rounded-xl text-xs font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition flex items-center gap-1.5 shrink-0"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span>Acessar Chrome Web Store</span>
+          </a>
+        </ActionTooltip>
       </div>
 
       {/* Modal de Solicitação de Encerramento / Cancelamento */}

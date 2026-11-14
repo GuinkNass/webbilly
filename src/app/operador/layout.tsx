@@ -7,6 +7,7 @@ import { OperatorProvider, useOperator } from '@/contexts/OperatorContext';
 import GamerAvatar from '@/components/GamerAvatar';
 import TrophyImage from '@/components/TrophyImage';
 import OperatorAlertsBell from '@/components/OperatorAlertsBell';
+import { ActionTooltip, TooltipsToggle, TooltipProvider } from '@/components/ui/ActionTooltip';
 import { startOperadorTour } from '@/lib/tours';
 import {
   Search,
@@ -70,6 +71,8 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
     {
       href: '/operador',
       label: 'Dashboard',
+      tooltipTitle: 'Dashboard',
+      tooltipDesc: 'Visão geral com gráficos, faturamento, metas e indicadores em tempo real.',
       iconSrc: '/icones/dashboard.svg',
       isTrophy: false,
       badge: stats?.activeSubscriptionsCount ? `${stats.activeSubscriptionsCount} sites` : null,
@@ -78,6 +81,8 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
     {
       href: '/operador/sites',
       label: 'Sites Ativos (SaaS)',
+      tooltipTitle: 'Sites Ativos',
+      tooltipDesc: 'Gerencie os sites gerados, edite dados do cliente, copie links de demonstração e acompanhe o status.',
       iconSrc: '/icones/sites.svg',
       isTrophy: false,
       badge: stats?.activeSubscriptionsCount || (data?.subscriptions || []).length || 0,
@@ -86,6 +91,8 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
     {
       href: '/operador/treinamento',
       label: 'Área de Treinamento',
+      tooltipTitle: 'Treinamento & Scripts',
+      tooltipDesc: 'Acesse tutoriais em vídeo, scripts de abordagem e passo a passo de prospecção.',
       iconSrc: '/icones/treinamento.svg',
       isTrophy: false,
       badge: '4 Aulas',
@@ -94,6 +101,8 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
     {
       href: '/operador/vendas',
       label: 'Minhas Vendas & Pix',
+      tooltipTitle: 'Minhas Vendas & Pix',
+      tooltipDesc: 'Acompanhe suas vendas fechadas, comissões (50%) e status de pagamentos Pix.',
       iconSrc: '/icones/vendas.svg',
       isTrophy: false,
       badge: `R$ ${(stats?.monthlyCommissionMRR ?? ((stats?.activeSubscriptionsCount ?? 0) * 10)).toLocaleString('pt-BR')}`,
@@ -102,6 +111,8 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
     {
       href: '/operador/ranking',
       label: 'Ranking & Medalhas',
+      tooltipTitle: 'Ranking & Medalhas',
+      tooltipDesc: 'Veja sua posição no ranking mensal, patentes e metas para desbloquear os troféus oficiais.',
       iconSrc: '/trofeus/Ouro.png',
       isTrophy: true,
       badge: data?.gamification?.currentMedal?.name || 'Iniciante',
@@ -110,6 +121,8 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
     {
       href: '/operador/afiliados',
       label: 'Billy Afiliados',
+      tooltipTitle: 'Billy Afiliados',
+      tooltipDesc: 'Copie seu link exclusivo para indicar novos operadores e ganhar bônus recorrente.',
       iconSrc: '/icones/afiliados.svg',
       isTrophy: false,
       badge: data?.affiliates?.enabled ? '5% Ativo' : data?.affiliates?.eligibility?.eligible ? 'Liberado!' : 'Bronze',
@@ -186,18 +199,23 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
 
             {/* Botão de Fixar / Desafixar */}
             {isExpanded && (
-              <button
-                type="button"
-                onClick={() => setIsPinned(!isPinned)}
-                className={`p-1.5 rounded-lg text-xs transition cursor-pointer ${
-                  isPinned
-                    ? 'bg-[#84cc16]/20 text-[#a3e635] border border-[#84cc16]/40'
-                    : 'text-zinc-500 hover:text-white hover:bg-white/[0.06]'
-                }`}
-                title={isPinned ? 'Desafixar barra lateral (recolher)' : 'Fixar barra lateral aberta'}
+              <ActionTooltip
+                title="Menu Lateral"
+                description={isPinned ? 'Desafixar menu (recolher automaticamente).' : 'Fixar menu aberto na lateral.'}
+                side="right"
               >
-                {isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setIsPinned(!isPinned)}
+                  className={`p-1.5 rounded-lg text-xs transition cursor-pointer ${
+                    isPinned
+                      ? 'bg-[#84cc16]/20 text-[#a3e635] border border-[#84cc16]/40'
+                      : 'text-zinc-500 hover:text-white hover:bg-white/[0.06]'
+                  }`}
+                >
+                  {isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
+                </button>
+              </ActionTooltip>
             )}
           </div>
 
@@ -210,57 +228,63 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
                   : pathname.startsWith(item.href);
 
               return (
-                <Link
+                <ActionTooltip
                   key={item.href}
-                  href={item.href}
-                  className={`w-full flex items-center rounded-2xl transition-all duration-200 group relative ${
-                    isExpanded ? 'px-3 py-2 justify-between' : 'h-14 justify-center px-0'
-                  } ${
-                    isActive
-                      ? 'bg-gradient-to-r from-emerald-600/30 via-emerald-500/20 to-transparent text-white font-bold border border-[#84cc16]/40 shadow-lg shadow-[#84cc16]/10'
-                      : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
-                  }`}
-                  title={!isExpanded ? item.label : undefined}
+                  title={item.tooltipTitle}
+                  description={item.tooltipDesc}
+                  side="right"
+                  className="w-full block"
                 >
-                  <div className={`flex items-center gap-3.5 ${!isExpanded ? 'justify-center w-full' : ''}`}>
-                    {/* Container Estilizado com Glow / Sombra Neon Verde */}
-                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+                  <Link
+                    href={item.href}
+                    className={`w-full flex items-center rounded-2xl transition-all duration-200 group relative ${
+                      isExpanded ? 'px-3 py-2 justify-between' : 'h-14 justify-center px-0'
+                    } ${
                       isActive
-                        ? 'bg-[#84cc16]/20 border border-[#84cc16]/60 shadow-[0_0_24px_rgba(132,204,22,0.55)]'
-                        : 'bg-[#84cc16]/10 border border-[#84cc16]/25 shadow-[0_0_16px_rgba(132,204,22,0.28)] group-hover:bg-[#84cc16]/20 group-hover:border-[#84cc16]/50 group-hover:shadow-[0_0_20px_rgba(132,204,22,0.45)]'
-                    }`}>
-                      <img
-                        src={item.iconSrc}
-                        alt=""
-                        className={`w-7 h-7 object-contain transition-transform duration-200 group-hover:scale-110 ${
-                          item.isTrophy
-                            ? 'drop-shadow-[0_2px_8px_rgba(245,158,11,0.6)]'
-                            : isActive
-                            ? 'brightness-0 invert [filter:invert(81%)_sepia(47%)_saturate(746%)_hue-rotate(36deg)_brightness(98%)_contrast(92%)] drop-shadow-[0_0_8px_rgba(132,204,22,0.8)]'
-                            : 'brightness-0 invert opacity-85 group-hover:opacity-100'
-                        }`}
-                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                      />
-                      {/* Ponto indicador ativo no modo recolhido */}
-                      {!isExpanded && isActive && (
-                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#84cc16] shadow-md shadow-[#84cc16]/80 animate-pulse border-2 border-[#0c0f17]" />
+                        ? 'bg-gradient-to-r from-emerald-600/30 via-emerald-500/20 to-transparent text-white font-bold border border-[#84cc16]/40 shadow-lg shadow-[#84cc16]/10'
+                        : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    <div className={`flex items-center gap-3.5 ${!isExpanded ? 'justify-center w-full' : ''}`}>
+                      {/* Container Estilizado com Glow / Sombra Neon Verde */}
+                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+                        isActive
+                          ? 'bg-[#84cc16]/20 border border-[#84cc16]/60 shadow-[0_0_24px_rgba(132,204,22,0.55)]'
+                          : 'bg-[#84cc16]/10 border border-[#84cc16]/25 shadow-[0_0_16px_rgba(132,204,22,0.28)] group-hover:bg-[#84cc16]/20 group-hover:border-[#84cc16]/50 group-hover:shadow-[0_0_20px_rgba(132,204,22,0.45)]'
+                      }`}>
+                        <img
+                          src={item.iconSrc}
+                          alt=""
+                          className={`w-7 h-7 object-contain transition-transform duration-200 group-hover:scale-110 ${
+                            item.isTrophy
+                              ? 'drop-shadow-[0_2px_8px_rgba(245,158,11,0.6)]'
+                              : isActive
+                              ? 'brightness-0 invert [filter:invert(81%)_sepia(47%)_saturate(746%)_hue-rotate(36deg)_brightness(98%)_contrast(92%)] drop-shadow-[0_0_8px_rgba(132,204,22,0.8)]'
+                              : 'brightness-0 invert opacity-85 group-hover:opacity-100'
+                          }`}
+                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                        />
+                        {/* Ponto indicador ativo no modo recolhido */}
+                        {!isExpanded && isActive && (
+                          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#84cc16] shadow-md shadow-[#84cc16]/80 animate-pulse border-2 border-[#0c0f17]" />
+                        )}
+                      </div>
+                      {isExpanded && (
+                        <span className={`text-xs font-semibold whitespace-nowrap overflow-hidden ${isActive ? 'text-[#a3e635]' : 'text-zinc-200'}`}>
+                          {item.label}
+                        </span>
                       )}
                     </div>
-                    {isExpanded && (
-                      <span className={`text-xs font-semibold whitespace-nowrap overflow-hidden ${isActive ? 'text-[#a3e635]' : 'text-zinc-200'}`}>
-                        {item.label}
+
+                    {isExpanded && item.badge && (
+                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold truncate max-w-[90px] ${
+                        isActive ? 'bg-[#84cc16]/25 text-[#a3e635] border border-[#84cc16]/40' : item.badgeColor
+                      }`}>
+                        {item.badge}
                       </span>
                     )}
-                  </div>
-
-                  {isExpanded && item.badge && (
-                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold truncate max-w-[90px] ${
-                      isActive ? 'bg-[#84cc16]/25 text-[#a3e635] border border-[#84cc16]/40' : item.badgeColor
-                    }`}>
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
+                  </Link>
+                </ActionTooltip>
               );
             })}
           </nav>
@@ -273,42 +297,46 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
             <div className="p-2.5 rounded-xl bg-[#141824] border border-white/[0.06] text-xs animate-in fade-in duration-150">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[10px] uppercase font-bold text-zinc-400">Chave Serial</span>
-                <button
-                  type="button"
-                  onClick={copySerial}
-                  className="text-[10px] font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 cursor-pointer"
-                >
-                  {copiedSerial ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                  {copiedSerial ? 'Copiado!' : 'Copiar'}
-                </button>
+                <ActionTooltip title="Copiar Serial" description="Copia sua chave exclusiva para ativar o software Billy no Windows." side="top">
+                  <button
+                    type="button"
+                    onClick={copySerial}
+                    className="text-[10px] font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 cursor-pointer"
+                  >
+                    {copiedSerial ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                    {copiedSerial ? 'Copiado!' : 'Copiar'}
+                  </button>
+                </ActionTooltip>
               </div>
               <div className="font-mono text-[11px] font-bold text-white bg-zinc-950/60 p-1.5 rounded-lg border border-zinc-800 truncate select-all">
                 {op?.serialToken || 'CARREGANDO...'}
               </div>
             </div>
           ) : (
-            <button
-              type="button"
-              onClick={copySerial}
-              className="w-full h-10 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] flex items-center justify-center text-emerald-400 transition"
-              title="Copiar Token Serial"
-            >
-              <Key className="w-5 h-5" />
-            </button>
+            <ActionTooltip title="Copiar Chave Serial" description="Copia seu token serial para o Billy Suite Desktop." side="right">
+              <button
+                type="button"
+                onClick={copySerial}
+                className="w-full h-10 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] flex items-center justify-center text-emerald-400 transition"
+              >
+                <Key className="w-5 h-5" />
+              </button>
+            </ActionTooltip>
           )}
 
           {/* Botão Sair */}
-          <button
-            type="button"
-            onClick={handleLogout}
-            className={`w-full flex items-center rounded-xl text-xs font-semibold text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition ${
-              isExpanded ? 'px-3 py-2 gap-2 justify-start' : 'h-10 justify-center'
-            }`}
-            title="Encerrar Sessão"
-          >
-            <LogOut className="w-4 h-4 shrink-0" />
-            {isExpanded && <span>Encerrar Sessão</span>}
-          </button>
+          <ActionTooltip title="Encerrar Sessão" description="Encerra seu login e desconecta do painel com segurança." side="right" className="w-full block">
+            <button
+              type="button"
+              onClick={handleLogout}
+              className={`w-full flex items-center rounded-xl text-xs font-semibold text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition ${
+                isExpanded ? 'px-3 py-2 gap-2 justify-start' : 'h-10 justify-center'
+              }`}
+            >
+              <LogOut className="w-4 h-4 shrink-0" />
+              {isExpanded && <span>Encerrar Sessão</span>}
+            </button>
+          </ActionTooltip>
         </div>
       </aside>
 
@@ -400,71 +428,80 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
 
           {/* Ações da Topbar */}
           <div className="flex items-center gap-2.5 sm:gap-3">
+            {/* Botão Modo Dicas / Tooltips */}
+            <TooltipsToggle />
+
             {/* Tour Guiado */}
-            <button
-              type="button"
-              onClick={() => startOperadorTour(() => {})}
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#84cc16]/15 hover:bg-[#84cc16]/25 text-[#a3e635] hover:text-white border border-[#84cc16]/40 transition shadow-sm cursor-pointer"
-              title="Iniciar Tour Guiado Interativo do Painel do Operador"
-            >
-              <HelpCircle className="w-3.5 h-3.5 text-[#84cc16]" />
-              <span>? Tour</span>
-            </button>
+            <ActionTooltip title="Tour Guiado" description="Inicia o passo a passo interativo com explicações sobre cada área do painel." side="bottom">
+              <button
+                type="button"
+                onClick={() => startOperadorTour(() => {})}
+                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#84cc16]/15 hover:bg-[#84cc16]/25 text-[#a3e635] hover:text-white border border-[#84cc16]/40 transition shadow-sm cursor-pointer"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-[#84cc16]" />
+                <span>? Tour</span>
+              </button>
+            </ActionTooltip>
 
             {/* Webmail */}
-            <a
-              href="https://mail.larksuite.com"
-              target="_blank"
-              rel="noreferrer"
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition shadow-sm cursor-pointer"
-              title="Acessar webmail corporativo no Lark Suite"
-            >
-              <Mail className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="hidden xl:inline">Webmail (@webbilly)</span>
-              <ExternalLink className="w-3 h-3 opacity-60" />
-            </a>
+            <ActionTooltip title="Webmail Corporativo" description="Acessar sua caixa postal oficial @webbilly no Lark Suite." side="bottom">
+              <a
+                href="https://mail.larksuite.com"
+                target="_blank"
+                rel="noreferrer"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition shadow-sm cursor-pointer"
+              >
+                <Mail className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="hidden xl:inline">Webmail (@webbilly)</span>
+                <ExternalLink className="w-3 h-3 opacity-60" />
+              </a>
+            </ActionTooltip>
 
             {/* Status Asaas */}
-            <div className="hidden xl:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 text-xs font-semibold">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Asaas v3</span>
-            </div>
+            <ActionTooltip title="Integração Asaas v3" description="Serviço de geração de Pix dinâmico e cobranças recorrentes online." side="bottom">
+              <div className="hidden xl:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 text-xs font-semibold cursor-default">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Asaas v3</span>
+              </div>
+            </ActionTooltip>
 
             {/* Sininho de Alertas Globais em Tempo Real */}
             <OperatorAlertsBell operatorId={op?.id || ''} />
 
             {/* Atualizar Dados */}
-            <button
-              type="button"
-              onClick={loadData}
-              className="p-2 text-zinc-400 hover:text-white rounded-xl hover:bg-white/[0.05] border border-white/[0.08] transition"
-              title="Atualizar dados"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            </button>
+            <ActionTooltip title="Sincronizar Dados" description="Atualiza instantaneamente os indicadores, métricas e sites da sua conta." side="bottom">
+              <button
+                type="button"
+                onClick={loadData}
+                className="p-2 text-zinc-400 hover:text-white rounded-xl hover:bg-white/[0.05] border border-white/[0.08] transition"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              </button>
+            </ActionTooltip>
 
             {/* Perfil Operador com GamerAvatar Clicável */}
             <div className="flex items-center gap-2.5 pl-2.5 border-l border-white/[0.08]">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowAvatarModal(true);
-                  setAvatarModalCanClose(true);
-                }}
-                className="group relative cursor-pointer"
-                title="Clique para personalizar seu Avatar"
-              >
-                <GamerAvatar
-                  svg={op?.avatar_svg || op?.avatarSvg}
-                  config={op?.avatar_config || op?.avatarConfig}
-                  seed={op?.name || op?.id || 'Operador'}
-                  size={36}
-                  className="ring-2 ring-emerald-500/40 group-hover:ring-[#84cc16] group-hover:scale-105 transition"
-                />
-                <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#84cc16] border-2 border-[#090D16] flex items-center justify-center text-[7px] text-black font-bold">
-                  ✨
-                </span>
-              </button>
+              <ActionTooltip title="Personalizar Avatar" description="Clique para personalizar suas roupas, acessórios e visual gamer 2D." side="bottom">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAvatarModal(true);
+                    setAvatarModalCanClose(true);
+                  }}
+                  className="group relative cursor-pointer"
+                >
+                  <GamerAvatar
+                    svg={op?.avatar_svg || op?.avatarSvg}
+                    config={op?.avatar_config || op?.avatarConfig}
+                    seed={op?.name || op?.id || 'Operador'}
+                    size={36}
+                    className="ring-2 ring-emerald-500/40 group-hover:ring-[#84cc16] group-hover:scale-105 transition"
+                  />
+                  <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#84cc16] border-2 border-[#090D16] flex items-center justify-center text-[7px] text-black font-bold">
+                    ✨
+                  </span>
+                </button>
+              </ActionTooltip>
               <div className="hidden lg:block text-left">
                 <div className="text-xs font-bold text-white line-clamp-1">{op?.name || 'Operador'}</div>
                 <div className="text-[10px] text-zinc-400">{op?.email || 'operador@webbilly.com.br'}</div>
@@ -557,8 +594,10 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
 
 export default function OperatorLayout({ children }: { children: React.ReactNode }) {
   return (
-    <OperatorProvider>
-      <OperatorShell>{children}</OperatorShell>
-    </OperatorProvider>
+    <TooltipProvider>
+      <OperatorProvider>
+        <OperatorShell>{children}</OperatorShell>
+      </OperatorProvider>
+    </TooltipProvider>
   );
 }

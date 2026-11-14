@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { ActionTooltip } from '@/components/ui/ActionTooltip';
 import {
   X,
   Send,
@@ -326,16 +327,22 @@ export default function AdminAlertsModal({
                 )}
 
                 {/* Botão Submeter */}
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#a3e635] text-black shadow-lg shadow-[#84cc16]/20 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                <ActionTooltip
+                  title="Disparar Comunicado"
+                  description="Envia este comunicado imediatamente para o painel de todos os operadores conectados."
+                  side="top"
                 >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>
-                    {submitting ? 'Disparando...' : 'Disparar Comunicado Global'}
-                  </span>
-                </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#a3e635] text-black shadow-lg shadow-[#84cc16]/20 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>
+                      {submitting ? 'Disparando...' : 'Disparar Comunicado Global'}
+                    </span>
+                  </button>
+                </ActionTooltip>
               </form>
             </div>
           </div>
@@ -396,26 +403,33 @@ export default function AdminAlertsModal({
                       </div>
 
                       <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => handleToggleStatus(alert)}
-                          className={`p-1.5 rounded-lg text-xs transition cursor-pointer ${
-                            alert.is_active
-                              ? 'text-amber-400 hover:bg-amber-500/10'
-                              : 'text-emerald-400 hover:bg-emerald-500/10'
-                          }`}
+                        <ActionTooltip
                           title={alert.is_active ? 'Pausar Comunicado' : 'Reativar Comunicado'}
+                          description={alert.is_active ? 'Oculta este alerta do painel dos operadores.' : 'Torna este alerta visível novamente para os operadores.'}
+                          side="top"
                         >
-                          <Power className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(alert.id)}
-                          className="p-1.5 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition cursor-pointer"
-                          title="Excluir Definitivamente"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStatus(alert)}
+                            className={`p-1.5 rounded-lg text-xs transition cursor-pointer ${
+                              alert.is_active
+                                ? 'text-amber-400 hover:bg-amber-500/10'
+                                : 'text-emerald-400 hover:bg-emerald-500/10'
+                            }`}
+                          >
+                            <Power className="w-3.5 h-3.5" />
+                          </button>
+                        </ActionTooltip>
+
+                        <ActionTooltip title="Excluir Comunicado" description="Remove este comunicado definitivamente do histórico." side="top">
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(alert.id)}
+                            className="p-1.5 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </ActionTooltip>
                       </div>
                     </div>
 

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import TrophyImage from '@/components/TrophyImage';
 import GamerAvatar from '@/components/GamerAvatar';
+import { ActionTooltip } from '@/components/ui/ActionTooltip';
 import {
   Trophy,
   Medal,
@@ -145,15 +146,16 @@ export default function RankingView({ mode }: RankingViewProps) {
           </div>
 
           <div className="flex flex-wrap items-center gap-3 shrink-0">
-            <button
-              onClick={() => fetchRanking(true)}
-              disabled={refreshing}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border border-white/10 text-xs font-bold transition disabled:opacity-50 shadow-md hover:border-[#45f882]/40"
-              title="Recarregar dados do ranking"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 text-[#45f882] ${refreshing ? 'animate-spin' : ''}`} />
-              <span>{refreshing ? 'Atualizando...' : 'Atualizar'}</span>
-            </button>
+            <ActionTooltip title="Atualizar Ranking" description="Recarrega as pontuações, posições e medalhas da liga em tempo real." side="bottom">
+              <button
+                onClick={() => fetchRanking(true)}
+                disabled={refreshing}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border border-white/10 text-xs font-bold transition disabled:opacity-50 shadow-md hover:border-[#45f882]/40 cursor-pointer"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 text-[#45f882] ${refreshing ? 'animate-spin' : ''}`} />
+                <span>{refreshing ? 'Atualizando...' : 'Atualizar'}</span>
+              </button>
+            </ActionTooltip>
 
             {mode === 'operator' && (
               <div className="px-5 py-2.5 rounded-xl bg-black/60 border border-[#45f882]/30 text-right backdrop-blur-sm">

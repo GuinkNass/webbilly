@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, CheckCheck, ExternalLink, X, Flame, Sparkles, Info, Clock } from 'lucide-react';
+import { ActionTooltip } from '@/components/ui/ActionTooltip';
 
 interface AlertItem {
   id: string;
@@ -152,28 +153,33 @@ export default function OperatorAlertsBell({ operatorId }: OperatorAlertsBellPro
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Botão Sininho */}
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className={`relative p-2 rounded-xl transition duration-200 cursor-pointer flex items-center justify-center ${
-          isOpen
-            ? 'bg-white/[0.12] text-white ring-2 ring-emerald-500/50'
-            : 'text-zinc-300 hover:text-white hover:bg-white/[0.06] border border-white/[0.08]'
-        }`}
-        title="Central de Avisos & Comunicados Oficiais"
+      <ActionTooltip
+        title="Central de Avisos"
+        description="Visualizar comunicados oficiais, campanhas e avisos em tempo real da administração."
+        side="bottom"
       >
-        <img
-          src="/icones/029-megaphone.svg"
-          alt="Alertas"
-          className="w-4 h-4 object-contain transition-transform group-hover:scale-110"
-        />
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className={`relative p-2 rounded-xl transition duration-200 cursor-pointer flex items-center justify-center ${
+            isOpen
+              ? 'bg-white/[0.12] text-white ring-2 ring-emerald-500/50'
+              : 'text-zinc-300 hover:text-white hover:bg-white/[0.06] border border-white/[0.08]'
+          }`}
+        >
+          <img
+            src="/icones/029-megaphone.svg"
+            alt="Alertas"
+            className="w-4 h-4 object-contain transition-transform group-hover:scale-110"
+          />
 
-        {unreadCount > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-gradient-to-r from-[#84cc16] to-emerald-500 text-black font-mono font-black text-[10px] flex items-center justify-center shadow-lg shadow-emerald-500/40 animate-pulse border border-[#090D16]">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
-        )}
-      </button>
+          {unreadCount > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-gradient-to-r from-[#84cc16] to-emerald-500 text-black font-mono font-black text-[10px] flex items-center justify-center shadow-lg shadow-emerald-500/40 animate-pulse border border-[#090D16]">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
+      </ActionTooltip>
 
       {/* Dropdown Popover */}
       {isOpen && (

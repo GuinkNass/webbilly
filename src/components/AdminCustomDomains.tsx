@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { ActionTooltip } from '@/components/ui/ActionTooltip';
 import {
   Globe,
   Search,
@@ -556,46 +557,50 @@ export default function AdminCustomDomains({
 
                       <td className="py-4 px-5 text-right">
                         <div className="flex flex-col sm:flex-row items-end sm:items-center justify-end gap-2">
-                          <button
-                            onClick={() => handleCreateCharge(domainName, 'annual_renewal')}
-                            disabled={generatingCharge}
-                            className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition flex items-center gap-1"
-                            title="Gerar Cobrança Pix Asaas para Renovação Anual (R$ 70,00)"
-                          >
-                            <CreditCard className="w-3 h-3 text-emerald-400" />
-                            <span>Renovação (R$ 70)</span>
-                          </button>
+                          <ActionTooltip title="Cobrança Renovação Anual" description="Gera cobrança Pix de R$ 70,00 no Asaas para a renovação de 1 ano do domínio." side="top">
+                            <button
+                              onClick={() => handleCreateCharge(domainName, 'annual_renewal')}
+                              disabled={generatingCharge}
+                              className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition flex items-center gap-1 cursor-pointer"
+                            >
+                              <CreditCard className="w-3 h-3 text-emerald-400" />
+                              <span>Renovação (R$ 70)</span>
+                            </button>
+                          </ActionTooltip>
 
-                          <button
-                            onClick={() => handleCreateCharge(domainName, 'single_update')}
-                            disabled={generatingCharge}
-                            className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition flex items-center gap-1"
-                            title="Gerar Cobrança Pix Asaas para Atualização Avulsa Sob Demanda (R$ 29,90)"
-                          >
-                            <CreditCard className="w-3 h-3 text-amber-400" />
-                            <span>Atualização (R$ 29,90)</span>
-                          </button>
+                          <ActionTooltip title="Cobrança Atualização Avulsa" description="Gera cobrança Pix de R$ 29,90 no Asaas para alteração ou ajuste solicitado pelo cliente." side="top">
+                            <button
+                              onClick={() => handleCreateCharge(domainName, 'single_update')}
+                              disabled={generatingCharge}
+                              className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition flex items-center gap-1 cursor-pointer"
+                            >
+                              <CreditCard className="w-3 h-3 text-amber-400" />
+                              <span>Atualização (R$ 29,90)</span>
+                            </button>
+                          </ActionTooltip>
 
-                          <button
-                            onClick={() => handleVerify(domainName)}
-                            disabled={verifyingDomain === domainName}
-                            className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#161a26] text-zinc-200 border border-white/[0.08] hover:bg-white/[0.06] transition flex items-center gap-1"
-                            title="Verificar status DNS e Certificado SSL"
-                          >
-                            <RefreshCw className={`w-3 h-3 ${verifyingDomain === domainName ? 'animate-spin text-emerald-400' : 'text-zinc-400'}`} />
-                            <span>Verificar DNS</span>
-                          </button>
+                          <ActionTooltip title="Checar DNS & SSL" description="Consulta o status de propagação do domínio e emissão do certificado SSL na Vercel." side="top">
+                            <button
+                              onClick={() => handleVerify(domainName)}
+                              disabled={verifyingDomain === domainName}
+                              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#161a26] text-zinc-200 border border-white/[0.08] hover:bg-white/[0.06] transition flex items-center gap-1 cursor-pointer"
+                            >
+                              <RefreshCw className={`w-3 h-3 ${verifyingDomain === domainName ? 'animate-spin text-emerald-400' : 'text-zinc-400'}`} />
+                              <span>Verificar DNS</span>
+                            </button>
+                          </ActionTooltip>
 
-                          <a
-                            href={`https://${domainName}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition flex items-center gap-1"
-                            title="Abrir site no domínio próprio"
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                            <span>Abrir</span>
-                          </a>
+                          <ActionTooltip title="Abrir Domínio Próprio" description="Abre o site oficial no domínio próprio do cliente em nova aba." side="top">
+                            <a
+                              href={`https://${domainName}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25 transition flex items-center gap-1 inline-flex"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                              <span>Abrir</span>
+                            </a>
+                          </ActionTooltip>
 
                           <a
                             href={`https://${sub.siteSlug}.webbilly.com.br`}

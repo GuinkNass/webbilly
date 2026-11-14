@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useOperator } from '@/contexts/OperatorContext';
+import { ActionTooltip } from '@/components/ui/ActionTooltip';
 import {
   PlayCircle,
   Clock,
@@ -102,13 +103,15 @@ export default function OperatorTrainingPage() {
                     <FileText className="w-4 h-4 text-emerald-400" />
                     <span>Material de Apoio: <strong>{selectedVideo.downloadAttachment}</strong></span>
                   </div>
-                  <button
-                    onClick={() => alert('Download do material iniciado.')}
-                    className="px-3 py-1.5 rounded-lg bg-[#141824] hover:bg-zinc-800 text-xs text-white transition flex items-center gap-1.5 border border-white/[0.08] cursor-pointer"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    Baixar Anexo
-                  </button>
+                  <ActionTooltip title="Baixar Material de Apoio" description="Faz o download do material didático, PDFs e scripts de apoio desta aula." side="top">
+                    <button
+                      onClick={() => alert('Download do material iniciado.')}
+                      className="px-3 py-1.5 rounded-lg bg-[#141824] hover:bg-zinc-800 text-xs text-white transition flex items-center gap-1.5 border border-white/[0.08] cursor-pointer"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Baixar Anexo
+                    </button>
+                  </ActionTooltip>
                 </div>
               )}
             </div>
@@ -124,27 +127,34 @@ export default function OperatorTrainingPage() {
           {(data?.trainingModules || []).map((mod: any) => {
             const isCurrent = selectedVideo?.id === mod.id;
             return (
-              <button
+              <ActionTooltip
                 key={mod.id}
-                onClick={() => setSelectedVideo(mod)}
-                className={`w-full text-left p-4 rounded-xl border transition flex items-start gap-3 cursor-pointer ${
-                  isCurrent
-                    ? 'bg-indigo-950/40 border-indigo-800/60 text-white shadow-lg shadow-indigo-950/30'
-                    : 'bg-[#11141c] border-white/[0.06] text-zinc-400 hover:bg-[#141824] hover:text-zinc-200'
-                }`}
+                title={mod.title}
+                description="Carrega esta aula prática no reprodutor de vídeo principal."
+                side="left"
+                className="w-full block"
               >
-                <div className={`p-2 rounded-lg shrink-0 mt-0.5 ${
-                  isCurrent ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400'
-                }`}>
-                  <PlayCircle className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-white line-clamp-1">{mod.title}</div>
-                  <div className="text-[11px] text-zinc-500 mt-1 flex items-center gap-2">
-                    <Clock className="w-3 h-3" /> {mod.duration}
+                <button
+                  onClick={() => setSelectedVideo(mod)}
+                  className={`w-full text-left p-4 rounded-xl border transition flex items-start gap-3 cursor-pointer ${
+                    isCurrent
+                      ? 'bg-indigo-950/40 border-indigo-800/60 text-white shadow-lg shadow-indigo-950/30'
+                      : 'bg-[#11141c] border-white/[0.06] text-zinc-400 hover:bg-[#141824] hover:text-zinc-200'
+                  }`}
+                >
+                  <div className={`p-2 rounded-lg shrink-0 mt-0.5 ${
+                    isCurrent ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-400'
+                  }`}>
+                    <PlayCircle className="w-4 h-4" />
                   </div>
-                </div>
-              </button>
+                  <div>
+                    <div className="text-xs font-bold text-white line-clamp-1">{mod.title}</div>
+                    <div className="text-[11px] text-zinc-500 mt-1 flex items-center gap-2">
+                      <Clock className="w-3 h-3" /> {mod.duration}
+                    </div>
+                  </div>
+                </button>
+              </ActionTooltip>
             );
           })}
         </div>

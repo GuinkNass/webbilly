@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useAdmin } from '@/contexts/AdminContext';
 import DashboardCharts from '@/components/DashboardCharts';
+import { ActionTooltip } from '@/components/ui/ActionTooltip';
 import {
   DollarSign,
   TrendingUp,
@@ -141,13 +142,15 @@ export default function AdminDashboardPage() {
               Monitore status Asaas, gerencie suspensões no Edge Config e processe cancelamentos definitivos no Vercel.
             </p>
           </div>
-          <Link
-            href="/admin/sites"
-            className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/30 flex items-center justify-between transition group"
-          >
-            <span>Gerenciar Sites Ativos</span>
-            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition" />
-          </Link>
+          <ActionTooltip title="Sites Ativos" description="Gerencie os sites gerados, edite dados do cliente, copie links de demonstração e acompanhe o status." side="top" className="w-full block">
+            <Link
+              href="/admin/sites"
+              className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/30 flex items-center justify-between transition group"
+            >
+              <span>Gerenciar Sites Ativos</span>
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition" />
+            </Link>
+          </ActionTooltip>
         </div>
 
         {/* Bloco 2: Gestão de Operadores & Licenças */}
@@ -164,13 +167,15 @@ export default function AdminDashboardPage() {
               Aprove candidatos da landing page, provisione e-mails corporativos Lark e emita chaves seriais virgens.
             </p>
           </div>
-          <Link
-            href="/admin/operadores"
-            className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-800/40 flex items-center justify-between transition group"
-          >
-            <span>Gerenciar Operadores</span>
-            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition" />
-          </Link>
+          <ActionTooltip title="Operadores & Licenças" description="Aprove ou recuse candidaturas, gere seriais do app desktop e gerencie a equipe." side="top" className="w-full block">
+            <Link
+              href="/admin/operadores"
+              className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-800/40 flex items-center justify-between transition group"
+            >
+              <span>Gerenciar Operadores</span>
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition" />
+            </Link>
+          </ActionTooltip>
         </div>
 
         {/* Bloco 3: Financeiro & APIs */}
@@ -187,13 +192,15 @@ export default function AdminDashboardPage() {
               Liquidação de repasses Pix aos operadores, comissões de afiliados e parametrização de chaves de API.
             </p>
           </div>
-          <Link
-            href="/admin/financeiro"
-            className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 flex items-center justify-between transition group"
-          >
-            <span>Ver Controle Financeiro</span>
-            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition" />
-          </Link>
+          <ActionTooltip title="Financeiro & APIs" description="Controle receitas totais, repasses de comissão, assinaturas Asaas e saldo líquido." side="top" className="w-full block">
+            <Link
+              href="/admin/financeiro"
+              className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 flex items-center justify-between transition group"
+            >
+              <span>Ver Controle Financeiro</span>
+              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition" />
+            </Link>
+          </ActionTooltip>
         </div>
       </div>
 

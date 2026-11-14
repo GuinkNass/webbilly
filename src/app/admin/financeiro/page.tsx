@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAdmin } from '@/contexts/AdminContext';
+import { ActionTooltip } from '@/components/ui/ActionTooltip';
 import {
   DollarSign,
   TrendingUp,
@@ -204,15 +205,21 @@ export default function AdminFinancialPage() {
                           R$ {req.amount?.toFixed(2) || '0.00'}
                         </td>
                         <td className="py-3.5 px-4">
-                          <span
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border ${
-                              req.status === 'PAGO'
-                                ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/40'
-                                : 'bg-amber-950/40 text-amber-400 border-amber-800/40'
-                            }`}
+                          <ActionTooltip
+                            title="Status do Repasse"
+                            description={req.status === 'PAGO' ? 'Comissão transferida para a chave Pix do operador com comprovante emitido.' : 'Aguardando processamento e liquidação do Pix pelo financeiro.'}
+                            side="top"
                           >
-                            {req.status === 'PAGO' ? '● Liquidado' : '● Aguardando Pix'}
-                          </span>
+                            <span
+                              className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border inline-block cursor-default ${
+                                req.status === 'PAGO'
+                                  ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/40'
+                                  : 'bg-amber-950/40 text-amber-400 border-amber-800/40'
+                              }`}
+                            >
+                              {req.status === 'PAGO' ? '● Liquidado' : '● Aguardando Pix'}
+                            </span>
+                          </ActionTooltip>
                         </td>
                         <td className="py-3.5 px-4 text-right font-mono text-zinc-400 text-[11px]">
                           {req.requestedAt ? new Date(req.requestedAt).toLocaleDateString('pt-BR') : '—'}
@@ -378,13 +385,19 @@ export default function AdminFinancialPage() {
             </div>
 
             <div className="flex items-center justify-end pt-3">
-              <button
-                type="submit"
-                disabled={savingSettings}
-                className="py-2.5 px-6 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-2 shadow-lg shadow-emerald-950/40 cursor-pointer disabled:opacity-50"
+              <ActionTooltip
+                title="Salvar Parâmetros"
+                description="Atualiza as chaves de API, credenciais e taxas de comissão no banco de dados."
+                side="top"
               >
-                {savingSettings ? 'Salvando Parâmetros...' : 'Salvar Todas as Configurações'}
-              </button>
+                <button
+                  type="submit"
+                  disabled={savingSettings}
+                  className="py-2.5 px-6 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center gap-2 shadow-lg shadow-emerald-950/40 cursor-pointer disabled:opacity-50"
+                >
+                  {savingSettings ? 'Salvando Parâmetros...' : 'Salvar Todas as Configurações'}
+                </button>
+              </ActionTooltip>
             </div>
           </form>
         </div>

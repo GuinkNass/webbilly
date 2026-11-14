@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useOperator } from '@/contexts/OperatorContext';
+import { ActionTooltip } from '@/components/ui/ActionTooltip';
 import {
   Users,
   Sparkles,
@@ -244,23 +245,29 @@ export default function OperatorAffiliatesPage() {
           </div>
 
           <div className="pt-2">
-            <button
-              onClick={handleActivateAffiliates}
-              disabled={activatingAffiliate}
-              className="py-3.5 px-8 rounded-2xl font-bold text-sm text-black bg-[#84cc16] hover:bg-[#a3e635] transition shadow-lg shadow-[#84cc16]/30 flex items-center justify-center gap-2 mx-auto cursor-pointer disabled:opacity-50"
+            <ActionTooltip
+              title="Ativar Billy Afiliados"
+              description="Gera seu código exclusivo e desbloqueia o recebimento de 5% sobre vendas da sua rede."
+              side="top"
             >
-              {activatingAffiliate ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                  <span>Ativando Billy Afiliados...</span>
-                </>
-              ) : (
-                <>
-                  <Users className="w-4 h-4" />
-                  <span>Ativar Billy Afiliados Agora</span>
-                </>
-              )}
-            </button>
+              <button
+                onClick={handleActivateAffiliates}
+                disabled={activatingAffiliate}
+                className="py-3.5 px-8 rounded-2xl font-bold text-sm text-black bg-[#84cc16] hover:bg-[#a3e635] transition shadow-lg shadow-[#84cc16]/30 flex items-center justify-center gap-2 mx-auto cursor-pointer disabled:opacity-50"
+              >
+                {activatingAffiliate ? (
+                  <>
+                    <span className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    <span>Ativando Billy Afiliados...</span>
+                  </>
+                ) : (
+                  <>
+                    <Users className="w-4 h-4" />
+                    <span>Ativar Billy Afiliados Agora</span>
+                  </>
+                )}
+              </button>
+            </ActionTooltip>
           </div>
         </div>
       )}
@@ -282,32 +289,44 @@ export default function OperatorAffiliatesPage() {
               </div>
 
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleCopyInviteLink(inviteUrl)}
-                  className="py-2 px-3.5 rounded-xl text-xs font-semibold bg-[#84cc16] hover:bg-[#a3e635] text-black transition flex items-center gap-1.5 shadow-md shadow-[#84cc16]/20 cursor-pointer"
+                <ActionTooltip
+                  title="Copiar Link de Convite"
+                  description="Copia seu link oficial de afiliado para convidar novos operadores parceiros."
+                  side="top"
                 >
-                  {copiedInvite ? (
-                    <>
-                      <Check className="w-3.5 h-3.5" />
-                      <span>Copiado!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>Copiar Link</span>
-                    </>
-                  )}
-                </button>
+                  <button
+                    onClick={() => handleCopyInviteLink(inviteUrl)}
+                    className="py-2 px-3.5 rounded-xl text-xs font-semibold bg-[#84cc16] hover:bg-[#a3e635] text-black transition flex items-center gap-1.5 shadow-md shadow-[#84cc16]/20 cursor-pointer"
+                  >
+                    {copiedInvite ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Copiado!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copiar Link</span>
+                      </>
+                    )}
+                  </button>
+                </ActionTooltip>
 
-                <a
-                  href={whatsappShareUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="py-2 px-3.5 rounded-xl text-xs font-semibold bg-emerald-700 hover:bg-emerald-600 text-white transition flex items-center gap-1.5 cursor-pointer"
+                <ActionTooltip
+                  title="Compartilhar no WhatsApp"
+                  description="Abre o WhatsApp com mensagem e link prontos para convidar novos membros para a equipe."
+                  side="top"
                 >
-                  <Share2 className="w-3.5 h-3.5" />
-                  <span>WhatsApp</span>
-                </a>
+                  <a
+                    href={whatsappShareUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="py-2 px-3.5 rounded-xl text-xs font-semibold bg-emerald-700 hover:bg-emerald-600 text-white transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span>WhatsApp</span>
+                  </a>
+                </ActionTooltip>
               </div>
             </div>
 

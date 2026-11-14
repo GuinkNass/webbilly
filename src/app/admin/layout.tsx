@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { AdminProvider, useAdmin } from '@/contexts/AdminContext';
 import GamerAvatar from '@/components/GamerAvatar';
 import { startAdminTour } from '@/lib/tours';
+import { ActionTooltip, TooltipsToggle, TooltipProvider } from '@/components/ui/ActionTooltip';
 import {
   Search,
   HelpCircle,
@@ -69,7 +70,9 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       iconSrc: '/icones/dashboard.svg',
       isTrophy: false,
       badge: 'Geral',
-      badgeColor: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+      badgeColor: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
+      tooltipTitle: 'Dashboard Executivo',
+      tooltipDesc: 'Visão geral com gráficos, faturamento, metas e indicadores em tempo real.'
     },
     {
       href: '/admin/sites',
@@ -77,7 +80,9 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       iconSrc: '/icones/sites.svg',
       isTrophy: false,
       badge: (data?.subscriptions || []).length ? `${(data?.subscriptions || []).length}` : null,
-      badgeColor: 'bg-zinc-800 text-zinc-300'
+      badgeColor: 'bg-zinc-800 text-zinc-300',
+      tooltipTitle: 'Sites Ativos',
+      tooltipDesc: 'Gerencie os sites gerados, edite dados do cliente, copie links de demonstração e acompanhe o status.'
     },
     {
       href: '/admin/operadores',
@@ -85,7 +90,9 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       iconSrc: '/icones/operadores.svg',
       isTrophy: false,
       badge: (data?.operators || []).length ? `${(data?.operators || []).length}` : null,
-      badgeColor: 'bg-indigo-950/40 text-indigo-300 border border-indigo-800/40'
+      badgeColor: 'bg-indigo-950/40 text-indigo-300 border border-indigo-800/40',
+      tooltipTitle: 'Operadores & Licenças',
+      tooltipDesc: 'Aprove ou recuse candidaturas, gere seriais do app desktop e gerencie a equipe.'
     },
     {
       href: '/admin/ranking',
@@ -93,7 +100,9 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       iconSrc: '/trofeus/Ouro.png',
       isTrophy: true,
       badge: 'Top 3',
-      badgeColor: 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+      badgeColor: 'bg-amber-500/20 text-amber-300 border border-amber-500/40',
+      tooltipTitle: 'Ranking & Medalhas',
+      tooltipDesc: 'Veja sua posição no ranking mensal, patentes e metas para desbloquear os troféus oficiais.'
     },
     {
       href: '/admin/financeiro',
@@ -101,7 +110,9 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       iconSrc: '/icones/financeiro.svg',
       isTrophy: false,
       badge: 'Caixa 70/30',
-      badgeColor: 'bg-emerald-950/40 text-emerald-400'
+      badgeColor: 'bg-emerald-950/40 text-emerald-400',
+      tooltipTitle: 'Financeiro & APIs',
+      tooltipDesc: 'Controle receitas totais, repasses de comissão, assinaturas Asaas e saldo líquido.'
     }
   ];
 
@@ -194,74 +205,108 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
         {/* Direita: Ações Globais */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Botão Modo Dicas / Tooltips */}
+          <TooltipsToggle />
+
           {/* Status Asaas Gateway */}
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900/80 border border-white/[0.06] text-[11px] font-mono text-zinc-300">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Asaas Gateway</span>
-          </div>
+          <ActionTooltip
+            title="Status Asaas Gateway"
+            description="Indica se a integração de pagamentos Pix e cobranças está online e operando normalmente."
+            side="bottom"
+          >
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900/80 border border-white/[0.06] text-[11px] font-mono text-zinc-300 cursor-default">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Asaas Gateway</span>
+            </div>
+          </ActionTooltip>
 
           {/* Botão Tour Interativo */}
-          <button
-            onClick={() => startAdminTour()}
-            className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-semibold text-zinc-300 hover:text-white transition flex items-center gap-1.5 cursor-pointer"
-            title="Iniciar tutorial guiado do painel administrativo"
+          <ActionTooltip
+            title="Tour Guiado Admin"
+            description="Inicia um tour interativo com instruções detalhadas sobre cada ferramenta do painel master."
+            side="bottom"
           >
-            <HelpCircle className="w-4 h-4 text-amber-400" />
-            <span className="hidden sm:inline">Tour</span>
-          </button>
+            <button
+              onClick={() => startAdminTour()}
+              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-semibold text-zinc-300 hover:text-white transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <HelpCircle className="w-4 h-4 text-amber-400" />
+              <span className="hidden sm:inline">Tour</span>
+            </button>
+          </ActionTooltip>
 
           {/* Botão Trocar Senha Master */}
-          <button
-            onClick={() => {
-              setChangePasswordError(null);
-              setChangePasswordSuccess(null);
-              setShowChangePasswordModal(true);
-            }}
-            className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-semibold text-zinc-300 hover:text-white transition flex items-center gap-1.5 cursor-pointer"
-            title="Alterar senha do Administrador Master"
+          <ActionTooltip
+            title="Senha Master"
+            description="Altera a senha de acesso administrativo master da conta atual."
+            side="bottom"
           >
-            <KeyRound className="w-4 h-4 text-[#84cc16]" />
-            <span className="hidden md:inline">Senha Master</span>
-          </button>
+            <button
+              onClick={() => {
+                setChangePasswordError(null);
+                setChangePasswordSuccess(null);
+                setShowChangePasswordModal(true);
+              }}
+              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-semibold text-zinc-300 hover:text-white transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <KeyRound className="w-4 h-4 text-[#84cc16]" />
+              <span className="hidden md:inline">Senha Master</span>
+            </button>
+          </ActionTooltip>
 
           {/* Sininho de Alertas Globais */}
-          <button
-            onClick={() => setShowAlertsModal(true)}
-            className="relative p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 hover:text-white transition cursor-pointer"
-            title="Gerenciar Alertas Globais da Plataforma"
+          <ActionTooltip
+            title="Enviar Alerta Global (Sininho)"
+            description="Dispara uma notificação instantânea para todos os operadores conectados."
+            side="bottom"
           >
-            <Bell className="w-4 h-4 text-amber-400" />
-            {activeAlertsCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-black font-mono font-black text-[10px] flex items-center justify-center animate-pulse shadow-md">
-                {activeAlertsCount}
-              </span>
-            )}
-          </button>
+            <button
+              onClick={() => setShowAlertsModal(true)}
+              className="relative p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 hover:text-white transition cursor-pointer"
+            >
+              <Bell className="w-4 h-4 text-amber-400" />
+              {activeAlertsCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-black font-mono font-black text-[10px] flex items-center justify-center animate-pulse shadow-md">
+                  {activeAlertsCount}
+                </span>
+              )}
+            </button>
+          </ActionTooltip>
 
           {/* Avatar Gamer do Admin Master */}
           <div className="flex items-center gap-2 pl-1 sm:pl-2 border-l border-white/[0.08]">
-            <button
-              onClick={() => setShowAdminAvatarModal(true)}
-              className="relative rounded-full hover:ring-2 hover:ring-[#84cc16] transition cursor-pointer p-0.5"
-              title="Personalizar Avatar do Perfil Admin"
+            <ActionTooltip
+              title="Perfil Admin Master"
+              description="Personalize a aparência do seu avatar gamer oficial de administrador."
+              side="bottom"
             >
-              <GamerAvatar
-                svg={adminUser?.avatar_svg}
-                config={adminUser?.avatar_config}
-                seed={adminUser?.name || 'Administrador Master'}
-                size={34}
-                className="ring-2 ring-amber-500/50 shadow-md shadow-amber-500/20"
-              />
-            </button>
+              <button
+                onClick={() => setShowAdminAvatarModal(true)}
+                className="relative rounded-full hover:ring-2 hover:ring-[#84cc16] transition cursor-pointer p-0.5"
+              >
+                <GamerAvatar
+                  svg={adminUser?.avatar_svg}
+                  config={adminUser?.avatar_config}
+                  seed={adminUser?.name || 'Administrador Master'}
+                  size={34}
+                  className="ring-2 ring-amber-500/50 shadow-md shadow-amber-500/20"
+                />
+              </button>
+            </ActionTooltip>
 
             {/* Logout */}
-            <button
-              onClick={handleLogout}
-              className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/25 transition cursor-pointer"
+            <ActionTooltip
               title="Sair do Painel Admin"
+              description="Encerra a sessão administrativa master com segurança."
+              side="bottom"
             >
-              <LogOut className="w-4 h-4" />
-            </button>
+              <button
+                onClick={handleLogout}
+                className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/25 transition cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </ActionTooltip>
           </div>
         </div>
       </header>
@@ -295,15 +340,20 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                 Menu de Gestão
               </span>
             )}
-            <button
-              onClick={() => setIsPinned(!isPinned)}
-              className={`p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition ml-auto cursor-pointer ${
-                isPinned ? 'text-[#84cc16]' : ''
-              }`}
-              title={isPinned ? 'Desafixar Sidebar' : 'Fixar Sidebar Expandida'}
+            <ActionTooltip
+              title={isPinned ? 'Desafixar Sidebar' : 'Fixar Sidebar'}
+              description={isPinned ? 'Permite que a barra lateral recolha automaticamente ao afastar o mouse.' : 'Fixa a barra lateral expandida permanentemente na tela.'}
+              side="right"
             >
-              {isPinned ? <PinOff className="w-4 h-4 text-[#84cc16]" /> : <Pin className="w-4 h-4" />}
-            </button>
+              <button
+                onClick={() => setIsPinned(!isPinned)}
+                className={`p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition ml-auto cursor-pointer ${
+                  isPinned ? 'text-[#84cc16]' : ''
+                }`}
+              >
+                {isPinned ? <PinOff className="w-4 h-4 text-[#84cc16]" /> : <Pin className="w-4 h-4" />}
+              </button>
+            </ActionTooltip>
           </div>
 
           {/* Links de Navegação com Ícones Maiores e Container Glow Neon */}
@@ -311,75 +361,88 @@ function AdminShell({ children }: { children: React.ReactNode }) {
             {navItems.map((item) => {
               const isActive = pathname === item.href;
               return (
-                <Link
+                <ActionTooltip
                   key={item.href}
-                  href={item.href}
-                  className={`group relative flex items-center rounded-2xl transition duration-150 cursor-pointer ${
-                    isExpanded ? 'px-3 py-2 gap-3.5' : 'justify-center p-2'
-                  } ${
-                    isActive
-                      ? 'bg-[#84cc16]/10 text-white border border-[#84cc16]/30 shadow-lg shadow-lime-950/40'
-                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.04] border border-transparent'
-                  }`}
-                  title={!isExpanded ? item.label : undefined}
+                  title={item.tooltipTitle}
+                  description={item.tooltipDesc}
+                  side="right"
+                  className="w-full block"
                 >
-                  {/* Container Estilizado com Glow / Sombra Neon Verde */}
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${
-                    isActive
-                      ? 'bg-[#84cc16]/20 border border-[#84cc16]/60 shadow-[0_0_24px_rgba(132,204,22,0.55)]'
-                      : 'bg-[#84cc16]/10 border border-[#84cc16]/25 shadow-[0_0_16px_rgba(132,204,22,0.28)] group-hover:bg-[#84cc16]/20 group-hover:border-[#84cc16]/50 group-hover:shadow-[0_0_20px_rgba(132,204,22,0.45)]'
-                  }`}>
-                    <img
-                      src={item.iconSrc}
-                      alt=""
-                      className={`w-7 h-7 object-contain transition-transform duration-200 group-hover:scale-110 ${
-                        item.isTrophy
-                          ? 'drop-shadow-[0_2px_8px_rgba(245,158,11,0.6)]'
-                          : isActive
-                          ? 'brightness-0 invert [filter:invert(81%)_sepia(47%)_saturate(746%)_hue-rotate(36deg)_brightness(98%)_contrast(92%)] drop-shadow-[0_0_8px_rgba(132,204,22,0.8)]'
-                          : 'brightness-0 invert opacity-85 group-hover:opacity-100'
-                      }`}
-                    />
-                    {isActive && (
-                      <span className="absolute -left-2 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#84cc16] rounded-r-full" />
-                    )}
-                  </div>
-
-                  {/* Texto e Badge (Visíveis apenas quando expandido) */}
-                  {isExpanded && (
-                    <div className="flex-1 flex items-center justify-between min-w-0">
-                      <span className={`text-xs font-bold truncate ${isActive ? 'text-[#a3e635]' : 'text-zinc-300'}`}>
-                        {item.label}
-                      </span>
-                      {item.badge && (
-                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold shrink-0 ${item.badgeColor}`}>
-                          {item.badge}
-                        </span>
+                  <Link
+                    href={item.href}
+                    className={`group relative flex items-center rounded-2xl transition duration-150 cursor-pointer ${
+                      isExpanded ? 'px-3 py-2 gap-3.5' : 'justify-center p-2'
+                    } ${
+                      isActive
+                        ? 'bg-[#84cc16]/10 text-white border border-[#84cc16]/30 shadow-lg shadow-lime-950/40'
+                        : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.04] border border-transparent'
+                    }`}
+                  >
+                    {/* Container Estilizado com Glow / Sombra Neon Verde */}
+                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+                      isActive
+                        ? 'bg-[#84cc16]/20 border border-[#84cc16]/60 shadow-[0_0_24px_rgba(132,204,22,0.55)]'
+                        : 'bg-[#84cc16]/10 border border-[#84cc16]/25 shadow-[0_0_16px_rgba(132,204,22,0.28)] group-hover:bg-[#84cc16]/20 group-hover:border-[#84cc16]/50 group-hover:shadow-[0_0_20px_rgba(132,204,22,0.45)]'
+                    }`}>
+                      <img
+                        src={item.iconSrc}
+                        alt=""
+                        className={`w-7 h-7 object-contain transition-transform duration-200 group-hover:scale-110 ${
+                          item.isTrophy
+                            ? 'drop-shadow-[0_2px_8px_rgba(245,158,11,0.6)]'
+                            : isActive
+                            ? 'brightness-0 invert [filter:invert(81%)_sepia(47%)_saturate(746%)_hue-rotate(36deg)_brightness(98%)_contrast(92%)] drop-shadow-[0_0_8px_rgba(132,204,22,0.8)]'
+                            : 'brightness-0 invert opacity-85 group-hover:opacity-100'
+                        }`}
+                      />
+                      {isActive && (
+                        <span className="absolute -left-2 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#84cc16] rounded-r-full" />
                       )}
                     </div>
-                  )}
-                </Link>
+
+                    {/* Texto e Badge (Visíveis apenas quando expandido) */}
+                    {isExpanded && (
+                      <div className="flex-1 flex items-center justify-between min-w-0">
+                        <span className={`text-xs font-bold truncate ${isActive ? 'text-[#a3e635]' : 'text-zinc-300'}`}>
+                          {item.label}
+                        </span>
+                        {item.badge && (
+                          <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold shrink-0 ${item.badgeColor}`}>
+                            {item.badge}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </Link>
+                </ActionTooltip>
               );
             })}
           </nav>
 
           {/* Rodapé da Sidebar */}
           <div className="p-3 border-t border-white/[0.06] space-y-2">
-            {isExpanded ? (
-              <div className="p-3 rounded-xl bg-black/40 border border-white/[0.04] space-y-1">
-                <span className="text-[10px] uppercase font-bold text-zinc-400 block font-mono">
-                  Supervisão Central
-                </span>
-                <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  Operação Total Ativa
-                </span>
-              </div>
-            ) : (
-              <div className="flex justify-center py-2" title="Operação Total Ativa">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              </div>
-            )}
+            <ActionTooltip
+              title="Supervisão Central"
+              description="Monitoramento ativo de conexões, licenças, subdomínios e infraestrutura em tempo real."
+              side="right"
+              className="w-full block"
+            >
+              {isExpanded ? (
+                <div className="p-3 rounded-xl bg-black/40 border border-white/[0.04] space-y-1 cursor-default">
+                  <span className="text-[10px] uppercase font-bold text-zinc-400 block font-mono">
+                    Supervisão Central
+                  </span>
+                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    Operação Total Ativa
+                  </span>
+                </div>
+              ) : (
+                <div className="flex justify-center py-2 cursor-default">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                </div>
+              )}
+            </ActionTooltip>
           </div>
         </aside>
 
@@ -542,8 +605,10 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AdminProvider>
-      <AdminShell>{children}</AdminShell>
-    </AdminProvider>
+    <TooltipProvider>
+      <AdminProvider>
+        <AdminShell>{children}</AdminShell>
+      </AdminProvider>
+    </TooltipProvider>
   );
 }

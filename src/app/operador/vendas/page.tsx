@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useOperator } from '@/contexts/OperatorContext';
+import { ActionTooltip } from '@/components/ui/ActionTooltip';
 import {
   DollarSign,
   Calendar,
@@ -198,41 +199,47 @@ export default function OperatorSalesPage() {
 
           {/* Botão de Solicitação com Validação de Mês Civil */}
           <div className="flex flex-col items-center lg:items-end gap-2 w-full lg:w-auto shrink-0">
-            <button
-              onClick={handleSolicitarRepasse}
-              disabled={payoutLoading || saldoLiquidoRepasse <= 0 || hasRequestedThisMonth}
-              className={`w-full sm:w-auto py-3 px-6 rounded-xl font-bold text-xs uppercase tracking-wider text-white transition shadow-lg flex items-center justify-center gap-2 ${
-                hasRequestedThisMonth
-                  ? 'bg-zinc-800 text-zinc-400 border border-white/[0.08] cursor-not-allowed shadow-none'
-                  : saldoLiquidoRepasse <= 0
-                  ? 'bg-zinc-800/80 text-zinc-500 border border-white/[0.06] cursor-not-allowed shadow-none'
-                  : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30 cursor-pointer'
-              }`}
+            <ActionTooltip
+              title="Solicitar Repasse Pix"
+              description="Envia a solicitação formal de transferência via Pix das suas comissões para o financeiro."
+              side="top"
             >
-              {payoutLoading ? (
-                <>
-                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Enviando ao Financeiro...</span>
-                </>
-              ) : hasRequestedThisMonth ? (
-                isPaid ? (
+              <button
+                onClick={handleSolicitarRepasse}
+                disabled={payoutLoading || saldoLiquidoRepasse <= 0 || hasRequestedThisMonth}
+                className={`w-full sm:w-auto py-3 px-6 rounded-xl font-bold text-xs uppercase tracking-wider text-white transition shadow-lg flex items-center justify-center gap-2 ${
+                  hasRequestedThisMonth
+                    ? 'bg-zinc-800 text-zinc-400 border border-white/[0.08] cursor-not-allowed shadow-none'
+                    : saldoLiquidoRepasse <= 0
+                    ? 'bg-zinc-800/80 text-zinc-500 border border-white/[0.06] cursor-not-allowed shadow-none'
+                    : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30 cursor-pointer'
+                }`}
+              >
+                {payoutLoading ? (
                   <>
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    <span>Repasse Pago Neste Mês</span>
+                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Enviando ao Financeiro...</span>
                   </>
+                ) : hasRequestedThisMonth ? (
+                  isPaid ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      <span>Repasse Pago Neste Mês</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4 text-amber-400" />
+                      <span>Solicitação deste Mês Enviada</span>
+                    </>
+                  )
                 ) : (
                   <>
-                    <Lock className="w-4 h-4 text-amber-400" />
-                    <span>Solicitação deste Mês Enviada</span>
+                    <Send className="w-4 h-4" />
+                    <span>Solicitar Repasse de R$ {saldoLiquidoRepasse.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                   </>
-                )
-              ) : (
-                <>
-                  <Send className="w-4 h-4" />
-                  <span>Solicitar Repasse de R$ {saldoLiquidoRepasse.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                </>
-              )}
-            </button>
+                )}
+              </button>
+            </ActionTooltip>
 
             {hasRequestedThisMonth ? (
               <div className="text-[11px] text-amber-300/90 font-medium bg-amber-950/40 border border-amber-800/40 px-3 py-1.5 rounded-xl text-center lg:text-right max-w-xs">
@@ -357,14 +364,16 @@ export default function OperatorSalesPage() {
                     <td className="py-3.5 px-4">
                       <div className="font-semibold text-white">{s.clientName}</div>
                       {s.siteUrl && (
-                        <a
-                          href={s.siteUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-[11px] text-sky-400 hover:underline inline-flex items-center gap-1"
-                        >
-                          Ver Site Entregue <ExternalLink className="w-2.5 h-2.5" />
-                        </a>
+                        <ActionTooltip title="Ver Site Entregue" description="Abre o site oficial entregue ao cliente." side="top">
+                          <a
+                            href={s.siteUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[11px] text-sky-400 hover:underline inline-flex items-center gap-1"
+                          >
+                            Ver Site Entregue <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
+                        </ActionTooltip>
                       )}
                     </td>
                     <td className="py-3.5 px-4 text-zinc-400">{s.niche || 'Geral'}</td>
@@ -375,15 +384,21 @@ export default function OperatorSalesPage() {
                       R$ {s.commissionValue?.toLocaleString('pt-BR')},00
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold ${
-                          s.pixStatus === 'PAGO'
-                            ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/40'
-                            : 'bg-amber-950/40 text-amber-400 border border-amber-800/40'
-                        }`}
+                      <ActionTooltip
+                        title="Status do Repasse Pix"
+                        description={s.pixStatus === 'PAGO' ? 'Comissão transferida para sua chave Pix com comprovante emitido.' : 'Aguardando processamento e liquidação do Pix pelo financeiro.'}
+                        side="left"
                       >
-                        {s.pixStatus === 'PAGO' ? 'Comissão Paga via Pix' : 'Aguardando Pagamento Pix'}
-                      </span>
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold cursor-default inline-block ${
+                            s.pixStatus === 'PAGO'
+                              ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-800/40'
+                              : 'bg-amber-950/40 text-amber-400 border border-amber-800/40'
+                          }`}
+                        >
+                          {s.pixStatus === 'PAGO' ? 'Comissão Paga via Pix' : 'Aguardando Pagamento Pix'}
+                        </span>
+                      </ActionTooltip>
                       {s.pixProof && (
                         <div className="text-[10px] text-zinc-500 font-mono mt-0.5">
                           Compr: {s.pixProof}
