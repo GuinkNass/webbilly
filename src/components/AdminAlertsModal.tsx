@@ -33,12 +33,16 @@ interface AdminAlertsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAlertsUpdated?: () => void;
+  adminEmail?: string;
+  adminName?: string;
 }
 
 export default function AdminAlertsModal({
   isOpen,
   onClose,
-  onAlertsUpdated
+  onAlertsUpdated,
+  adminEmail,
+  adminName
 }: AdminAlertsModalProps) {
   const [alerts, setAlerts] = useState<AdminAlertItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -95,7 +99,7 @@ export default function AdminAlertsModal({
           priority,
           action_label: actionLabel || undefined,
           action_url: actionUrl || undefined,
-          created_by: 'admin@billysuite.com.br'
+          created_by: adminEmail || 'admin@billysuite.com.br'
         })
       });
 

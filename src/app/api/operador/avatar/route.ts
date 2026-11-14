@@ -73,14 +73,18 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      if (cleanOpId === 'admin' || cleanOpId === 'OP-0001' || cleanEmail.includes('admin@')) {
-        if (Array.isArray(db.adminUsers) && db.adminUsers[0]) {
-          db.adminUsers[0].avatar_config = avatarConfig;
-          db.adminUsers[0].avatarConfig = avatarConfig;
-          db.adminUsers[0].avatar_svg = finalSvg;
-          db.adminUsers[0].avatarSvg = finalSvg;
-          updatedDb = true;
-        }
+      const adminTarget = (db.adminUsers || []).find(
+        u => u.id === cleanOpId ||
+             (u.email && u.email.toLowerCase() === cleanEmail) ||
+             ((u as any).personal_email && (u as any).personal_email.toLowerCase() === cleanEmail) ||
+             (cleanOpId === 'admin' && u.role === 'MASTER')
+      );
+      if (adminTarget) {
+        adminTarget.avatar_config = avatarConfig;
+        adminTarget.avatarConfig = avatarConfig;
+        adminTarget.avatar_svg = finalSvg;
+        adminTarget.avatarSvg = finalSvg;
+        updatedDb = true;
       }
 
       if (updatedDb) {

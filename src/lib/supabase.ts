@@ -896,14 +896,18 @@ export async function saveOperatorAvatarInSupabase(
       }
     }
     // Caso seja admin master
-    if (cleanId === 'admin' || cleanId === 'OP-0001' || cleanEmail.includes('admin@')) {
-      if (Array.isArray(db.adminUsers) && db.adminUsers.length > 0) {
-        db.adminUsers[0].avatar_config = avatarConfig;
-        db.adminUsers[0].avatarConfig = avatarConfig;
-        db.adminUsers[0].avatar_svg = avatarSvg;
-        db.adminUsers[0].avatarSvg = avatarSvg;
-        persistedInDb = true;
-      }
+    const adminUserMatch = (db.adminUsers || []).find(
+      u => u.id === cleanId ||
+           (u.email && u.email.toLowerCase() === cleanEmail) ||
+           ((u as any).personal_email && (u as any).personal_email.toLowerCase() === cleanEmail) ||
+           (cleanId === 'admin' && u.role === 'MASTER')
+    );
+    if (adminUserMatch) {
+      adminUserMatch.avatar_config = avatarConfig;
+      adminUserMatch.avatarConfig = avatarConfig;
+      adminUserMatch.avatar_svg = avatarSvg;
+      adminUserMatch.avatarSvg = avatarSvg;
+      persistedInDb = true;
     }
     if (persistedInDb) {
       writeDb(db);

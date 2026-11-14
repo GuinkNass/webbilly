@@ -138,8 +138,16 @@ export async function GET(req: NextRequest) {
       })
       .sort((a, b) => b.totalEarnedCommissions - a.totalEarnedCommissions || b.totalRecruits - a.totalRecruits);
 
-    const masterOp = combinedOperators.find(
-      o => o.id === 'OP-0001' || o.email?.toLowerCase() === 'admin@billysuite.com.br'
+    const currentAdmin = (db.adminUsers || []).find(
+      u => u.id === user.userId ||
+           (user.email && u.email.toLowerCase() === user.email.toLowerCase()) ||
+           (user.email && (u as any).personal_email?.toLowerCase() === user.email.toLowerCase())
+    ) || db.adminUsers?.[0];
+
+    const currentAdminOp = (combinedOperators || []).find(
+      o => (currentAdmin?.email && o.email?.toLowerCase() === currentAdmin.email.toLowerCase()) ||
+           (currentAdmin?.id === 'ADMIN-001' && o.id === 'OP-0001') ||
+           (currentAdmin?.name && o.name?.toLowerCase() === currentAdmin.name.toLowerCase())
     );
 
     return NextResponse.json({
@@ -250,11 +258,12 @@ export async function GET(req: NextRequest) {
       }),
 
       adminUser: {
-        id: db.adminUsers?.[0]?.id || 'admin',
-        name: db.adminUsers?.[0]?.name || 'Administrador Master',
-        email: db.adminUsers?.[0]?.email || 'admin@billysuite.com.br',
-        avatar_config: masterOp?.avatar_config || masterOp?.avatarConfig || db.adminUsers?.[0]?.avatar_config || null,
-        avatar_svg: masterOp?.avatar_svg || masterOp?.avatarSvg || db.adminUsers?.[0]?.avatar_svg || null
+        id: currentAdmin?.id || user.userId || 'admin',
+        name: currentAdmin?.name || user.name || 'Administrador Master',
+        email: currentAdmin?.email || user.email || 'admin@billysuite.com.br',
+        is_partner: (currentAdmin as any)?.is_partner ?? false,
+        avatar_config: currentAdminOp?.avatar_config || currentAdminOp?.avatarConfig || currentAdmin?.avatar_config || null,
+        avatar_svg: currentAdminOp?.avatar_svg || currentAdminOp?.avatarSvg || currentAdmin?.avatar_svg || null
       },
       sales: db.sales,
       settings: {

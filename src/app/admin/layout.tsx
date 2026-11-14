@@ -464,7 +464,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
               </div>
               <div>
                 <h3 className="font-bold text-white text-base">Alterar Senha Master</h3>
-                <span className="text-xs text-zinc-400">admin@billysuite.com.br</span>
+                <span className="text-xs text-zinc-400">{adminUser?.email || 'admin@billysuite.com.br'}</span>
               </div>
             </div>
 

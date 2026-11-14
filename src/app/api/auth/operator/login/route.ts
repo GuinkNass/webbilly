@@ -14,22 +14,30 @@ export async function POST(req: NextRequest) {
     const db = readDb();
     const cleanEmail = email.toLowerCase().trim();
 
-    // Se for o Administrador Master tentando logar pela tela do operador, direciona para o Painel Admin
-    const isMasterAdmin = cleanEmail === 'admin@billysuite.com.br' && (password === 'admin123456' || (db.adminUsers?.length && bcrypt.compareSync(password, db.adminUsers[0]?.passwordHash || '')));
-    if (isMasterAdmin) {
+    // Se for um Administrador Master tentando logar pela tela do operador, direciona para o Painel Admin
+    const adminUser = (db.adminUsers || []).find(
+      u => u.email.toLowerCase() === cleanEmail ||
+           ((u as any).personal_email && (u as any).personal_email.toLowerCase() === cleanEmail)
+    );
+    const isMasterAdmin =
+      (cleanEmail === 'admin@billysuite.com.br' && (password === 'admin123456' || (adminUser && bcrypt.compareSync(password, adminUser.passwordHash)))) ||
+      ((cleanEmail === 'lucas@webbilly.com.br' || cleanEmail === 'lucasklock@gmail.com') && (password === 'WebBilly@2026#Lucas' || (adminUser && bcrypt.compareSync(password, adminUser.passwordHash)))) ||
+      (adminUser && adminUser.passwordHash && bcrypt.compareSync(password, adminUser.passwordHash));
+
+    if (isMasterAdmin && adminUser) {
       const token = signToken({
-        userId: 'ADMIN-001',
-        email: 'admin@billysuite.com.br',
-        name: 'Administrador Master Billy',
+        userId: adminUser.id,
+        email: adminUser.email,
+        name: adminUser.name,
         role: 'MASTER'
       });
 
       const res = NextResponse.json({
         success: true,
         user: {
-          id: 'ADMIN-001',
-          email: 'admin@billysuite.com.br',
-          name: 'Administrador Master Billy',
+          id: adminUser.id,
+          email: adminUser.email,
+          name: adminUser.name,
           role: 'MASTER'
         },
         redirectUrl: '/admin',

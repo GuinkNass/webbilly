@@ -11,14 +11,19 @@ export async function GET(req: NextRequest) {
 
     const db = readDb();
     if (user.role === 'MASTER') {
-      const admin = db.adminUsers.find(u => u.id === user.userId);
+      const admin = db.adminUsers?.find(
+        u => u.id === user.userId ||
+             (u.email && u.email.toLowerCase() === (user.email || '').toLowerCase()) ||
+             ((u as any).personal_email && (u as any).personal_email.toLowerCase() === (user.email || '').toLowerCase())
+      );
       return NextResponse.json({
         authenticated: true,
         user: {
-          id: admin?.id,
-          name: admin?.name,
-          email: admin?.email,
-          role: 'MASTER'
+          id: admin?.id || user.userId,
+          name: admin?.name || user.name,
+          email: admin?.email || user.email,
+          role: 'MASTER',
+          is_partner: (admin as any)?.is_partner ?? false
         }
       });
     } else {

@@ -71,7 +71,7 @@
       "id": "OP-C071",
       "name": "Lucas Klock",
       "email": "lucasklock@gmail.com",
-      "passwordHash": "$2a$10$QK0t7Xx1/kp9Aeq7gZDIcOgWiv67Ql8zUA9je.iLBdcvKqaizufSS",
+      "passwordHash": "$2a$10$Qta7oi7p/nX5VuVDjq7.Huc9nYTdlCnDsSjZXMpPFVn5TT4MLNhYa",
       "whatsapp": "(47) 99123-4567",
       "pixType": "cpf",
       "pixKey": "000.111.222-33",
@@ -80,9 +80,13 @@
       "machineId": "BILLY-PC-C071A33F",
       "osInfo": "Windows 11 Pro 64-bit",
       "lastSync": "2026-11-10T18:00:00.000Z",
-      "dailyLimit": 50,
+      "dailyLimit": 999,
       "todayGenerations": 0,
-      "createdAt": "2026-11-10T12:00:00.000Z"
+      "createdAt": "2026-11-10T12:00:00.000Z",
+      "corporate_email": "lucas@webbilly.com.br",
+      "corporateEmail": "lucas@webbilly.com.br",
+      "role": "admin",
+      "is_partner": true
     }
   ],
   "licenses": [
@@ -148,6 +152,16 @@
       "name": "Administrador Master Billy",
       "passwordHash": "$2a$10$QK0t7Xx1/kp9Aeq7gZDIcOgWiv67Ql8zUA9je.iLBdcvKqaizufSS",
       "role": "MASTER"
+    },
+    {
+      "id": "ADMIN-002",
+      "email": "lucas@webbilly.com.br",
+      "personal_email": "lucasklock@gmail.com",
+      "name": "Lucas Klock",
+      "passwordHash": "$2a$10$Qta7oi7p/nX5VuVDjq7.Huc9nYTdlCnDsSjZXMpPFVn5TT4MLNhYa",
+      "role": "MASTER",
+      "is_partner": true,
+      "status": "active"
     }
   ],
   "demos": {

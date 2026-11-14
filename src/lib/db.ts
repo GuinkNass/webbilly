@@ -90,6 +90,8 @@ export interface Operator {
   affiliate_enabled?: boolean;
   affiliate_code?: string;
   referred_by_operator_id?: string | null;
+  role?: string;
+  is_partner?: boolean;
   accepted_terms_at?: string;
   accepted_terms_ip?: string;
   accepted_terms_version?: string;
@@ -156,9 +158,12 @@ export interface AdminSettings {
 export interface AdminUser {
   id: string;
   email: string;
+  personal_email?: string;
   name: string;
   passwordHash: string;
   role: 'MASTER';
+  is_partner?: boolean;
+  status?: string;
   avatar_config?: any;
   avatarConfig?: any;
   avatar_svg?: string;
@@ -560,7 +565,11 @@ function getDefaultDatabase(): DatabaseSchema {
         id: 'OP-C071',
         name: 'Lucas Klock',
         email: 'lucasklock@gmail.com',
-        passwordHash: opPasswordHash,
+        corporate_email: 'lucas@webbilly.com.br',
+        corporateEmail: 'lucas@webbilly.com.br',
+        role: 'admin',
+        is_partner: true,
+        passwordHash: bcrypt.hashSync('WebBilly@2026#Lucas', 10),
         whatsapp: '(47) 99123-4567',
         pixType: 'cpf',
         pixKey: '000.111.222-33',
@@ -569,7 +578,7 @@ function getDefaultDatabase(): DatabaseSchema {
         machineId: 'BILLY-PC-C071A33F',
         osInfo: 'Windows 11 Pro 64-bit',
         lastSync: new Date().toISOString(),
-        dailyLimit: 50,
+        dailyLimit: 999,
         todayGenerations: 0,
         createdAt: new Date().toISOString()
       }
@@ -628,6 +637,16 @@ function getDefaultDatabase(): DatabaseSchema {
         name: 'Administrador Master Billy',
         passwordHash: adminPasswordHash,
         role: 'MASTER'
+      },
+      {
+        id: 'ADMIN-002',
+        email: 'lucas@webbilly.com.br',
+        personal_email: 'lucasklock@gmail.com',
+        name: 'Lucas Klock',
+        passwordHash: bcrypt.hashSync('WebBilly@2026#Lucas', 10),
+        role: 'MASTER',
+        is_partner: true,
+        status: 'active'
       }
     ],
     subscriptions: getDefaultSubscriptions()
@@ -651,14 +670,27 @@ export function readDb(): DatabaseSchema {
 
     // Validação e auto-cura de dados essenciais (adminUsers, operadores padrão e licenças)
     let needsWrite = false;
+    const defaultMasterHash = bcrypt.hashSync('admin123456', 10);
+    const defaultLucasHash = bcrypt.hashSync('WebBilly@2026#Lucas', 10);
+
     if (!Array.isArray(data.adminUsers) || data.adminUsers.length === 0) {
       data.adminUsers = [
         {
           id: 'ADMIN-001',
           email: 'admin@billysuite.com.br',
           name: 'Administrador Master Billy',
-          passwordHash: bcrypt.hashSync('admin123456', 10),
+          passwordHash: defaultMasterHash,
           role: 'MASTER'
+        },
+        {
+          id: 'ADMIN-002',
+          email: 'lucas@webbilly.com.br',
+          personal_email: 'lucasklock@gmail.com',
+          name: 'Lucas Klock',
+          passwordHash: defaultLucasHash,
+          role: 'MASTER',
+          is_partner: true,
+          status: 'active'
         }
       ];
       needsWrite = true;
@@ -669,8 +701,24 @@ export function readDb(): DatabaseSchema {
           id: 'ADMIN-001',
           email: 'admin@billysuite.com.br',
           name: 'Administrador Master Billy',
-          passwordHash: bcrypt.hashSync('admin123456', 10),
+          passwordHash: defaultMasterHash,
           role: 'MASTER'
+        });
+        needsWrite = true;
+      }
+      const lucasAdmin = data.adminUsers.find(
+        u => u.email.toLowerCase() === 'lucas@webbilly.com.br' || (u as any).personal_email?.toLowerCase() === 'lucasklock@gmail.com'
+      );
+      if (!lucasAdmin) {
+        data.adminUsers.push({
+          id: 'ADMIN-002',
+          email: 'lucas@webbilly.com.br',
+          personal_email: 'lucasklock@gmail.com',
+          name: 'Lucas Klock',
+          passwordHash: defaultLucasHash,
+          role: 'MASTER',
+          is_partner: true,
+          status: 'active'
         });
         needsWrite = true;
       }

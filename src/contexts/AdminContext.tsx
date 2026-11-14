@@ -87,7 +87,12 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       // Hidrata avatar local do admin
       try {
         if (typeof window !== 'undefined') {
-          const stored = localStorage.getItem('webbilly_avatar_admin') || localStorage.getItem('webbilly_avatar_OP-0001');
+          const userKey = json.adminUser?.id || json.adminUser?.email || 'admin';
+          const stored =
+            localStorage.getItem(`webbilly_avatar_${userKey}`) ||
+            (json.adminUser?.email ? localStorage.getItem(`webbilly_avatar_${json.adminUser.email}`) : null) ||
+            localStorage.getItem('webbilly_avatar_admin') ||
+            localStorage.getItem('webbilly_avatar_OP-0001');
           if (stored) {
             const parsed = JSON.parse(stored);
             if (json.adminUser && (!json.adminUser.avatar_config || !json.adminUser.avatar_svg)) {
@@ -141,10 +146,12 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
     if (typeof window !== 'undefined') {
       try {
-        localStorage.setItem('webbilly_avatar_admin', JSON.stringify({ config: newConfig, svg: newSvg }));
-        if (data?.adminUser?.id) {
-          localStorage.setItem(`webbilly_avatar_${data.adminUser.id}`, JSON.stringify({ config: newConfig, svg: newSvg }));
+        const userKey = data?.adminUser?.id || data?.adminUser?.email || 'admin';
+        localStorage.setItem(`webbilly_avatar_${userKey}`, JSON.stringify({ config: newConfig, svg: newSvg }));
+        if (data?.adminUser?.email) {
+          localStorage.setItem(`webbilly_avatar_${data.adminUser.email}`, JSON.stringify({ config: newConfig, svg: newSvg }));
         }
+        localStorage.setItem('webbilly_avatar_admin', JSON.stringify({ config: newConfig, svg: newSvg }));
       } catch {}
     }
     setShowAdminAvatarModal(false);
@@ -186,6 +193,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
             refreshAdminAlertsCount();
           }}
           onAlertsUpdated={refreshAdminAlertsCount}
+          adminEmail={adminUser?.email}
+          adminName={adminUser?.name}
         />
       )}
 
