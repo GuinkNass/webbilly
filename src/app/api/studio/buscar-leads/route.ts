@@ -25,6 +25,10 @@ export interface LeadBusiness {
   opportunityReason: string;
   suggestedSlug: string;
   instagram?: string;
+  photos?: string[];
+  hours?: string;
+  openingHours?: string;
+  realReviews?: Array<{ author: string; rating: number; text: string }>;
 }
 
 export async function POST(req: NextRequest) {
@@ -53,7 +57,8 @@ export async function POST(req: NextRequest) {
           headers: {
             'Content-Type': 'application/json',
             'X-Goog-Api-Key': GOOGLE_PLACES_KEY,
-            'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount,places.primaryTypeDisplayName'
+            'X-Goog-FieldMask':
+              'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount,places.primaryTypeDisplayName,places.photos,places.regularOpeningHours,places.reviews'
           },
           body: JSON.stringify({
             textQuery: query,
@@ -70,16 +75,70 @@ export async function POST(req: NextRequest) {
           googleError = placesJson.error?.message || `Google Places retornou status ${placesRes.status}`;
           console.warn('[Studio Leads] Google Places API retornou erro:', googleError);
         } else if (Array.isArray(placesJson.places) && placesJson.places.length > 0) {
-          rawPlaces = placesJson.places.map((p: any) => ({
-            id: p.id || `places_${Math.random().toString(36).substring(2, 9)}`,
-            name: p.displayName?.text || p.displayName || 'Comércio Local',
-            address: p.formattedAddress || `${city}`,
-            phone: p.nationalPhoneNumber || p.internationalPhoneNumber || '',
-            website: p.websiteUri || null,
-            rating: Number(p.rating || 5.0),
-            reviewsCount: Number(p.userRatingCount || 0),
-            category: p.primaryTypeDisplayName?.text || niche || 'Comércio Local'
-          }));
+          // Resolve fotos reais, horários e avaliações do Google Places
+          rawPlaces = await Promise.all(
+            placesJson.places.map(async (p: any) => {
+              // 1. Fotos reais em alta resolução (maxWidthPx=1200) com skipHttpRedirect=true (extrai photoUri do googleusercontent)
+              let resolvedPhotos: string[] = [];
+              if (Array.isArray(p.photos) && p.photos.length > 0 && GOOGLE_PLACES_KEY) {
+                const targetPhotos = p.photos.slice(0, 6);
+                const photoPromises = targetPhotos.map(async (photoObj: any) => {
+                  if (!photoObj?.name) return null;
+                  try {
+                    const mediaUrl = `https://places.googleapis.com/v1/${photoObj.name}/media?maxWidthPx=1200&skipHttpRedirect=true&key=${GOOGLE_PLACES_KEY}`;
+                    const mediaRes = await fetch(mediaUrl, {
+                      headers: { Accept: 'application/json' },
+                      signal: AbortSignal.timeout(4000),
+                      cache: 'no-store'
+                    });
+                    if (!mediaRes.ok) return null;
+                    const mediaJson = await mediaRes.json().catch(() => ({}));
+                    return mediaJson.photoUri || null;
+                  } catch {
+                    return null;
+                  }
+                });
+                const resolved = await Promise.allSettled(photoPromises);
+                resolvedPhotos = resolved
+                  .filter((r): r is PromiseFulfilledResult<string> => r.status === 'fulfilled' && Boolean(r.value))
+                  .map((r) => r.value);
+              }
+
+              // 2. Horários reais de funcionamento
+              let formattedHours = '';
+              if (p.regularOpeningHours?.weekdayDescriptions && Array.isArray(p.regularOpeningHours.weekdayDescriptions)) {
+                formattedHours = p.regularOpeningHours.weekdayDescriptions.join(' | ');
+              }
+
+              // 3. Avaliações reais (até 3 depoimentos reais para o site)
+              let formattedReviews: Array<{ author: string; rating: number; text: string }> = [];
+              if (Array.isArray(p.reviews)) {
+                formattedReviews = p.reviews
+                  .slice(0, 3)
+                  .map((rev: any) => ({
+                    author: rev.authorAttribution?.displayName || 'Cliente Verificado',
+                    rating: Number(rev.rating || 5),
+                    text: rev.text?.text || rev.originalText?.text || ''
+                  }))
+                  .filter((r: any) => r.text && r.text.length > 5);
+              }
+
+              return {
+                id: p.id || `places_${Math.random().toString(36).substring(2, 9)}`,
+                name: p.displayName?.text || p.displayName || 'Comércio Local',
+                address: p.formattedAddress || `${city}`,
+                phone: p.nationalPhoneNumber || p.internationalPhoneNumber || '',
+                website: p.websiteUri || null,
+                rating: Number(p.rating || 5.0),
+                reviewsCount: Number(p.userRatingCount || 0),
+                category: p.primaryTypeDisplayName?.text || niche || 'Comércio Local',
+                photos: resolvedPhotos,
+                hours: formattedHours,
+                openingHours: formattedHours,
+                realReviews: formattedReviews
+              };
+            })
+          );
           providerUsed = 'google_places';
           providerLabel = 'Google Places API (New)';
         }
@@ -121,7 +180,11 @@ export async function POST(req: NextRequest) {
               website: p.website || null,
               rating: Number(p.rating || 5.0),
               reviewsCount: Number(p.ratingCount || p.reviews || 0),
-              category: p.category || niche || 'Comércio Local'
+              category: p.category || niche || 'Comércio Local',
+              photos: p.imageUrl ? [p.imageUrl] : [],
+              hours: '',
+              openingHours: '',
+              realReviews: []
             }));
             providerUsed = 'serper';
             providerLabel = 'Serper Places API';
@@ -322,7 +385,11 @@ export async function POST(req: NextRequest) {
         isHighOpportunity,
         opportunity: isHighOpportunity ? 'HOT_NO_WEBSITE' : 'HAS_WEBSITE',
         opportunityReason: oppReason,
-        suggestedSlug
+        suggestedSlug,
+        photos: Array.isArray(item.photos) ? item.photos : [],
+        hours: item.hours || item.openingHours || '',
+        openingHours: item.hours || item.openingHours || '',
+        realReviews: Array.isArray(item.realReviews) ? item.realReviews : []
       };
     });
 

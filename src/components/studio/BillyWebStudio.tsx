@@ -40,7 +40,8 @@ import {
   Bookmark,
   Building2,
   ShieldCheck,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Camera
 } from 'lucide-react';
 import { ActionTooltip } from '@/components/ui/ActionTooltip';
 import {
@@ -75,6 +76,10 @@ interface LeadResult {
   isHighOpportunity?: boolean;
   opportunityReason?: string;
   opportunity?: 'HOT_NO_WEBSITE' | 'HAS_WEBSITE';
+  photos?: string[];
+  hours?: string;
+  openingHours?: string;
+  realReviews?: Array<{ author: string; rating: number; text: string }>;
 }
 
 interface ProjectItem {
@@ -230,6 +235,7 @@ export default function BillyWebStudio({
   const [generating, setGenerating] = useState(false);
   const [generationStep, setGenerationStep] = useState('');
   const [generationError, setGenerationError] = useState<string | null>(null);
+  const [selectedLeadReviews, setSelectedLeadReviews] = useState<Array<{ author: string; rating: number; text: string }>>([]);
 
   // =========================================================================
   // TAB 3: PREVIEW INSTANTÂNEO (`srcDoc`) & DEPLOY REAL
@@ -416,6 +422,10 @@ export default function BillyWebStudio({
     setSelectedTemplateId(recommendation.template.id);
     setTemplateRecommendationReason(recommendation.reason);
 
+    // Fotos reais do Google Places (se existirem)
+    const googlePhotos = Array.isArray(lead.photos) && lead.photos.length > 0 ? lead.photos : [];
+    const leadHours = lead.hours || lead.openingHours || '';
+
     setSiteForm((prev) => ({
       ...prev,
       businessName: lead.name,
@@ -427,8 +437,17 @@ export default function BillyWebStudio({
       tagline: `Excelência em ${niche} em ${city} com atendimento exclusivo.`,
       description: `Na ${lead.name}, oferecemos soluções completas com profissionais qualificados e padrão de alto nível.`,
       address: lead.address || prev.address,
-      accentColor: recommendation.template.accentColor
+      accentColor: recommendation.template.accentColor,
+      heroPhoto: googlePhotos.length > 0 ? googlePhotos[0] : prev.heroPhoto,
+      galleryPhotos: googlePhotos.length > 0 ? googlePhotos : prev.galleryPhotos,
+      hours: leadHours || prev.hours
     }));
+
+    if (Array.isArray(lead.realReviews) && lead.realReviews.length > 0) {
+      setSelectedLeadReviews(lead.realReviews);
+    } else {
+      setSelectedLeadReviews([]);
+    }
 
     setPixabayQuery(niche);
     handleSearchPixabay(niche);
@@ -643,6 +662,7 @@ export default function BillyWebStudio({
           features: siteForm.features,
           faqs: siteForm.faqs,
           hours: siteForm.hours,
+          reviews: selectedLeadReviews,
           blocks,
           toneOfVoice: siteForm.toneOfVoice,
           uploadedText: ocrText,
@@ -1055,6 +1075,31 @@ export default function BillyWebStudio({
                             <Star className="w-3 h-3 fill-amber-400" />
                             <span>{lead.rating || 5.0} ({revCount})</span>
                           </span>
+                        </div>
+
+                        {/* Badges de Enriquecimento: Fotos do Google, Avaliações Reais e Horários */}
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                          {lead.photos && lead.photos.length > 0 && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
+                              <Camera className="w-3 h-3 text-cyan-400" />
+                              <span>{lead.photos.length} fotos reais do Google</span>
+                            </span>
+                          )}
+                          {lead.realReviews && lead.realReviews.length > 0 && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                              <MessageCircle className="w-3 h-3 text-amber-400" />
+                              <span>{lead.realReviews.length} avaliações reais</span>
+                            </span>
+                          )}
+                          {(lead.hours || lead.openingHours) && (
+                            <span
+                              className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-800/80 text-zinc-300 border border-white/[0.08] flex items-center gap-1 max-w-[220px] truncate"
+                              title={lead.hours || lead.openingHours}
+                            >
+                              <Clock className="w-3 h-3 text-zinc-400 shrink-0" />
+                              <span className="truncate">{lead.hours || lead.openingHours}</span>
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -1693,18 +1738,27 @@ export default function BillyWebStudio({
                   Fotos Selecionadas para o Site ({siteForm.galleryPhotos.length}):
                 </span>
                 <div className="flex flex-wrap gap-2">
-                  {siteForm.galleryPhotos.map((photo, i) => (
-                    <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden border border-white/[0.1] group">
-                      <img src={photo} alt="" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => handleRemovePhoto(i)}
-                        className="absolute inset-0 bg-rose-950/80 text-rose-300 opacity-0 group-hover:opacity-100 flex items-center justify-center transition cursor-pointer"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
+                  {siteForm.galleryPhotos.map((photo, i) => {
+                    const isGoogle = photo.includes('googleusercontent.com') || photo.includes('places.googleapis.com');
+                    return (
+                      <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border border-white/[0.1] group">
+                        <img src={photo} alt="" className="w-full h-full object-cover" />
+                        {isGoogle && (
+                          <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-[#84cc16] text-black shadow-md flex items-center gap-0.5 z-10 pointer-events-none">
+                            <Camera className="w-2.5 h-2.5" />
+                            <span>Google Maps Oficial</span>
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePhoto(i)}
+                          className="absolute inset-0 bg-rose-950/80 text-rose-300 opacity-0 group-hover:opacity-100 flex items-center justify-center transition cursor-pointer z-20"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
