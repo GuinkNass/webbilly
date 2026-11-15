@@ -137,60 +137,116 @@ export async function POST(req: NextRequest) {
     }
 
     // -----------------------------------------------------------------------
-    // PROVEDOR 3: OpenStreetMap Real (Nominatim com extratags reais)
+    // PROVEDOR 3: OpenStreetMap Radar Inteligente (Comércios Reais em Cascata)
     // -----------------------------------------------------------------------
     if (rawPlaces.length === 0) {
       try {
-        console.log('[Studio Leads] Consultando OpenStreetMap (Nominatim) para:', `${niche} ${city}`);
-        const osmUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(`${niche} ${city}`)}&format=json&extratags=1&addressdetails=1&limit=25`;
-        const osmRes = await fetch(osmUrl, {
-          headers: {
-            'User-Agent': 'WebbillyStudio/2.0 (contato@webbilly.com.br)',
-            'Accept-Language': 'pt-BR,pt;q=0.9'
-          },
-          cache: 'no-store'
-        });
+        console.log('[Studio Leads] Consultando OpenStreetMap Radar para:', `${niche} ${city}`);
 
-        if (osmRes.ok) {
-          const osmJson = await osmRes.json().catch(() => []);
-          if (Array.isArray(osmJson) && osmJson.length > 0) {
-            // Filtra estabelecimentos reais que possuam nome
-            const validOsmPlaces = osmJson.filter((item: any) => {
-              const name = item.name || (item.display_name ? item.display_name.split(',')[0].trim() : '');
-              return name && name.length >= 3 && !name.toLowerCase().includes('rodovia') && !name.toLowerCase().includes('avenida');
-            });
+        // Limpeza e normalização do Nicho e Cidade
+        const cleanCity = city
+          .replace(/[,/-]\s*[A-Z]{2}\b/gi, '')
+          .replace(/\bbrasil\b/gi, '')
+          .trim();
+        const cleanNiche = niche
+          .replace(/^(est[uú]dio|studio|loja|cl[ií]nica|clinica|sal[aã]o|salao|oficina|espa[cç]o)\s+(de\s+)?/gi, '')
+          .trim();
 
-            if (validOsmPlaces.length > 0) {
-              rawPlaces = validOsmPlaces.map((item: any, idx: number) => {
-                const addr = item.address || {};
+        // Lista de variantes de busca em cascata
+        const searchVariants: string[] = [
+          `${cleanNiche} ${cleanCity}`,
+          `${niche} ${cleanCity}`,
+          `${cleanNiche} ${city}`
+        ];
+
+        // Sinônimos inteligentes para nichos comuns no Brasil
+        if (/tattoo/i.test(cleanNiche)) searchVariants.push(`tatuagem ${cleanCity}`);
+        if (/tatuagem/i.test(cleanNiche)) searchVariants.push(`tattoo ${cleanCity}`);
+        if (/barbe/i.test(cleanNiche)) searchVariants.push(`barbearia ${cleanCity}`, `barbeiro ${cleanCity}`);
+        if (/pizza/i.test(cleanNiche)) searchVariants.push(`pizzaria ${cleanCity}`);
+        if (/lanche|burger/i.test(cleanNiche)) searchVariants.push(`hamburgueria ${cleanCity}`, `lanchonete ${cleanCity}`);
+        if (/oficina|mec[aâ]nic/i.test(cleanNiche)) searchVariants.push(`oficina mecânica ${cleanCity}`, `autocenter ${cleanCity}`);
+        if (/dente|odont/i.test(cleanNiche)) searchVariants.push(`odontologia ${cleanCity}`, `dentista ${cleanCity}`);
+        if (/est[eé]tic|beleza/i.test(cleanNiche)) searchVariants.push(`estética ${cleanCity}`, `salão de beleza ${cleanCity}`);
+
+        for (const variant of searchVariants) {
+          if (rawPlaces.length >= 12) break;
+
+          const osmUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(variant)}&format=json&extratags=1&addressdetails=1&limit=20`;
+          const osmRes = await fetch(osmUrl, {
+            headers: {
+              'User-Agent': 'WebbillyStudio/2.0 (contato@webbilly.com.br)',
+              'Accept-Language': 'pt-BR,pt;q=0.9'
+            },
+            cache: 'no-store'
+          });
+
+          if (osmRes.ok) {
+            const osmJson = await osmRes.json().catch(() => []);
+            if (Array.isArray(osmJson) && osmJson.length > 0) {
+              const validOsmPlaces = osmJson.filter((item: any) => {
+                const name = item.name || (item.display_name ? item.display_name.split(',')[0].trim() : '');
+                const lower = name.toLowerCase();
+                // Descarta nomes que sejam apenas nomes de vias
+                return (
+                  name &&
+                  name.length >= 3 &&
+                  !lower.startsWith('rua ') &&
+                  !lower.startsWith('avenida ') &&
+                  !lower.startsWith('rodovia ') &&
+                  !lower.startsWith('travessa ') &&
+                  !lower.startsWith('alameda ')
+                );
+              });
+
+              for (const item of validOsmPlaces) {
                 const rawName = item.name || item.display_name.split(',')[0].trim();
+                // Evita duplicatas pelo nome
+                if (rawPlaces.some((p) => p.name.toLowerCase() === rawName.toLowerCase())) continue;
+
+                const addr = item.address || {};
                 const street = addr.road ? `${addr.road}${addr.house_number ? `, nº ${addr.house_number}` : ''}` : '';
                 const neighborhood = addr.suburb || addr.neighbourhood || addr.city_district || '';
-                const fullAddr = [street, neighborhood, city].filter(Boolean).join(' - ') || item.display_name;
+                const itemCity = addr.city || addr.town || addr.municipality || cleanCity;
+                const fullAddr = [street, neighborhood, itemCity].filter(Boolean).join(' - ') || item.display_name;
 
                 // Telefone e Website REAIS extraídos do OpenStreetMap
                 const tags = item.extratags || {};
                 const realPhone = tags.phone || tags['contact:phone'] || tags['contact:whatsapp'] || tags['phone:mobile'] || '';
                 const realWebsite = tags.website || tags['contact:website'] || null;
 
-                return {
-                  id: `osm_${item.place_id || idx}`,
+                rawPlaces.push({
+                  id: `osm_${item.place_id || Math.random().toString(36).substring(2, 9)}`,
                   name: rawName,
                   address: fullAddr,
                   phone: realPhone,
                   website: realWebsite,
                   rating: 5.0,
-                  reviewsCount: 0,
+                  reviewsCount: realPhone ? 1 : 0,
                   category: niche || 'Comércio Local'
-                };
-              });
-              providerUsed = 'osm';
-              providerLabel = 'OpenStreetMap (Comércios Reais OSM)';
+                });
+              }
+
+              if (rawPlaces.length > 0) {
+                providerUsed = 'osm';
+                providerLabel = 'OpenStreetMap Radar';
+              }
             }
           }
         }
       } catch (err: any) {
         console.warn('[Studio Leads] Erro OSM:', err);
+      }
+    }
+
+    // Formata o aviso do Google Places de forma amigável e explicativa
+    let formattedGoogleNotice: string | null = null;
+    if (googleError) {
+      if (/api key not valid/i.test(googleError)) {
+        formattedGoogleNotice =
+          'Aviso Google Places: A chave em GOOGLE_PLACES_API_KEY no painel da Vercel é inválida para a "Places API (New)" do Google Cloud. Utilizando o provedor alternativo para buscar comércios reais.';
+      } else {
+        formattedGoogleNotice = `Aviso Google Places: ${googleError}. Provedor alternativo ativo.`;
       }
     }
 
@@ -203,7 +259,7 @@ export async function POST(req: NextRequest) {
       if (!GOOGLE_PLACES_KEY && !SERPER_KEY) {
         aviso += ' Dica: Configure GOOGLE_PLACES_API_KEY ou SERPER_API_KEY no painel da Vercel para busca completa em tempo real.';
       } else if (googleError) {
-        aviso += ` (Aviso Google Places: ${googleError})`;
+        aviso += ` (Google Places: ${googleError})`;
       }
 
       return NextResponse.json({
@@ -211,7 +267,7 @@ export async function POST(req: NextRequest) {
         leads: [],
         provider: 'none',
         message: aviso,
-        googleNotice: googleError || serperError || null
+        googleNotice: formattedGoogleNotice || googleError || serperError || null
       });
     }
 
@@ -283,7 +339,7 @@ export async function POST(req: NextRequest) {
       provider: providerLabel,
       total: leads.length,
       hotCount: leads.filter((l) => l.isHighOpportunity).length,
-      googleNotice: googleError,
+      googleNotice: formattedGoogleNotice,
       message: `${leads.length} comércios reais encontrados via ${providerLabel}.`,
       leads
     });
