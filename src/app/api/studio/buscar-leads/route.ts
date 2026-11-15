@@ -172,22 +172,25 @@ export async function POST(req: NextRequest) {
         if (serperRes.ok) {
           const sJson = await serperRes.json().catch(() => ({}));
           if (Array.isArray(sJson.places) && sJson.places.length > 0) {
-            rawPlaces = sJson.places.map((p: any) => ({
-              id: p.cid || `serper_${Math.random().toString(36).substring(2, 9)}`,
-              name: p.title || p.name || 'Comércio Local',
-              address: p.address || `${city}`,
-              phone: p.phoneNumber || p.phone || '',
-              website: p.website || null,
-              rating: Number(p.rating || 5.0),
-              reviewsCount: Number(p.ratingCount || p.reviews || 0),
-              category: p.category || niche || 'Comércio Local',
-              photos: p.imageUrl ? [p.imageUrl] : [],
-              hours: '',
-              openingHours: '',
-              realReviews: []
-            }));
+            rawPlaces = sJson.places.map((p: any) => {
+              const serperPhotos = [p.imageUrl, p.thumbnailUrl].filter(Boolean);
+              return {
+                id: p.cid || `serper_${Math.random().toString(36).substring(2, 9)}`,
+                name: p.title || p.name || 'Comércio Local',
+                address: p.address || `${city}`,
+                phone: p.phoneNumber || p.phone || '',
+                website: p.website || null,
+                rating: Number(p.rating || 5.0),
+                reviewsCount: Number(p.ratingCount || p.reviews || 0),
+                category: p.category || niche || 'Comércio Local',
+                photos: serperPhotos,
+                hours: '',
+                openingHours: '',
+                realReviews: []
+              };
+            });
             providerUsed = 'serper';
-            providerLabel = 'Serper Places API';
+            providerLabel = 'Google Maps (via Serper)';
           }
         } else {
           const sErr = await serperRes.json().catch(() => ({}));
@@ -400,13 +403,18 @@ export async function POST(req: NextRequest) {
       return b.reviewsCount - a.reviewsCount;
     });
 
+    const activeGoogleNotice =
+      providerUsed === 'google_places' || providerUsed === 'serper'
+        ? null
+        : formattedGoogleNotice;
+
     return NextResponse.json({
       success: true,
       query,
       provider: providerLabel,
       total: leads.length,
       hotCount: leads.filter((l) => l.isHighOpportunity).length,
-      googleNotice: formattedGoogleNotice,
+      googleNotice: activeGoogleNotice,
       message: `${leads.length} comércios reais encontrados via ${providerLabel}.`,
       leads
     });
