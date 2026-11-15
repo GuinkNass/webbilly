@@ -11,26 +11,12 @@ export async function GET(req: NextRequest) {
     let alerts: SystemAlertRecord[] = [];
     let readsCounts: Record<string, number> = {};
 
-    // 1. Tenta buscar do Supabase (testa tabela 'alerts' e fallback 'system_alerts')
+    // 1. Tenta buscar do Supabase (tabela 'system_alerts')
     try {
-      let sbAlerts: any[] | null = null;
-      let sbErr: any = null;
-
-      const resAlerts = await supabase
-        .from('alerts')
+      const { data: sbAlerts, error: sbErr } = await supabase
+        .from('system_alerts')
         .select('*')
         .order('created_at', { ascending: false });
-
-      if (!resAlerts.error && Array.isArray(resAlerts.data)) {
-        sbAlerts = resAlerts.data;
-      } else {
-        const resSysAlerts = await supabase
-          .from('system_alerts')
-          .select('*')
-          .order('created_at', { ascending: false });
-        sbAlerts = resSysAlerts.data;
-        sbErr = resSysAlerts.error;
-      }
 
       if (!sbErr && Array.isArray(sbAlerts)) {
         alerts = sbAlerts.map(a => ({
@@ -110,13 +96,10 @@ export async function POST(req: NextRequest) {
       created_at: new Date().toISOString(),
     };
 
-    // 1. Tenta salvar no Supabase (alerts e fallback system_alerts)
+    // 1. Tenta salvar no Supabase (system_alerts)
     try {
       const supabase = getSupabaseAdmin();
-      const { error: insErr } = await supabase.from('alerts').insert([newAlert]);
-      if (insErr) {
-        await supabase.from('system_alerts').insert([newAlert]);
-      }
+      await supabase.from('system_alerts').insert([newAlert]);
     } catch (e) {
       console.warn('[Admin Alerts POST] Supabase insert warning:', e);
     }
@@ -153,19 +136,13 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // 1. Atualiza no Supabase (alerts e fallback system_alerts)
+    // 1. Atualiza no Supabase (system_alerts)
     try {
       const supabase = getSupabaseAdmin();
-      const { error: upErr } = await supabase
-        .from('alerts')
+      await supabase
+        .from('system_alerts')
         .update({ is_active })
         .eq('id', id);
-      if (upErr) {
-        await supabase
-          .from('system_alerts')
-          .update({ is_active })
-          .eq('id', id);
-      }
     } catch (e) {
       console.warn('[Admin Alerts PATCH] Supabase update warning:', e);
     }
@@ -205,10 +182,9 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'ID do alerta é obrigatório.' }, { status: 400 });
     }
 
-    // 1. Supabase (alerts e fallback system_alerts)
+    // 1. Supabase (system_alerts)
     try {
       const supabase = getSupabaseAdmin();
-      await supabase.from('alerts').delete().eq('id', id);
       await supabase.from('system_alerts').delete().eq('id', id);
       await supabase.from('operator_alert_reads').delete().eq('alert_id', id);
     } catch (e) {

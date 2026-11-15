@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
     db.systemAlerts.unshift(newAlert);
     writeDb(db);
 
-    // Tenta persistir alerta na tabela alerts / system_alerts do Supabase
+    // Tenta persistir alerta na tabela system_alerts do Supabase
     try {
       const supabase = getSupabaseAdmin();
       const alertPayload = {
@@ -167,10 +167,7 @@ export async function POST(req: NextRequest) {
         protocol: newAlert.protocol
       } as any;
 
-      const { error: insErr } = await supabase.from('alerts').insert(alertPayload);
-      if (insErr) {
-        await supabase.from('system_alerts').insert(alertPayload);
-      }
+      await supabase.from('system_alerts').insert(alertPayload);
     } catch {}
 
     return NextResponse.json({
