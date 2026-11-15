@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDb, writeDb, SubscriptionRecord } from '@/lib/db';
 import { findOrCreateCustomer, createSubscription } from '@/services/asaas';
-import { persistSite } from '@/lib/site-storage';
+import { persistSite, setSlugSuspended } from '@/lib/site-storage';
 
 export async function POST(req: NextRequest) {
   try {
@@ -183,6 +183,11 @@ async function handleCreateCheckout(req: NextRequest, body: any) {
       operatorName: sub.operatorName,
       leadToken: sub.leadToken
     });
+
+    // Blindagem: garante que o site permanece offline/bloqueado até a confirmação real do 1º pagamento
+    if (sub.status === 'pending' && !sub.lastPaymentDate) {
+      setSlugSuspended(sub.siteSlug, true);
+    }
   } catch (persistErr) {
     console.warn('[create-checkout persistSite Warning]:', persistErr);
   }

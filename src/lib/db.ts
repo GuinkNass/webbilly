@@ -182,7 +182,7 @@ export interface BriefingRecord {
   domainIdeas: string[];
   photos: string[];
   submittedAt: string;
-  status: 'PENDENTE' | 'PROCESSADO';
+  status: 'PENDENTE' | 'PROCESSADO' | 'RECUSADO' | 'declined';
   deployedUrl?: string;
   demoUrl?: string;
   accepted_terms_at?: string;

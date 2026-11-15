@@ -17,7 +17,8 @@ import {
   Globe,
   Layers,
   Copy,
-  MessageCircle
+  MessageCircle,
+  ShieldCheck
 } from 'lucide-react';
 
 function getSubdomain(sub: any): string {
@@ -101,6 +102,57 @@ function AdminSitesContent() {
     cancelledAt: string;
   } | null>(null);
   const [copiedReceipt, setCopiedReceipt] = useState(false);
+
+  // Estados de Limpeza / Cancelamento de Pendência no Asaas
+  const [cleaningPending, setCleaningPending] = useState(false);
+
+  const handleCancelPendingAsaas = async (sub: any) => {
+    if (!confirm(`Deseja cancelar imediatamente a cobrança pendente de "${sub.clientName}" no Asaas? Isso impedirá qualquer débito ou geração de fatura futura.`)) {
+      return;
+    }
+    try {
+      const res = await fetch('/api/admin/subscriptions/cancel-pending', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subscriptionId: sub.id,
+          siteSlug: sub.siteSlug
+        })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Erro ao cancelar pendência no Asaas.');
+
+      setActionSuccess(`Cobrança de "${sub.clientName}" cancelada no Asaas com sucesso.`);
+      setTimeout(() => setActionSuccess(null), 4000);
+      await loadData();
+    } catch (err: any) {
+      alert(err.message || 'Falha ao cancelar pendência no Asaas.');
+    }
+  };
+
+  const handleCleanAllPendingAsaas = async () => {
+    if (!confirm('Deseja cancelar no Asaas TODAS as assinaturas que estão com status Pendente e sem nenhum pagamento realizado? Isso garante zero cobranças indevidas em aberto.')) {
+      return;
+    }
+    setCleaningPending(true);
+    try {
+      const res = await fetch('/api/admin/subscriptions/cancel-pending', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cancelAll: true })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Erro ao limpar pendências no Asaas.');
+
+      setActionSuccess(`${json.totalCancelled || 0} assinaturas pendentes foram canceladas e limpas no Asaas.`);
+      setTimeout(() => setActionSuccess(null), 5000);
+      await loadData();
+    } catch (err: any) {
+      alert(err.message || 'Falha ao limpar pendências.');
+    } finally {
+      setCleaningPending(false);
+    }
+  };
 
   const handleToggleSubscription = async (subscriptionId: string, currentStatus: string) => {
     try {
@@ -255,6 +307,31 @@ function AdminSitesContent() {
           ))}
         </div>
       </div>
+
+      {/* Banner de Blindagem Asaas para Assinaturas Pendentes */}
+      {subFilter === 'PENDING' && (
+        <div className="bg-[#14120a] border border-amber-500/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-white">Blindagem Contra Cobrança Indevida Asaas</h4>
+              <p className="text-xs text-zinc-400">
+                Assinaturas pendentes nunca pagas podem ser canceladas em lote no gateway para evitar débitos ou cobranças abertas.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleCleanAllPendingAsaas}
+            disabled={cleaningPending}
+            className="px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-500/40 font-bold text-xs transition cursor-pointer shrink-0 disabled:opacity-50 flex items-center gap-2"
+          >
+            <XCircle className="w-4 h-4 text-amber-400" />
+            <span>{cleaningPending ? 'Limpando...' : 'Cancelar Todas as Pendências no Asaas'}</span>
+          </button>
+        </div>
+      )}
 
       {/* Tabela de Assinaturas */}
       <div className="bg-[#0f121a] rounded-2xl border border-white/[0.08] shadow-xl overflow-hidden">
@@ -422,22 +499,41 @@ function AdminSitesContent() {
                           ) : (
                             <>
                               {/* Botão de Toggle Ativar/Suspender */}
-                              <ActionTooltip
-                                title={sub.status === 'active' ? 'Suspender Site' : 'Ativar Site'}
-                                description={sub.status === 'active' ? 'Bloqueia o acesso ao site via Edge Config por inadimplência.' : 'Libera o acesso ao site reativando o subdomínio.'}
-                                side="top"
-                              >
-                                <button
-                                  onClick={() => handleToggleSubscription(sub.id, sub.status)}
-                                  className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition cursor-pointer ${
-                                    sub.status === 'active'
-                                      ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/30'
-                                      : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                                  }`}
+                              {sub.status !== 'pending' && (
+                                <ActionTooltip
+                                  title={sub.status === 'active' ? 'Suspender Site' : 'Ativar Site'}
+                                  description={sub.status === 'active' ? 'Bloqueia o acesso ao site via Edge Config por inadimplência.' : 'Libera o acesso ao site reativando o subdomínio.'}
+                                  side="top"
                                 >
-                                  {sub.status === 'active' ? 'Suspender' : 'Ativar'}
-                                </button>
-                              </ActionTooltip>
+                                  <button
+                                    onClick={() => handleToggleSubscription(sub.id, sub.status)}
+                                    className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition cursor-pointer ${
+                                      sub.status === 'active'
+                                        ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/30'
+                                        : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                    }`}
+                                  >
+                                    {sub.status === 'active' ? 'Suspender' : 'Ativar'}
+                                  </button>
+                                </ActionTooltip>
+                              )}
+
+                              {/* Ação rápida para status pendente (Blindagem Asaas) */}
+                              {sub.status === 'pending' && (
+                                <ActionTooltip
+                                  title="Cancelar Pendência no Asaas"
+                                  description="Cancela a assinatura e faturas pendentes no Asaas antes que ocorra débito ou cobrança indevida."
+                                  side="top"
+                                >
+                                  <button
+                                    onClick={() => handleCancelPendingAsaas(sub)}
+                                    className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 text-[10px] font-bold transition cursor-pointer flex items-center gap-1"
+                                  >
+                                    <XCircle className="w-3 h-3 text-amber-400" />
+                                    <span>Cancelar no Asaas</span>
+                                  </button>
+                                </ActionTooltip>
+                              )}
 
                               {/* Botão de Cancelamento Definitivo */}
                               <ActionTooltip

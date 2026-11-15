@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDb, writeDb, Sale, AffiliateCommissionRecord } from '@/lib/db';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { setSlugSuspended } from '@/lib/site-storage';
+import { cancelAsaasSubscription, cancelAsaasPayment, cancelAllPendingCharges } from '@/services/asaas';
 
 const fallbackWebhookToken = Buffer.from(
   'd2hzZWNfS19KS1p0MTZ4SWUyN0ZRSWgzczlObU1FTVk5TEtNTmN0RGdhUGpWb0FUSQ==',
@@ -72,12 +74,16 @@ export async function POST(req: NextRequest) {
 
     console.log(`[Asaas Webhook] Evento: ${event} | Slug: ${siteSlug} | PaymentId: ${payment.id}`);
 
+    const effectiveSlug = siteSlug || sub?.siteSlug || '';
+
     switch (event) {
       case 'PAYMENT_RECEIVED':
       case 'PAYMENT_CONFIRMED': {
-        // Altera status do site para ativo
+        // Ativa o site no sistema e libera subdomínio no ar
         if (sub) {
           sub.status = 'active';
+          sub.siteStatus = 'active';
+          (sub as any).site_status = 'active';
           sub.lastPaymentDate = nowIso;
           sub.nextRenewalDate = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString();
           if (payment.invoiceUrl) {
@@ -85,6 +91,11 @@ export async function POST(req: NextRequest) {
             sub.checkoutUrl = payment.invoiceUrl;
           }
           sub.updatedAt = nowIso;
+        }
+
+        // Libera acesso ao subdomínio no Edge Config
+        if (effectiveSlug) {
+          setSlugSuspended(effectiveSlug, false);
         }
 
         // Localiza operador vinculado para registrar comissão de R$ 10,00 recorrentes
@@ -176,24 +187,66 @@ export async function POST(req: NextRequest) {
       }
 
       case 'PAYMENT_OVERDUE': {
-        // Inadimplência: suspende o site imediatamente
-        if (sub) {
-          sub.status = 'suspended';
-          if (payment.invoiceUrl) {
-            sub.asaasInvoiceUrl = payment.invoiceUrl;
-            sub.checkoutUrl = payment.invoiceUrl;
+        // Blindagem contra cobrança indevida:
+        // Se o cliente nunca pagou nada (1ª fatura em aberto não quitada), cancela imediatamente a assinatura no Asaas
+        const isFirstInvoice = !sub?.lastPaymentDate;
+
+        if (isFirstInvoice) {
+          console.log(`[Asaas Webhook] 1ª fatura vencida sem pagamento para ${effectiveSlug}. Executando cancelamento automático de proteção no Asaas.`);
+          // 1. Cancela a assinatura e expurga cobranças pendentes no Asaas
+          if (asaasSubId) {
+            await cancelAsaasSubscription(asaasSubId);
           }
-          sub.updatedAt = nowIso;
+          if (payment.id) {
+            await cancelAsaasPayment(payment.id);
+          }
+
+          // 2. Marca status como cancelado e mantém site offline
+          if (sub) {
+            sub.status = 'cancelled';
+            sub.siteStatus = 'cancelled';
+            (sub as any).site_status = 'cancelled';
+            sub.cancellationReason = '1ª fatura vencida sem pagamento (cancelamento automático de proteção)';
+            sub.cancelledAt = nowIso;
+            sub.updatedAt = nowIso;
+          }
+          if (effectiveSlug) {
+            setSlugSuspended(effectiveSlug, true);
+          }
+        } else {
+          // Renovação mensal de cliente já ativo: suspende o site no Edge Config
+          console.log(`[Asaas Webhook] Renovação mensal em atraso para ${effectiveSlug}. Suspendendo site no Edge Config.`);
+          if (sub) {
+            sub.status = 'suspended';
+            sub.siteStatus = 'suspended';
+            (sub as any).site_status = 'suspended';
+            if (payment.invoiceUrl) {
+              sub.asaasInvoiceUrl = payment.invoiceUrl;
+              sub.checkoutUrl = payment.invoiceUrl;
+            }
+            sub.updatedAt = nowIso;
+          }
+          if (effectiveSlug) {
+            setSlugSuspended(effectiveSlug, true);
+          }
         }
         break;
       }
 
       case 'PAYMENT_REFUNDED':
+      case 'PAYMENT_DELETED':
       case 'SUBSCRIPTION_DELETED': {
-        // Cancelamento definitivo
+        // Cancelamento definitivo ou estorno
+        console.log(`[Asaas Webhook] Cancelamento definitivo recebido (${event}) para ${effectiveSlug}.`);
         if (sub) {
           sub.status = 'cancelled';
+          sub.siteStatus = 'cancelled';
+          (sub as any).site_status = 'cancelled';
+          sub.cancelledAt = nowIso;
           sub.updatedAt = nowIso;
+        }
+        if (effectiveSlug) {
+          setSlugSuspended(effectiveSlug, true);
         }
         break;
       }

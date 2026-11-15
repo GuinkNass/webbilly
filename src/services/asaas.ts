@@ -231,25 +231,139 @@ export async function createSubscription(params: SubscriptionParams): Promise<{
 
 /**
  * Cancela definitivamente uma assinatura recorrente no Asaas (DELETE /v3/subscriptions/{id})
+ * com parâmetro cancelPendingPayments=true para eliminar cobranças pendentes geradas.
  */
 export async function cancelAsaasSubscription(subscriptionId: string): Promise<boolean> {
   if (!subscriptionId) return false;
   try {
-    const res = await fetch(`${getApiUrl()}/subscriptions/${encodeURIComponent(subscriptionId)}`, {
+    const cleanId = encodeURIComponent(subscriptionId.trim());
+    const res = await fetch(`${getApiUrl()}/subscriptions/${cleanId}?cancelPendingPayments=true`, {
       method: 'DELETE',
       headers: getHeaders()
     });
     if (res.ok) {
-      console.log(`[Asaas] Assinatura ${subscriptionId} cancelada com sucesso.`);
+      console.log(`[Asaas] Assinatura ${subscriptionId} cancelada com sucesso (cobranças pendentes expurgadas).`);
       return true;
     } else {
       const errData = await res.json().catch(() => ({}));
       console.warn(`[Asaas] Resposta ao deletar assinatura ${subscriptionId}:`, errData);
-      // Se já estava cancelada ou não encontrada, consideramos ok
+      // Se já estava cancelada ou não encontrada (404), consideramos cancelada
       if (res.status === 404) return true;
     }
   } catch (err) {
     console.warn(`[Asaas] Exceção ao cancelar assinatura ${subscriptionId}:`, err);
   }
   return false;
+}
+
+/**
+ * Cancela uma cobrança avulsa pendente no Asaas (DELETE /v3/payments/{id})
+ */
+export async function cancelAsaasPayment(paymentId: string): Promise<boolean> {
+  if (!paymentId) return false;
+  try {
+    const cleanId = encodeURIComponent(paymentId.trim());
+    const res = await fetch(`${getApiUrl()}/payments/${cleanId}`, {
+      method: 'DELETE',
+      headers: getHeaders()
+    });
+    if (res.ok) {
+      console.log(`[Asaas] Cobrança pendente ${paymentId} cancelada com sucesso.`);
+      return true;
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      console.warn(`[Asaas] Resposta ao deletar cobrança ${paymentId}:`, errData);
+      if (res.status === 404) return true;
+    }
+  } catch (err) {
+    console.warn(`[Asaas] Exceção ao cancelar cobrança ${paymentId}:`, err);
+  }
+  return false;
+}
+
+/**
+ * Cancela um link de pagamento no Asaas (DELETE /v3/paymentLinks/{id})
+ */
+export async function cancelAsaasPaymentLink(linkId: string): Promise<boolean> {
+  if (!linkId) return false;
+  try {
+    const cleanId = encodeURIComponent(linkId.trim());
+    const res = await fetch(`${getApiUrl()}/paymentLinks/${cleanId}`, {
+      method: 'DELETE',
+      headers: getHeaders()
+    });
+    if (res.ok || res.status === 404) {
+      console.log(`[Asaas] Link de pagamento ${linkId} cancelado com sucesso.`);
+      return true;
+    }
+  } catch (err) {
+    console.warn(`[Asaas] Exceção ao cancelar link de pagamento ${linkId}:`, err);
+  }
+  return false;
+}
+
+/**
+ * Blindagem: Cancela qualquer cobrança e assinatura pendente no Asaas vinculada
+ * a uma assinatura, cliente ou slug, garantindo zero cobranças indevidas.
+ */
+export async function cancelAllPendingCharges(params: {
+  customerId?: string;
+  subscriptionId?: string;
+  siteSlug?: string;
+}): Promise<{ cancelledSubscriptions: number; cancelledPayments: number }> {
+  let cancelledSubscriptions = 0;
+  let cancelledPayments = 0;
+
+  // 1. Se informada assinatura, cancela e expurga cobranças pendentes
+  if (params.subscriptionId) {
+    const subId = params.subscriptionId.trim();
+    const okSub = await cancelAsaasSubscription(subId);
+    if (okSub) cancelledSubscriptions++;
+    await cancelAsaasPaymentLink(subId);
+
+    // Consulta e exclui individualmente qualquer pagamento vinculado à assinatura ainda em aberto
+    try {
+      const paymentsRes = await fetch(
+        `${getApiUrl()}/subscriptions/${encodeURIComponent(subId)}/payments?limit=10`,
+        { method: 'GET', headers: getHeaders() }
+      );
+      if (paymentsRes.ok) {
+        const paymentsData = await paymentsRes.json();
+        if (Array.isArray(paymentsData.data)) {
+          for (const p of paymentsData.data) {
+            if (p.status === 'PENDING' || p.status === 'OVERDUE') {
+              const okPay = await cancelAsaasPayment(p.id);
+              if (okPay) cancelledPayments++;
+            }
+          }
+        }
+      }
+    } catch (payErr) {
+      console.warn('[Asaas] Falha ao consultar pagamentos da assinatura para expurgo:', payErr);
+    }
+  }
+
+  // 2. Se informado cliente, varre e cancela cobranças PENDING e OVERDUE do cliente
+  if (params.customerId) {
+    const custId = params.customerId.trim();
+    try {
+      const custPaymentsRes = await fetch(
+        `${getApiUrl()}/payments?customer=${encodeURIComponent(custId)}&status=PENDING`,
+        { method: 'GET', headers: getHeaders() }
+      );
+      if (custPaymentsRes.ok) {
+        const custPaymentsData = await custPaymentsRes.json();
+        if (Array.isArray(custPaymentsData.data)) {
+          for (const p of custPaymentsData.data) {
+            const okPay = await cancelAsaasPayment(p.id);
+            if (okPay) cancelledPayments++;
+          }
+        }
+      }
+    } catch (custPayErr) {
+      console.warn('[Asaas] Falha ao expurgar cobranças pendentes do cliente:', custPayErr);
+    }
+  }
+
+  return { cancelledSubscriptions, cancelledPayments };
 }

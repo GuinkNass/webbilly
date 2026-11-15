@@ -13,6 +13,7 @@ export async function GET(
     const title = briefing?.title || 'Empresa Parceira';
     const category = briefing?.category || 'Comércio Local';
     const phone = briefing?.phone || '';
+    const isDeclined = briefing?.status === 'declined' || briefing?.status === 'RECUSADO';
     const suggestedDomain = (title || 'site')
       .toLowerCase()
       .normalize('NFD')
@@ -33,16 +34,34 @@ export async function GET(
     // Payload básico Copia e Cola Pix
     const pixPayload = `00020126580014BR.GOV.BCB.PIX0136${pixKey}520400005303986540${amount.toFixed(2)}5802BR5911${pixName}6009${pixCity}62170513${txid}6304ABCD`;
 
+    // Localiza se há assinatura prévia cadastrada
+    const sub = (db.subscriptions || []).find(
+      s => s.leadToken === leadToken || s.siteSlug === suggestedDomain
+    );
+
+    const asaasCheckoutUrl =
+      sub?.asaasInvoiceUrl ||
+      sub?.checkoutUrl ||
+      `/api/subscription/create-checkout?leadId=${encodeURIComponent(leadToken)}&slug=${encodeURIComponent(suggestedDomain)}&clientName=${encodeURIComponent(title)}&clientPhone=${encodeURIComponent(phone)}`;
+
     return NextResponse.json({
       success: true,
       leadToken,
+      isDeclined: isDeclined || sub?.status === 'cancelled',
       lead: {
         title,
         category,
         phone,
-        suggestedPrice: amount
+        suggestedPrice: amount,
+        subdomain: `${suggestedDomain}.webbilly.com.br`,
+        accepted_terms_at: (briefing as any)?.accepted_terms_at
       },
       domains,
+      subscription: {
+        status: sub?.status || 'pending',
+        monthlyPrice: sub?.monthlyPrice || 29.90,
+        checkoutUrl: asaasCheckoutUrl
+      },
       pix: {
         key: pixKey,
         name: pixName,
