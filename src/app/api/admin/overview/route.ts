@@ -45,7 +45,48 @@ export async function GET(req: NextRequest) {
       console.warn('Erro ao mesclar operadores do Supabase:', e);
     }
 
-    const pendingCandidatesCount = combinedOperators.filter(o => o.status === 'PENDENTE').length + db.candidates.filter(c => c.status === 'PENDENTE').length;
+    // Mescla candidatos do db.candidates com operadores PENDENTES para triagem completa e sem duplicidade
+    const candMap = new Map<string, any>();
+    for (const c of db.candidates || []) {
+      candMap.set(c.id || c.email?.toLowerCase(), c);
+    }
+    for (const op of combinedOperators) {
+      if (op.status === 'PENDENTE' || (op.status as any) === 'PENDENTE_APROVACAO') {
+        const key = op.candidateId || op.id || op.email?.toLowerCase();
+        const existing = candMap.get(key) || (op.email ? candMap.get(op.email.toLowerCase()) : null);
+        if (existing) {
+          candMap.set(key, { ...existing, ...op, id: existing.id || op.id });
+        } else {
+          candMap.set(key, {
+            id: op.candidateId || op.id,
+            name: op.name,
+            email: op.email,
+            whatsapp: op.whatsapp,
+            phone: op.whatsapp,
+            cpf: op.cpf,
+            cep: op.cep,
+            address: op.address,
+            neighborhood: op.neighborhood,
+            city: op.city_state || (op as any).city || '',
+            state: (op as any).state || '',
+            city_state: op.city_state,
+            pixType: op.pixType || op.pix_type || 'cpf',
+            pixKey: op.pixKey || op.pix_key || '',
+            pix_type: op.pixType || op.pix_type || 'cpf',
+            pix_key: op.pixKey || op.pix_key || '',
+            experience: op.experience || '',
+            status: op.status,
+            createdAt: op.createdAt || new Date().toISOString(),
+            referred_by_operator_id: op.referred_by_operator_id,
+            accepted_terms_at: op.accepted_terms_at,
+            accepted_terms_ip: op.accepted_terms_ip,
+            accepted_terms_version: op.accepted_terms_version
+          });
+        }
+      }
+    }
+    const allCandidates = Array.from(candMap.values());
+    const pendingCandidatesCount = allCandidates.filter(c => c.status === 'PENDENTE' || c.status === 'PENDENTE_APROVACAO').length;
     const activeOperatorsCount = combinedOperators.filter(o => o.status === 'ATIVO').length;
     const blockedOperatorsCount = combinedOperators.filter(o => o.status === 'BLOQUEADO').length;
 
@@ -173,7 +214,7 @@ export async function GET(req: NextRequest) {
       leaderboard,
       affiliateSponsors,
       subscriptions,
-      candidates: db.candidates,
+      candidates: allCandidates,
       operators: combinedOperators.map(op => {
         const lbItem = leaderboard.find(l => l.operatorId === op.id);
         const sponsor = op.referred_by_operator_id ? combinedOperators.find(p => p.id === op.referred_by_operator_id) : null;

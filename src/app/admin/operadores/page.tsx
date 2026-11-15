@@ -20,7 +20,9 @@ import {
   AlertTriangle,
   X,
   ExternalLink,
-  Laptop
+  Laptop,
+  Eye,
+  FileText
 } from 'lucide-react';
 
 export default function AdminOperatorsPage() {
@@ -44,6 +46,19 @@ export default function AdminOperatorsPage() {
       message: string;
     };
     error?: string;
+  } | null>(null);
+
+  // Estados para Ficha do Candidato e Triagem de Recusa (60 dias)
+  const [selectedCandidate, setSelectedCandidate] = useState<any | null>(null);
+  const [rejectLoadingId, setRejectLoadingId] = useState<string | null>(null);
+  const [rejectResultModal, setRejectResultModal] = useState<{
+    candidateName: string;
+    candidateEmail: string;
+    candidateWhatsapp: string;
+    whatsappLink: string | null;
+    messageText: string;
+    reapplyDateBr: string;
+    emailSent: boolean;
   } | null>(null);
 
   // Bloquear / Desbloquear Licença
@@ -143,6 +158,52 @@ export default function AdminOperatorsPage() {
     }
   };
 
+  // Recusar Candidatura com Mensagem Educada e Prazo de 60 Dias
+  const handleRejectCandidate = async (cand: any) => {
+    if (!cand) return;
+    const confirmMsg = `Deseja negar a candidatura de ${cand.name}?\n\nO candidato será informado que poderá tentar novamente após 60 dias.`;
+    if (!confirm(confirmMsg)) return;
+
+    setRejectLoadingId(cand.id);
+    try {
+      const res = await fetch('/api/admin/candidatos/negar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          candidateId: cand.id,
+          operatorId: cand.id,
+          email: cand.email,
+          reason: 'Candidatura negada pela triagem administrativa (nova tentativa após 60 dias).'
+        })
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Erro ao recusar candidatura.');
+
+      // Fecha modal de ficha se estiver aberta
+      setSelectedCandidate(null);
+
+      // Abre modal com resultado e opções de WhatsApp e Copiar
+      setRejectResultModal({
+        candidateName: json.candidateName || cand.name,
+        candidateEmail: json.candidateEmail || cand.email,
+        candidateWhatsapp: json.candidateWhatsapp || cand.whatsapp || cand.phone || '',
+        whatsappLink: json.whatsappLink,
+        messageText: json.messageText,
+        reapplyDateBr: json.reapplyDateBr || '60 dias',
+        emailSent: Boolean(json.emailSent)
+      });
+
+      setActionSuccess(`Candidatura de ${cand.name} recusada. Registro atualizado.`);
+      setTimeout(() => setActionSuccess(null), 5000);
+      await loadData();
+    } catch (err: any) {
+      alert(err.message || 'Falha ao processar recusa da candidatura.');
+    } finally {
+      setRejectLoadingId(null);
+    }
+  };
+
   // Abrir Modal de Provisionamento
   const handleOpenProvisionModal = (lic: any) => {
     const op = (data?.operators || []).find((o: any) =>
@@ -235,13 +296,14 @@ export default function AdminOperatorsPage() {
   });
 
   const candidates = (data?.candidates || []).filter((c: any) => {
-    if (c.status === 'APROVADO') return false;
+    if (c.status === 'APROVADO' || c.status === 'RECUSADO' || c.status === 'rejected') return false;
     if (!candidateSearch) return true;
     const q = candidateSearch.toLowerCase();
     return (
       (c.name && c.name.toLowerCase().includes(q)) ||
       (c.email && c.email.toLowerCase().includes(q)) ||
-      (c.phone && c.phone.toLowerCase().includes(q))
+      (c.phone && c.phone.toLowerCase().includes(q)) ||
+      (c.whatsapp && c.whatsapp.toLowerCase().includes(q))
     );
   });
 
@@ -474,7 +536,7 @@ export default function AdminOperatorsPage() {
                   <th className="py-3.5 px-4">WhatsApp</th>
                   <th className="py-3.5 px-4">Chave Pix Informada</th>
                   <th className="py-3.5 px-4">Data Registro</th>
-                  <th className="py-3.5 px-4 text-right">Ação de Aprovação</th>
+                  <th className="py-3.5 px-4 text-right">Ações de Triagem</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.05]">
@@ -488,13 +550,20 @@ export default function AdminOperatorsPage() {
                   candidates.map((cand: any) => (
                     <tr key={cand.id} className="hover:bg-white/[0.02] transition">
                       <td className="py-3.5 px-4 font-bold text-white">
-                        {cand.name}
+                        <button
+                          onClick={() => setSelectedCandidate(cand)}
+                          className="text-left font-bold text-white hover:text-[#84cc16] transition flex items-center gap-1.5 group cursor-pointer"
+                          title="Clique para visualizar a ficha completa"
+                        >
+                          <span>{cand.name}</span>
+                          <Eye className="w-3 h-3 text-zinc-500 group-hover:text-[#84cc16] opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </button>
                       </td>
                       <td className="py-3.5 px-4 font-mono text-zinc-300">
                         {cand.email}
                       </td>
                       <td className="py-3.5 px-4 font-mono text-zinc-300">
-                        {cand.phone || '—'}
+                        {cand.whatsapp || cand.phone || '—'}
                       </td>
                       <td className="py-3.5 px-4 font-mono text-emerald-400">
                         {cand.pixKey || cand.pix_key || '—'}
@@ -508,14 +577,38 @@ export default function AdminOperatorsPage() {
                             Aprovado
                           </span>
                         ) : (
-                          <ActionTooltip title="Aprovar Candidato" description="Aprova a inscrição, gera a licença desktop e ativa o acesso do operador." side="left">
-                            <button
-                              onClick={() => handleApproveOperator(cand.serialToken || 'NOVO', cand.id, cand.email)}
-                              className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-md shadow-emerald-950/40 cursor-pointer"
-                            >
-                              Aprovar & Emitir Serial
-                            </button>
-                          </ActionTooltip>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <ActionTooltip title="Ver Ficha" description="Visualizar todos os dados preenchidos pelo candidato no formulário do site" side="left">
+                              <button
+                                onClick={() => setSelectedCandidate(cand)}
+                                className="px-2.5 py-1.5 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-zinc-200 hover:text-white font-medium text-xs transition border border-white/[0.1] flex items-center gap-1 cursor-pointer"
+                              >
+                                <Eye className="w-3.5 h-3.5 text-cyan-400" />
+                                <span>Ver Ficha</span>
+                              </button>
+                            </ActionTooltip>
+
+                            <ActionTooltip title="Aprovar & Emitir Serial" description="Aprova a inscrição, gera a licença desktop e ativa o acesso do operador." side="left">
+                              <button
+                                onClick={() => handleApproveOperator(cand.serialToken || 'NOVO', cand.id, cand.email)}
+                                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-md shadow-emerald-950/40 cursor-pointer flex items-center gap-1"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>Aprovar & Emitir Serial</span>
+                              </button>
+                            </ActionTooltip>
+
+                            <ActionTooltip title="Negar Candidatura" description="Recusar candidatura e enviar aviso de nova tentativa após 60 dias" side="left">
+                              <button
+                                onClick={() => handleRejectCandidate(cand)}
+                                disabled={rejectLoadingId === cand.id}
+                                className="px-2.5 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 font-medium text-xs transition border border-rose-500/30 flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                                <span>Negar</span>
+                              </button>
+                            </ActionTooltip>
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -615,6 +708,323 @@ export default function AdminOperatorsPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: FICHA COMPLETA DO CANDIDATO */}
+      {selectedCandidate && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+          <div className="bg-[#0b0e14] border border-white/[0.12] rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 my-auto">
+            {/* Header */}
+            <div className="px-6 py-5 bg-gradient-to-r from-[#121622] via-[#0f131d] to-[#121622] border-b border-white/[0.08] flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#84cc16]/10 border border-[#84cc16]/30 flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-[#84cc16]" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <span>Ficha Completa do Candidato</span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                      {selectedCandidate.status || 'PENDENTE'}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Dados oficiais preenchidos no formulário da Landing Page
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedCandidate(null)}
+                className="text-zinc-400 hover:text-white p-2 rounded-xl hover:bg-white/[0.06] transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-6 max-h-[72vh] overflow-y-auto text-xs">
+              {/* Seção 1: Identificação & Contato */}
+              <div>
+                <span className="text-[11px] font-bold text-[#84cc16] uppercase tracking-wider block mb-3">
+                  1. Dados Pessoais & Contato
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-[#121622]/80 border border-white/[0.06] rounded-2xl p-4">
+                  <div>
+                    <span className="text-zinc-500 block text-[10px] uppercase font-mono">Nome Completo</span>
+                    <span className="text-white font-semibold text-sm">{selectedCandidate.name}</span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500 block text-[10px] uppercase font-mono">E-mail Pessoal</span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-zinc-200 font-mono select-all">{selectedCandidate.email}</span>
+                      <button
+                        onClick={() => copyToClipboard(selectedCandidate.email, 'E-mail copiado!')}
+                        className="text-zinc-500 hover:text-white cursor-pointer"
+                        title="Copiar e-mail"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500 block text-[10px] uppercase font-mono">WhatsApp</span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-emerald-400 font-mono font-semibold">
+                        {selectedCandidate.whatsapp || selectedCandidate.phone || 'Não informado'}
+                      </span>
+                      {(selectedCandidate.whatsapp || selectedCandidate.phone) && (
+                        <a
+                          href={`https://wa.me/55${(selectedCandidate.whatsapp || selectedCandidate.phone).replace(/\D/g, '')}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1 text-[10px] bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20"
+                        >
+                          <span>Abrir WhatsApp</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500 block text-[10px] uppercase font-mono">CPF</span>
+                    <span className="text-zinc-200 font-mono">
+                      {selectedCandidate.cpf || 'Não informado'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500 block text-[10px] uppercase font-mono">Cidade / Estado</span>
+                    <span className="text-zinc-200">
+                      {selectedCandidate.city_state || (selectedCandidate.city ? `${selectedCandidate.city} - ${selectedCandidate.state || 'BR'}` : 'Não informado')}
+                    </span>
+                  </div>
+                  {selectedCandidate.address && (
+                    <div>
+                      <span className="text-zinc-500 block text-[10px] uppercase font-mono">Endereço Residencial</span>
+                      <span className="text-zinc-200">
+                        {selectedCandidate.address}
+                        {selectedCandidate.number ? `, ${selectedCandidate.number}` : ''}
+                        {selectedCandidate.neighborhood ? ` - ${selectedCandidate.neighborhood}` : ''}
+                        {selectedCandidate.cep ? ` (CEP: ${selectedCandidate.cep})` : ''}
+                      </span>
+                    </div>
+                  )}
+                  {selectedCandidate.instagram && (
+                    <div>
+                      <span className="text-zinc-500 block text-[10px] uppercase font-mono">Instagram</span>
+                      <a
+                        href={`https://instagram.com/${selectedCandidate.instagram.replace('@', '')}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-cyan-400 hover:underline flex items-center gap-1 font-mono"
+                      >
+                        <span>{selectedCandidate.instagram}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Seção 2: Dados Financeiros / Repasse Pix */}
+              <div>
+                <span className="text-[11px] font-bold text-[#84cc16] uppercase tracking-wider block mb-3">
+                  2. Dados Financeiros para Repasse das Comissões
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-[#121622]/80 border border-white/[0.06] rounded-2xl p-4">
+                  <div>
+                    <span className="text-zinc-500 block text-[10px] uppercase font-mono">Tipo da Chave Pix</span>
+                    <span className="text-zinc-300 uppercase font-mono font-bold">
+                      {selectedCandidate.pixType || selectedCandidate.pix_type || 'CPF'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500 block text-[10px] uppercase font-mono">Chave Pix Cadastrada</span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-emerald-400 font-mono font-bold select-all">
+                        {selectedCandidate.pixKey || selectedCandidate.pix_key || 'Não informada'}
+                      </span>
+                      {(selectedCandidate.pixKey || selectedCandidate.pix_key) && (
+                        <button
+                          onClick={() => copyToClipboard(selectedCandidate.pixKey || selectedCandidate.pix_key, 'Chave Pix copiada!')}
+                          className="text-zinc-500 hover:text-white cursor-pointer"
+                          title="Copiar Pix"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Seção 3: Experiência Comercial */}
+              <div>
+                <span className="text-[11px] font-bold text-[#84cc16] uppercase tracking-wider block mb-3">
+                  3. Perfil & Experiência Comercial Informada
+                </span>
+                <div className="bg-[#121622]/80 border border-white/[0.06] rounded-2xl p-4 space-y-2">
+                  <p className="text-zinc-200 leading-relaxed whitespace-pre-wrap">
+                    {selectedCandidate.experience || 'Nenhuma experiência detalhada informada pelo candidato.'}
+                  </p>
+                  {selectedCandidate.resumeUrl && (
+                    <div className="pt-2 border-t border-white/[0.06]">
+                      <a
+                        href={selectedCandidate.resumeUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-cyan-400 hover:text-cyan-300 underline inline-flex items-center gap-1.5"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Acessar Link de Currículo / LinkedIn</span>
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Seção 4: Auditoria de Aceite e Origem */}
+              <div>
+                <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-3">
+                  4. Auditoria Jurídica & Origem da Inscrição
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-[#121622]/50 border border-white/[0.04] rounded-2xl p-3.5 text-[11px]">
+                  <div>
+                    <span className="text-zinc-500 block text-[10px]">Data do Cadastro</span>
+                    <span className="text-zinc-300 font-mono">
+                      {selectedCandidate.createdAt ? new Date(selectedCandidate.createdAt).toLocaleString('pt-BR') : '—'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500 block text-[10px]">IP de Aceite dos Termos</span>
+                    <span className="text-zinc-300 font-mono">
+                      {selectedCandidate.accepted_terms_ip || '127.0.0.1'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-500 block text-[10px]">Indicação / Patrocinador</span>
+                    <span className="text-zinc-300 font-mono">
+                      {selectedCandidate.referred_by_name || selectedCandidate.affiliate_code_used || selectedCandidate.referred_by_operator_id || 'Inscrição Direta'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer com Botões de Decisão */}
+            <div className="px-6 py-4 bg-[#0d1017] border-t border-white/[0.08] flex items-center justify-between gap-3">
+              <button
+                onClick={() => setSelectedCandidate(null)}
+                className="px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 hover:text-white font-medium text-xs transition cursor-pointer"
+              >
+                Fechar
+              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const cand = selectedCandidate;
+                    handleRejectCandidate(cand);
+                  }}
+                  disabled={rejectLoadingId === selectedCandidate.id}
+                  className="px-4 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 hover:text-rose-300 font-bold text-xs transition border border-rose-500/30 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <X className="w-4 h-4" />
+                  <span>Negar Candidatura</span>
+                </button>
+
+                <button
+                  onClick={async () => {
+                    const cand = selectedCandidate;
+                    await handleApproveOperator(cand.serialToken || 'NOVO', cand.id, cand.email);
+                    setSelectedCandidate(null);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-lg shadow-emerald-950/40 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Aprovar & Emitir Serial</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE CONFIRMAÇÃO: CANDIDATURA RECUSADA (COM PRAZO DE 60 DIAS) */}
+      {rejectResultModal && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#0f121a] border border-rose-500/30 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-2xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center shrink-0">
+                <X className="w-5 h-5 text-rose-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-bold text-white">
+                  Candidatura Recusada
+                </h3>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  O cadastro de <strong className="text-white">{rejectResultModal.candidateName}</strong> foi marcado como recusado. Nova tentativa liberada em {rejectResultModal.reapplyDateBr}.
+                </p>
+              </div>
+              <button
+                onClick={() => setRejectResultModal(null)}
+                className="text-zinc-500 hover:text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {rejectResultModal.emailSent ? (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 text-xs text-emerald-300 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                <span>E-mail oficial com prazo de 60 dias enviado automaticamente para <strong>{rejectResultModal.candidateEmail}</strong>.</span>
+              </div>
+            ) : (
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 text-xs text-amber-300 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
+                <span>Servidor SMTP não configurado. Você pode enviar a mensagem oficial diretamente via WhatsApp abaixo:</span>
+              </div>
+            )}
+
+            {/* Caixa da mensagem pré-formatada */}
+            <div>
+              <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
+                Mensagem Padrão (Tentativa após 60 dias):
+              </label>
+              <div className="bg-[#141824] border border-white/[0.08] rounded-xl p-3.5 text-xs text-zinc-200 leading-relaxed font-sans select-all">
+                {rejectResultModal.messageText}
+              </div>
+            </div>
+
+            {/* Botões de Ação de 1 Clique */}
+            <div className="flex flex-col sm:flex-row items-center gap-2 pt-2">
+              {rejectResultModal.whatsappLink && (
+                <a
+                  href={rejectResultModal.whatsappLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-md shadow-emerald-950/40 cursor-pointer"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  <span>Enviar via WhatsApp</span>
+                </a>
+              )}
+
+              <button
+                onClick={() => copyToClipboard(rejectResultModal.messageText, 'Mensagem copiada para a área de transferência!')}
+                className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-zinc-200 hover:text-white font-semibold text-xs transition border border-white/[0.1] flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Copy className="w-4 h-4" />
+                <span>Copiar Mensagem</span>
+              </button>
+
+              <button
+                onClick={() => setRejectResultModal(null)}
+                className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white font-medium text-xs transition cursor-pointer"
+              >
+                Concluir
+              </button>
+            </div>
           </div>
         </div>
       )}

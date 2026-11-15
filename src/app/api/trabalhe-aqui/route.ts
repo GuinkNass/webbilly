@@ -63,6 +63,44 @@ export async function POST(req: Request) {
     }
 
     const db = readDb();
+
+    // Bloqueio de reenvio antes de 60 dias se candidatura foi recusada
+    const cleanEmail = candidateEmail.toLowerCase().trim();
+    const cleanCpf = candidateCpf.replace(/\D/g, '');
+
+    const priorRejectedCandidate = (db.candidates || []).find(c => {
+      const matchEmail = c.email && c.email.toLowerCase().trim() === cleanEmail;
+      const matchCpf = cleanCpf && c.cpf && c.cpf.replace(/\D/g, '') === cleanCpf;
+      return (matchEmail || matchCpf) && (c.status === 'RECUSADO' || (c.status as any) === 'rejected');
+    });
+
+    const priorRejectedOp = (db.operators || []).find(o => {
+      const matchEmail = o.email && o.email.toLowerCase().trim() === cleanEmail;
+      const matchCpf = cleanCpf && o.cpf && o.cpf.replace(/\D/g, '') === cleanCpf;
+      return (matchEmail || matchCpf) && (o.status === 'RECUSADO' || (o.status as any) === 'rejected');
+    });
+
+    const priorRecord = priorRejectedCandidate || priorRejectedOp;
+    if (priorRecord) {
+      const reapplyTimestamp = priorRecord.reapply_after
+        ? new Date(priorRecord.reapply_after).getTime()
+        : (priorRecord.rejected_at
+            ? new Date(priorRecord.rejected_at).getTime() + 60 * 24 * 60 * 60 * 1000
+            : (priorRecord.createdAt
+                ? new Date(priorRecord.createdAt).getTime() + 60 * 24 * 60 * 60 * 1000
+                : 0));
+
+      if (reapplyTimestamp > Date.now()) {
+        const reapplyDateFormatted = new Date(reapplyTimestamp).toLocaleDateString('pt-BR');
+        return NextResponse.json(
+          {
+            error: `Sua candidatura anterior foi analisada recentemente. Conforme as diretrizes do processo seletivo da Webbilly, você poderá enviar uma nova inscrição a partir de ${reapplyDateFormatted}.`
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     let sponsorId: string | null = null;
     let usedCode: string | null = null;
 

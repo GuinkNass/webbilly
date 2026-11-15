@@ -25,7 +25,7 @@ export interface AdminContextType {
   actionSuccess: string | null;
   setActionSuccess: (msg: string | null) => void;
   handleLogout: () => Promise<void>;
-  copyToClipboard: (text: string) => void;
+  copyToClipboard: (text: string, msg?: string) => void;
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
@@ -123,9 +123,13 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     router.push('/admin/login');
   };
 
-  const copyToClipboard = (text: string) => {
+  const copyToClipboard = (text: string, msg?: string) => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(text);
+      if (msg) {
+        setActionSuccess(msg);
+        setTimeout(() => setActionSuccess(null), 3000);
+      }
     }
   };
 

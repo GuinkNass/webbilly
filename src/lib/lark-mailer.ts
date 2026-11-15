@@ -49,6 +49,7 @@ export interface OperatorApprovalEmailData {
 export interface OperatorRejectionEmailData {
   operadorNome: string;
   operadorEmailPessoal: string;
+  reapplyDate?: string;
 }
 
 export interface ContactData {
@@ -407,17 +408,17 @@ export async function sendOperatorRejectionEmail(data: OperatorRejectionEmailDat
         <!-- Conteúdo -->
         <div style="padding:28px 24px;">
           <h2 style="font-size:17px;font-weight:800;color:#ffffff;margin:0 0 14px 0;">
-            Olá, ${data.operadorNome}.
+            Olá, ${data.operadorNome}!
           </h2>
           <p style="font-size:13px;color:#94a3b8;line-height:1.7;margin:0 0 16px 0;">
-            Agradecemos sinceramente pelo envio de seus dados e pelo interesse em atuar como Operador Comercial parceiro da Webbilly.
-          </p>
-          <p style="font-size:13px;color:#94a3b8;line-height:1.7;margin:0 0 16px 0;">
-            Informamos que, por <strong>contingência operacional e preenchimento integral das vagas regionais para este ciclo</strong>, não conseguiremos liberar novas licenças de operação para a sua praça neste momento.
+            Agradecemos o seu interesse em fazer parte da equipe de operadores da Webbilly. No momento não temos vagas disponíveis para o seu perfil.
           </p>
           <div style="background:#0d111a;border:1px solid #1e2638;border-radius:12px;padding:16px;margin:20px 0;font-size:12px;color:#cbd5e1;line-height:1.6;">
-            Seu cadastro e currículo comercial permanecerão ativos em nosso <strong>Banco de Talentos Preferencial</strong>. Assim que um novo lote de licenças e cotas regionais for disponibilizado, entraremos em contato prioritariamente pelo seu WhatsApp.
+            Caso tenha interesse, você poderá enviar uma nova candidatura novamente <strong>após 60 dias</strong>${data.reapplyDate ? ` (a partir de <strong>${data.reapplyDate}</strong>)` : ''}.
           </div>
+          <p style="font-size:13px;color:#94a3b8;line-height:1.7;margin:0 0 16px 0;">
+            Desejamos muito sucesso em seus projetos e trajetória profissional!
+          </p>
           <p style="font-size:12px;color:#64748b;line-height:1.6;margin:16px 0 0 0;text-align:center;">
             Atenciosamente,<br/>
             <strong style="color:#94a3b8;">Equipe de Recrutamento & Operações Webbilly</strong>

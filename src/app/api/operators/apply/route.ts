@@ -68,13 +68,34 @@ export async function POST(req: NextRequest) {
     try {
       const db = readDb();
       const existing = db.candidates.find(c => c.email.toLowerCase() === candidateEmail);
-      if (!existing) {
-        db.candidates.unshift(candidateData);
-      } else {
+      if (existing) {
+        if (existing.status === 'RECUSADO' || (existing.status as any) === 'rejected') {
+          const reapplyTimestamp = existing.reapply_after
+            ? new Date(existing.reapply_after).getTime()
+            : (existing.rejected_at
+                ? new Date(existing.rejected_at).getTime() + 60 * 24 * 60 * 60 * 1000
+                : (existing.createdAt
+                    ? new Date(existing.createdAt).getTime() + 60 * 24 * 60 * 60 * 1000
+                    : 0));
+
+          if (reapplyTimestamp > Date.now()) {
+            const reapplyDateFormatted = new Date(reapplyTimestamp).toLocaleDateString('pt-BR');
+            return NextResponse.json(
+              {
+                success: false,
+                error: `Sua candidatura anterior foi analisada recentemente. Conforme as diretrizes do processo seletivo da Webbilly, você poderá enviar uma nova inscrição a partir de ${reapplyDateFormatted}.`
+              },
+              { status: 403 }
+            );
+          }
+        }
         Object.assign(existing, candidateData);
+      } else {
+        db.candidates.unshift(candidateData);
       }
       writeDb(db);
-    } catch (dbErr) {
+    } catch (dbErr: any) {
+      if (dbErr?.status === 403) throw dbErr;
       console.warn('[Apply API] Aviso na persistência local do db:', dbErr);
     }
 

@@ -28,10 +28,30 @@ export async function POST(req: NextRequest) {
     // Verifica se já existe candidato com este email
     const existing = db.candidates.find(c => c.email.toLowerCase() === email.toLowerCase());
     if (existing) {
-      return NextResponse.json(
-        { error: 'Já existe uma candidatura registrada com este e-mail. Aguarde a análise da equipe Billy Suite.' },
-        { status: 409 }
-      );
+      if (existing.status === 'RECUSADO' || (existing.status as any) === 'rejected') {
+        const reapplyTimestamp = existing.reapply_after
+          ? new Date(existing.reapply_after).getTime()
+          : (existing.rejected_at
+              ? new Date(existing.rejected_at).getTime() + 60 * 24 * 60 * 60 * 1000
+              : (existing.createdAt
+                  ? new Date(existing.createdAt).getTime() + 60 * 24 * 60 * 60 * 1000
+                  : 0));
+
+        if (reapplyTimestamp > Date.now()) {
+          const reapplyDateFormatted = new Date(reapplyTimestamp).toLocaleDateString('pt-BR');
+          return NextResponse.json(
+            {
+              error: `Sua candidatura anterior foi analisada recentemente. Conforme as diretrizes do processo seletivo da Webbilly, você poderá enviar uma nova inscrição a partir de ${reapplyDateFormatted}.`
+            },
+            { status: 403 }
+          );
+        }
+      } else {
+        return NextResponse.json(
+          { error: 'Já existe uma candidatura registrada com este e-mail. Aguarde a análise da equipe Webbilly.' },
+          { status: 409 }
+        );
+      }
     }
 
     let sponsorId: string | null = null;
