@@ -49,17 +49,17 @@ export interface SiteGenerationInput {
 }
 
 /**
- * Executa a chamada à API Gemini com fallback automático de modelos
+ * Executa a chamada à API Gemini com fallback automático de modelos e timeout seguro
  */
 async function callGeminiApi(prompt: string, apiKey: string, preferredModel?: string): Promise<string> {
   const models = [
     preferredModel || process.env.GEMINI_MODEL || 'gemini-2.5-flash',
-    'gemini-2.5-flash',
-    'gemini-1.5-flash',
     'gemini-2.0-flash',
-    'gemini-flash-latest'
+    'gemini-1.5-flash',
+    'gemini-2.5-pro'
   ].filter(Boolean);
 
+  const cleanKey = apiKey.trim();
   const tried = new Set<string>();
   let lastError: any = null;
 
@@ -68,7 +68,8 @@ async function callGeminiApi(prompt: string, apiKey: string, preferredModel?: st
     tried.add(model);
 
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`;
+      
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -78,12 +79,13 @@ async function callGeminiApi(prompt: string, apiKey: string, preferredModel?: st
             temperature: 0.35,
             maxOutputTokens: 32768
           }
-        })
+        }),
+        signal: AbortSignal.timeout(20000)
       });
 
       if (!res.ok) {
         const errorText = await res.text().catch(() => '');
-        console.warn(`[Gemini Engine] Modelo ${model} falhou com status ${res.status}: ${errorText.slice(0, 150)}`);
+        console.warn(`[Gemini Engine] Modelo ${model} retornou status ${res.status}: ${errorText.slice(0, 150)}`);
         continue;
       }
 
@@ -100,7 +102,7 @@ async function callGeminiApi(prompt: string, apiKey: string, preferredModel?: st
     }
   }
 
-  throw lastError || new Error('Nenhum modelo compatível do Gemini respondeu com sucesso.');
+  throw lastError || new Error('Nenhum modelo compatível do Gemini respondeu a tempo.');
 }
 
 function cleanHtmlResponse(text: string): string {
@@ -124,10 +126,10 @@ export async function buildSiteHtml(input: SiteGenerationInput): Promise<{ html:
     `Olá! Vim pelo site ${input.subdomain}.webbilly.com.br e gostaria de mais informações sobre os serviços da ${input.businessName}.`
   )}`;
 
-  const activeAccent = input.accentColor || tpl.accentColor || '#84cc16';
-  const apiKey = process.env.GEMINI_API_KEY || '';
+  const activeAccent = (input.accentColor || tpl.accentColor || '#84cc16').trim();
+  const apiKey = (process.env.GEMINI_API_KEY || '').trim();
 
-  // 1. Tenta geração profunda via Gemini AI se houver API Key
+  // 1. Tenta geração profunda via Gemini AI se houver API Key configurada
   if (apiKey) {
     try {
       const prompt = `Você é o compilador sênior de Landing Pages do Billy Suite Desktop.
@@ -458,10 +460,12 @@ function generateSmartModularDesktopHtml(
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      ${reviews.map((r) => `
+      ${reviews.map((r) => {
+        const starCount = Math.max(1, Math.min(5, Math.round(Number(r.rating) || 5)));
+        return `
         <div class="p-6 rounded-3xl bg-[#0e121b] border border-white/[0.08] space-y-4 shadow-xl">
           <div class="flex items-center gap-1 text-amber-400 text-xs">
-            ${Array(r.rating || 5).fill('<i class="fa-solid fa-star"></i>').join('')}
+            ${Array(starCount).fill('<i class="fa-solid fa-star"></i>').join('')}
           </div>
           <p class="text-zinc-300 text-xs leading-relaxed italic">"${r.text}"</p>
           <div class="pt-4 border-t border-white/[0.06] flex items-center justify-between">
@@ -469,7 +473,8 @@ function generateSmartModularDesktopHtml(
             <span class="text-[10px] text-zinc-500 font-mono">Avaliação Google</span>
           </div>
         </div>
-      `).join('')}
+      `;
+      }).join('')}
     </div>
   </section>
   ` : ''}

@@ -101,6 +101,34 @@ interface BillyWebStudioProps {
   operatorEmail?: string;
 }
 
+/**
+ * Função utilitária para leitura segura de respostas da API
+ * Previne o erro "Unexpected token 'A', 'An error o'... is not valid JSON"
+ * ao converter erros HTML do servidor em mensagens legíveis.
+ */
+async function safeFetchJson(url: string, options?: RequestInit): Promise<any> {
+  const res = await fetch(url, options);
+  const rawText = await res.text().catch(() => '');
+  let json: any = null;
+  try {
+    json = rawText ? JSON.parse(rawText) : null;
+  } catch {
+    // Se a Vercel retornou página HTML de erro (ex: 500 ou 504)
+    const cleanError = rawText
+      .replace(/<[^>]*>?/gm, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 250);
+    throw new Error(cleanError || `Erro no servidor (Status ${res.status}).`);
+  }
+
+  if (!res.ok) {
+    throw new Error(json?.error || json?.message || `Erro HTTP ${res.status}`);
+  }
+
+  return json;
+}
+
 export default function BillyWebStudio({
   role,
   operatorId = 'OP-BILLY-01',
@@ -289,9 +317,8 @@ export default function BillyWebStudio({
     const searchTarget = q !== undefined ? q : pixabayQuery;
     setPixabayLoading(true);
     try {
-      const res = await fetch(`/api/studio/pixabay?q=${encodeURIComponent(searchTarget || 'business')}&perPage=18`);
-      const data = await res.json();
-      if (data.success && Array.isArray(data.images)) {
+      const data = await safeFetchJson(`/api/studio/pixabay?q=${encodeURIComponent(searchTarget || 'business')}&perPage=18`);
+      if (data && data.success && Array.isArray(data.images)) {
         setPixabayImages(data.images);
       }
     } catch (err) {
@@ -305,15 +332,27 @@ export default function BillyWebStudio({
   const loadProjects = async () => {
     try {
       setProjectsLoading(true);
-      const res = await fetch(`/api/studio/projetos?role=${role}&operatorId=${operatorId}`);
-      const data = await res.json();
-      if (data.success && Array.isArray(data.projects)) {
+      const data = await safeFetchJson(`/api/studio/projetos?role=${role}&operatorId=${operatorId}`);
+      if (data && data.success && Array.isArray(data.projects)) {
         setProjects(data.projects);
       }
     } catch (err) {
       console.warn('Erro ao carregar projetos:', err);
     } finally {
       setProjectsLoading(false);
+    }
+  };
+
+  // Excluir projeto do histórico
+  const handleDeleteProject = async (slug: string) => {
+    if (!confirm(`Tem certeza que deseja excluir o site "${slug}" do histórico?`)) return;
+    try {
+      await safeFetchJson(`/api/studio/projetos?slug=${encodeURIComponent(slug)}`, {
+        method: 'DELETE'
+      });
+      loadProjects();
+    } catch (err: any) {
+      alert('Erro ao excluir projeto: ' + err.message);
     }
   };
 
@@ -331,16 +370,14 @@ export default function BillyWebStudio({
     const city = cityQuery.trim() || 'São Paulo - SP';
 
     try {
-      const res = await fetch('/api/studio/buscar-leads', {
+      const data = await safeFetchJson('/api/studio/buscar-leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ niche, city })
       });
 
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || data.message || `Erro HTTP ${res.status}`);
+      if (!data.success) {
+        throw new Error(data.error || data.message || 'Erro ao buscar comércios');
       }
 
       const results = Array.isArray(data.leads) ? data.leads : [];
@@ -450,7 +487,7 @@ export default function BillyWebStudio({
     setCopyGenerating(true);
     setCopySuccessNotice(false);
     try {
-      const res = await fetch('/api/studio/gerar-copy', {
+      const json = await safeFetchJson('/api/studio/gerar-copy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -460,7 +497,6 @@ export default function BillyWebStudio({
           toneOfVoice: siteForm.toneOfVoice
         })
       });
-      const json = await res.json();
       if (json.success && json.data) {
         setSiteForm((prev) => ({
           ...prev,
@@ -486,7 +522,7 @@ export default function BillyWebStudio({
     setIsExtractingOcr(true);
     setOcrSuccessNotice(null);
     try {
-      const res = await fetch('/api/studio/extrair-texto', {
+      const data = await safeFetchJson('/api/studio/extrair-texto', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -495,7 +531,6 @@ export default function BillyWebStudio({
           niche: siteForm.niche
         })
       });
-      const data = await res.json();
       if (data.success && Array.isArray(data.services) && data.services.length > 0) {
         setSiteForm((prev) => ({
           ...prev,
@@ -584,7 +619,7 @@ export default function BillyWebStudio({
       setTimeout(() => setGenerationStep('Redigindo copywriting persuasivo e estrutura de alta conversão...'), 2600);
       setTimeout(() => setGenerationStep('Compilando HTML completo e botões de WhatsApp...'), 4200);
 
-      const res = await fetch('/api/studio/gerar-site', {
+      const data = await safeFetchJson('/api/studio/gerar-site', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -616,7 +651,6 @@ export default function BillyWebStudio({
         })
       });
 
-      const data = await res.json();
       if (!data.success) {
         throw new Error(data.error || 'Erro ao gerar site');
       }
@@ -652,7 +686,7 @@ export default function BillyWebStudio({
     setDeployError(null);
 
     try {
-      const res = await fetch('/api/studio/deploy', {
+      const data = await safeFetchJson('/api/studio/deploy', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -669,7 +703,6 @@ export default function BillyWebStudio({
         })
       });
 
-      const data = await res.json();
       if (!data.success) {
         throw new Error(data.error || 'Falha ao realizar deploy');
       }
@@ -691,7 +724,7 @@ export default function BillyWebStudio({
     setAdjustingSite(true);
     setAdjustSuccessMsg(null);
     try {
-      const res = await fetch('/api/studio/ajustar-site', {
+      const data = await safeFetchJson('/api/studio/ajustar-site', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -700,7 +733,6 @@ export default function BillyWebStudio({
           currentHtml: generatedHtml
         })
       });
-      const data = await res.json();
       if (data.success) {
         setAdjustSuccessMsg(`Alteração "${text}" aplicada com sucesso!`);
         setQuickInstruction('');
@@ -2118,28 +2150,39 @@ export default function BillyWebStudio({
                   </div>
 
                   <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPreviewSlug(proj.slug);
+                          setGeneratedHtml('');
+                          setActiveTab('preview');
+                        }}
+                        className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/[0.06] hover:bg-white/[0.12] text-white transition flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Ver Preview</span>
+                      </button>
+
+                      <a
+                        href={proj.proposalUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#84cc16]/15 hover:bg-[#84cc16] text-[#84cc16] hover:text-black border border-[#84cc16]/40 transition flex items-center gap-1.5"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        <span>Proposta</span>
+                      </a>
+                    </div>
+
                     <button
                       type="button"
-                      onClick={() => {
-                        setPreviewSlug(proj.slug);
-                        setGeneratedHtml('');
-                        setActiveTab('preview');
-                      }}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/[0.06] hover:bg-white/[0.12] text-white transition flex items-center gap-1.5 cursor-pointer"
+                      onClick={() => handleDeleteProject(proj.slug)}
+                      className="p-2 rounded-xl text-xs font-medium text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition cursor-pointer"
+                      title="Excluir site do Histórico"
                     >
-                      <Eye className="w-3.5 h-3.5" />
-                      <span>Ver Preview</span>
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
-
-                    <a
-                      href={proj.proposalUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#84cc16]/15 hover:bg-[#84cc16] text-[#84cc16] hover:text-black border border-[#84cc16]/40 transition flex items-center gap-1.5"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      <span>Proposta</span>
-                    </a>
                   </div>
                 </div>
               ))}

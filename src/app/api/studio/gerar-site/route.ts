@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
     const {
       businessName,
       niche = 'Barbearia',
@@ -65,70 +65,111 @@ export async function POST(req: NextRequest) {
     )}`;
 
     // 1. Gera o HTML com o motor completo portado do Billy Desktop
-    const generationResult = await buildSiteHtml({
-      businessName,
-      niche,
-      city,
-      subdomain: cleanSlug,
-      phone: rawPhone,
-      whatsapp: cleanPhone,
-      instagram,
-      address,
-      tagline,
-      description,
-      theme,
-      templateId,
-      accentColor,
-      logoUrl,
-      heroPhoto,
-      galleryPhotos,
-      services,
-      features,
-      faqs,
-      reviews: reviews.length > 0 ? reviews : testimonials,
-      hours,
-      blocks,
-      differentiators,
-      toneOfVoice,
-      uploadedText
-    });
+    let generationResult;
+    try {
+      generationResult = await buildSiteHtml({
+        businessName,
+        niche,
+        city,
+        subdomain: cleanSlug,
+        phone: rawPhone,
+        whatsapp: cleanPhone,
+        instagram,
+        address,
+        tagline,
+        description,
+        theme,
+        templateId,
+        accentColor,
+        logoUrl,
+        heroPhoto,
+        galleryPhotos,
+        services,
+        features,
+        faqs,
+        reviews: reviews.length > 0 ? reviews : testimonials,
+        hours,
+        blocks,
+        differentiators,
+        toneOfVoice,
+        uploadedText
+      });
+    } catch (genErr: any) {
+      console.error('[Studio Gerar Site] Erro no buildSiteHtml:', genErr);
+      return NextResponse.json(
+        { success: false, error: `Falha na geração do HTML: ${genErr?.message || 'Erro desconhecido'}` },
+        { status: 500 }
+      );
+    }
 
     const generatedHtml = generationResult.html;
 
-    // 2. Grava no disco local (para ambientes persistentes / dev)
+    // 2. Grava no disco local apenas se não estiver em ambiente Vercel Serverless
     try {
-      const siteDir = path.join(process.cwd(), 'public', 'generated-sites', cleanSlug);
-      if (!fs.existsSync(siteDir)) {
-        fs.mkdirSync(siteDir, { recursive: true });
+      if (!process.env.VERCEL) {
+        const siteDir = path.join(process.cwd(), 'public', 'generated-sites', cleanSlug);
+        if (!fs.existsSync(siteDir)) {
+          fs.mkdirSync(siteDir, { recursive: true });
+        }
+        fs.writeFileSync(path.join(siteDir, 'index.html'), generatedHtml, 'utf-8');
       }
-      fs.writeFileSync(path.join(siteDir, 'index.html'), generatedHtml, 'utf-8');
     } catch (fsErr) {
       console.warn('[Studio Gerar Site] Aviso gravação em disco:', fsErr);
     }
 
     // 3. Salva no banco local db.json
     const leadToken = `lead_${cleanSlug}_${Date.now().toString(36)}`;
-    const db = readDb();
-    if (!db.generatedSites) db.generatedSites = {};
-    db.generatedSites[cleanSlug] = generatedHtml;
+    try {
+      const db = readDb();
+      if (!db.generatedSites) db.generatedSites = {};
+      db.generatedSites[cleanSlug] = generatedHtml;
 
-    if (!db.demos) db.demos = {};
-    db.demos[leadToken] = {
-      leadToken,
-      title: businessName,
-      category: niche,
-      deployedUrl: `/api/public/site/${cleanSlug}/render`,
-      phone: rawPhone,
-      instagram,
-      html: generatedHtml,
-      updatedAt: new Date().toISOString()
-    };
+      if (!db.demos) db.demos = {};
+      db.demos[leadToken] = {
+        leadToken,
+        title: businessName,
+        category: niche,
+        deployedUrl: `/api/public/site/${cleanSlug}/render`,
+        phone: rawPhone,
+        instagram,
+        html: generatedHtml,
+        updatedAt: new Date().toISOString()
+      };
 
-    if (!Array.isArray(db.subscriptions)) {
-      db.subscriptions = [];
+      if (!Array.isArray(db.subscriptions)) {
+        db.subscriptions = [];
+      }
+
+      const existingSubIdx = db.subscriptions.findIndex((s) => s.siteSlug === cleanSlug);
+      const subRecord = {
+        id: `sub_${cleanSlug}`,
+        siteSlug: cleanSlug,
+        clientName: businessName,
+        clientPhone: rawPhone,
+        clientEmail: `${cleanSlug}@webbilly.com.br`,
+        operatorToken: operatorId,
+        operatorName: operatorName,
+        monthlyPrice: 29.9,
+        status: 'active' as const,
+        deployedUrl: `/api/public/site/${cleanSlug}/render`,
+        checkoutUrl: `/proposta/${leadToken}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        leadToken
+      };
+
+      if (existingSubIdx >= 0) {
+        db.subscriptions[existingSubIdx] = { ...db.subscriptions[existingSubIdx], ...subRecord };
+      } else {
+        db.subscriptions.unshift(subRecord);
+      }
+
+      writeDb(db);
+    } catch (dbErr) {
+      console.warn('[Studio Gerar Site] Aviso db.json:', dbErr);
     }
 
-    const existingSubIdx = db.subscriptions.findIndex((s) => s.siteSlug === cleanSlug);
+    // 4. Salva no Supabase (Fonte de Verdade Persistente na Nuvem Vercel)
     const subRecord = {
       id: `sub_${cleanSlug}`,
       siteSlug: cleanSlug,
@@ -146,16 +187,6 @@ export async function POST(req: NextRequest) {
       leadToken
     };
 
-    if (existingSubIdx >= 0) {
-      db.subscriptions[existingSubIdx] = { ...db.subscriptions[existingSubIdx], ...subRecord };
-    } else {
-      db.subscriptions.unshift(subRecord);
-    }
-
-    writeDb(db);
-
-    // 4. Salva no Supabase (Fonte de Verdade Persistente na Nuvem Vercel)
-    // Gravamos html e html_content para garantir que /api/public/site/[slug]/render ache o HTML
     try {
       await upsertSubscriptionInSupabase(subRecord);
       const supabase = getSupabaseAdmin();
@@ -215,7 +246,7 @@ O que achou do visual que preparamos para vocês? Se quiser tirar qualquer dúvi
   } catch (error: any) {
     console.error('[Studio Gerar Site] Erro inesperado:', error);
     return NextResponse.json(
-      { success: false, error: error?.message || 'Falha ao gerar e publicar site.' },
+      { success: false, error: error?.message || 'Falha ao processar a geração do site.' },
       { status: 500 }
     );
   }
