@@ -39,6 +39,67 @@ export interface SubscriptionParams {
   value?: number;
 }
 
+export interface IndividualPaymentParams {
+  customerId: string;
+  siteSlug: string;
+  leadToken?: string;
+  operatorId?: string;
+  value?: number;
+  description?: string;
+  dueDateDays?: number;
+}
+
+/**
+ * Cria uma cobrança individual rastreável no Asaas (POST /v3/payments).
+ * Retorna o invoiceUrl direto (https://www.asaas.com/i/...) com suporte a Pix e Cartão.
+ */
+export async function createIndividualPayment(params: IndividualPaymentParams): Promise<{
+  paymentId: string;
+  invoiceUrl: string;
+  dueDate: string;
+}> {
+  const days = params.dueDateDays || 1;
+  const dueDateObj = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+  const dueDate = dueDateObj.toISOString().split('T')[0];
+
+  const externalReference = `${params.leadToken || 'lead'}|${params.siteSlug}|${params.operatorId || 'OP-0001'}`;
+  const description =
+    params.description || `Presença Digital Oficial - ${params.siteSlug}.webbilly.com.br`;
+
+  const payload = {
+    customer: params.customerId,
+    billingType: 'UNDEFINED', // Permite que o cliente pague via PIX ou Cartão de Crédito
+    value: params.value ?? 29.9,
+    dueDate,
+    description,
+    externalReference,
+    postalService: false
+  };
+
+  const res = await fetch(`${getApiUrl()}/payments`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(payload)
+  });
+
+  const data = await res.json();
+  if (!res.ok || !data.id) {
+    const errorMsg =
+      data?.errors?.[0]?.description ||
+      data?.message ||
+      'Erro ao gerar cobrança individual no Asaas.';
+    throw new Error(errorMsg);
+  }
+
+  const invoiceUrl = data.invoiceUrl || data.bankSlipUrl || `https://www.asaas.com/i/${data.id}`;
+
+  return {
+    paymentId: data.id,
+    invoiceUrl,
+    dueDate
+  };
+}
+
 /**
  * Localiza cliente existente pelo CPF/CNPJ ou e-mail, ou cadastra um novo no Asaas.
  */

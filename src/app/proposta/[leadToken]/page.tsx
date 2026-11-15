@@ -32,11 +32,48 @@ export default function ProposalPage() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsSubmitting, setTermsSubmitting] = useState(false);
 
+  // Dados do formulário de identificação Asaas
+  const [customerName, setCustomerName] = useState('');
+  const [customerCpfCnpj, setCustomerCpfCnpj] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
+  const [checkoutError, setCheckoutError] = useState('');
+
   // Estados de Recusa/Cancelamento de Proposta
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
   const [declining, setDeclining] = useState(false);
   const [isDeclined, setIsDeclined] = useState(false);
+
+  function maskCpfCnpj(v: string): string {
+    const digits = v.replace(/\D/g, '');
+    if (digits.length <= 11) {
+      return digits
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    } else {
+      return digits
+        .slice(0, 14)
+        .replace(/(\d{2})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1/$2')
+        .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+    }
+  }
+
+  function maskPhone(v: string): string {
+    const digits = v.replace(/\D/g, '').slice(0, 11);
+    if (digits.length <= 10) {
+      return digits
+        .replace(/(\d{2})(\d)/, '($1) $2')
+        .replace(/(\d{4})(\d{1,4})$/, '$1-$2');
+    }
+    return digits
+      .replace(/(\d{2})(\d)/, '($1) $2')
+      .replace(/(\d{5})(\d{1,4})$/, '$1-$2');
+  }
 
   useEffect(() => {
     if (!leadToken) return;
@@ -53,10 +90,65 @@ export default function ProposalPage() {
         if (resData?.lead?.accepted_terms_at) {
           setTermsAccepted(true);
         }
+        if (resData?.lead) {
+          if (resData.lead.title) setCustomerName(resData.lead.title);
+          if (resData.lead.phone) setCustomerPhone(maskPhone(resData.lead.phone));
+        }
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, [leadToken]);
+
+  const handleStartCheckout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCheckoutError('');
+
+    const cleanCpf = customerCpfCnpj.replace(/\D/g, '');
+    if (cleanCpf.length !== 11 && cleanCpf.length !== 14) {
+      setCheckoutError('Por favor, informe um CPF (11 dígitos) ou CNPJ (14 dígitos) válido.');
+      return;
+    }
+
+    const cleanEmail = customerEmail.trim();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      setCheckoutError('Por favor, informe um e-mail válido para receber o comprovante.');
+      return;
+    }
+
+    if (!customerName.trim()) {
+      setCheckoutError('Por favor, confirme o Nome Completo ou Razão Social.');
+      return;
+    }
+
+    setCheckoutSubmitting(true);
+    try {
+      const res = await fetch('/api/asaas/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          leadToken,
+          slug: data?.slug || '',
+          name: customerName.trim(),
+          cpfCnpj: cleanCpf,
+          email: cleanEmail,
+          phone: customerPhone.replace(/\D/g, ''),
+          plan: selectedPlan,
+          domain: selectedDomain
+        })
+      });
+
+      const resJson = await res.json();
+      if (!res.ok || !resJson.success || !resJson.invoiceUrl) {
+        throw new Error(resJson.error || 'Falha ao gerar cobrança no gateway Asaas.');
+      }
+
+      // Redireciona imediatamente para a fatura individual no Asaas
+      window.location.href = resJson.invoiceUrl;
+    } catch (err: any) {
+      setCheckoutError(err.message || 'Erro ao conectar ao checkout seguro.');
+      setCheckoutSubmitting(false);
+    }
+  };
 
   const handleToggleTerms = async (checked: boolean) => {
     setTermsAccepted(checked);
@@ -404,23 +496,107 @@ export default function ProposalPage() {
 
             <div className="space-y-4">
               <p className="text-xs text-slate-300 leading-relaxed">
-                Clique no botão abaixo para abrir o checkout oficial do gateway <strong>Asaas</strong> e ativar a primeira mensalidade via Pix ou Cartão de Crédito. O seu site entrará no ar imediatamente após a confirmação:
+                Confirme seus dados abaixo para emitir a cobrança oficial no gateway <strong>Asaas</strong> via Pix ou Cartão de Crédito. O seu site entrará no ar imediatamente após a confirmação:
               </p>
 
-              <a
-                href={subscription.checkoutUrl || `/api/subscription/create-checkout?leadId=${encodeURIComponent(leadToken)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-3.5 px-6 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20 cursor-pointer"
-              >
-                <CreditCard className="w-4 h-4" />
-                <span>Pagar R$ 29,90 & Ativar Meu Site no Ar</span>
-                <ArrowRight className="w-4 h-4" />
-              </a>
+              <form onSubmit={handleStartCheckout} className="space-y-4">
+                <div className="bg-[#070a11] border border-white/[0.08] rounded-2xl p-4 sm:p-5 space-y-3.5">
+                  <div className="flex items-center gap-2 text-slate-200 font-bold text-xs pb-2 border-b border-white/[0.06]">
+                    <ShieldCheck className="w-4 h-4 text-sky-400" />
+                    <span>Dados do Titular para Emissão da Cobrança Oficial Asaas</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
+                        Nome Completo ou Razão Social <span className="text-rose-400">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                        placeholder="Ex: Studio Bella Ltda"
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#0b101c] border border-white/10 text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
+                        CPF ou CNPJ do Titular <span className="text-rose-400">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={customerCpfCnpj}
+                        onChange={(e) => setCustomerCpfCnpj(maskCpfCnpj(e.target.value))}
+                        placeholder="000.000.000-00 ou 00.000.000/0000-00"
+                        maxLength={18}
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#0b101c] border border-white/10 text-white placeholder:text-slate-600 font-mono focus:outline-none focus:border-sky-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
+                        WhatsApp para Notificações <span className="text-rose-400">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={customerPhone}
+                        onChange={(e) => setCustomerPhone(maskPhone(e.target.value))}
+                        placeholder="(11) 99999-9999"
+                        maxLength={15}
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#0b101c] border border-white/10 text-white placeholder:text-slate-600 font-mono focus:outline-none focus:border-sky-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-mono uppercase text-slate-400 mb-1">
+                        E-mail para Receber o Comprovante <span className="text-rose-400">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={customerEmail}
+                        onChange={(e) => setCustomerEmail(e.target.value)}
+                        placeholder="contato@empresa.com.br"
+                        className="w-full px-3 py-2.5 rounded-xl bg-[#0b101c] border border-white/10 text-white placeholder:text-slate-600 focus:outline-none focus:border-sky-500"
+                      />
+                    </div>
+                  </div>
+
+                  {checkoutError && (
+                    <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
+                      <span>{checkoutError}</span>
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={checkoutSubmitting || !termsAccepted}
+                  className="w-full py-3.5 px-6 rounded-xl bg-sky-500 hover:bg-sky-400 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-bold text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20 cursor-pointer"
+                >
+                  {checkoutSubmitting ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
+                      <span>Emitindo Fatura Segura no Asaas...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="w-4 h-4" />
+                      <span>Confirmar & Ir para Pagamento Seguro (R$ 29,90)</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
 
               <div className="p-3 rounded-xl bg-[#070a11] border border-white/[0.06] text-[11px] text-slate-400 flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Cobrança 100% segura e blindada: nenhuma mensalidade futura será cobrada caso decida cancelar.</span>
+                <span>Cobrança 100% segura e individual emitida no Asaas: nenhuma mensalidade futura será cobrada caso decida cancelar.</span>
               </div>
             </div>
           </div>

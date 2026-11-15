@@ -428,6 +428,9 @@ export async function upsertSubscriptionInSupabase(sub: Partial<SubscriptionReco
     domain_purchased_at: sub.domain_purchased_at || sub.domainPurchasedAt || null,
     deployed_url: sub.deployedUrl || `https://${sub.siteSlug}.vercel.app`,
     checkout_url: sub.checkoutUrl || `/api/subscription/create-checkout?slug=${sub.siteSlug}`,
+    asaas_customer_id: (sub as any).asaasCustomerId || (sub as any).asaas_customer_id || null,
+    asaas_payment_id: (sub as any).asaasPaymentId || (sub as any).asaas_payment_id || null,
+    asaas_subscription_id: (sub as any).asaasSubscriptionId || (sub as any).asaas_subscription_id || null,
     updated_at: sub.updatedAt || nowIso
   };
 

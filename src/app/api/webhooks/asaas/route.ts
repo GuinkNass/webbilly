@@ -38,11 +38,18 @@ export async function POST(req: NextRequest) {
     const payment = payload.payment || {};
     const externalRef = payment.externalReference || payload.externalReference || '';
 
-    // Extrai o slug do site e o serial do operador da referência externa: 'slug:::operatorSerial'
+    // Extrai leadToken, slug do site e o serial do operador da referência externa:
+    // Suporta: 'leadToken|siteSlug|operatorId' ou 'siteSlug:::operatorSerial' ou 'siteSlug'
+    let leadToken = '';
     let siteSlug = '';
     let operatorSerial = '';
 
-    if (externalRef.includes(':::')) {
+    if (externalRef.includes('|')) {
+      const parts = externalRef.split('|');
+      leadToken = (parts[0] || '').trim();
+      siteSlug = (parts[1] || '').trim().toLowerCase();
+      operatorSerial = (parts[2] || '').trim();
+    } else if (externalRef.includes(':::')) {
       const parts = externalRef.split(':::');
       siteSlug = (parts[0] || '').trim().toLowerCase();
       operatorSerial = (parts[1] || '').trim();
@@ -58,12 +65,58 @@ export async function POST(req: NextRequest) {
       db.sales = [];
     }
 
-    // Localiza a assinatura por slug ou pelo ID da assinatura no Asaas
+    // Localiza a assinatura por paymentId, leadToken, slug ou ID da assinatura no Asaas
     let sub = db.subscriptions.find(
       s =>
+        (payment.id && ((s as any).asaasPaymentId === payment.id || (s as any).asaas_payment_id === payment.id)) ||
+        (leadToken && s.leadToken === leadToken) ||
         (siteSlug && s.siteSlug === siteSlug) ||
         (payment.subscription && (s.asaasSubscriptionId === payment.subscription || s.asaas_subscription_id === payment.subscription))
     );
+
+    // Se não encontrou no db local, consulta o Supabase
+    if (!sub) {
+      try {
+        const supabase = getSupabaseAdmin();
+        const orClauses = [
+          payment.id ? `asaas_payment_id.eq.${payment.id}` : null,
+          leadToken ? `lead_token.eq.${leadToken}` : null,
+          siteSlug ? `site_slug.eq.${siteSlug}` : null,
+          payment.subscription ? `asaas_subscription_id.eq.${payment.subscription}` : null
+        ].filter(Boolean).join(',');
+
+        if (orClauses) {
+          const { data: foundSubs } = await supabase
+            .from('subscriptions')
+            .select('*')
+            .or(orClauses)
+            .limit(1);
+
+          if (foundSubs && foundSubs.length > 0) {
+            const row = foundSubs[0];
+            sub = {
+              id: row.id,
+              siteSlug: row.site_slug,
+              leadToken: row.lead_token,
+              clientName: row.client_name,
+              clientPhone: row.client_phone,
+              clientEmail: row.client_email,
+              status: row.status,
+              deployedUrl: row.deployed_url,
+              monthlyPrice: row.monthly_price,
+              checkoutUrl: row.checkout_url,
+              asaasCustomerId: row.asaas_customer_id,
+              asaasSubscriptionId: row.asaas_subscription_id,
+              createdAt: row.created_at,
+              updatedAt: row.updated_at
+            };
+            db.subscriptions.unshift(sub);
+          }
+        }
+      } catch (sbLookupErr) {
+        console.warn('[Asaas Webhook] Erro ao consultar Supabase:', sbLookupErr);
+      }
+    }
 
     const asaasSubId = payment.subscription || payload.subscription || sub?.asaasSubscriptionId || sub?.asaas_subscription_id;
     const asaasCustId = payment.customer || payload.customer || sub?.asaasCustomerId || sub?.asaas_customer_id;
@@ -105,6 +158,29 @@ export async function POST(req: NextRequest) {
         // Libera acesso ao subdomínio no Edge Config
         if (effectiveSlug) {
           setSlugSuspended(effectiveSlug, false);
+        }
+
+        // Se for a primeira cobrança avulsa paga (R$ 29,90) e ainda não tem assinatura recorrente criada, agenda a recorrência (+30 dias)
+        const paymentValue = Number(payment.value) || 29.90;
+        if (paymentValue < 100 && asaasCustId && (!sub?.asaasSubscriptionId || sub.asaasSubscriptionId.startsWith('pay_'))) {
+          try {
+            const { createSubscription } = await import('@/services/asaas');
+            const recurringSub = await createSubscription({
+              customerId: asaasCustId,
+              siteSlug: effectiveSlug,
+              operatorSerial: operatorSerial || sub?.operatorToken,
+              value: 29.90
+            });
+            if (recurringSub?.subscriptionId) {
+              if (sub) {
+                sub.asaasSubscriptionId = recurringSub.subscriptionId;
+                (sub as any).asaas_subscription_id = recurringSub.subscriptionId;
+              }
+              console.log(`[Asaas Webhook] Assinatura recorrente mensal criada para ${effectiveSlug}: ${recurringSub.subscriptionId}`);
+            }
+          } catch (recErr) {
+            console.warn('[Asaas Webhook] Aviso ao criar assinatura recorrente no Asaas:', recErr);
+          }
         }
 
         // Localiza operador vinculado para registrar comissão de R$ 10,00 recorrentes
