@@ -167,6 +167,37 @@ export default function OperatorDashboardPage() {
       )}
 
       {/* =========================================================================
+          BANNER BILLY STUDIO WEB (SEM INSTALAÇÃO)
+         ========================================================================= */}
+      <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-r from-[#0c1322] via-[#101b2e] to-[#0c1a16] border border-[#84cc16]/40 shadow-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-[#84cc16]/10 rounded-full blur-[80px] pointer-events-none" />
+        
+        <div className="space-y-1.5 relative z-10">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#84cc16]/20 text-[#a3e635] border border-[#84cc16]/40">
+            <Sparkles className="w-3.5 h-3.5 animate-spin" />
+            <span>NOVO: 100% NO NAVEGADOR</span>
+          </div>
+          <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
+            Prefere trabalhar sem instalar nada? Use o Billy Studio Web!
+          </h2>
+          <p className="text-xs sm:text-sm text-zinc-300 max-w-2xl leading-relaxed">
+            Prospecte comércios locais no Google Maps, gere sites profissionais em segundos com IA, publique no subdomínio oficial e feche vendas no WhatsApp direto pelo navegador.
+          </p>
+        </div>
+
+        <div className="shrink-0 relative z-10">
+          <Link
+            href="/operador/estudio"
+            className="py-3 px-6 rounded-2xl font-black text-xs sm:text-sm bg-gradient-to-r from-[#84cc16] to-[#65a30d] hover:brightness-110 text-black shadow-[0_0_25px_rgba(132,204,22,0.4)] flex items-center gap-2 cursor-pointer transition"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Acessar Billy Studio Web Agora</span>
+            <ChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
+      </div>
+
+      {/* =========================================================================
           CARD CENTRAL DE DOWNLOADS & FERRAMENTAS OFICIAIS
          ========================================================================= */}
       <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#11141c] via-[#141824] to-[#0d1017] border border-white/[0.08] shadow-2xl space-y-6 relative overflow-hidden">

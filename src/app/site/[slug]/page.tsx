@@ -118,7 +118,9 @@ export default async function SiteViewerPage({
     : (isSuspended ? 'suspended' : (site?.status || 'active').toLowerCase());
 
   const clientName = site?.clientName || formatSlugToTitle(slug);
-  const deployedUrl = site?.deployedUrl || `https://${slug}.vercel.app`;
+  const deployedUrl = (site?.deployedUrl && !site.deployedUrl.includes(`${slug}.vercel.app`))
+    ? site.deployedUrl
+    : `/api/public/site/${slug}/render`;
   const checkoutUrl = site?.checkoutUrl || `/api/subscription/create-checkout?slug=${slug}`;
 
   // 5. Busca dados do operador responsável para suporte direto e reativação

@@ -82,6 +82,16 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
       badgeColor: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
     },
     {
+      href: '/operador/estudio',
+      label: 'Billy Studio Web',
+      tooltipTitle: 'Billy Studio Web (IA & Maps)',
+      tooltipDesc: 'Busque comércios no Google Maps, gere sites com IA, publique no subdomínio e envie propostas no WhatsApp.',
+      iconSrc: '/icones/app-newproject.svg',
+      isTrophy: false,
+      badge: 'NOVO ✨',
+      badgeColor: 'bg-[#84cc16]/25 text-[#a3e635] border border-[#84cc16]/50 font-bold'
+    },
+    {
       href: '/operador/sites',
       label: 'Sites Ativos (SaaS)',
       tooltipTitle: 'Sites Ativos',

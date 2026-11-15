@@ -389,6 +389,7 @@ export interface DatabaseSchema {
   adminUsers: AdminUser[];
   briefings?: Record<string, BriefingRecord>;
   demos?: Record<string, DemoRecord>;
+  generatedSites?: Record<string, string>;
   subscriptions: SubscriptionRecord[];
   payoutRequests?: PayoutRequest[];
   medalUpgrades?: MedalUpgradeRecord[];

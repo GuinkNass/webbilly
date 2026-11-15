@@ -83,6 +83,16 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       tooltipDesc: 'Visão geral com gráficos, faturamento, metas e indicadores em tempo real.'
     },
     {
+      href: '/admin/estudio',
+      label: 'Billy Studio Web',
+      iconSrc: '/icones/app-newproject.svg',
+      isTrophy: false,
+      badge: 'IA & MAPS ✨',
+      badgeColor: 'bg-[#84cc16]/25 text-[#a3e635] border border-[#84cc16]/50 font-bold',
+      tooltipTitle: 'Billy Studio Web (Master)',
+      tooltipDesc: 'Busque comércios com IA, gere sites para subdomínios oficiais e acompanhe propostas de todos os operadores.'
+    },
+    {
       href: '/admin/sites',
       label: 'Gestão de Sites (SaaS)',
       iconSrc: '/icones/sites.svg',
