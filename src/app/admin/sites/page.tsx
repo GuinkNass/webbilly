@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAdmin } from '@/contexts/AdminContext';
 import AdminCustomDomains from '@/components/AdminCustomDomains';
 import { ActionTooltip } from '@/components/ui/ActionTooltip';
@@ -14,7 +15,9 @@ import {
   CheckCircle,
   XCircle,
   Globe,
-  Layers
+  Layers,
+  Copy,
+  MessageCircle
 } from 'lucide-react';
 
 function getSubdomain(sub: any): string {
@@ -29,16 +32,75 @@ function getSubdomain(sub: any): string {
   return '';
 }
 
-export default function AdminSitesPage() {
+function getWhatsAppUrl(phone: string, text: string): string {
+  const cleanPhone = (phone || '').replace(/\D/g, '');
+  const finalPhone = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
+  return `https://wa.me/${finalPhone}?text=${encodeURIComponent(text)}`;
+}
+
+function getReceiptText(receipt: any): string {
+  const d = receipt.cancelledAt ? new Date(receipt.cancelledAt) : new Date();
+  const dateStr = d.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+  const subdom = receipt.subdomain ? `${receipt.subdomain}.webbilly.com.br` : 'webbilly.com.br';
+  return `*COMPROVANTE OFICIAL DE ENCERRAMENTO DE ASSINATURA — WEBBILLY*
+
+Prezado(a) *${receipt.clientName}*,
+Confirmamos que a solicitação de cancelamento da assinatura do seu site foi processada e concluída com sucesso.
+
+📋 *DADOS DO ENCERRAMENTO:*
+• *Protocolo Oficial:* ${receipt.protocol}
+• *Estabelecimento:* ${receipt.clientName}
+• *Subdomínio:* ${subdom}
+• *Valor da Mensalidade:* R$ 29,90/mês (Cobranças cessadas no Asaas)
+• *Data/Hora do Encerramento:* ${dateStr}
+• *Status:* Encerrado Definitivo
+
+✅ *GARANTIA DE ENCERRAMENTO:*
+Informamos que não haverá nenhuma cobrança futura vinculada a esta assinatura no cartão de crédito ou Pix. O site foi retirado do ar conforme solicitado.
+
+Caso deseje reativar seu site profissional no futuro com a Webbilly, basta entrar em contato com nossa equipe.
+
+Agradecemos pela parceria!
+*Equipe Webbilly Brasil*
+https://webbilly.com.br`;
+}
+
+function AdminSitesContent() {
+  const searchParams = useSearchParams();
   const { data, loading, error, searchQuery, loadData, setActionSuccess } = useAdmin();
 
   const [subFilter, setSubFilter] = useState<'TODOS' | 'ACTIVE' | 'SUSPENDED' | 'PENDING' | 'CANCELLATION_REQUESTED'>('TODOS');
+
+  // Ativa automaticamente o filtro de cancelamento caso venha por query param
+  useEffect(() => {
+    const statusParam = searchParams.get('status') || searchParams.get('filter');
+    if (statusParam && (statusParam.toLowerCase() === 'cancellation_requested' || statusParam.toUpperCase() === 'CANCELLATION_REQUESTED')) {
+      setSubFilter('CANCELLATION_REQUESTED');
+    }
+  }, [searchParams]);
 
   // Estados de Cancelamento Definitivo (Asaas + Vercel + Supabase)
   const [cancelDefinitiveSub, setCancelDefinitiveSub] = useState<any | null>(null);
   const [cancelDefinitiveLoading, setCancelDefinitiveLoading] = useState(false);
   const [cancelDefinitiveSuccess, setCancelDefinitiveSuccess] = useState<string | null>(null);
   const [cancelDefinitiveError, setCancelDefinitiveError] = useState<string | null>(null);
+
+  // Modal de Comprovante de Encerramento (Pós-cancelamento)
+  const [closureReceipt, setClosureReceipt] = useState<{
+    protocol: string;
+    clientName: string;
+    subdomain: string;
+    clientPhone: string;
+    asaasSubscriptionId: string;
+    cancelledAt: string;
+  } | null>(null);
+  const [copiedReceipt, setCopiedReceipt] = useState(false);
 
   const handleToggleSubscription = async (subscriptionId: string, currentStatus: string) => {
     try {
@@ -76,12 +138,21 @@ export default function AdminSitesPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Erro ao executar cancelamento definitivo.');
 
-      setCancelDefinitiveSuccess('Cancelamento definitivo executado com sucesso no Asaas, Vercel e Supabase.');
+      const targetSub = cancelDefinitiveSub;
+      const cleanProtocol = json.protocol || json.details?.protocol || `ENC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+      // Preenche comprovante oficial para visualização e envio via WhatsApp
+      setClosureReceipt({
+        protocol: cleanProtocol,
+        clientName: json.details?.clientName || targetSub.clientName || 'Cliente',
+        subdomain: getSubdomain(targetSub) || json.details?.siteSlug || '',
+        clientPhone: json.details?.clientPhone || targetSub.clientPhone || '',
+        asaasSubscriptionId: json.details?.asaasSubscriptionId || targetSub.asaasSubscriptionId || 'Encerrada',
+        cancelledAt: json.details?.cancelledAt || new Date().toISOString()
+      });
+
+      setCancelDefinitiveSub(null);
       await loadData();
-      setTimeout(() => {
-        setCancelDefinitiveSub(null);
-        setCancelDefinitiveSuccess(null);
-      }, 2000);
     } catch (err: any) {
       setCancelDefinitiveError(err.message || 'Falha ao executar cancelamento.');
     } finally {
@@ -109,7 +180,12 @@ export default function AdminSitesPage() {
     );
   }
 
-  const subscriptions = (data?.subscriptions || []).filter((sub: any) => {
+  const allSubscriptions = data?.subscriptions || [];
+  const pendingCancellationsCount = allSubscriptions.filter(
+    (s: any) => s.cancellationRequested || s.cancellation_requested
+  ).length;
+
+  const subscriptions = allSubscriptions.filter((sub: any) => {
     if (subFilter === 'ACTIVE' && sub.status !== 'active') return false;
     if (subFilter === 'SUSPENDED' && sub.status !== 'suspended') return false;
     if (subFilter === 'PENDING' && sub.status !== 'pending') return false;
@@ -139,7 +215,7 @@ export default function AdminSitesPage() {
             Gestão de Sites & Assinaturas Recorrentes
           </h1>
           <p className="text-xs text-zinc-400 mt-1">
-            Controle de cobranças Asaas, suspensão automática no Edge Config e cancelamento definitivo.
+            Controle de cobranças Asaas, suspensão automática no Edge Config e cancelamento definitivo assistido.
           </p>
         </div>
 
@@ -150,18 +226,31 @@ export default function AdminSitesPage() {
             { id: 'ACTIVE', label: 'Ativos' },
             { id: 'SUSPENDED', label: 'Suspensos' },
             { id: 'PENDING', label: 'Pendentes' },
-            { id: 'CANCELLATION_REQUESTED', label: 'Cancelamento Solicitado' }
+            { id: 'CANCELLATION_REQUESTED', label: 'Cancelamento Solicitado', count: pendingCancellationsCount }
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setSubFilter(tab.id as any)}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg font-semibold transition cursor-pointer inline-flex items-center gap-1.5 ${
                 subFilter === tab.id
-                  ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-sm'
+                  ? tab.id === 'CANCELLATION_REQUESTED'
+                    ? 'bg-rose-500/25 text-rose-300 border border-rose-500/50 shadow-sm shadow-rose-950/40'
+                    : 'bg-sky-500/20 text-sky-300 border border-sky-500/40 shadow-sm'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
-              {tab.label}
+              <span>{tab.label}</span>
+              {typeof tab.count === 'number' && tab.count > 0 && (
+                <span
+                  className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                    subFilter === tab.id
+                      ? 'bg-rose-500 text-white'
+                      : 'bg-rose-500/30 text-rose-300 border border-rose-500/40 animate-pulse'
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -195,9 +284,19 @@ export default function AdminSitesPage() {
                   const isOnline = sub.status === 'active' && isPublished;
                   const isSuspended = sub.status === 'suspended';
                   const isCancelled = sub.status === 'cancelled';
+                  const isCancellationRequested = Boolean(sub.cancellationRequested || sub.cancellation_requested);
+
+                  const retentionMessage = `Olá ${sub.clientName || ''}! Aqui é da equipe Webbilly Brasil sobre a sua solicitação de cancelamento da assinatura do site ${subDomain ? `${subDomain}.webbilly.com.br` : ''}. Posso te ajudar com alguma dúvida ou suporte?`;
 
                   return (
-                    <tr key={sub.id} className="hover:bg-white/[0.02] transition">
+                    <tr
+                      key={sub.id}
+                      className={`transition ${
+                        isCancellationRequested
+                          ? 'bg-rose-950/20 border-l-4 border-l-rose-500 hover:bg-rose-950/30'
+                          : 'hover:bg-white/[0.02]'
+                      }`}
+                    >
                       <td className="py-3.5 px-4 font-mono">
                         {subDomain ? (
                           <ActionTooltip title="Abrir Subdomínio" description="Acessa o site público do cliente hospedado no subdomínio oficial." side="top">
@@ -219,9 +318,27 @@ export default function AdminSitesPage() {
                       <td className="py-3.5 px-4">
                         <span className="font-semibold text-white block">{sub.clientName}</span>
                         <span className="text-[11px] text-zinc-400">{sub.planName || 'Assinatura Mensal R$ 29,90'}</span>
+                        {sub.cancellationReason && (
+                          <span className="text-[10px] text-rose-300 block italic mt-0.5">
+                            Motivo: "{sub.cancellationReason}"
+                          </span>
+                        )}
                       </td>
                       <td className="py-3.5 px-4 font-mono text-zinc-300">
-                        {sub.clientPhone || '—'}
+                        {sub.clientPhone ? (
+                          <a
+                            href={getWhatsAppUrl(sub.clientPhone, retentionMessage)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:text-emerald-400 hover:underline inline-flex items-center gap-1"
+                            title="Chamar no WhatsApp"
+                          >
+                            <span>{sub.clientPhone}</span>
+                            <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+                          </a>
+                        ) : (
+                          '—'
+                        )}
                       </td>
                       <td className="py-3.5 px-4 font-mono">
                         <span className="text-white font-bold">R$ {sub.monthlyPrice?.toFixed(2) || '29.90'}/mês</span>
@@ -251,52 +368,96 @@ export default function AdminSitesPage() {
                             </span>
                           </ActionTooltip>
                         </div>
-                        {(sub.cancellationRequested || sub.cancellation_requested) && (
+                        {isCancellationRequested && (
                           <div className="pt-0.5">
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 animate-pulse">
                               <AlertTriangle className="w-2.5 h-2.5" />
-                              <span>Cancelamento Solicitado pelo Operador</span>
+                              <span>Cancelamento Solicitado</span>
                             </span>
                           </div>
                         )}
                       </td>
                       <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {/* Botão de Toggle Ativar/Suspender */}
-                          <ActionTooltip
-                            title={sub.status === 'active' ? 'Suspender Site' : 'Ativar Site'}
-                            description={sub.status === 'active' ? 'Bloqueia o acesso ao site via Edge Config por inadimplência.' : 'Libera o acesso ao site reativando o subdomínio.'}
-                            side="top"
-                          >
-                            <button
-                              onClick={() => handleToggleSubscription(sub.id, sub.status)}
-                              className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition cursor-pointer ${
-                                sub.status === 'active'
-                                  ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/30'
-                                  : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                              }`}
-                            >
-                              {sub.status === 'active' ? 'Suspender' : 'Ativar'}
-                            </button>
-                          </ActionTooltip>
+                        <div className="flex items-center justify-end gap-2 flex-wrap">
+                          {isCancellationRequested ? (
+                            <>
+                              {/* Botão de Chamar no WhatsApp */}
+                              {sub.clientPhone && (
+                                <ActionTooltip
+                                  title="Chamar no WhatsApp"
+                                  description="Entra em contato com o cliente para negociar retenção ou alinhar encerramento formal."
+                                  side="top"
+                                >
+                                  <a
+                                    href={getWhatsAppUrl(sub.clientPhone, retentionMessage)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-2.5 py-1 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold transition inline-flex items-center gap-1.5 cursor-pointer"
+                                  >
+                                    <Send className="w-3 h-3 text-emerald-400" />
+                                    <span>Chamar WhatsApp</span>
+                                  </a>
+                                </ActionTooltip>
+                              )}
 
-                          {/* Botão de Cancelamento Definitivo */}
-                          <ActionTooltip
-                            title="Cancelar Definitivo"
-                            description="Cancela a assinatura no Asaas, desativa o subdomínio na Vercel e encerra o cliente."
-                            side="top"
-                          >
-                            <button
-                              onClick={() => {
-                                setCancelDefinitiveSub(sub);
-                                setCancelDefinitiveError(null);
-                                setCancelDefinitiveSuccess(null);
-                              }}
-                              className="px-2.5 py-1 rounded-lg bg-red-600/15 hover:bg-red-600/25 text-red-400 border border-red-600/30 text-[10px] font-bold transition cursor-pointer"
-                            >
-                              Cancelar Definitivo
-                            </button>
-                          </ActionTooltip>
+                              {/* Botão de Encerrar Definitivo */}
+                              <ActionTooltip
+                                title="Encerrar Definitivo"
+                                description="Exclui a assinatura no Asaas, desativa o subdomínio na Vercel e gera o comprovante oficial de cancelamento."
+                                side="top"
+                              >
+                                <button
+                                  onClick={() => {
+                                    setCancelDefinitiveSub(sub);
+                                    setCancelDefinitiveError(null);
+                                    setCancelDefinitiveSuccess(null);
+                                  }}
+                                  className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white border border-rose-500 text-[10px] font-bold transition cursor-pointer shadow-lg shadow-rose-950/50 inline-flex items-center gap-1 animate-pulse"
+                                >
+                                  <XCircle className="w-3 h-3" />
+                                  <span>Encerrar Definitivo</span>
+                                </button>
+                              </ActionTooltip>
+                            </>
+                          ) : (
+                            <>
+                              {/* Botão de Toggle Ativar/Suspender */}
+                              <ActionTooltip
+                                title={sub.status === 'active' ? 'Suspender Site' : 'Ativar Site'}
+                                description={sub.status === 'active' ? 'Bloqueia o acesso ao site via Edge Config por inadimplência.' : 'Libera o acesso ao site reativando o subdomínio.'}
+                                side="top"
+                              >
+                                <button
+                                  onClick={() => handleToggleSubscription(sub.id, sub.status)}
+                                  className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition cursor-pointer ${
+                                    sub.status === 'active'
+                                      ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/30'
+                                      : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                  }`}
+                                >
+                                  {sub.status === 'active' ? 'Suspender' : 'Ativar'}
+                                </button>
+                              </ActionTooltip>
+
+                              {/* Botão de Cancelamento Definitivo */}
+                              <ActionTooltip
+                                title="Cancelar Definitivo"
+                                description="Cancela a assinatura no Asaas, desativa o subdomínio na Vercel e encerra o cliente."
+                                side="top"
+                              >
+                                <button
+                                  onClick={() => {
+                                    setCancelDefinitiveSub(sub);
+                                    setCancelDefinitiveError(null);
+                                    setCancelDefinitiveSuccess(null);
+                                  }}
+                                  className="px-2.5 py-1 rounded-lg bg-red-600/15 hover:bg-red-600/25 text-red-400 border border-red-600/30 text-[10px] font-bold transition cursor-pointer"
+                                >
+                                  Cancelar Definitivo
+                                </button>
+                              </ActionTooltip>
+                            </>
+                          )}
 
                           {subDomain ? (
                             <ActionTooltip title="Ver Site Online" description="Abre o site gerado em nova aba para conferir o visual e dados." side="top">
@@ -372,6 +533,7 @@ export default function AdminSitesPage() {
                 <li>Cancelamento definitivo da cobrança recorrente no gateway <strong>Asaas</strong>.</li>
                 <li>Desativação imediata do subdomínio e projeto na <strong>Vercel</strong>.</li>
                 <li>Atualização do registro para status <code>cancelled</code> no <strong>Supabase</strong>.</li>
+                <li>Geração automática do <strong>Comprovante Oficial com Protocolo ENC-2026</strong>.</li>
               </ul>
             </div>
 
@@ -409,6 +571,127 @@ export default function AdminSitesPage() {
           </div>
         </div>
       )}
+
+      {/* Modal de Comprovante de Cancelamento Definitivo (Pós-Encerramento) */}
+      {closureReceipt && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#0b0e14] border border-rose-500/40 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative space-y-5 text-white">
+            <button
+              onClick={() => {
+                setClosureReceipt(null);
+                setCopiedReceipt(false);
+              }}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-white p-1 rounded-lg bg-white/5 hover:bg-white/10 transition cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-emerald-400" />
+              </div>
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold mb-0.5">
+                  <CheckCircle className="w-3 h-3" />
+                  Cancelamento Processado com Sucesso
+                </div>
+                <h3 className="font-bold text-white text-base">Comprovante Oficial de Encerramento</h3>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-[#111622] border border-white/10 space-y-3 font-mono text-xs">
+              <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                <span className="text-zinc-400">Protocolo Oficial:</span>
+                <span className="font-bold text-sky-400 text-sm tracking-wide">{closureReceipt.protocol}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-400">Cliente:</span>
+                <span className="font-semibold text-white">{closureReceipt.clientName}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-400">Subdomínio:</span>
+                <span className="text-zinc-300">{closureReceipt.subdomain ? `${closureReceipt.subdomain}.webbilly.com.br` : '—'}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-400">WhatsApp de Contato:</span>
+                <span className="text-emerald-400">{closureReceipt.clientPhone || '—'}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-400">Status Asaas & Vercel:</span>
+                <span className="text-rose-400 font-bold">Encerrado / Cobranças Cessadas</span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-200/90 leading-relaxed">
+              <strong>Próximo Passo Recomendado:</strong> Envie o comprovante oficial diretamente no WhatsApp do cliente para formalizar o encerramento com transparência.
+            </div>
+
+            <div className="space-y-2 pt-1">
+              {closureReceipt.clientPhone ? (
+                <a
+                  href={getWhatsAppUrl(closureReceipt.clientPhone, getReceiptText(closureReceipt))}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 cursor-pointer"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>Enviar Comprovante via WhatsApp</span>
+                </a>
+              ) : null}
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(getReceiptText(closureReceipt));
+                    setCopiedReceipt(true);
+                    setTimeout(() => setCopiedReceipt(false), 3000);
+                  }}
+                  className="flex-1 py-2.5 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold text-xs transition border border-white/10 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {copiedReceipt ? (
+                    <>
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="text-emerald-400">Texto Copiado!</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5 text-zinc-400" />
+                      <span>Copiar Texto do Comprovante</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setClosureReceipt(null);
+                    setCopiedReceipt(false);
+                  }}
+                  className="py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white font-semibold text-xs transition border border-white/10 cursor-pointer"
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+export default function AdminSitesPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-sky-400 border-t-transparent rounded-full animate-spin" />
+          <span className="text-zinc-400 text-xs font-mono">Carregando painel de sites...</span>
+        </div>
+      </div>
+    }>
+      <AdminSitesContent />
+    </Suspense>
   );
 }

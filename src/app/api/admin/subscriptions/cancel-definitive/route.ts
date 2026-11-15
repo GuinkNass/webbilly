@@ -87,6 +87,9 @@ export async function POST(req: NextRequest) {
     const targetIdentifier = targetSlug || cleanId;
     await cancelDefinitiveInSupabase(targetIdentifier);
 
+    // Protocolo oficial de encerramento
+    const protocol = (sub as any)?.cancellationProtocol || (sub as any)?.cancellation_protocol || `ENC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
     // 4. db.json: Atualiza localmente
     if (sub) {
       sub.status = 'cancelled';
@@ -94,17 +97,37 @@ export async function POST(req: NextRequest) {
       sub.siteStatus = 'deleted';
       sub.cancellationRequested = false;
       sub.cancellation_requested = false;
+      (sub as any).cancellationProtocol = protocol;
+      (sub as any).cancellation_protocol = protocol;
       sub.cancelledAt = nowIso;
       sub.cancelled_at = nowIso;
       sub.updatedAt = nowIso;
-      writeDb(db);
     }
+
+    // 5. Desativa alertas pendentes de cancelamento deste site
+    if (Array.isArray(db.systemAlerts)) {
+      db.systemAlerts.forEach(a => {
+        if (
+          a.type === 'cancellation_request' &&
+          (a.site_slug === targetSlug || a.subscription_id === cleanId || (sub && a.client_name === sub.clientName))
+        ) {
+          a.is_active = false;
+        }
+      });
+    }
+
+    writeDb(db);
 
     return NextResponse.json({
       success: true,
       message: 'Cancelamento definitivo executado com sucesso no Asaas, Vercel e Supabase.',
+      protocol,
       details: {
+        protocol,
+        clientName: sub?.clientName || 'Cliente Estabelecimento',
         siteSlug: targetSlug,
+        clientPhone: sub?.clientPhone || (sub as any)?.clientWhatsapp || '',
+        monthlyPrice: sub?.monthlyPrice || 29.90,
         asaasSubscriptionId: asaasSubId || 'não vinculado',
         asaasCancelled,
         vercelRemoved,

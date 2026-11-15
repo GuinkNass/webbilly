@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { ActionTooltip } from '@/components/ui/ActionTooltip';
 import {
   X,
@@ -14,7 +15,11 @@ import {
   Eye,
   CheckCircle2,
   AlertTriangle,
-  RefreshCw
+  RefreshCw,
+  Phone,
+  ExternalLink,
+  Globe,
+  ArrowRight
 } from 'lucide-react';
 
 interface AdminAlertItem {
@@ -36,6 +41,8 @@ interface AdminAlertsModalProps {
   onAlertsUpdated?: () => void;
   adminEmail?: string;
   adminName?: string;
+  pendingCancellations?: any[];
+  onRefreshData?: () => Promise<void>;
 }
 
 export default function AdminAlertsModal({
@@ -43,13 +50,27 @@ export default function AdminAlertsModal({
   onClose,
   onAlertsUpdated,
   adminEmail,
-  adminName
+  adminName,
+  pendingCancellations = [],
+  onRefreshData
 }: AdminAlertsModalProps) {
+  const router = useRouter();
   const [alerts, setAlerts] = useState<AdminAlertItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const pendingCancellationsList = Array.isArray(pendingCancellations) ? pendingCancellations : [];
+  const [activeTab, setActiveTab] = useState<'cancellations' | 'broadcast'>(
+    pendingCancellationsList.length > 0 ? 'cancellations' : 'broadcast'
+  );
+
+  useEffect(() => {
+    if (pendingCancellationsList.length > 0) {
+      setActiveTab('cancellations');
+    }
+  }, [pendingCancellationsList.length]);
 
   // Formulário
   const [title, setTitle] = useState('');
@@ -190,7 +211,10 @@ export default function AdminAlertsModal({
 
           <div className="flex items-center gap-2">
             <button
-              onClick={fetchAdminAlerts}
+              onClick={() => {
+                fetchAdminAlerts();
+                if (onRefreshData) onRefreshData();
+              }}
               className="p-2 rounded-xl text-zinc-400 hover:text-white hover:bg-white/[0.06] transition"
               title="Recarregar"
             >
@@ -205,7 +229,173 @@ export default function AdminAlertsModal({
           </div>
         </div>
 
-        {/* Corpo do Modal com 2 Colunas */}
+        {/* Barra de Abas */}
+        <div className="px-6 py-2.5 bg-[#0e111a] border-b border-white/[0.08] flex items-center gap-2 shrink-0">
+          {pendingCancellationsList.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setActiveTab('cancellations')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                activeTab === 'cancellations'
+                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/50 shadow-md shadow-rose-950/40'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+              }`}
+            >
+              <AlertTriangle className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+              <span>Solicitações de Cancelamento</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-rose-600 text-white font-mono font-black animate-bounce">
+                {pendingCancellationsList.length}
+              </span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('broadcast')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+              activeTab === 'broadcast'
+                ? 'bg-indigo-600 text-white shadow-md'
+                : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+            }`}
+          >
+            <Send className="w-3.5 h-3.5 text-white" />
+            <span>Comunicados Globais ({alerts.length})</span>
+          </button>
+        </div>
+
+        {/* Conteúdo da Aba Cancelamentos */}
+        {activeTab === 'cancellations' && (
+          <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping inline-block" />
+                  <span>Clientes Aguardando Contato / Cancelamento</span>
+                </h4>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Faça o contato prévio de retenção ou confirmação via WhatsApp antes de executar o encerramento definitivo.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  router.push('/admin/sites?filter=CANCELLATION_REQUESTED');
+                }}
+                className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 hover:text-white transition flex items-center gap-1.5"
+              >
+                <span>Ver Todos em Sites</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {pendingCancellationsList.map((sub: any) => {
+                const cleanSlug = sub.siteSlug || sub.slug || (sub.id?.startsWith('sub_') ? sub.id.replace('sub_', '') : '') || '';
+                const cleanPhone = (sub.clientPhone || sub.clientWhatsapp || '').replace(/\D/g, '');
+                const cleanPhoneForWa = cleanPhone.startsWith('55') ? cleanPhone : `55${cleanPhone}`;
+                const waMessage = `Olá! Recebemos sua solicitação de cancelamento do site ${cleanSlug ? `${cleanSlug}.webbilly.com.br` : (sub.clientName || '')} na Webbilly. Podemos confirmar se deseja prosseguir com o encerramento definitivo da assinatura?`;
+                const waUrl = `https://wa.me/${cleanPhoneForWa}?text=${encodeURIComponent(waMessage)}`;
+
+                return (
+                  <div
+                    key={sub.id}
+                    className="p-5 rounded-2xl bg-[#141824] border border-rose-500/30 shadow-lg relative flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+                  >
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                          Cancelamento Solicitado
+                        </span>
+                        {cleanSlug && (
+                          <a
+                            href={`https://${cleanSlug}.webbilly.com.br`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="font-mono text-xs text-sky-400 hover:underline flex items-center gap-1 font-bold"
+                          >
+                            <span>{cleanSlug}.webbilly.com.br</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                      </div>
+
+                      <h5 className="text-base font-bold text-white tracking-tight">
+                        {sub.clientName}
+                      </h5>
+
+                      <div className="text-xs text-zinc-300 flex flex-wrap items-center gap-x-4 gap-y-1">
+                        <span className="flex items-center gap-1 font-mono text-emerald-400 font-semibold">
+                          <Phone className="w-3.5 h-3.5" />
+                          {sub.clientPhone || 'Sem telefone'}
+                        </span>
+                        {sub.monthlyPrice && (
+                          <span className="font-mono text-zinc-400">
+                            Mensalidade: <strong className="text-white">R$ {sub.monthlyPrice?.toFixed(2)}/mês</strong>
+                          </span>
+                        )}
+                        {(sub.cancellationRequestedAt || sub.cancellation_requested_at) && (
+                          <span className="text-[11px] text-zinc-500 font-mono">
+                            Solicitado em: {new Date(sub.cancellationRequestedAt || sub.cancellation_requested_at).toLocaleDateString('pt-BR')}
+                          </span>
+                        )}
+                      </div>
+
+                      {(sub.cancellationReason || sub.cancellation_reason) && (
+                        <div className="p-2.5 rounded-xl bg-black/40 border border-white/[0.04] text-xs text-zinc-300 mt-2">
+                          <strong className="text-zinc-400 font-medium">Motivo: </strong>
+                          {sub.cancellationReason || sub.cancellation_reason}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto shrink-0 pt-2 md:pt-0">
+                      {cleanPhone && (
+                        <ActionTooltip
+                          title="Abrir WhatsApp do Cliente"
+                          description="Inicia conversa no WhatsApp com texto de retenção e confirmação de encerramento."
+                          side="top"
+                        >
+                          <a
+                            href={waUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center justify-center gap-2 shadow-md shadow-emerald-950/40"
+                          >
+                            <Phone className="w-4 h-4" />
+                            <span>Abrir WhatsApp do Cliente</span>
+                          </a>
+                        </ActionTooltip>
+                      )}
+
+                      <ActionTooltip
+                        title="Gerenciar Encerramento"
+                        description="Abre a tela de sites ativos para executar o cancelamento definitivo."
+                        side="top"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onClose();
+                            router.push('/admin/sites?filter=CANCELLATION_REQUESTED');
+                          }}
+                          className="px-4 py-2.5 rounded-xl text-xs font-bold bg-red-600/20 hover:bg-red-600/30 text-red-300 border border-red-600/40 transition flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          <span>Gerenciar em Sites Ativos</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </ActionTooltip>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Corpo do Modal com 2 Colunas (Broadcast) */}
+        {activeTab === 'broadcast' && (
         <div className="flex-1 min-h-0 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Coluna Esquerda: Formulário de Envio (5 cols) */}
           <div className="lg:col-span-5 space-y-4">
@@ -460,6 +650,7 @@ export default function AdminAlertsModal({
             </div>
           </div>
         </div>
+        )}
 
         {/* Rodapé do Modal */}
         <div className="px-6 py-3 bg-[#0a0d15] border-t border-white/[0.08] flex items-center justify-between text-xs text-zinc-400">

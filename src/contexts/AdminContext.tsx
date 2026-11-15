@@ -195,6 +195,10 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           onAlertsUpdated={refreshAdminAlertsCount}
           adminEmail={adminUser?.email}
           adminName={adminUser?.name}
+          pendingCancellations={(data?.subscriptions || []).filter(
+            (s: any) => s.cancellationRequested || s.cancellation_requested
+          )}
+          onRefreshData={loadData}
         />
       )}
 

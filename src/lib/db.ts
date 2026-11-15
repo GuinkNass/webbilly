@@ -345,6 +345,13 @@ export interface SystemAlertRecord {
   title: string;
   message: string;
   priority: 'info' | 'promo' | 'urgent';
+  type?: string;
+  target_role?: string;
+  site_slug?: string;
+  client_name?: string;
+  client_whatsapp?: string;
+  subscription_id?: string;
+  protocol?: string;
   action_label?: string;
   action_url?: string;
   is_active: boolean;

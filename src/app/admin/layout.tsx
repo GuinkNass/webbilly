@@ -66,6 +66,11 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
   const isExpanded = isPinned || isHovered;
 
+  const pendingCancellations = (data?.subscriptions || []).filter(
+    (s: any) => s.cancellationRequested || s.cancellation_requested
+  );
+  const hasCancellationAlerts = pendingCancellations.length > 0;
+
   const navItems = [
     {
       href: '/admin',
@@ -257,22 +262,30 @@ function AdminShell({ children }: { children: React.ReactNode }) {
             </button>
           </ActionTooltip>
 
-          {/* Sininho de Alertas Globais */}
+          {/* Sininho de Alertas Globais & Cancelamentos */}
           <ActionTooltip
-            title="Enviar Alerta Global (Sininho)"
-            description="Dispara uma notificação instantânea para todos os operadores conectados."
+            title={hasCancellationAlerts ? "Atenção: Cancelamentos Pendentes" : "Enviar Alerta Global (Sininho)"}
+            description={hasCancellationAlerts ? `Há ${pendingCancellations.length} solicitação(ões) de cancelamento aguardando contato do Admin.` : "Dispara uma notificação instantânea para todos os operadores conectados."}
             side="bottom"
           >
             <button
               onClick={() => setShowAlertsModal(true)}
-              className="relative p-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 hover:text-white transition cursor-pointer"
+              className={`relative p-2 rounded-xl border transition cursor-pointer ${
+                hasCancellationAlerts
+                  ? 'bg-rose-500/15 border-rose-500/40 text-rose-300 shadow-[0_0_15px_rgba(244,63,94,0.3)]'
+                  : 'bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 hover:text-white'
+              }`}
             >
-              <Bell className="w-4 h-4 text-amber-400" />
-              {activeAlertsCount > 0 && (
+              <Bell className={`w-4 h-4 ${hasCancellationAlerts ? 'text-rose-400 animate-pulse' : 'text-amber-400'}`} />
+              {hasCancellationAlerts ? (
+                <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full bg-rose-600 text-white font-mono font-black text-[10px] flex items-center justify-center animate-bounce shadow-[0_0_12px_rgba(244,63,94,0.9)] border border-rose-400">
+                  {pendingCancellations.length}
+                </span>
+              ) : activeAlertsCount > 0 ? (
                 <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-black font-mono font-black text-[10px] flex items-center justify-center animate-pulse shadow-md">
                   {activeAlertsCount}
                 </span>
-              )}
+              ) : null}
             </button>
           </ActionTooltip>
 

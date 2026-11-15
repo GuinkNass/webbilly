@@ -32,7 +32,8 @@ import {
   Award,
   Layers,
   HelpCircle,
-  CheckCheck
+  CheckCheck,
+  FileText
 } from 'lucide-react';
 
 export default function WebbillyHomePage() {
@@ -1346,6 +1347,12 @@ export default function WebbillyHomePage() {
                   Contrato de Parceria & NDA
                 </Link>
               </li>
+              <li className="pt-2 border-t border-white/[0.06]">
+                <Link href="/cancelamento" className="hover:text-rose-400 transition flex items-center gap-1.5 text-zinc-400">
+                  <FileText className="w-3 h-3 text-rose-400" />
+                  Solicitar Cancelamento de Assinatura
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -1410,13 +1417,17 @@ export default function WebbillyHomePage() {
         {/* Rodapé inferior / Direitos */}
         <div className="max-w-7xl mx-auto mt-12 pt-6 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-zinc-500">
           <p>© {new Date().getFullYear()} Webbilly • Todos os direitos reservados.</p>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 flex-wrap justify-center">
             <Link href="/termos" className="hover:text-zinc-300 transition underline underline-offset-2">
               Termos de Uso
             </Link>
             <span className="text-zinc-700">•</span>
             <Link href="/contrato-operador" className="hover:text-zinc-300 transition underline underline-offset-2">
               Contrato do Operador & NDA
+            </Link>
+            <span className="text-zinc-700">•</span>
+            <Link href="/cancelamento" className="text-rose-400 hover:text-rose-300 transition underline underline-offset-2 font-medium">
+              Solicitar Cancelamento de Assinatura
             </Link>
           </div>
           <p className="flex items-center gap-1">
