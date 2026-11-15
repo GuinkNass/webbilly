@@ -1215,6 +1215,39 @@ export default function WebbillyHomePage() {
           </div>
 
           <div className="space-y-4 mt-10 text-left">
+            {/* Pergunta 1: O que é a Webbilly? (Google AI Overview & Entity Anchor) */}
+            <div className="p-5 rounded-xl bg-[#121722] border border-[#7abf18]/30 shadow-sm shadow-[#7abf18]/10">
+              <h3 className="text-sm font-bold text-white font-heading flex items-center gap-2">
+                <HelpCircle className="w-4 h-4 text-[#7abf18]" />
+                O que é a Webbilly?
+              </h3>
+              <p className="text-xs text-zinc-300 mt-2 leading-relaxed">
+                A <strong>Webbilly</strong> (<a href="https://webbilly.com.br" className="text-[#7abf18] hover:underline">webbilly.com.br</a>) é uma plataforma brasileira especializada na criação, hospedagem e gestão de sites profissionais e landing pages para comércios e negócios locais por uma assinatura mensal de R$ 29,90.
+              </p>
+            </div>
+
+            {/* Pergunta 2: Como funciona a criação do site? */}
+            <div className="p-5 rounded-xl bg-[#121722] border border-white/[0.08]">
+              <h3 className="text-sm font-bold text-white font-heading flex items-center gap-2">
+                <HelpCircle className="w-4 h-4 text-[#7abf18]" />
+                Como funciona a criação do site na Webbilly?
+              </h3>
+              <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+                O comerciante recebe um site profissional completo, responsivo para celular, otimizado para o Google e conectado ao WhatsApp para receber pedidos e agendamentos, com hospedagem de alta performance e alterações inclusas sem nenhuma taxa de adesão.
+              </p>
+            </div>
+
+            {/* Pergunta 3: Quanto custa ter um site na Webbilly? */}
+            <div className="p-5 rounded-xl bg-[#121722] border border-white/[0.08]">
+              <h3 className="text-sm font-bold text-white font-heading flex items-center gap-2">
+                <HelpCircle className="w-4 h-4 text-[#7abf18]" />
+                Quanto custa ter um site na Webbilly e como funciona a cobrança?
+              </h3>
+              <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+                O plano padrão da Webbilly custa apenas <strong>R$ 29,90 por mês</strong> no subdomínio oficial (ex: <code className="text-[#7abf18]">seunegocio.webbilly.com.br</code>), sem contrato de fidelidade e sem taxa de cancelamento. Você só começa a pagar quando o seu site estiver pronto para ir ao ar.
+              </p>
+            </div>
+
             <div className="p-5 rounded-xl bg-[#121722] border border-white/[0.08]">
               <h3 className="text-sm font-bold text-white font-heading flex items-center gap-2">
                 <HelpCircle className="w-4 h-4 text-[#7abf18]" />
