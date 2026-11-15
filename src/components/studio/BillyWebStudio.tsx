@@ -230,7 +230,7 @@ export default function BillyWebStudio({
   // Central de Fotos Reais (Google & Instagram)
   const [photoSearchMode, setPhotoSearchMode] = useState<'real' | 'pixabay' | 'custom'>('real');
   const [realPhotosQuery, setRealPhotosQuery] = useState('');
-  const [realPhotos, setRealPhotos] = useState<Array<{ id: string; url: string; title: string; source: 'google' | 'instagram' | 'web' }>>([]);
+  const [realPhotos, setRealPhotos] = useState<Array<{ id: string; url: string; proxyUrl?: string; title: string; source: 'google' | 'instagram' | 'web' }>>([]);
   const [realPhotosLoading, setRealPhotosLoading] = useState(false);
   const [realPhotosSuccessNotice, setRealPhotosSuccessNotice] = useState<string | null>(null);
 
@@ -530,6 +530,7 @@ export default function BillyWebStudio({
         googlePhotos.map((url, idx) => ({
           id: `lead_photo_${idx}`,
           url,
+          proxyUrl: `/api/studio/image-proxy?url=${encodeURIComponent(url)}`,
           title: `${lead.name} (Google Maps Oficial)`,
           source: 'google'
         }))
@@ -1856,6 +1857,7 @@ export default function BillyWebStudio({
                       const target = item.url;
                       const isHero = siteForm.heroPhoto === target;
                       const isGallery = siteForm.galleryPhotos.includes(target);
+                      const displayThumb = item.proxyUrl || `/api/studio/image-proxy?url=${encodeURIComponent(target)}`;
 
                       return (
                         <div
@@ -1868,7 +1870,17 @@ export default function BillyWebStudio({
                               : 'border-white/[0.08]'
                           }`}
                         >
-                          <img src={target} alt="" className="w-full h-full object-cover" />
+                          <img
+                            src={displayThumb}
+                            alt={item.title || ''}
+                            referrerPolicy="no-referrer"
+                            crossOrigin="anonymous"
+                            className="w-full h-full object-cover"
+                            onError={() => {
+                              // Remove automaticamente o card da imagem quebrada ou expirada
+                              setRealPhotos((prev) => prev.filter((p) => p.id !== item.id));
+                            }}
+                          />
                           <span
                             className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
                               item.source === 'instagram'
@@ -2026,10 +2038,20 @@ export default function BillyWebStudio({
                 {siteForm.galleryPhotos.map((photo, i) => {
                   const isGoogle = photo.includes('googleusercontent.com') || photo.includes('places.googleapis.com');
                   const isInstagram = photo.includes('cdninstagram.com') || photo.includes('fbcdn.net');
+                  const displayThumb = isGoogle || isInstagram
+                    ? `/api/studio/image-proxy?url=${encodeURIComponent(photo)}`
+                    : photo;
 
                   return (
                     <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border border-white/[0.1] group">
-                      <img src={photo} alt="" className="w-full h-full object-cover" />
+                      <img
+                        src={displayThumb}
+                        alt=""
+                        referrerPolicy="no-referrer"
+                        crossOrigin="anonymous"
+                        className="w-full h-full object-cover"
+                        onError={() => handleRemovePhoto(i)}
+                      />
                       {(isGoogle || isInstagram) && (
                         <span
                           className={`absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase shadow-md flex items-center gap-0.5 z-10 pointer-events-none ${

@@ -831,3 +831,151 @@ export function renderPreparationHtml(businessName: string, slug: string): strin
 </body>
 </html>`;
 }
+
+/**
+ * Baixa uma imagem externa (Google, Instagram, etc) pelo servidor e faz upload permanente no Supabase Storage (bucket 'site-assets')
+ * Retorna a URL pública permanente ou a original como fallback seguro.
+ */
+export async function persistImageToSupabaseStorage(
+  imageUrl: string,
+  slug: string,
+  index: number = 0
+): Promise<string> {
+  if (!imageUrl || typeof imageUrl !== 'string' || !imageUrl.startsWith('http')) {
+    return imageUrl;
+  }
+
+  // Se já for uma URL do nosso próprio Supabase Storage, não precisa reprocessar
+  if (imageUrl.includes('supabase.co/storage/v1/object/public/site-assets/')) {
+    return imageUrl;
+  }
+
+  const cleanSlug = sanitizeSlug(slug) || 'site';
+
+  try {
+    const supabase = getSupabaseAdmin();
+    if (!supabase) return imageUrl;
+
+    // Garante que o bucket 'site-assets' exista
+    try {
+      await supabase.storage.createBucket('site-assets', { public: true });
+    } catch (_) {}
+
+    // Baixa o arquivo da imagem pelo servidor (sem Referer do cliente)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+    const res = await fetch(imageUrl, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+        'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7'
+      },
+      redirect: 'follow',
+      signal: controller.signal,
+      cache: 'no-store'
+    }).catch(() => null);
+
+    clearTimeout(timeoutId);
+
+    if (!res || !res.ok) {
+      console.warn(`[PersistImage] Falha ao baixar imagem externa (${res?.status}):`, imageUrl);
+      return imageUrl;
+    }
+
+    const contentType = res.headers.get('content-type') || 'image/jpeg';
+    if (contentType.includes('text/html') || contentType.includes('application/json')) {
+      console.warn('[PersistImage] Resposta não é imagem válida:', contentType);
+      return imageUrl;
+    }
+
+    // Determina a extensão do arquivo
+    let ext = 'jpg';
+    if (contentType.includes('png')) ext = 'png';
+    else if (contentType.includes('webp')) ext = 'webp';
+    else if (contentType.includes('avif')) ext = 'avif';
+
+    const arrayBuffer = await res.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Nome único do arquivo
+    const filePath = `${cleanSlug}/${Date.now()}-${index}.${ext}`;
+
+    const { data: uploadData, error: uploadErr } = await supabase.storage
+      .from('site-assets')
+      .upload(filePath, buffer, {
+        contentType,
+        upsert: true
+      });
+
+    if (uploadErr || !uploadData) {
+      console.warn('[PersistImage] Erro ao fazer upload no Supabase Storage:', uploadErr?.message);
+      return imageUrl;
+    }
+
+    const { data: pubUrlData } = supabase.storage
+      .from('site-assets')
+      .getPublicUrl(filePath);
+
+    if (pubUrlData?.publicUrl) {
+      console.log(`[PersistImage] Imagem persistida com sucesso: ${imageUrl} -> ${pubUrlData.publicUrl}`);
+      return pubUrlData.publicUrl;
+    }
+  } catch (err: any) {
+    console.warn('[PersistImage] Erro ao persistir imagem:', err?.message || err);
+  }
+
+  return imageUrl;
+}
+
+/**
+ * Persiste um conjunto de fotos (heroPhoto e galleryPhotos) no Supabase Storage em paralelo
+ */
+export async function persistSiteImages(
+  heroPhoto: string,
+  galleryPhotos: string[],
+  slug: string
+): Promise<{ heroPhoto: string; galleryPhotos: string[] }> {
+  let persistedHero = heroPhoto;
+  if (
+    heroPhoto &&
+    (heroPhoto.includes('googleusercontent.com') ||
+      heroPhoto.includes('places.googleapis.com') ||
+      heroPhoto.includes('cdninstagram.com') ||
+      heroPhoto.includes('fbcdn.net') ||
+      heroPhoto.includes('duckduckgo.com'))
+  ) {
+    persistedHero = await persistImageToSupabaseStorage(heroPhoto, slug, 0);
+  }
+
+  const persistedGallery: string[] = [];
+  if (Array.isArray(galleryPhotos) && galleryPhotos.length > 0) {
+    const promises = galleryPhotos.map((url, idx) => {
+      if (
+        url &&
+        (url.includes('googleusercontent.com') ||
+          url.includes('places.googleapis.com') ||
+          url.includes('cdninstagram.com') ||
+          url.includes('fbcdn.net') ||
+          url.includes('duckduckgo.com'))
+      ) {
+        return persistImageToSupabaseStorage(url, slug, idx + 1);
+      }
+      return Promise.resolve(url);
+    });
+    const results = await Promise.allSettled(promises);
+    results.forEach((r, idx) => {
+      if (r.status === 'fulfilled' && r.value) {
+        persistedGallery.push(r.value);
+      } else {
+        persistedGallery.push(galleryPhotos[idx]);
+      }
+    });
+  }
+
+  return {
+    heroPhoto: persistedHero,
+    galleryPhotos: persistedGallery
+  };
+}

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs';
 import { readDb, writeDb } from '@/lib/db';
-import { sanitizeSlug, saveSiteToCloudStorage } from '@/lib/site-storage';
+import { sanitizeSlug, saveSiteToCloudStorage, persistSiteImages } from '@/lib/site-storage';
 import { getSupabaseAdmin, upsertSubscriptionInSupabase } from '@/lib/supabase';
 import { buildSiteHtml } from '@/lib/billy-desktop-port/generator';
 
@@ -64,7 +64,18 @@ export async function POST(req: NextRequest) {
       `Olá! Vim pelo site ${cleanSlug}.webbilly.com.br e gostaria de agendar um horário.`
     )}`;
 
-    // 1. Gera o HTML com o motor completo portado do Billy Desktop
+    // 1. Persiste fotos temporárias externas do Google/Instagram no Supabase Storage permanente
+    let finalHeroPhoto = heroPhoto;
+    let finalGalleryPhotos = galleryPhotos;
+    try {
+      const persisted = await persistSiteImages(heroPhoto, galleryPhotos, cleanSlug);
+      finalHeroPhoto = persisted.heroPhoto;
+      finalGalleryPhotos = persisted.galleryPhotos;
+    } catch (persistErr) {
+      console.warn('[Studio Gerar Site] Falha ao persistir imagens no Supabase Storage:', persistErr);
+    }
+
+    // 2. Gera o HTML com o motor completo portado do Billy Desktop
     let generationResult;
     try {
       generationResult = await buildSiteHtml({
@@ -82,8 +93,8 @@ export async function POST(req: NextRequest) {
         templateId,
         accentColor,
         logoUrl,
-        heroPhoto,
-        galleryPhotos,
+        heroPhoto: finalHeroPhoto,
+        galleryPhotos: finalGalleryPhotos,
         services,
         features,
         faqs,

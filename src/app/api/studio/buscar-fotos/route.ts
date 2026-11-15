@@ -6,6 +6,7 @@ export const maxDuration = 30;
 export interface RealPhotoItem {
   id: string;
   url: string;
+  proxyUrl?: string;
   title: string;
   source: 'google' | 'instagram' | 'web';
   width?: number;
@@ -52,6 +53,7 @@ export async function POST(req: NextRequest) {
       photos.push({
         id: `photo_${photos.length + 1}_${Math.random().toString(36).substring(2, 7)}`,
         url: cleanUrl,
+        proxyUrl: `/api/studio/image-proxy?url=${encodeURIComponent(cleanUrl)}`,
         title: title || businessName || 'Foto do Estabelecimento',
         source
       });
