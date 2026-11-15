@@ -145,10 +145,10 @@ export async function POST(req: NextRequest) {
     db.systemAlerts.unshift(newAlert);
     writeDb(db);
 
-    // Tenta persistir alerta na tabela system_alerts do Supabase
+    // Tenta persistir alerta na tabela alerts / system_alerts do Supabase
     try {
       const supabase = getSupabaseAdmin();
-      await supabase.from('system_alerts').insert({
+      const alertPayload = {
         id: newAlert.id,
         title: newAlert.title,
         message: newAlert.message,
@@ -165,7 +165,12 @@ export async function POST(req: NextRequest) {
         client_whatsapp: newAlert.client_whatsapp,
         subscription_id: newAlert.subscription_id,
         protocol: newAlert.protocol
-      } as any);
+      } as any;
+
+      const { error: insErr } = await supabase.from('alerts').insert(alertPayload);
+      if (insErr) {
+        await supabase.from('system_alerts').insert(alertPayload);
+      }
     } catch {}
 
     return NextResponse.json({

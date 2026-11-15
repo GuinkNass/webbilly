@@ -14,13 +14,28 @@ export async function GET(req: NextRequest) {
     let alerts: SystemAlertRecord[] = [];
     let readAlertIds = new Set<string>();
 
-    // 1. Tenta carregar do Supabase
+    // 1. Tenta carregar do Supabase (alerts e fallback system_alerts)
     try {
-      const { data: sbAlerts, error: sbErr } = await supabase
-        .from('system_alerts')
+      let sbAlerts: any[] | null = null;
+      let sbErr: any = null;
+
+      const resAlerts = await supabase
+        .from('alerts')
         .select('*')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
+
+      if (!resAlerts.error && Array.isArray(resAlerts.data)) {
+        sbAlerts = resAlerts.data;
+      } else {
+        const resSysAlerts = await supabase
+          .from('system_alerts')
+          .select('*')
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
+        sbAlerts = resSysAlerts.data;
+        sbErr = resSysAlerts.error;
+      }
 
       if (!sbErr && Array.isArray(sbAlerts)) {
         alerts = sbAlerts.map(a => ({

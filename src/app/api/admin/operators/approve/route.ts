@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
 import { readDb, writeDb, generateSerial, Operator, LicenseRecord } from '@/lib/db';
-import { fetchAllOperatorsFromSupabase, upsertOperatorInSupabase, getSupabaseAdmin } from '@/lib/supabase';
+import { fetchAllOperatorsFromSupabase, upsertOperatorInSupabase, getSupabaseAdmin, mapRowToOperator } from '@/lib/supabase';
 import { sendOperatorApprovalEmail } from '@/lib/lark-mailer';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
@@ -139,6 +139,37 @@ export async function POST(req: NextRequest) {
       (targetId && c.id === targetId) ||
       (cleanEmail && c.email && c.email.toLowerCase().trim() === cleanEmail)
     );
+
+    // Fallback direto no Supabase caso o candidato tenha se inscrito na landing page
+    if (!op && !candidate) {
+      try {
+        const supabase = getSupabaseAdmin();
+        if (targetId) {
+          const { data: opData } = await supabase.from('operators').select('*').eq('id', targetId).maybeSingle();
+          if (opData) op = mapRowToOperator(opData);
+        }
+        if (!op && cleanEmail) {
+          const { data: opData } = await supabase.from('operators').select('*').eq('email', cleanEmail).maybeSingle();
+          if (opData) op = mapRowToOperator(opData);
+        }
+        if (!op && targetId) {
+          const { data: candData } = await supabase.from('candidaturas').select('*').eq('id', targetId).maybeSingle();
+          if (candData) {
+            candidate = {
+              id: candData.id,
+              name: candData.full_name || candData.name || 'Candidato',
+              email: candData.email,
+              whatsapp: candData.whatsapp,
+              pixKey: candData.pix_key,
+              pixType: candData.pix_type,
+              status: 'PENDENTE'
+            } as any;
+          }
+        }
+      } catch (errSup) {
+        console.warn('Erro na busca de candidato no Supabase:', errSup);
+      }
+    }
 
     if (!op && !candidate) {
       return NextResponse.json({ error: 'Operador / Candidato não encontrado no sistema.' }, { status: 404 });
