@@ -100,6 +100,20 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         console.warn('Falha ao sincronizar /api/admin/operadores:', opErr);
       }
 
+      // Sincronização dinâmica direta de sites e subdomínios via /api/admin/sites (Vercel + Supabase)
+      try {
+        const sitesRes = await fetch('/api/admin/sites', { cache: 'no-store' });
+        if (sitesRes.ok) {
+          const sitesJson = await sitesRes.json();
+          if (Array.isArray(sitesJson.sites)) {
+            json.subscriptions = sitesJson.sites;
+            json.vercelDomains = sitesJson.vercelDomains || [];
+          }
+        }
+      } catch (sitesErr) {
+        console.warn('Falha ao sincronizar /api/admin/sites:', sitesErr);
+      }
+
       // Hidrata avatar local do admin
       try {
         if (typeof window !== 'undefined') {

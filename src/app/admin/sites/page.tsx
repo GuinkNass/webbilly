@@ -18,7 +18,8 @@ import {
   Layers,
   Copy,
   MessageCircle,
-  ShieldCheck
+  ShieldCheck,
+  Trash2
 } from 'lucide-react';
 
 function getSubdomain(sub: any): string {
@@ -74,7 +75,7 @@ https://webbilly.com.br`;
 
 function AdminSitesContent() {
   const searchParams = useSearchParams();
-  const { data, loading, error, searchQuery, loadData, setActionSuccess } = useAdmin();
+  const { data, setData, loading, error, searchQuery, loadData, setActionSuccess } = useAdmin();
 
   const [subFilter, setSubFilter] = useState<'TODOS' | 'ACTIVE' | 'SUSPENDED' | 'PENDING' | 'CANCELLATION_REQUESTED'>('TODOS');
 
@@ -85,6 +86,14 @@ function AdminSitesContent() {
       setSubFilter('CANCELLATION_REQUESTED');
     }
   }, [searchParams]);
+
+  // Estados de Sincronização em Tempo Real com Vercel
+  const [syncingVercel, setSyncingVercel] = useState(false);
+
+  // Estados de Exclusão Definitiva Completa (Vercel + Edge Config + Asaas + Supabase)
+  const [deleteTargetSub, setDeleteTargetSub] = useState<any | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Estados de Cancelamento Definitivo (Asaas + Vercel + Supabase)
   const [cancelDefinitiveSub, setCancelDefinitiveSub] = useState<any | null>(null);
@@ -151,6 +160,67 @@ function AdminSitesContent() {
       alert(err.message || 'Falha ao limpar pendências.');
     } finally {
       setCleaningPending(false);
+    }
+  };
+
+  const handleSyncVercel = async () => {
+    setSyncingVercel(true);
+    try {
+      const res = await fetch('/api/admin/sites', { cache: 'no-store' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Erro ao sincronizar subdomínios.');
+
+      await loadData();
+      setActionSuccess(`Sincronização concluída com sucesso! ${json.totalSites || 0} subdomínio(s) verificados na Vercel e Supabase.`);
+      setTimeout(() => setActionSuccess(null), 4000);
+    } catch (err: any) {
+      alert(err.message || 'Falha ao sincronizar subdomínios com a Vercel.');
+    } finally {
+      setSyncingVercel(false);
+    }
+  };
+
+  const handleDeleteSubdomainDefinitive = async () => {
+    if (!deleteTargetSub) return;
+    setDeleteLoading(true);
+    setDeleteError(null);
+    try {
+      const subDomain = getSubdomain(deleteTargetSub);
+      const res = await fetch('/api/admin/sites', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          siteId: deleteTargetSub.id,
+          siteSlug: subDomain,
+          customDomain: deleteTargetSub.custom_domain || deleteTargetSub.customDomain,
+          asaasSubscriptionId: deleteTargetSub.asaas_subscription_id || deleteTargetSub.asaasSubscriptionId
+        })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Erro ao excluir subdomínio.');
+
+      // Atualiza o estado local imediatamente para feedback instantâneo na tela
+      if (setData) {
+        setData((prev: any) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            subscriptions: (prev.subscriptions || []).filter((s: any) => {
+              const sSlug = getSubdomain(s);
+              return s.id !== deleteTargetSub.id && (!subDomain || sSlug !== subDomain);
+            })
+          };
+        });
+      }
+
+      setActionSuccess(`Subdomínio ${subDomain ? `${subDomain}.webbilly.com.br` : deleteTargetSub.clientName} excluído definitivamente.`);
+      setTimeout(() => setActionSuccess(null), 4000);
+      setDeleteTargetSub(null);
+      await loadData();
+    } catch (err: any) {
+      setDeleteError(err.message || 'Falha ao processar exclusão definitiva do subdomínio.');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -256,8 +326,8 @@ function AdminSitesContent() {
 
   return (
     <div className="space-y-6">
-      {/* Header com Filtros Rápidos */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#11141c] p-6 rounded-2xl border border-white/[0.06]">
+      {/* Header com Filtros Rápidos e Sincronização Vercel */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-[#11141c] p-6 rounded-2xl border border-white/[0.06]">
         <div>
           <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-sky-500/15 border border-sky-500/30 text-sky-300 text-xs font-bold mb-2 font-mono">
             <Globe className="w-3.5 h-3.5" />
@@ -267,12 +337,29 @@ function AdminSitesContent() {
             Gestão de Sites & Assinaturas Recorrentes
           </h1>
           <p className="text-xs text-zinc-400 mt-1">
-            Controle de cobranças Asaas, suspensão automática no Edge Config e cancelamento definitivo assistido.
+            Controle de cobranças Asaas, sincronização de subdomínios Vercel e exclusão definitiva completa.
           </p>
         </div>
 
-        {/* Filtros em Abas */}
-        <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-[#0a0d14] rounded-xl border border-white/[0.06] text-xs">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Botão Sincronizar Subdomínios Vercel */}
+          <ActionTooltip
+            title="Sincronizar Subdomínios Vercel"
+            description="Revalida imediatamente a lista de subdomínios ativos na Vercel e no Supabase (cache: no-store)."
+            side="bottom"
+          >
+            <button
+              onClick={handleSyncVercel}
+              disabled={syncingVercel}
+              className="px-3.5 py-2 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/30 text-xs font-bold transition cursor-pointer flex items-center gap-2 disabled:opacity-50 shrink-0 shadow-sm shadow-sky-950/40"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-sky-400 ${syncingVercel ? 'animate-spin' : ''}`} />
+              <span>{syncingVercel ? 'Sincronizando...' : 'Sincronizar Subdomínios Vercel'}</span>
+            </button>
+          </ActionTooltip>
+
+          {/* Filtros em Abas */}
+          <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-[#0a0d14] rounded-xl border border-white/[0.06] text-xs">
           {[
             { id: 'TODOS', label: 'Todos' },
             { id: 'ACTIVE', label: 'Ativos' },
@@ -305,6 +392,7 @@ function AdminSitesContent() {
               )}
             </button>
           ))}
+          </div>
         </div>
       </div>
 
@@ -575,6 +663,24 @@ function AdminSitesContent() {
                               <ExternalLink className="w-3.5 h-3.5" />
                             </button>
                           )}
+
+                          {/* Botão de Excluir Definitivo (Vercel + Edge Config + Asaas + Supabase) */}
+                          <ActionTooltip
+                            title="Excluir Definitivo"
+                            description="Apaga permanentemente o subdomínio da Vercel, remove do Edge Config, cancela no Asaas e exclui do Supabase."
+                            side="top"
+                          >
+                            <button
+                              onClick={() => {
+                                setDeleteTargetSub(sub);
+                                setDeleteError(null);
+                              }}
+                              className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 inline-flex items-center justify-center cursor-pointer transition hover:scale-105"
+                              title="Excluir Subdomínio Definitivo"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-rose-400" />
+                            </button>
+                          </ActionTooltip>
                         </div>
                       </td>
                     </tr>
@@ -769,6 +875,77 @@ function AdminSitesContent() {
                   Fechar
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Exclusão Definitiva Completa (Vercel + Edge Config + Asaas + Supabase) */}
+      {deleteTargetSub && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#11141c] border border-rose-500/50 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
+            <button
+              onClick={() => {
+                if (!deleteLoading) setDeleteTargetSub(null);
+              }}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-white p-1 rounded-lg bg-white/5 hover:bg-white/10 transition cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center shrink-0">
+                <Trash2 className="w-6 h-6 text-rose-400" />
+              </div>
+              <div>
+                <h3 className="font-bold text-white text-base">Exclusão Definitiva de Subdomínio</h3>
+                <span className="text-xs text-rose-400 font-mono font-bold">
+                  {getSubdomain(deleteTargetSub)
+                    ? `${getSubdomain(deleteTargetSub)}.webbilly.com.br`
+                    : deleteTargetSub.clientName || deleteTargetSub.id}
+                </span>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-rose-950/30 border border-rose-900/50 text-xs text-rose-200 space-y-2">
+              <p className="font-semibold text-rose-300">
+                Atenção: Esta ação é definitiva e irreversível!
+              </p>
+              <p className="text-zinc-300 text-[11px] leading-relaxed">
+                Ao confirmar a exclusão deste subdomínio, o sistema executará as seguintes ações em cascata:
+              </p>
+              <ul className="list-disc pl-5 space-y-1 text-[11px] text-zinc-300">
+                <li><strong className="text-white">Vercel REST API:</strong> Remove apontamentos e desvincula o domínio do projeto.</li>
+                <li><strong className="text-white">Vercel Edge Config:</strong> Suspende e desativa o roteamento de borda do slug.</li>
+                <li><strong className="text-white">Asaas Gateway:</strong> Cancela faturas pendentes e cancela a assinatura recorrente associada.</li>
+                <li><strong className="text-white">Supabase & Banco de Dados:</strong> Remove o registro da tabela <code className="text-rose-300 font-mono">subscriptions</code> e do banco local.</li>
+              </ul>
+            </div>
+
+            {deleteError && (
+              <div className="p-3 rounded-lg bg-rose-950/60 border border-rose-800 text-xs text-rose-300">
+                {deleteError}
+              </div>
+            )}
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                disabled={deleteLoading}
+                onClick={() => setDeleteTargetSub(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={deleteLoading}
+                onClick={handleDeleteSubdomainDefinitive}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white transition flex items-center gap-1.5 shadow-lg shadow-rose-950/50 disabled:opacity-50 cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{deleteLoading ? 'Excluindo da Vercel...' : 'Confirmar Exclusão Definitiva'}</span>
+              </button>
             </div>
           </div>
         </div>
