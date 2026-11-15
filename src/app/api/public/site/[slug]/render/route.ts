@@ -4,6 +4,7 @@ import fs from 'fs';
 import { readDb } from '@/lib/db';
 import { sanitizeSlug } from '@/lib/site-storage';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { buildSiteHtml } from '@/lib/billy-desktop-port/generator';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +20,51 @@ export async function GET(
       return new NextResponse('Subdomínio inválido.', { status: 400 });
     }
 
-    // 1. Tenta carregar do arquivo em disco (public/generated-sites/[slug]/index.html)
+    // 1. Tenta carregar do Supabase (Fonte de Verdade Persistente na Nuvem Vercel)
+    try {
+      const supabase = getSupabaseAdmin();
+      if (supabase) {
+        // Tenta na tabela 'sites'
+        const { data: siteRow } = await supabase
+          .from('sites')
+          .select('*')
+          .or(`subdomain.eq.${cleanSlug},id.eq.${cleanSlug},slug.eq.${cleanSlug}`)
+          .maybeSingle();
+
+        if (siteRow && (siteRow.html_content || siteRow.html || siteRow.content)) {
+          const html = siteRow.html_content || siteRow.html || siteRow.content;
+          return new NextResponse(html, {
+            status: 200,
+            headers: {
+              'Content-Type': 'text/html; charset=utf-8',
+              'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+            }
+          });
+        }
+
+        // Tenta na tabela 'subscriptions'
+        const { data: subRow } = await supabase
+          .from('subscriptions')
+          .select('*')
+          .or(`site_slug.eq.${cleanSlug},id.eq.sub_${cleanSlug}`)
+          .maybeSingle();
+
+        if (subRow && (subRow.html_content || subRow.html || subRow.content)) {
+          const html = subRow.html_content || subRow.html || subRow.content;
+          return new NextResponse(html, {
+            status: 200,
+            headers: {
+              'Content-Type': 'text/html; charset=utf-8',
+              'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+            }
+          });
+        }
+      }
+    } catch (sbErr) {
+      console.warn('[Public Site Render] Erro Supabase:', sbErr);
+    }
+
+    // 2. Tenta carregar do arquivo em disco (public/generated-sites/[slug]/index.html)
     try {
       const diskPath = path.join(process.cwd(), 'public', 'generated-sites', cleanSlug, 'index.html');
       if (fs.existsSync(diskPath)) {
@@ -28,13 +73,13 @@ export async function GET(
           status: 200,
           headers: {
             'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 'public, max-age=60, s-maxage=300'
+            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
           }
         });
       }
     } catch (_) {}
 
-    // 2. Tenta carregar do banco local (db.generatedSites ou db.demos)
+    // 3. Tenta carregar do banco local (db.generatedSites ou db.demos)
     try {
       const db = readDb();
       if (db.generatedSites && db.generatedSites[cleanSlug]) {
@@ -42,7 +87,7 @@ export async function GET(
           status: 200,
           headers: {
             'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 'public, max-age=60, s-maxage=300'
+            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
           }
         });
       }
@@ -55,7 +100,7 @@ export async function GET(
               status: 200,
               headers: {
                 'Content-Type': 'text/html; charset=utf-8',
-                'Cache-Control': 'public, max-age=60, s-maxage=300'
+                'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
               }
             });
           }
@@ -63,50 +108,28 @@ export async function GET(
       }
     } catch (_) {}
 
-    // 3. Tenta carregar do Supabase (tabela 'sites' ou 'subscriptions')
-    try {
-      const supabase = getSupabaseAdmin();
-      const { data: siteRow } = await supabase
-        .from('sites')
-        .select('*')
-        .or(`slug.eq.${cleanSlug},id.eq.${cleanSlug}`)
-        .maybeSingle();
+    // 4. Se o site foi cadastrado mas o HTML não foi gerado, compila na hora sem travar
+    const formattedTitle = cleanSlug
+      .split('-')
+      .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
 
-      if (siteRow && (siteRow.html || siteRow.content || siteRow.html_content)) {
-        const html = siteRow.html || siteRow.content || siteRow.html_content;
-        return new NextResponse(html, {
-          status: 200,
-          headers: {
-            'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 'public, max-age=60, s-maxage=300'
-          }
-        });
-      }
-    } catch (_) {}
-
-    return new NextResponse(`
-      <!DOCTYPE html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="utf-8" />
-        <title>Site em Construção — Webbilly</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-      </head>
-      <body class="bg-[#07090e] text-white flex items-center justify-center min-h-screen p-6 text-center">
-        <div class="max-w-md bg-[#0e121a] border border-white/10 p-8 rounded-2xl shadow-2xl">
-          <div class="w-12 h-12 bg-[#84cc16]/20 text-[#84cc16] rounded-xl flex items-center justify-center mx-auto mb-4 font-bold text-xl">W</div>
-          <h1 class="text-xl font-bold mb-2">Site em Preparação</h1>
-          <p class="text-xs text-zinc-400 mb-6">O subdomínio <code class="text-[#84cc16]">${cleanSlug}.webbilly.com.br</code> está reservado na plataforma Webbilly e aguarda a finalização de publicação.</p>
-          <a href="https://webbilly.com.br" class="px-4 py-2 rounded-xl bg-[#84cc16] hover:bg-[#65a30d] text-slate-950 font-bold text-xs transition inline-block">Conhecer a Webbilly</a>
-        </div>
-      </body>
-      </html>
-    `, {
-      status: 200,
-      headers: { 'Content-Type': 'text/html; charset=utf-8' }
+    const fallbackSite = await buildSiteHtml({
+      businessName: formattedTitle,
+      niche: 'Comércio Local',
+      city: 'São Paulo - SP',
+      subdomain: cleanSlug
     });
 
-  } catch (err: any) {
-    return new NextResponse(`Erro ao renderizar site: ${err.message}`, { status: 500 });
+    return new NextResponse(fallbackSite.html, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+      }
+    });
+  } catch (error: any) {
+    console.error('[Public Site Render Error]', error);
+    return new NextResponse('Erro interno ao renderizar página.', { status: 500 });
   }
 }

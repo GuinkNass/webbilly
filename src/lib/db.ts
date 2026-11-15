@@ -215,6 +215,7 @@ export interface DemoRecord {
   deployedUrl: string;
   instagram?: string;
   phone?: string;
+  html?: string;
   updatedAt: string;
 }
 
