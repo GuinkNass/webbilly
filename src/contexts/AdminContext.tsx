@@ -73,7 +73,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
       // Sincronização dinâmica direta via /api/admin/licenses
       try {
-        const licRes = await fetch('/api/admin/licenses');
+        const licRes = await fetch('/api/admin/licenses', { cache: 'no-store' });
         if (licRes.ok) {
           const licJson = await licRes.json();
           if (Array.isArray(licJson.licenses)) {
@@ -82,6 +82,22 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (licErr) {
         console.warn('Falha ao sincronizar /api/admin/licenses:', licErr);
+      }
+
+      // Sincronização dinâmica direta via /api/admin/operadores (Supabase sem cache)
+      try {
+        const opRes = await fetch('/api/admin/operadores', { cache: 'no-store' });
+        if (opRes.ok) {
+          const opJson = await opRes.json();
+          if (Array.isArray(opJson.candidates)) {
+            json.candidates = opJson.candidates;
+          }
+          if (Array.isArray(opJson.operators)) {
+            json.operators = opJson.operators;
+          }
+        }
+      } catch (opErr) {
+        console.warn('Falha ao sincronizar /api/admin/operadores:', opErr);
       }
 
       // Hidrata avatar local do admin

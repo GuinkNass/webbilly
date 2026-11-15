@@ -517,36 +517,7 @@ function getDefaultDatabase(): DatabaseSchema {
   const masterSerial = 'BILLY-OP-ADMIN-MASTER-2026';
 
   return {
-    candidates: [
-      {
-        id: 'cand-001',
-        name: 'Lucas Ferreira Mendes',
-        email: 'lucas.mendes@exemplo.com.br',
-        whatsapp: '(11) 98765-4321',
-        city: 'São Paulo',
-        state: 'SP',
-        pixType: 'cpf',
-        pixKey: '123.456.789-00',
-        resumeUrl: 'https://linkedin.com/in/lucas-mendes-comercial',
-        experience: '2 anos como SDR B2B em agência de marketing digital.',
-        status: 'PENDENTE',
-        createdAt: new Date(Date.now() - 3600000 * 5).toISOString()
-      },
-      {
-        id: 'cand-002',
-        name: 'Beatriz Vasconcelos',
-        email: 'beatriz.vendas@exemplo.com.br',
-        whatsapp: '(21) 99876-5432',
-        city: 'Rio de Janeiro',
-        state: 'RJ',
-        pixType: 'phone',
-        pixKey: '(21) 99876-5432',
-        resumeUrl: 'https://linkedin.com/in/beatriz-closer',
-        experience: 'Closer autônoma com experiência em prospecção ativa e WhatsApp.',
-        status: 'PENDENTE',
-        createdAt: new Date(Date.now() - 3600000 * 12).toISOString()
-      }
-    ],
+    candidates: [],
     operators: [
       {
         id: 'OP-1001',

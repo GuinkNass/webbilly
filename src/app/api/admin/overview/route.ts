@@ -45,48 +45,59 @@ export async function GET(req: NextRequest) {
       console.warn('Erro ao mesclar operadores do Supabase:', e);
     }
 
-    // Mescla candidatos do db.candidates com operadores PENDENTES para triagem completa e sem duplicidade
+    // Mescla candidatos do db.candidates com operadores PENDENTES do Supabase para triagem completa e sem duplicidade
     const candMap = new Map<string, any>();
     for (const c of db.candidates || []) {
+      if (c.email?.includes('exemplo.com.br') || c.name === 'Lucas Ferreira Mendes' || c.name === 'Beatriz Vasconcelos') {
+        continue;
+      }
       candMap.set(c.id || c.email?.toLowerCase(), c);
     }
     for (const op of combinedOperators) {
-      if (op.status === 'PENDENTE' || (op.status as any) === 'PENDENTE_APROVACAO') {
+      const st = (op.status || '').toLowerCase();
+      if (st === 'pending' || st === 'pendente' || st === 'pendente_aprovacao') {
+        const extra = (typeof op.avatar_config === 'object' && op.avatar_config !== null) ? op.avatar_config : {};
         const key = op.candidateId || op.id || op.email?.toLowerCase();
         const existing = candMap.get(key) || (op.email ? candMap.get(op.email.toLowerCase()) : null);
         if (existing) {
-          candMap.set(key, { ...existing, ...op, id: existing.id || op.id });
+          candMap.set(key, { ...existing, ...op, ...extra, id: existing.id || op.id, status: 'PENDENTE' });
         } else {
           candMap.set(key, {
             id: op.candidateId || op.id,
-            name: op.name,
-            email: op.email,
-            whatsapp: op.whatsapp,
-            phone: op.whatsapp,
-            cpf: op.cpf,
-            cep: op.cep,
-            address: op.address,
-            neighborhood: op.neighborhood,
-            city: op.city_state || (op as any).city || '',
-            state: (op as any).state || '',
-            city_state: op.city_state,
-            pixType: op.pixType || op.pix_type || 'cpf',
-            pixKey: op.pixKey || op.pix_key || '',
-            pix_type: op.pixType || op.pix_type || 'cpf',
-            pix_key: op.pixKey || op.pix_key || '',
-            experience: op.experience || '',
-            status: op.status,
+            name: op.name || extra.full_name || extra.name || 'Candidato',
+            email: op.email || extra.email || '',
+            whatsapp: op.whatsapp || extra.whatsapp || op.phone || '',
+            phone: op.whatsapp || extra.whatsapp || op.phone || '',
+            cpf: op.cpf || extra.cpf || '',
+            cep: op.cep || extra.cep || '',
+            address: op.address || extra.address || '',
+            neighborhood: op.neighborhood || extra.neighborhood || '',
+            city: op.city_state || (op as any).city || extra.city || '',
+            state: (op as any).state || extra.state || 'BR',
+            city_state: op.city_state || extra.city_state || (extra.city ? `${extra.city} - ${extra.state || 'BR'}` : ''),
+            pixType: op.pixType || op.pix_type || extra.pixType || 'cpf',
+            pixKey: op.pixKey || op.pix_key || extra.pixKey || '',
+            pix_type: op.pixType || op.pix_type || extra.pix_type || 'cpf',
+            pix_key: op.pixKey || op.pix_key || extra.pix_key || '',
+            experience: op.experience || extra.experience || '',
+            availability: extra.availability || 'Integral',
+            has_computer: extra.has_computer ?? extra.hasComputer ?? true,
+            status: 'PENDENTE',
             createdAt: op.createdAt || new Date().toISOString(),
             referred_by_operator_id: op.referred_by_operator_id,
             accepted_terms_at: op.accepted_terms_at,
             accepted_terms_ip: op.accepted_terms_ip,
-            accepted_terms_version: op.accepted_terms_version
+            accepted_terms_version: op.accepted_terms_version,
+            raw_payload: extra
           });
         }
       }
     }
     const allCandidates = Array.from(candMap.values());
-    const pendingCandidatesCount = allCandidates.filter(c => c.status === 'PENDENTE' || c.status === 'PENDENTE_APROVACAO').length;
+    const pendingCandidatesCount = allCandidates.filter(c => {
+      const s = (c.status || '').toLowerCase();
+      return s === 'pending' || s === 'pendente' || s === 'pendente_aprovacao';
+    }).length;
     const activeOperatorsCount = combinedOperators.filter(o => o.status === 'ATIVO').length;
     const blockedOperatorsCount = combinedOperators.filter(o => o.status === 'BLOQUEADO').length;
 

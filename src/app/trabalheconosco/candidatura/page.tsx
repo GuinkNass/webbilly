@@ -132,30 +132,39 @@ function CandidaturaForm() {
       const cityState = formData.city && formData.state ? `${formData.city} - ${formData.state}` : formData.city;
 
       const payload = {
+        full_name: formData.name,
         nome: formData.name,
+        name: formData.name,
         cpf: formData.cpf,
         whatsapp: formData.whatsapp,
+        phone: formData.whatsapp,
         email: formData.email,
         cep: formData.cep,
         address: fullAddress,
         neighborhood: formData.neighborhood,
         cidade: formData.city,
+        city: formData.city,
         state: formData.state,
         city_state: cityState,
         pixType: formData.pixType,
+        pix_type: formData.pixType,
         pixKey: formData.pixKey,
+        pix_key: formData.pixKey,
         experiencia: formData.experience,
+        experience: formData.experience,
+        availability: 'Integral',
+        has_computer: true,
         ref: formData.ref
       };
 
-      const res = await fetch('/api/trabalhe-aqui', {
+      const res = await fetch('/api/candidaturas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || 'Erro ao enviar ficha de candidatura.');
+      if (!res.ok) throw new Error(json.error || 'Erro ao registrar candidatura.');
 
       setSubmitSuccess(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });

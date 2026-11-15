@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
 import { readDb, writeDb, generateSerial, Operator, LicenseRecord } from '@/lib/db';
-import { fetchAllOperatorsFromSupabase, upsertOperatorInSupabase } from '@/lib/supabase';
+import { fetchAllOperatorsFromSupabase, upsertOperatorInSupabase, getSupabaseAdmin } from '@/lib/supabase';
 import { sendOperatorApprovalEmail } from '@/lib/lark-mailer';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
@@ -233,6 +233,7 @@ export async function POST(req: NextRequest) {
     // 8. Atualiza Supabase como fonte única de verdade (payload seguro)
     await upsertOperatorInSupabase({
       ...finalOp,
+      id: finalOp.id,
       status: 'ATIVO',
       serialToken: finalSerial,
       corporate_email: corporateEmail,
@@ -243,6 +244,12 @@ export async function POST(req: NextRequest) {
       lark_provisioned: larkResult.success,
       larkProvisioned: larkResult.success
     });
+
+    try {
+      const supabase = getSupabaseAdmin();
+      await supabase.from('candidaturas').update({ status: 'approved' }).or(`id.eq.${finalOp.id},email.eq.${finalOp.email}`);
+      await supabase.from('candidates').update({ status: 'approved' }).or(`id.eq.${finalOp.id},email.eq.${finalOp.email}`);
+    } catch (_) {}
 
     // 9. Atualiza banco local
     const localOp = db.operators.find(o => o.id === finalOp.id);

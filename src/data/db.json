@@ -1,20 +1,5 @@
 {
-  "candidates": [
-    {
-      "id": "cand-001",
-      "name": "Lucas Ferreira Mendes",
-      "email": "lucas.mendes@exemplo.com.br",
-      "whatsapp": "(11) 98765-4321",
-      "city": "São Paulo",
-      "state": "SP",
-      "pixType": "cpf",
-      "pixKey": "123.456.789-00",
-      "resumeUrl": "https://linkedin.com/in/lucas-mendes-comercial",
-      "experience": "2 anos como SDR B2B em agência de marketing digital.",
-      "status": "PENDENTE",
-      "createdAt": "2026-11-06T04:32:21.275Z"
-    }
-  ],
+  "candidates": [],
   "operators": [
     {
       "id": "OP-6A42",

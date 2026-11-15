@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAdmin } from '@/contexts/AdminContext';
 import { ActionTooltip } from '@/components/ui/ActionTooltip';
 import {
@@ -60,6 +60,27 @@ export default function AdminOperatorsPage() {
     reapplyDateBr: string;
     emailSent: boolean;
   } | null>(null);
+
+  // Sincronização direta em tempo real de candidaturas do Supabase (sem cache)
+  const [directCandidates, setDirectCandidates] = useState<any[] | null>(null);
+
+  const refreshCandidatesFromSupabase = async () => {
+    try {
+      const res = await fetch('/api/admin/operadores', { cache: 'no-store' });
+      if (res.ok) {
+        const json = await res.json();
+        if (Array.isArray(json.candidates)) {
+          setDirectCandidates(json.candidates);
+        }
+      }
+    } catch (e) {
+      console.warn('Erro ao atualizar candidaturas do Supabase:', e);
+    }
+  };
+
+  useEffect(() => {
+    refreshCandidatesFromSupabase();
+  }, [activeTabSub]);
 
   // Bloquear / Desbloquear Licença
   const handleToggleLicense = async (serialToken: string, currentStatus: string) => {
@@ -153,6 +174,7 @@ export default function AdminOperatorsPage() {
       setActionSuccess(json.message || `Operador aprovado com sucesso! Acesso liberado no app desktop.`);
       setTimeout(() => setActionSuccess(null), 5000);
       await loadData();
+      await refreshCandidatesFromSupabase();
     } catch (err: any) {
       alert(err.message || 'Erro ao aprovar operador.');
     }
@@ -197,6 +219,7 @@ export default function AdminOperatorsPage() {
       setActionSuccess(`Candidatura de ${cand.name} recusada. Registro atualizado.`);
       setTimeout(() => setActionSuccess(null), 5000);
       await loadData();
+      await refreshCandidatesFromSupabase();
     } catch (err: any) {
       alert(err.message || 'Falha ao processar recusa da candidatura.');
     } finally {
@@ -295,8 +318,11 @@ export default function AdminOperatorsPage() {
     );
   });
 
-  const candidates = (data?.candidates || []).filter((c: any) => {
-    if (c.status === 'APROVADO' || c.status === 'RECUSADO' || c.status === 'rejected') return false;
+  const candidates = (directCandidates ?? data?.candidates ?? []).filter((c: any) => {
+    const st = (c.status || '').toLowerCase();
+    if (st === 'aprovado' || st === 'approved' || st === 'recusado' || st === 'rejected') return false;
+    // Elimina qualquer resquício de mock
+    if (c.email?.includes('exemplo.com.br') || c.name === 'Lucas Ferreira Mendes' || c.name === 'Beatriz Vasconcelos') return false;
     if (!candidateSearch) return true;
     const q = candidateSearch.toLowerCase();
     return (

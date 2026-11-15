@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
 import { readDb, writeDb } from '@/lib/db';
-import { fetchAllOperatorsFromSupabase, upsertOperatorInSupabase } from '@/lib/supabase';
+import { fetchAllOperatorsFromSupabase, upsertOperatorInSupabase, getSupabaseAdmin } from '@/lib/supabase';
 import { sendOperatorRejectionEmail } from '@/lib/lark-mailer';
 
 export const dynamic = 'force-dynamic';
@@ -119,6 +119,9 @@ export async function POST(req: NextRequest) {
         rejected_at: nowIso,
         reapply_after: reapplyDateIso
       });
+      const supabase = getSupabaseAdmin();
+      await supabase.from('candidaturas').update({ status: 'rejected', reapply_after: reapplyDateIso }).or(`id.eq.${targetId},email.eq.${candidateEmail}`);
+      await supabase.from('candidates').update({ status: 'rejected', reapply_after: reapplyDateIso }).or(`id.eq.${targetId},email.eq.${candidateEmail}`);
     } catch (errSup) {
       console.warn('Erro ao atualizar status RECUSADO no Supabase:', errSup);
     }
