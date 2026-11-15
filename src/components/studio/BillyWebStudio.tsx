@@ -227,6 +227,13 @@ export default function BillyWebStudio({
   const [pixabayLoading, setPixabayLoading] = useState(false);
   const [customPhotoUrl, setCustomPhotoUrl] = useState('');
 
+  // Central de Fotos Reais (Google & Instagram)
+  const [photoSearchMode, setPhotoSearchMode] = useState<'real' | 'pixabay' | 'custom'>('real');
+  const [realPhotosQuery, setRealPhotosQuery] = useState('');
+  const [realPhotos, setRealPhotos] = useState<Array<{ id: string; url: string; title: string; source: 'google' | 'instagram' | 'web' }>>([]);
+  const [realPhotosLoading, setRealPhotosLoading] = useState(false);
+  const [realPhotosSuccessNotice, setRealPhotosSuccessNotice] = useState<string | null>(null);
+
   // AI Copy Generation
   const [copyGenerating, setCopyGenerating] = useState(false);
   const [copySuccessNotice, setCopySuccessNotice] = useState(false);
@@ -332,6 +339,70 @@ export default function BillyWebStudio({
     } finally {
       setPixabayLoading(false);
     }
+  };
+
+  // Busca Fotos Reais do Estabelecimento (Google Imagens & Instagram)
+  const handleSearchRealPhotos = async (qOverride?: string) => {
+    const targetQuery = qOverride !== undefined ? qOverride : (realPhotosQuery || `${siteForm.businessName} ${siteForm.city}`);
+    if (!targetQuery.trim()) return;
+
+    setRealPhotosLoading(true);
+    setRealPhotosSuccessNotice(null);
+    try {
+      const data = await safeFetchJson('/api/studio/buscar-fotos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessName: siteForm.businessName,
+          city: siteForm.city,
+          niche: siteForm.niche,
+          instagram: siteForm.instagram,
+          query: targetQuery
+        })
+      });
+
+      if (data && data.success && Array.isArray(data.photos) && data.photos.length > 0) {
+        setRealPhotos(data.photos);
+        setRealPhotosSuccessNotice(`✨ ${data.photos.length} fotos reais encontradas no Google / Instagram!`);
+
+        // Se a galeria atual só tem fotos padrão de stock, substitui automaticamente pelas reais
+        setSiteForm((prev) => {
+          const hasCustomPhotos = prev.galleryPhotos.some(
+            (p) => !p.includes('unsplash.com') && !p.includes('pixabay.com')
+          );
+          if (!hasCustomPhotos && data.photos.length > 0) {
+            const urls = data.photos.slice(0, 8).map((p: any) => p.url);
+            return {
+              ...prev,
+              heroPhoto: urls[0] || prev.heroPhoto,
+              galleryPhotos: urls
+            };
+          }
+          return prev;
+        });
+
+        setTimeout(() => setRealPhotosSuccessNotice(null), 5000);
+      } else {
+        setRealPhotosSuccessNotice('Nenhuma foto pública encontrada. Tente buscar pelo @ do Instagram ou nome exato.');
+      }
+    } catch (err: any) {
+      console.warn('Erro ao buscar fotos reais:', err.message);
+    } finally {
+      setRealPhotosLoading(false);
+    }
+  };
+
+  // Importar e aplicar todas as fotos reais selecionadas para o site
+  const handleApplyRealPhotosToSite = () => {
+    if (realPhotos.length === 0) return;
+    const urls = realPhotos.slice(0, 8).map((p) => p.url);
+    setSiteForm((prev) => ({
+      ...prev,
+      heroPhoto: urls[0] || prev.heroPhoto,
+      galleryPhotos: urls
+    }));
+    setRealPhotosSuccessNotice(`✅ ${urls.length} fotos reais aplicadas com sucesso no site!`);
+    setTimeout(() => setRealPhotosSuccessNotice(null), 4000);
   };
 
   // Load projects list
@@ -447,6 +518,23 @@ export default function BillyWebStudio({
       setSelectedLeadReviews(lead.realReviews);
     } else {
       setSelectedLeadReviews([]);
+    }
+
+    // Prepara e dispara busca de fotos reais do Google / Instagram
+    const businessPhotoQuery = `${lead.name} ${city}`;
+    setRealPhotosQuery(businessPhotoQuery);
+
+    if (googlePhotos.length > 0) {
+      setRealPhotos(
+        googlePhotos.map((url, idx) => ({
+          id: `lead_photo_${idx}`,
+          url,
+          title: `${lead.name} (Google Maps Oficial)`,
+          source: 'google'
+        }))
+      );
+    } else {
+      handleSearchRealPhotos(businessPhotoQuery);
     }
 
     setPixabayQuery(niche);
@@ -1632,134 +1720,330 @@ export default function BillyWebStudio({
             </div>
           </div>
 
-          {/* SEÇÃO 5: BUSCADOR PIXABAY & GALERIA DE FOTOS */}
+          {/* SEÇÃO 5: CENTRAL INTELIGENTE DE FOTOS DO ESTABELECIMENTO */}
           <div className="p-6 sm:p-8 rounded-3xl bg-[#0e121b] border border-white/[0.06] shadow-xl space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <ImageIcon className="w-5 h-5 text-[#84cc16]" />
-                  <span>5. Acervo de Fotos em Alta Resolução (Pixabay & Fotos Próprias)</span>
+                  <Camera className="w-5 h-5 text-[#84cc16]" />
+                  <span>5. Fotos do Estabelecimento (Google, Instagram & Pixabay)</span>
                 </h3>
                 <p className="text-xs text-zinc-400 mt-1">
-                  Busque imagens profissionais gratuitas ou adicione fotos do Instagram e Google do cliente.
+                  Importe fotografias reais do Google Maps e Instagram do cliente ou use fotos conceituais HD.
                 </p>
               </div>
 
-              {/* Barra de Busca Pixabay */}
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={pixabayQuery}
-                  onChange={(e) => setPixabayQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearchPixabay()}
-                  placeholder="Buscar no Pixabay..."
-                  className="bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#84cc16]"
-                />
+              {/* Seletor de Abas de Fotos */}
+              <div className="flex items-center gap-1 p-1 bg-[#07090e] border border-white/[0.08] rounded-2xl shrink-0">
                 <button
                   type="button"
-                  onClick={() => handleSearchPixabay()}
-                  disabled={pixabayLoading}
-                  className="px-3.5 py-2 rounded-xl text-xs font-bold bg-white/[0.06] hover:bg-white/[0.12] text-white transition flex items-center gap-1.5 cursor-pointer shrink-0"
+                  onClick={() => setPhotoSearchMode('real')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                    photoSearchMode === 'real'
+                      ? 'bg-[#84cc16] text-black shadow-md shadow-[#84cc16]/20'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
                 >
-                  {pixabayLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
-                  <span>Buscar</span>
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>Fotos Reais (Google / Insta)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPhotoSearchMode('pixabay')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                    photoSearchMode === 'pixabay'
+                      ? 'bg-[#84cc16] text-black shadow-md shadow-[#84cc16]/20'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <ImageIcon className="w-3.5 h-3.5" />
+                  <span>Banco Pixabay HD</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPhotoSearchMode('custom')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                    photoSearchMode === 'custom'
+                      ? 'bg-[#84cc16] text-black shadow-md shadow-[#84cc16]/20'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>Colar URL</span>
                 </button>
               </div>
             </div>
 
-            {/* Grade Interativa do Pixabay */}
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5 max-h-56 overflow-y-auto pr-1 scrollbar-thin">
-              {pixabayImages.map((img, i) => {
-                const target = img.largeUrl || img.previewUrl;
-                const isHero = siteForm.heroPhoto === target;
-                const isGallery = siteForm.galleryPhotos.includes(target);
+            {/* Aviso de Sucesso */}
+            {realPhotosSuccessNotice && (
+              <div className="p-3 rounded-xl bg-[#84cc16]/10 border border-[#84cc16]/30 text-[#a3e635] text-xs flex items-center justify-between gap-2">
+                <span>{realPhotosSuccessNotice}</span>
+                <button type="button" onClick={() => setRealPhotosSuccessNotice(null)} className="text-zinc-400 hover:text-white">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
 
-                return (
-                  <div
-                    key={i}
-                    className={`relative rounded-xl overflow-hidden aspect-video border group transition-all ${
-                      isHero
-                        ? 'border-[#84cc16] ring-2 ring-[#84cc16]'
-                        : isGallery
-                        ? 'border-emerald-500'
-                        : 'border-white/[0.08]'
-                    }`}
-                  >
-                    <img src={img.previewUrl} alt="" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition p-1">
-                      <button
-                        type="button"
-                        onClick={() => setSiteForm((prev) => ({ ...prev, heroPhoto: target }))}
-                        className="px-2 py-0.5 rounded text-[9px] font-bold bg-[#84cc16] text-black w-full text-center"
-                      >
-                        Hero ★
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (siteForm.galleryPhotos.includes(target)) {
-                            setSiteForm((prev) => ({ ...prev, galleryPhotos: prev.galleryPhotos.filter((p) => p !== target) }));
-                          } else {
-                            setSiteForm((prev) => ({ ...prev, galleryPhotos: [...prev.galleryPhotos, target] }));
-                          }
-                        }}
-                        className="px-2 py-0.5 rounded text-[9px] font-bold bg-white text-black w-full text-center"
-                      >
-                        {isGallery ? 'Remover' : '+ Galeria'}
-                      </button>
-                    </div>
+            {/* MODO 1: FOTOS REAIS DO ESTABELECIMENTO (GOOGLE & INSTAGRAM) */}
+            {photoSearchMode === 'real' && (
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      value={realPhotosQuery}
+                      onChange={(e) => setRealPhotosQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSearchRealPhotos()}
+                      placeholder="Nome da empresa, cidade ou @Instagram (ex: Caixa Preta Tattoo São Paulo)..."
+                      className="w-full bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#84cc16]"
+                    />
                   </div>
-                );
-              })}
-            </div>
+                  <button
+                    type="button"
+                    onClick={() => handleSearchRealPhotos()}
+                    disabled={realPhotosLoading}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#9ae639] text-black transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shrink-0"
+                  >
+                    {realPhotosLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+                    <span>{realPhotosLoading ? 'Buscando...' : 'Buscar Fotos Reais'}</span>
+                  </button>
+                  {realPhotos.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleApplyRealPhotosToSite}
+                      className="px-4 py-2 rounded-xl text-xs font-bold bg-white/[0.08] hover:bg-white/[0.15] text-white border border-white/[0.1] transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-[#84cc16]" />
+                      <span>Aplicar Todas no Site</span>
+                    </button>
+                  )}
+                </div>
 
-            {/* Adicionar URLs de Fotos e Instagram */}
-            <div className="pt-4 border-t border-white/[0.06] space-y-3">
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={customPhotoUrl}
-                  onChange={(e) => setCustomPhotoUrl(e.target.value)}
-                  placeholder="Colar URL de foto do Instagram, Google Fotos ou Imgur..."
-                  className="flex-1 bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#84cc16]"
-                />
-                <button
-                  type="button"
-                  onClick={handleAddCustomPhoto}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-white/[0.06] hover:bg-white/[0.12] text-white transition cursor-pointer"
-                >
-                  + Adicionar Foto
-                </button>
-              </div>
+                {/* Grade de Fotos Reais */}
+                {realPhotosLoading ? (
+                  <div className="py-12 text-center text-zinc-500 space-y-2">
+                    <Loader2 className="w-8 h-8 border-2 border-[#84cc16] rounded-full animate-spin mx-auto text-[#84cc16]" />
+                    <p className="text-xs">Localizando fotografias públicas no Google Imagens e redes sociais...</p>
+                  </div>
+                ) : realPhotos.length === 0 ? (
+                  <div className="p-8 rounded-2xl bg-[#07090e]/60 border border-dashed border-white/[0.08] text-center space-y-3">
+                    <Camera className="w-8 h-8 text-zinc-600 mx-auto" />
+                    <div>
+                      <p className="text-xs font-bold text-zinc-300">Nenhuma foto real carregada ainda.</p>
+                      <p className="text-[11px] text-zinc-500 mt-0.5">
+                        Clique em "Buscar Fotos Reais" para rastrear o portfólio no Google Maps e redes sociais de{' '}
+                        <strong>{siteForm.businessName || 'deste comércio'}</strong>.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleSearchRealPhotos(`${siteForm.businessName} ${siteForm.city}`)}
+                      className="px-4 py-2 rounded-xl text-xs font-bold bg-[#84cc16]/15 hover:bg-[#84cc16] text-[#84cc16] hover:text-black border border-[#84cc16]/30 transition inline-flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Search className="w-3.5 h-3.5" />
+                      <span>Buscar Fotos de {siteForm.businessName || 'Empresa'}</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5 max-h-72 overflow-y-auto pr-1 scrollbar-thin">
+                    {realPhotos.map((item, i) => {
+                      const target = item.url;
+                      const isHero = siteForm.heroPhoto === target;
+                      const isGallery = siteForm.galleryPhotos.includes(target);
 
-              {/* Fotos Atualmente Selecionadas */}
-              <div className="space-y-1.5">
-                <span className="text-[11px] font-bold text-zinc-300 block">
-                  Fotos Selecionadas para o Site ({siteForm.galleryPhotos.length}):
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {siteForm.galleryPhotos.map((photo, i) => {
-                    const isGoogle = photo.includes('googleusercontent.com') || photo.includes('places.googleapis.com');
-                    return (
-                      <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border border-white/[0.1] group">
-                        <img src={photo} alt="" className="w-full h-full object-cover" />
-                        {isGoogle && (
-                          <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-[#84cc16] text-black shadow-md flex items-center gap-0.5 z-10 pointer-events-none">
-                            <Camera className="w-2.5 h-2.5" />
-                            <span>Google Maps Oficial</span>
-                          </span>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => handleRemovePhoto(i)}
-                          className="absolute inset-0 bg-rose-950/80 text-rose-300 opacity-0 group-hover:opacity-100 flex items-center justify-center transition cursor-pointer z-20"
+                      return (
+                        <div
+                          key={item.id || i}
+                          className={`relative rounded-xl overflow-hidden aspect-square border group transition-all ${
+                            isHero
+                              ? 'border-[#84cc16] ring-2 ring-[#84cc16]'
+                              : isGallery
+                              ? 'border-emerald-500 ring-1 ring-emerald-500'
+                              : 'border-white/[0.08]'
+                          }`}
                         >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                          <img src={target} alt="" className="w-full h-full object-cover" />
+                          <span
+                            className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
+                              item.source === 'instagram'
+                                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
+                                : 'bg-emerald-500 text-black'
+                            }`}
+                          >
+                            {item.source === 'instagram' ? 'Instagram' : 'Google'}
+                          </span>
+                          <div className="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition p-1.5">
+                            <button
+                              type="button"
+                              onClick={() => setSiteForm((prev) => ({ ...prev, heroPhoto: target }))}
+                              className="px-2 py-1 rounded text-[9px] font-bold bg-[#84cc16] text-black w-full text-center cursor-pointer"
+                            >
+                              Hero ★
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (siteForm.galleryPhotos.includes(target)) {
+                                  setSiteForm((prev) => ({
+                                    ...prev,
+                                    galleryPhotos: prev.galleryPhotos.filter((p) => p !== target)
+                                  }));
+                                } else {
+                                  setSiteForm((prev) => ({
+                                    ...prev,
+                                    galleryPhotos: [...prev.galleryPhotos, target]
+                                  }));
+                                }
+                              }}
+                              className="px-2 py-1 rounded text-[9px] font-bold bg-white text-black w-full text-center cursor-pointer"
+                            >
+                              {isGallery ? 'Remover' : '+ Galeria'}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* MODO 2: BANCO PIXABAY HD */}
+            {photoSearchMode === 'pixabay' && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={pixabayQuery}
+                    onChange={(e) => setPixabayQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearchPixabay()}
+                    placeholder="Buscar no Pixabay (ex: barbearia, tattoo, odontologia)..."
+                    className="flex-1 bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleSearchPixabay()}
+                    disabled={pixabayLoading}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-white/[0.06] hover:bg-white/[0.12] text-white transition flex items-center gap-1.5 cursor-pointer shrink-0"
+                  >
+                    {pixabayLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+                    <span>Buscar</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5 max-h-56 overflow-y-auto pr-1 scrollbar-thin">
+                  {pixabayImages.map((img, i) => {
+                    const target = img.largeUrl || img.previewUrl;
+                    const isHero = siteForm.heroPhoto === target;
+                    const isGallery = siteForm.galleryPhotos.includes(target);
+
+                    return (
+                      <div
+                        key={i}
+                        className={`relative rounded-xl overflow-hidden aspect-video border group transition-all ${
+                          isHero
+                            ? 'border-[#84cc16] ring-2 ring-[#84cc16]'
+                            : isGallery
+                            ? 'border-emerald-500'
+                            : 'border-white/[0.08]'
+                        }`}
+                      >
+                        <img src={img.previewUrl} alt="" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition p-1">
+                          <button
+                            type="button"
+                            onClick={() => setSiteForm((prev) => ({ ...prev, heroPhoto: target }))}
+                            className="px-2 py-0.5 rounded text-[9px] font-bold bg-[#84cc16] text-black w-full text-center cursor-pointer"
+                          >
+                            Hero ★
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (siteForm.galleryPhotos.includes(target)) {
+                                setSiteForm((prev) => ({
+                                  ...prev,
+                                  galleryPhotos: prev.galleryPhotos.filter((p) => p !== target)
+                                }));
+                              } else {
+                                setSiteForm((prev) => ({
+                                  ...prev,
+                                  galleryPhotos: [...prev.galleryPhotos, target]
+                                }));
+                              }
+                            }}
+                            className="px-2 py-0.5 rounded text-[9px] font-bold bg-white text-black w-full text-center cursor-pointer"
+                          >
+                            {isGallery ? 'Remover' : '+ Galeria'}
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
                 </div>
+              </div>
+            )}
+
+            {/* MODO 3: ADICIONAR URL DIRETA */}
+            {photoSearchMode === 'custom' && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={customPhotoUrl}
+                    onChange={(e) => setCustomPhotoUrl(e.target.value)}
+                    placeholder="Colar URL de foto do Instagram, Google Fotos, Imgur ou site..."
+                    className="flex-1 bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddCustomPhoto}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-white/[0.06] hover:bg-white/[0.12] text-white transition cursor-pointer"
+                  >
+                    + Adicionar Foto
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Fotos Atualmente Selecionadas para o Site */}
+            <div className="pt-4 border-t border-white/[0.06] space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold text-zinc-300 block">
+                  Fotos Selecionadas para o Site ({siteForm.galleryPhotos.length}):
+                </span>
+                <span className="text-[10px] text-zinc-500 font-mono">
+                  Passe o mouse na miniatura para excluir
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {siteForm.galleryPhotos.map((photo, i) => {
+                  const isGoogle = photo.includes('googleusercontent.com') || photo.includes('places.googleapis.com');
+                  const isInstagram = photo.includes('cdninstagram.com') || photo.includes('fbcdn.net');
+
+                  return (
+                    <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border border-white/[0.1] group">
+                      <img src={photo} alt="" className="w-full h-full object-cover" />
+                      {(isGoogle || isInstagram) && (
+                        <span
+                          className={`absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase shadow-md flex items-center gap-0.5 z-10 pointer-events-none ${
+                            isInstagram ? 'bg-purple-600 text-white' : 'bg-[#84cc16] text-black'
+                          }`}
+                        >
+                          <Camera className="w-2.5 h-2.5" />
+                          <span>{isInstagram ? 'Instagram' : 'Google Maps'}</span>
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleRemovePhoto(i)}
+                        className="absolute inset-0 bg-rose-950/80 text-rose-300 opacity-0 group-hover:opacity-100 flex items-center justify-center transition cursor-pointer z-20"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
