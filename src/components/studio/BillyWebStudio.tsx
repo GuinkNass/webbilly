@@ -258,6 +258,7 @@ export default function BillyWebStudio({
 
   // Deploy Real State
   const [isDeploying, setIsDeploying] = useState(false);
+  const [isDeployed, setIsDeployed] = useState(false);
   const [deploySuccessNotice, setDeploySuccessNotice] = useState<string | null>(null);
   const [deployError, setDeployError] = useState<string | null>(null);
 
@@ -764,6 +765,9 @@ export default function BillyWebStudio({
       }
 
       setGeneratedHtml(data.html || '');
+      setIsDeployed(false);
+      setDeploySuccessNotice(null);
+      setDeployError(null);
       setGeneratedResult({
         slug: data.slug,
         subdomainUrl: data.subdomainUrl,
@@ -815,6 +819,7 @@ export default function BillyWebStudio({
         throw new Error(data.error || 'Falha ao realizar deploy');
       }
 
+      setIsDeployed(true);
       setDeploySuccessNotice(`✅ Deploy Concluído com Sucesso! O site oficial está online em ${data.subdomainUrl}`);
       loadProjects();
     } catch (err: any) {
@@ -846,6 +851,7 @@ export default function BillyWebStudio({
         setQuickInstruction('');
         if (data.html) {
           setGeneratedHtml(data.html);
+          setIsDeployed(false);
         }
         setTimeout(() => setAdjustSuccessMsg(null), 4000);
       } else {
@@ -2164,15 +2170,32 @@ export default function BillyWebStudio({
                       <span className="hidden sm:inline">Tela Cheia</span>
                     </button>
 
-                    <a
-                      href={`https://${previewSlug}.webbilly.com.br`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-bold text-zinc-300 hover:text-white border border-white/[0.08] flex items-center gap-1.5 transition"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5 text-[#84cc16]" />
-                      <span className="hidden sm:inline">Abrir Subdomínio</span>
-                    </a>
+                    {isDeployed ? (
+                      <a
+                        href={`https://${previewSlug}.webbilly.com.br`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-3.5 py-1.5 rounded-xl bg-[#84cc16] hover:bg-[#9ae639] text-xs font-bold text-black border border-[#84cc16] flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5 text-black" />
+                        <span className="hidden sm:inline">Abrir Subdomínio ↗</span>
+                      </a>
+                    ) : (
+                      <ActionTooltip
+                        title="Subdomínio Bloqueado"
+                        description="Clique em '🚀 Fazer Deploy no Subdomínio' ao lado para publicar oficialmente este site."
+                        side="bottom"
+                      >
+                        <button
+                          type="button"
+                          disabled
+                          className="px-3 py-1.5 rounded-xl bg-white/[0.03] text-xs font-semibold text-zinc-500 border border-white/[0.06] flex items-center gap-1.5 cursor-not-allowed opacity-60"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 text-zinc-500" />
+                          <span className="hidden sm:inline">Abrir Subdomínio (Faça Deploy Primeiro)</span>
+                        </button>
+                      </ActionTooltip>
+                    )}
                   </div>
                 </div>
 
@@ -2542,15 +2565,22 @@ export default function BillyWebStudio({
             </div>
 
             <div className="flex items-center gap-3">
-              <a
-                href={`https://${previewSlug}.webbilly.com.br`}
-                target="_blank"
-                rel="noreferrer"
-                className="px-3 py-1.5 rounded-xl bg-[#84cc16] text-black font-bold text-xs flex items-center gap-1.5"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                <span>Abrir Subdomínio Real</span>
-              </a>
+              {isDeployed ? (
+                <a
+                  href={`https://${previewSlug}.webbilly.com.br`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 rounded-xl bg-[#84cc16] hover:bg-[#9ae639] text-black font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Abrir Subdomínio Real ↗</span>
+                </a>
+              ) : (
+                <span className="px-3 py-1.5 rounded-xl bg-white/[0.04] text-zinc-500 font-semibold text-xs border border-white/[0.08] flex items-center gap-1.5 cursor-not-allowed">
+                  <ExternalLink className="w-3.5 h-3.5 text-zinc-500" />
+                  <span>Subdomínio Bloqueado (Faça Deploy Primeiro)</span>
+                </span>
+              )}
 
               <button
                 type="button"

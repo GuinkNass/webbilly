@@ -10,7 +10,7 @@ import {
   ShieldAlert
 } from 'lucide-react';
 import Link from 'next/link';
-import { resolveSiteBySlug, sanitizeSlug, fetchCloudSuspendedSlugs, formatSlugToTitle } from '@/lib/site-storage';
+import { resolveSiteBySlug, sanitizeSlug, fetchCloudSuspendedSlugs, formatSlugToTitle, getSiteFromCloudStorage } from '@/lib/site-storage';
 import { resolveTemplateBySlug } from '@/lib/templates-data';
 import { fetchSiteFromSupabase, fetchAllOperatorsFromSupabase } from '@/lib/supabase';
 
@@ -36,12 +36,13 @@ export default async function SiteViewerPage({
   const cloudSuspended = await fetchCloudSuspendedSlugs();
   const isDirectlySuspended = cloudSuspended.has(slug);
 
-  // 2. Consulta o registro no Supabase (Fonte Única de Verdade) ou no Banco Principal
+  // 2. Consulta o registro no Supabase Storage e na tabela subscriptions
+  const cloudSite = await getSiteFromCloudStorage(slug);
   const supabaseSite = await fetchSiteFromSupabase(slug);
   const site = supabaseSite || (await resolveSiteBySlug(slug));
 
   // 3. Se for um dos 6 Templates Oficiais de Demonstração (e não for um cliente cadastrado ou suspenso)
-  if (!site && !isDirectlySuspended) {
+  if (!site && !cloudSite && !isDirectlySuspended) {
     const demoTemplate = resolveTemplateBySlug(slug);
     if (demoTemplate) {
       return (
@@ -89,7 +90,54 @@ export default async function SiteViewerPage({
     }
   }
 
-  if (!site && !isDirectlySuspended) {
+  // 4. Se o site ainda não foi publicado (Rascunho aguardando deploy)
+  const isDraftOrUnpublished = (cloudSite && (!cloudSite.isPublished || cloudSite.status === 'draft')) ||
+                               (site && (site.status as string) === 'draft');
+
+  if (isDraftOrUnpublished && !isDirectlySuspended) {
+    const formattedName = cloudSite?.businessName || site?.clientName || formatSlugToTitle(slug);
+    return (
+      <div className="min-h-screen bg-[#07090e] text-white flex flex-col items-center justify-center p-4 sm:p-6 select-none relative overflow-hidden">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#84cc16]/10 rounded-full blur-[140px] pointer-events-none"></div>
+
+        <div className="max-w-lg w-full bg-[#0e121b]/95 border border-white/[0.08] rounded-3xl p-8 sm:p-10 shadow-2xl relative z-10 text-center space-y-6 backdrop-blur-md">
+          <div className="flex items-center justify-center gap-1.5 pb-2">
+            <span className="font-extrabold text-lg tracking-tight text-white font-heading">
+              Web<span className="text-[#84cc16]">billy</span>
+            </span>
+            <span className="text-zinc-600">•</span>
+            <span className="text-zinc-400 text-xs font-mono">Presença Digital</span>
+          </div>
+
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold tracking-wide uppercase">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            <span>Site em Preparação — Aguardando publicação</span>
+          </div>
+
+          <div className="space-y-3">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+              {formattedName}
+            </h1>
+            <p className="text-xs text-zinc-400 font-mono bg-black/50 py-1 px-3 rounded-lg inline-block border border-white/[0.06]">
+              {slug}.webbilly.com.br
+            </p>
+            <p className="text-sm text-zinc-300 leading-relaxed pt-2">
+              Este site oficial está sendo preparado e finalizado pela equipe Webbilly.
+            </p>
+            <p className="text-xs text-zinc-400">
+              A publicação oficial ocorrerá assim que os ajustes forem concluídos pelo operador responsável.
+            </p>
+          </div>
+
+          <div className="pt-4 border-t border-white/[0.08] text-[11px] text-zinc-500">
+            Webbilly Plataforma de Presença Digital • Todos os direitos reservados.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!site && !cloudSite && !isDirectlySuspended) {
     return (
       <div className="min-h-screen bg-[#07090e] text-white flex flex-col items-center justify-center p-6 text-center">
         <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 mb-4">

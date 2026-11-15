@@ -232,7 +232,7 @@ export interface SubscriptionRecord {
   operatorToken?: string;
   monthlyPrice: number;
   commissionMonthly?: number;
-  status: 'active' | 'pending' | 'suspended' | 'cancelled';
+  status: 'active' | 'pending' | 'suspended' | 'cancelled' | 'draft';
   deployedUrl?: string;
   asaasCustomerId?: string;
   asaas_customer_id?: string;

@@ -1,12 +1,12 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { readDb, writeDb, SubscriptionRecord } from '@/lib/db';
-import { fetchSiteFromSupabase, updateSiteStatusInSupabase } from '@/lib/supabase';
+import { fetchSiteFromSupabase, updateSiteStatusInSupabase, getSupabaseAdmin } from '@/lib/supabase';
 
 export interface SiteRecord {
   siteSlug: string;
   clientName: string;
-  status: 'active' | 'suspended' | 'pending' | 'cancelled';
+  status: 'active' | 'suspended' | 'pending' | 'cancelled' | 'draft';
   deployedUrl: string;
   monthlyPrice: number;
   checkoutUrl: string;
@@ -594,4 +594,240 @@ export async function persistSite(site: Partial<SiteRecord> & { siteSlug: string
   }
 
   return record;
+}
+
+export interface SiteCloudData {
+  slug: string;
+  businessName?: string;
+  niche?: string;
+  city?: string;
+  isPublished: boolean;
+  status: 'draft' | 'published' | 'suspended' | 'cancelled' | 'active';
+  html?: string;
+  publishedAt?: string;
+  updatedAt: string;
+}
+
+/**
+ * Salva o HTML e os metadados do site no Supabase Storage (Bucket 'webbilly-sites')
+ * e sincroniza de forma idempotente com disco local e banco de dados.
+ */
+export async function saveSiteToCloudStorage(
+  slug: string,
+  html: string,
+  meta: Partial<SiteCloudData>
+): Promise<boolean> {
+  const cleanSlug = sanitizeSlug(slug);
+  if (!cleanSlug) return false;
+
+  const nowIso = new Date().toISOString();
+  const isPublished = meta.isPublished ?? false;
+  const status = meta.status || (isPublished ? 'published' : 'draft');
+
+  const cloudMeta: SiteCloudData = {
+    slug: cleanSlug,
+    businessName: meta.businessName || formatSlugToTitle(cleanSlug),
+    niche: meta.niche || 'Comércio Local',
+    city: meta.city || 'São Paulo - SP',
+    isPublished,
+    status,
+    publishedAt: meta.publishedAt || (isPublished ? nowIso : undefined),
+    updatedAt: nowIso
+  };
+
+  // 1. Tenta gravar no Supabase Storage
+  try {
+    const supabase = getSupabaseAdmin();
+    if (supabase) {
+      // Salva o JSON de metadados
+      await supabase.storage.from('webbilly-sites').upload(
+        `${cleanSlug}.json`,
+        JSON.stringify(cloudMeta, null, 2),
+        { contentType: 'application/json; charset=utf-8', upsert: true }
+      );
+
+      // Salva o HTML
+      const htmlFilename = isPublished ? `${cleanSlug}.html` : `${cleanSlug}_draft.html`;
+      await supabase.storage.from('webbilly-sites').upload(
+        htmlFilename,
+        html,
+        { contentType: 'text/html; charset=utf-8', upsert: true }
+      );
+
+      // Se foi publicado, garante também a cópia em ${cleanSlug}.html
+      if (isPublished) {
+        await supabase.storage.from('webbilly-sites').upload(
+          `${cleanSlug}.html`,
+          html,
+          { contentType: 'text/html; charset=utf-8', upsert: true }
+        );
+      }
+    }
+  } catch (stErr) {
+    console.warn('[SiteStorage] Erro ao salvar no Supabase Storage:', stErr);
+  }
+
+  // 2. Salva no disco local (se disponível)
+  try {
+    const diskDir = path.join(process.cwd(), 'public', 'generated-sites', cleanSlug);
+    fs.ensureDirSync(diskDir);
+    fs.writeFileSync(path.join(diskDir, 'index.html'), html, 'utf-8');
+    fs.writeFileSync(path.join(diskDir, 'meta.json'), JSON.stringify(cloudMeta, null, 2), 'utf-8');
+  } catch (_) {}
+
+  // 3. Salva no db.json local
+  try {
+    const db = readDb();
+    if (!db.generatedSites) db.generatedSites = {};
+    db.generatedSites[cleanSlug] = html;
+    writeDb(db);
+  } catch (_) {}
+
+  return true;
+}
+
+/**
+ * Recupera o HTML e os metadados do site a partir do Supabase Storage / disco / db.json
+ */
+export async function getSiteFromCloudStorage(slug: string): Promise<SiteCloudData | null> {
+  const cleanSlug = sanitizeSlug(slug);
+  if (!cleanSlug) return null;
+
+  let cloudMeta: SiteCloudData | null = null;
+  let htmlContent: string | null = null;
+
+  // 1. Tenta carregar do Supabase Storage
+  try {
+    const supabase = getSupabaseAdmin();
+    if (supabase) {
+      // Download do JSON de metadados
+      const { data: metaBlob, error: metaErr } = await supabase.storage
+        .from('webbilly-sites')
+        .download(`${cleanSlug}.json`);
+
+      if (!metaErr && metaBlob) {
+        const metaText = await metaBlob.text();
+        cloudMeta = JSON.parse(metaText);
+      }
+
+      // Download do HTML
+      const htmlFile = cloudMeta?.isPublished ? `${cleanSlug}.html` : `${cleanSlug}_draft.html`;
+      const { data: htmlBlob, error: htmlErr } = await supabase.storage
+        .from('webbilly-sites')
+        .download(htmlFile);
+
+      if (!htmlErr && htmlBlob) {
+        htmlContent = await htmlBlob.text();
+      } else if (!cloudMeta?.isPublished) {
+        // Tenta também ${cleanSlug}.html como fallback
+        const { data: fallbackBlob } = await supabase.storage
+          .from('webbilly-sites')
+          .download(`${cleanSlug}.html`);
+        if (fallbackBlob) {
+          htmlContent = await fallbackBlob.text();
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[SiteStorage] Erro ao recuperar do Supabase Storage:', err);
+  }
+
+  // 2. Fallback de disco local
+  if (!htmlContent) {
+    try {
+      const diskPath = path.join(process.cwd(), 'public', 'generated-sites', cleanSlug, 'index.html');
+      if (fs.existsSync(diskPath)) {
+        htmlContent = fs.readFileSync(diskPath, 'utf-8');
+      }
+      const metaDiskPath = path.join(process.cwd(), 'public', 'generated-sites', cleanSlug, 'meta.json');
+      if (!cloudMeta && fs.existsSync(metaDiskPath)) {
+        cloudMeta = JSON.parse(fs.readFileSync(metaDiskPath, 'utf-8'));
+      }
+    } catch (_) {}
+  }
+
+  // 3. Fallback de db.json
+  if (!htmlContent) {
+    try {
+      const db = readDb();
+      if (db.generatedSites?.[cleanSlug]) {
+        htmlContent = db.generatedSites[cleanSlug];
+      }
+    } catch (_) {}
+  }
+
+  if (!cloudMeta && !htmlContent) {
+    return null;
+  }
+
+  return {
+    slug: cleanSlug,
+    businessName: cloudMeta?.businessName || formatSlugToTitle(cleanSlug),
+    niche: cloudMeta?.niche || 'Comércio Local',
+    city: cloudMeta?.city || 'São Paulo - SP',
+    isPublished: cloudMeta?.isPublished ?? (cloudMeta?.status === 'published' || cloudMeta?.status === 'active'),
+    status: cloudMeta?.status || (cloudMeta?.isPublished ? 'published' : 'draft'),
+    html: htmlContent || undefined,
+    publishedAt: cloudMeta?.publishedAt,
+    updatedAt: cloudMeta?.updatedAt || new Date().toISOString()
+  };
+}
+
+/**
+ * Renderiza a página oficial e elegante de Site em Preparação (Rascunho / Aguardando Deploy)
+ */
+export function renderPreparationHtml(businessName: string, slug: string): string {
+  const formattedName = businessName || formatSlugToTitle(slug);
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${formattedName} | Site em Preparação</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #07090e; color: #f8fafc; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 select-none relative overflow-hidden bg-[#07090e]">
+  <div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#84cc16]/10 rounded-full blur-[140px] pointer-events-none"></div>
+
+  <div class="max-w-lg w-full bg-[#0e121b]/95 border border-white/[0.08] rounded-3xl p-8 sm:p-10 shadow-2xl relative z-10 text-center space-y-6 backdrop-blur-md">
+    <div class="flex items-center justify-center gap-1.5 pb-2">
+      <span class="font-extrabold text-lg tracking-tight text-white">
+        Web<span class="text-[#84cc16]">billy</span>
+      </span>
+      <span class="text-zinc-600">•</span>
+      <span class="text-zinc-400 text-xs font-mono">Presença Digital</span>
+    </div>
+
+    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold tracking-wide uppercase">
+      <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+      <span>Site em Preparação</span>
+    </div>
+
+    <div class="space-y-3">
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+        ${formattedName}
+      </h1>
+      <p class="text-xs text-zinc-400 font-mono bg-black/50 py-1 px-3 rounded-lg inline-block border border-white/[0.06]">
+        ${slug}.webbilly.com.br
+      </p>
+      <p class="text-sm text-zinc-300 leading-relaxed pt-2">
+        Este site oficial está sendo preparado e finalizado pela equipe Webbilly.
+      </p>
+      <p class="text-xs text-zinc-400">
+        A publicação oficial com todos os serviços e agendamento online ocorrerá em breve.
+      </p>
+    </div>
+
+    <div class="pt-4 border-t border-white/[0.08] text-[11px] text-zinc-500">
+      Webbilly Plataforma de Presença Digital • Todos os direitos reservados.
+    </div>
+  </div>
+</body>
+</html>`;
 }

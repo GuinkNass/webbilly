@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs';
 import { readDb } from '@/lib/db';
-import { sanitizeSlug } from '@/lib/site-storage';
+import { sanitizeSlug, getSiteFromCloudStorage, renderPreparationHtml } from '@/lib/site-storage';
 import { getSupabaseAdmin } from '@/lib/supabase';
-import { buildSiteHtml } from '@/lib/billy-desktop-port/generator';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,51 +19,67 @@ export async function GET(
       return new NextResponse('Subdomínio inválido.', { status: 400 });
     }
 
-    // 1. Tenta carregar do Supabase (Fonte de Verdade Persistente na Nuvem Vercel)
+    // 1. Tenta carregar do Supabase Storage (Fonte de Verdade Persistente na Nuvem Vercel)
+    const cloudSite = await getSiteFromCloudStorage(cleanSlug);
+
+    // Se o site existe mas ainda NÃO foi publicado (está em rascunho / aguardando deploy)
+    if (cloudSite && (!cloudSite.isPublished || cloudSite.status === 'draft')) {
+      return new NextResponse(renderPreparationHtml(cloudSite.businessName || cleanSlug, cleanSlug), {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+        }
+      });
+    }
+
+    // Se o site foi publicado e tem o HTML exato gerado no Studio
+    if (cloudSite && cloudSite.isPublished && cloudSite.html) {
+      return new NextResponse(cloudSite.html, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+        }
+      });
+    }
+
+    // 2. Tenta carregar do Supabase (tabela subscriptions)
     try {
       const supabase = getSupabaseAdmin();
       if (supabase) {
-        // Tenta na tabela 'sites'
-        const { data: siteRow } = await supabase
-          .from('sites')
-          .select('*')
-          .or(`subdomain.eq.${cleanSlug},id.eq.${cleanSlug},slug.eq.${cleanSlug}`)
-          .maybeSingle();
-
-        if (siteRow && (siteRow.html_content || siteRow.html || siteRow.content)) {
-          const html = siteRow.html_content || siteRow.html || siteRow.content;
-          return new NextResponse(html, {
-            status: 200,
-            headers: {
-              'Content-Type': 'text/html; charset=utf-8',
-              'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
-            }
-          });
-        }
-
-        // Tenta na tabela 'subscriptions'
         const { data: subRow } = await supabase
           .from('subscriptions')
           .select('*')
           .or(`site_slug.eq.${cleanSlug},id.eq.sub_${cleanSlug}`)
           .maybeSingle();
 
-        if (subRow && (subRow.html_content || subRow.html || subRow.content)) {
-          const html = subRow.html_content || subRow.html || subRow.content;
-          return new NextResponse(html, {
-            status: 200,
-            headers: {
-              'Content-Type': 'text/html; charset=utf-8',
-              'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
-            }
-          });
+        if (subRow) {
+          if (subRow.status === 'draft' || subRow.site_status === 'draft') {
+            return new NextResponse(renderPreparationHtml(subRow.client_name || cleanSlug, cleanSlug), {
+              status: 200,
+              headers: {
+                'Content-Type': 'text/html; charset=utf-8',
+                'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+              }
+            });
+          }
+          if (subRow.html_content || subRow.html) {
+            return new NextResponse(subRow.html_content || subRow.html, {
+              status: 200,
+              headers: {
+                'Content-Type': 'text/html; charset=utf-8',
+                'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+              }
+            });
+          }
         }
       }
     } catch (sbErr) {
       console.warn('[Public Site Render] Erro Supabase:', sbErr);
     }
 
-    // 2. Tenta carregar do arquivo em disco (public/generated-sites/[slug]/index.html)
+    // 3. Tenta carregar do arquivo em disco (public/generated-sites/[slug]/index.html)
     try {
       const diskPath = path.join(process.cwd(), 'public', 'generated-sites', cleanSlug, 'index.html');
       if (fs.existsSync(diskPath)) {
@@ -79,7 +94,7 @@ export async function GET(
       }
     } catch (_) {}
 
-    // 3. Tenta carregar do banco local (db.generatedSites ou db.demos)
+    // 4. Tenta carregar do banco local (db.generatedSites)
     try {
       const db = readDb();
       if (db.generatedSites && db.generatedSites[cleanSlug]) {
@@ -91,37 +106,10 @@ export async function GET(
           }
         });
       }
-
-      if (db.demos) {
-        for (const k of Object.keys(db.demos)) {
-          const d = db.demos[k];
-          if ((d.leadToken === cleanSlug || d.deployedUrl?.includes(cleanSlug)) && (d as any).html) {
-            return new NextResponse((d as any).html, {
-              status: 200,
-              headers: {
-                'Content-Type': 'text/html; charset=utf-8',
-                'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
-              }
-            });
-          }
-        }
-      }
     } catch (_) {}
 
-    // 4. Se o site foi cadastrado mas o HTML não foi gerado, compila na hora sem travar
-    const formattedTitle = cleanSlug
-      .split('-')
-      .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(' ');
-
-    const fallbackSite = await buildSiteHtml({
-      businessName: formattedTitle,
-      niche: 'Comércio Local',
-      city: 'São Paulo - SP',
-      subdomain: cleanSlug
-    });
-
-    return new NextResponse(fallbackSite.html, {
+    // 5. Se o subdomínio não existe ou não foi publicado: exibe tela neutra de preparação
+    return new NextResponse(renderPreparationHtml(cleanSlug, cleanSlug), {
       status: 200,
       headers: {
         'Content-Type': 'text/html; charset=utf-8',

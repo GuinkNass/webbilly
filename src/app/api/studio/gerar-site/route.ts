@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs';
 import { readDb, writeDb } from '@/lib/db';
-import { sanitizeSlug } from '@/lib/site-storage';
+import { sanitizeSlug, saveSiteToCloudStorage } from '@/lib/site-storage';
 import { getSupabaseAdmin, upsertSubscriptionInSupabase } from '@/lib/supabase';
 import { buildSiteHtml } from '@/lib/billy-desktop-port/generator';
 
@@ -150,7 +150,8 @@ export async function POST(req: NextRequest) {
         operatorToken: operatorId,
         operatorName: operatorName,
         monthlyPrice: 29.9,
-        status: 'active' as const,
+        status: 'draft' as const,
+        site_status: 'draft',
         deployedUrl: `/api/public/site/${cleanSlug}/render`,
         checkoutUrl: `/proposta/${leadToken}`,
         createdAt: new Date().toISOString(),
@@ -169,7 +170,15 @@ export async function POST(req: NextRequest) {
       console.warn('[Studio Gerar Site] Aviso db.json:', dbErr);
     }
 
-    // 4. Salva no Supabase (Fonte de Verdade Persistente na Nuvem Vercel)
+    // 4. Salva no Supabase Storage e na tabela subscriptions estritamente como RASCUNHO (status = 'draft', isPublished = false)
+    await saveSiteToCloudStorage(cleanSlug, generatedHtml, {
+      businessName,
+      niche,
+      city,
+      isPublished: false,
+      status: 'draft'
+    });
+
     const subRecord = {
       id: `sub_${cleanSlug}`,
       siteSlug: cleanSlug,
@@ -179,7 +188,8 @@ export async function POST(req: NextRequest) {
       operatorToken: operatorId,
       operatorName: operatorName,
       monthlyPrice: 29.9,
-      status: 'active' as const,
+      status: 'draft' as const,
+      site_status: 'draft',
       deployedUrl: `/api/public/site/${cleanSlug}/render`,
       checkoutUrl: `/proposta/${leadToken}`,
       createdAt: new Date().toISOString(),
@@ -189,26 +199,6 @@ export async function POST(req: NextRequest) {
 
     try {
       await upsertSubscriptionInSupabase(subRecord);
-      const supabase = getSupabaseAdmin();
-      if (supabase) {
-        await supabase.from('sites').upsert({
-          id: cleanSlug,
-          subdomain: cleanSlug,
-          business_name: businessName,
-          niche,
-          city,
-          phone: rawPhone,
-          whatsapp: cleanPhone,
-          deployed_url: `/api/public/site/${cleanSlug}/render`,
-          lead_token: leadToken,
-          status: 'active',
-          operator_id: operatorId,
-          html_content: generatedHtml,
-          html: generatedHtml,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-      }
     } catch (supaErr) {
       console.warn('[Studio Gerar Site] Erro ao sincronizar com Supabase:', supaErr);
     }
@@ -241,7 +231,9 @@ O que achou do visual que preparamos para vocês? Se quiser tirar qualquer dúvi
       previewUrl: `/api/public/site/${cleanSlug}/render`,
       proposalUrl,
       leadToken,
-      whatsappMessage
+      whatsappMessage,
+      isPublished: false,
+      isDeployed: false
     });
   } catch (error: any) {
     console.error('[Studio Gerar Site] Erro inesperado:', error);

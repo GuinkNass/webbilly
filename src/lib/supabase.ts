@@ -43,7 +43,7 @@ export interface SupabaseSiteRecord {
   id: string;
   siteSlug: string;
   clientName: string;
-  status: 'active' | 'suspended' | 'pending' | 'cancelled';
+  status: 'active' | 'suspended' | 'pending' | 'cancelled' | 'draft';
   deployedUrl: string;
   monthlyPrice?: number;
   checkoutUrl?: string;

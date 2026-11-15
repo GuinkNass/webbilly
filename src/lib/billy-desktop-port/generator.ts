@@ -105,11 +105,23 @@ async function callGeminiApi(prompt: string, apiKey: string, preferredModel?: st
   throw lastError || new Error('Nenhum modelo compatível do Gemini respondeu a tempo.');
 }
 
-function cleanHtmlResponse(text: string): string {
+function cleanHtmlResponse(text: string, fallbackHeroImg: string = ''): string {
   let cleaned = (text || '').trim();
   cleaned = cleaned.replace(/^```html\s*/i, '');
   cleaned = cleaned.replace(/^```\s*/i, '');
   cleaned = cleaned.replace(/\s*```$/i, '');
+
+  // 1. Remove qualquer tag <img> com src vazio (""), nulo ou indefinido
+  cleaned = cleaned.replace(/<img[^>]*src=["']\s*(?:undefined|null)?\s*["'][^>]*>/gi, '');
+
+  // 2. Se houver <img> com src vazio restante, substitui pelo heroImg válido
+  if (fallbackHeroImg) {
+    cleaned = cleaned.replace(/<img([^>]*?)src=["']\s*["']([^>]*?)>/gi, `<img$1src="${fallbackHeroImg}"$2>`);
+  }
+
+  // 3. Garante que TODAS as tags <img> tenham onerror="this.style.display='none'" para evitar ícone quebrado
+  cleaned = cleaned.replace(/<img(?![^>]*\bonerror=)([^>]*?)>/gi, '<img$1 onerror="this.style.display=\'none\'">');
+
   return cleaned.trim();
 }
 
@@ -128,6 +140,15 @@ export async function buildSiteHtml(input: SiteGenerationInput): Promise<{ html:
 
   const activeAccent = (input.accentColor || tpl.accentColor || '#84cc16').trim();
   const apiKey = (process.env.GEMINI_API_KEY || '').trim();
+
+  // Garante seleção de imagem Hero e Galeria válidas sem URLs vazias
+  const validGallery = (input.galleryPhotos || []).filter(
+    (p) => typeof p === 'string' && p.trim().startsWith('http')
+  );
+  const heroImg = (input.heroPhoto && input.heroPhoto.trim().startsWith('http'))
+    ? input.heroPhoto.trim()
+    : (validGallery.length > 0 ? validGallery[0] : tpl.previewImg);
+  const gallery = validGallery.length > 0 ? validGallery : [heroImg, tpl.previewImg];
 
   // 1. Tenta geração profunda via Gemini AI se houver API Key configurada
   if (apiKey) {
@@ -149,8 +170,8 @@ Sua missão é gerar o código HTML/Tailwind CSS COMPLETO, ultra-responsivo e de
 - Tom de Voz da Copy: "${input.toneOfVoice || 'Comercial Agressivo de Alta Conversão'}"
 - Cor de Destaque Primária (Hex): "${activeAccent}"
 - Logotipo: "${input.logoUrl || ''}"
-- Foto Hero Principal: "${input.heroPhoto || tpl.previewImg}"
-- Galeria de Fotos Reais: ${JSON.stringify(input.galleryPhotos && input.galleryPhotos.length > 0 ? input.galleryPhotos : [tpl.previewImg])}
+- Foto Hero Principal (OBRIGATÓRIO USAR ESTA URL NO HERO): "${heroImg}"
+- Galeria de Fotos Reais: ${JSON.stringify(gallery)}
 - Diferenciais Exclusivos: "${input.differentiators || input.tagline || 'Atendimento pontual, estrutura moderna, profissionais experientes e facilidade no pagamento.'}"
 
 2. CARDÁPIO / SERVIÇOS & PREÇOS FORNECIDOS:
@@ -176,7 +197,10 @@ ${input.uploadedText ? `5. TEXTO ADICIONAL / EXTRAÇÃO DE CARDÁPIO:\n"""\n${in
 - FAQ / Objeções: ${blocks.faq ? 'ATIVO' : 'DESLIGADO'}
 - Botão Flutuante de WhatsApp: ${blocks.whatsappFloat ? 'ATIVO' : 'DESLIGADO'}
 
-DIRETRIZES DE DESIGN OBRIGATÓRIAS:
+DIRETRIZES DE DESIGN E IMAGENS OBRIGATÓRIAS:
+- NUNCA renderize tags <img> com src vazio (""), nulo, "undefined" ou caminhos inventados.
+- Para o fundo ou destaque do Hero Principal, use EXATAMENTE a URL: "${heroImg}".
+- Adicione SEMPRE em TODAS as tags <img> o atributo onerror="this.style.display='none'".
 - Inclua Tailwind CSS (<script src="https://cdn.tailwindcss.com"></script>) e FontAwesome 6 (<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">).
 - Inclua fontes Google Fonts modernas (Plus Jakarta Sans ou Inter).
 - O site deve ser escuro e premium (background #07090e ou #0b0f19) com toques luminosos na cor de destaque ${activeAccent}.
@@ -184,7 +208,8 @@ DIRETRIZES DE DESIGN OBRIGATÓRIAS:
 - O botão flutuante de WhatsApp deve ficar fixo no canto inferior direito.
 - RETORNE EXCLUSIVAMENTE o código HTML completo final, iniciando em <!DOCTYPE html> e finalizando em </html>, sem blocos markdown (\`\`\`html) e sem qualquer texto adicional.`;
 
-      const aiHtml = await callGeminiApi(prompt, apiKey);
+      const rawAiHtml = await callGeminiApi(prompt, apiKey);
+      const aiHtml = cleanHtmlResponse(rawAiHtml, heroImg);
       if (aiHtml && aiHtml.length > 500) {
         return { html: aiHtml, usedAi: true, modelUsed: process.env.GEMINI_MODEL || 'gemini-2.5-flash' };
       }
@@ -195,7 +220,7 @@ DIRETRIZES DE DESIGN OBRIGATÓRIAS:
 
   // 2. Motor Modular Cirúrgico do Billy Desktop (Garantia de 100% de sucesso sem mock)
   const localHtml = generateSmartModularDesktopHtml(input, tpl, blocks, activeAccent, cleanPhone, whatsappLink);
-  return { html: localHtml, usedAi: false };
+  return { html: cleanHtmlResponse(localHtml, heroImg), usedAi: false };
 }
 
 /**
@@ -312,7 +337,7 @@ function generateSmartModularDesktopHtml(
   <!-- Hero Section -->
   <section id="inicio" class="relative pt-24 pb-20 sm:pt-32 sm:pb-28 overflow-hidden min-h-[85vh] flex items-center">
     <div class="absolute inset-0 z-0">
-      <img src="${heroImg}" alt="${input.businessName}" class="w-full h-full object-cover brightness-[0.3]">
+      <img src="${heroImg}" alt="${input.businessName}" class="w-full h-full object-cover brightness-[0.3]" onerror="this.style.display='none'">
       <div class="absolute inset-0 bg-gradient-to-t from-[#07090e] via-[#07090e]/80 to-transparent"></div>
     </div>
 
@@ -354,7 +379,7 @@ function generateSmartModularDesktopHtml(
   <section id="sobre" class="py-20 bg-[#0c1017] border-y border-white/[0.06]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
       <div class="lg:col-span-6 relative rounded-3xl overflow-hidden border border-white/[0.1] shadow-2xl aspect-[4/3]">
-        <img src="${gallery[0] || heroImg}" alt="Sobre ${input.businessName}" class="w-full h-full object-cover">
+        <img src="${gallery[0] || heroImg}" alt="Sobre ${input.businessName}" class="w-full h-full object-cover" onerror="this.style.display='none'">
         <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-6">
           <div>
             <span class="text-xs uppercase font-mono font-bold accent-text block">Atendimento Diferenciado</span>
@@ -433,7 +458,7 @@ function generateSmartModularDesktopHtml(
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         ${gallery.map((photo, i) => `
           <div class="group relative aspect-square rounded-2xl overflow-hidden border border-white/[0.08] bg-zinc-900 shadow-lg">
-            <img src="${photo}" alt="Trabalho ${i + 1}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+            <img src="${photo}" alt="Trabalho ${i + 1}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" onerror="this.style.display='none'">
             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-end p-4">
               <span class="text-xs font-bold text-white">Foto #${i + 1}</span>
             </div>

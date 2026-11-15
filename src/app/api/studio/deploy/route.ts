@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs';
 import { readDb, writeDb } from '@/lib/db';
-import { sanitizeSlug, syncSlugSuspension } from '@/lib/site-storage';
+import { sanitizeSlug, syncSlugSuspension, saveSiteToCloudStorage, getSiteFromCloudStorage } from '@/lib/site-storage';
 import { getSupabaseAdmin, upsertSubscriptionInSupabase } from '@/lib/supabase';
 import { buildSiteHtml } from '@/lib/billy-desktop-port/generator';
 
@@ -42,14 +42,19 @@ export async function POST(req: NextRequest) {
 
     let finalHtml = providedHtml || '';
 
-    // Se o HTML não foi enviado no payload, tenta recuperar do disco ou db.json
+    // Se o HTML não foi enviado no payload, tenta recuperar do Supabase Storage, disco ou db.json
     if (!finalHtml || finalHtml.trim().length < 100) {
-      const diskPath = path.join(process.cwd(), 'public', 'generated-sites', cleanSlug, 'index.html');
-      if (fs.existsSync(diskPath)) {
-        finalHtml = fs.readFileSync(diskPath, 'utf-8');
+      const cloudSite = await getSiteFromCloudStorage(cleanSlug);
+      if (cloudSite?.html) {
+        finalHtml = cloudSite.html;
       } else {
-        const db = readDb();
-        finalHtml = db.generatedSites?.[cleanSlug] || '';
+        const diskPath = path.join(process.cwd(), 'public', 'generated-sites', cleanSlug, 'index.html');
+        if (fs.existsSync(diskPath)) {
+          finalHtml = fs.readFileSync(diskPath, 'utf-8');
+        } else {
+          const db = readDb();
+          finalHtml = db.generatedSites?.[cleanSlug] || '';
+        }
       }
     }
 
@@ -67,16 +72,15 @@ export async function POST(req: NextRequest) {
       finalHtml = gen.html;
     }
 
-    // 1. Grava no disco
-    try {
-      const siteDir = path.join(process.cwd(), 'public', 'generated-sites', cleanSlug);
-      if (!fs.existsSync(siteDir)) {
-        fs.mkdirSync(siteDir, { recursive: true });
-      }
-      fs.writeFileSync(path.join(siteDir, 'index.html'), finalHtml, 'utf-8');
-    } catch (fsErr) {
-      console.warn('[Studio Deploy] Gravação em disco:', fsErr);
-    }
+    // 1. Grava no Supabase Storage como PUBLICADO (isPublished = true, status = 'published')
+    await saveSiteToCloudStorage(cleanSlug, finalHtml, {
+      businessName,
+      niche,
+      city,
+      isPublished: true,
+      status: 'published',
+      publishedAt: new Date().toISOString()
+    });
 
     // 2. Salva no banco local db.json
     const rawPhone = (whatsapp || phone || '').replace(/\D/g, '');
