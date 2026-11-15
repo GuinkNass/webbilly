@@ -89,49 +89,121 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { operatorId, serialToken } = body;
+    const { operatorId, candidateId, email, serialToken } = body;
 
-    if (!operatorId && !serialToken) {
+    const targetId = (operatorId || candidateId || '').trim();
+    const cleanEmail = (email || '').toLowerCase().trim();
+    const cleanSerial = serialToken && serialToken !== 'NOVO' && serialToken !== 'PENDENTE'
+      ? String(serialToken).trim().toUpperCase()
+      : null;
+
+    if (!targetId && !cleanEmail && !cleanSerial) {
       return NextResponse.json(
-        { error: 'ID do Operador ou Serial deve ser fornecido.' },
+        { error: 'ID do Operador, Candidato, E-mail ou Serial deve ser fornecido.' },
         { status: 400 }
       );
     }
 
     const db = readDb();
-    const cleanSerial = serialToken ? String(serialToken).trim().toUpperCase() : null;
 
     // 1. Busca operador no banco local e Supabase
     let op = (db.operators || []).find(o =>
-      (operatorId && o.id === operatorId) ||
+      (targetId && (o.id === targetId || o.candidateId === targetId)) ||
+      (cleanEmail && (
+        (o.email && o.email.toLowerCase().trim() === cleanEmail) ||
+        (o.corporate_email && o.corporate_email.toLowerCase().trim() === cleanEmail) ||
+        ((o as any).corporateEmail && (o as any).corporateEmail.toLowerCase().trim() === cleanEmail)
+      )) ||
       (cleanSerial && (o.serialToken || '').trim().toUpperCase() === cleanSerial)
     );
 
     if (!op) {
-      const allOps = await fetchAllOperatorsFromSupabase();
-      op = allOps.find(o =>
-        (operatorId && o.id === operatorId) ||
-        (cleanSerial && (o.serialToken || '').trim().toUpperCase() === cleanSerial)
-      );
+      try {
+        const allOps = await fetchAllOperatorsFromSupabase();
+        op = allOps.find(o =>
+          (targetId && (o.id === targetId || o.candidateId === targetId)) ||
+          (cleanEmail && (
+            (o.email && o.email.toLowerCase().trim() === cleanEmail) ||
+            (o.corporate_email && o.corporate_email.toLowerCase().trim() === cleanEmail) ||
+            ((o as any).corporateEmail && (o as any).corporateEmail.toLowerCase().trim() === cleanEmail)
+          )) ||
+          (cleanSerial && (o.serialToken || '').trim().toUpperCase() === cleanSerial)
+        );
+      } catch (err) {
+        console.warn('Erro ao consultar operadores no Supabase:', err);
+      }
     }
 
-    if (!op) {
+    // 2. Se não encontrou operador cadastrado, busca na lista de candidaturas (db.candidates)
+    let candidate = (db.candidates || []).find(c =>
+      (targetId && c.id === targetId) ||
+      (cleanEmail && c.email && c.email.toLowerCase().trim() === cleanEmail)
+    );
+
+    if (!op && !candidate) {
       return NextResponse.json({ error: 'Operador / Candidato não encontrado no sistema.' }, { status: 404 });
     }
 
-    // 2. Gera Serial Desktop único
-    let finalSerial = (op.serialToken || '').trim().toUpperCase();
-    if (!finalSerial || finalSerial === 'PENDENTE' || finalSerial === '') {
+    // 3. Se era apenas um candidato em db.candidates, promove para Operator
+    if (!op && candidate) {
+      const newOpId = `OP-${Date.now().toString(36).toUpperCase()}`;
+      op = {
+        id: newOpId,
+        candidateId: candidate.id,
+        name: candidate.name,
+        email: candidate.email.trim().toLowerCase(),
+        whatsapp: candidate.whatsapp,
+        pixType: candidate.pixType || 'cpf',
+        pixKey: candidate.pixKey || '',
+        pix_type: candidate.pixType || 'cpf',
+        pix_key: candidate.pixKey || '',
+        city_state: candidate.city && candidate.state ? `${candidate.city} - ${candidate.state}` : (candidate.city || candidate.state || ''),
+        experience: candidate.experience || '',
+        status: 'ATIVO',
+        serialToken: cleanSerial || '',
+        dailyLimit: 50,
+        todayGenerations: 0,
+        createdAt: new Date().toISOString(),
+        referred_by_operator_id: candidate.referred_by_operator_id || null,
+        affiliate_enabled: false,
+        passwordHash: '',
+        mustChangePassword: true,
+        must_change_password: true
+      };
+      db.operators.push(op);
+    }
+
+    const finalOp = op!;
+
+    // Marca status do candidato como APROVADO para remover da triagem pendente
+    if (candidate) {
+      candidate.status = 'APROVADO';
+      candidate.reviewedAt = new Date().toISOString();
+    } else {
+      // Se já era op, verifica se também existe ficha de candidatura para marcar aprovado
+      const matchingCand = (db.candidates || []).find(c =>
+        (finalOp.candidateId && c.id === finalOp.candidateId) ||
+        (finalOp.email && c.email && c.email.toLowerCase().trim() === finalOp.email.toLowerCase().trim())
+      );
+      if (matchingCand) {
+        matchingCand.status = 'APROVADO';
+        matchingCand.reviewedAt = new Date().toISOString();
+      }
+    }
+
+    // 4. Gera Serial Desktop único
+    let finalSerial = (finalOp.serialToken || '').trim().toUpperCase();
+    if (!finalSerial || finalSerial === 'PENDENTE' || finalSerial === 'NOVO' || finalSerial === '') {
       finalSerial = generateSerial();
-      while (db.licenses.some(l => l.serialToken === finalSerial)) {
+      while (db.licenses.some(l => (l.serialToken || '').trim().toUpperCase() === finalSerial)) {
         finalSerial = generateSerial();
       }
     }
 
-    // 3. Gera E-mail Corporativo (@webbilly.com.br)
-    let corporateEmail = op.corporate_email || (op as any).corporateEmail;
+    // 5. Gera E-mail Corporativo (@webbilly.com.br)
+    let corporateEmail = finalOp.corporate_email || (finalOp as any).corporateEmail;
     if (!corporateEmail) {
-      const basePrefix = cleanPrefixFromName(op.name);
+      const basePrefix = cleanPrefixFromName(finalOp.name);
       let candidatePrefix = basePrefix;
       let counter = 1;
 
@@ -149,18 +221,18 @@ export async function POST(req: NextRequest) {
       corporateEmail = `${candidatePrefix}@webbilly.com.br`;
     }
 
-    // 4. Gera Senha Provisória Forte
+    // 6. Gera Senha Provisória Forte
     const randomDigits = crypto.randomInt(1000, 9999);
     const tempPassword = `Billy@2026#${randomDigits}`;
     const passwordHash = bcrypt.hashSync(tempPassword, 10);
     const nowIso = new Date().toISOString();
 
-    // 5. Provisiona no Lark Suite se credenciais estiverem ativas
-    const larkResult = await provisionLarkMailbox(op.name, corporateEmail, op.whatsapp);
+    // 7. Provisiona no Lark Suite se credenciais estiverem ativas
+    const larkResult = await provisionLarkMailbox(finalOp.name, corporateEmail, finalOp.whatsapp);
 
-    // 6. Atualiza Supabase como fonte única de verdade
+    // 8. Atualiza Supabase como fonte única de verdade (payload seguro)
     await upsertOperatorInSupabase({
-      ...op,
+      ...finalOp,
       status: 'ATIVO',
       serialToken: finalSerial,
       corporate_email: corporateEmail,
@@ -172,8 +244,8 @@ export async function POST(req: NextRequest) {
       larkProvisioned: larkResult.success
     });
 
-    // 7. Atualiza banco local
-    const localOp = db.operators.find(o => o.id === op!.id);
+    // 9. Atualiza banco local
+    const localOp = db.operators.find(o => o.id === finalOp.id);
     if (localOp) {
       localOp.status = 'ATIVO';
       localOp.serialToken = finalSerial;
@@ -182,12 +254,13 @@ export async function POST(req: NextRequest) {
       localOp.passwordHash = passwordHash;
       localOp.tempPasswordPlain = tempPassword;
       localOp.mustChangePassword = true;
+      localOp.must_change_password = true;
       localOp.lark_provisioned = larkResult.success;
       localOp.larkProvisioned = larkResult.success;
       localOp.lastSync = nowIso;
     } else {
       db.operators.push({
-        ...op,
+        ...finalOp,
         status: 'ATIVO',
         serialToken: finalSerial,
         corporate_email: corporateEmail,
@@ -195,6 +268,7 @@ export async function POST(req: NextRequest) {
         passwordHash: passwordHash,
         tempPasswordPlain: tempPassword,
         mustChangePassword: true,
+        must_change_password: true,
         lark_provisioned: larkResult.success,
         larkProvisioned: larkResult.success,
         lastSync: nowIso
@@ -205,18 +279,18 @@ export async function POST(req: NextRequest) {
     const existingLic = db.licenses.find(l => (l.serialToken || '').trim().toUpperCase() === finalSerial);
     if (existingLic) {
       existingLic.status = 'active';
-      existingLic.operatorId = op.id;
-      existingLic.operatorName = op.name;
+      existingLic.operatorId = finalOp.id;
+      existingLic.operatorName = finalOp.name;
       existingLic.operatorEmail = corporateEmail;
-      existingLic.email = op.email;
+      existingLic.email = finalOp.email;
       existingLic.lastSync = nowIso;
     } else {
       db.licenses.unshift({
         serialToken: finalSerial,
-        operatorId: op.id,
-        operatorName: op.name,
+        operatorId: finalOp.id,
+        operatorName: finalOp.name,
         operatorEmail: corporateEmail,
-        email: op.email,
+        email: finalOp.email,
         status: 'active',
         machineId: null,
         osInfo: null,
@@ -231,15 +305,15 @@ export async function POST(req: NextRequest) {
 
     // 9. Envia e-mail oficial com credenciais e link do painel
     await sendOperatorApprovalEmail({
-      operadorNome: op.name,
-      operadorEmailPessoal: op.email,
+      operadorNome: finalOp.name,
+      operadorEmailPessoal: finalOp.email,
       corporateEmail: corporateEmail,
       temporaryPassword: tempPassword,
       serialToken: finalSerial,
       painelUrl: 'https://webbilly.com.br/operador'
     });
 
-    console.log(`[Admin Operadores] Operador ${op.name} aprovado com sucesso! Serial: ${finalSerial}, Email: ${corporateEmail}`);
+    console.log(`[Admin Operadores] Operador ${finalOp.name} aprovado com sucesso! Serial: ${finalSerial}, Email: ${corporateEmail}`);
 
     return NextResponse.json({
       success: true,
@@ -248,8 +322,8 @@ export async function POST(req: NextRequest) {
       tempPassword: tempPassword,
       larkProvisioned: larkResult.success,
       larkMessage: larkResult.message,
-      operatorName: op.name,
-      message: `Operador ${op.name} aprovado com sucesso! E-mail corporativo (${corporateEmail}), senha provisória e chave serial gerados e enviados para ${op.email}.`
+      operatorName: finalOp.name,
+      message: `Operador ${finalOp.name} aprovado com sucesso! E-mail corporativo (${corporateEmail}), senha provisória e chave serial gerados e enviados para ${finalOp.email}.`
     });
 
   } catch (err: any) {

@@ -17,6 +17,18 @@ import {
   Layers
 } from 'lucide-react';
 
+function getSubdomain(sub: any): string {
+  if (!sub) return '';
+  const candidate = sub.siteSlug || sub.slug || sub.site_slug || sub.subdomain || sub.subdominio;
+  if (candidate && typeof candidate === 'string' && candidate.trim() && candidate !== 'undefined') {
+    return candidate.trim().toLowerCase();
+  }
+  if (typeof sub.id === 'string' && sub.id.startsWith('sub_') && sub.id.length > 4) {
+    return sub.id.replace(/^sub_/, '').trim().toLowerCase();
+  }
+  return '';
+}
+
 export default function AdminSitesPage() {
   const { data, loading, error, searchQuery, loadData, setActionSuccess } = useAdmin();
 
@@ -105,8 +117,9 @@ export default function AdminSitesPage() {
 
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
+    const subDomain = getSubdomain(sub);
     return (
-      (sub.slug && sub.slug.toLowerCase().includes(q)) ||
+      (subDomain && subDomain.includes(q)) ||
       (sub.clientName && sub.clientName.toLowerCase().includes(q)) ||
       (sub.clientPhone && sub.clientPhone.toLowerCase().includes(q)) ||
       (sub.id && String(sub.id).toLowerCase().includes(q))
@@ -176,110 +189,140 @@ export default function AdminSitesPage() {
                   </td>
                 </tr>
               ) : (
-                subscriptions.map((sub: any) => (
-                  <tr key={sub.id} className="hover:bg-white/[0.02] transition">
-                    <td className="py-3.5 px-4 font-mono">
-                      <ActionTooltip title="Abrir Subdomínio" description="Acessa o site público do cliente hospedado no subdomínio oficial." side="top">
-                        <a
-                          href={`https://${sub.slug}.webbilly.com.br`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="font-bold text-sky-400 hover:underline inline-flex items-center gap-1.5"
-                        >
-                          <span>{sub.slug}.webbilly.com.br</span>
-                          <ExternalLink className="w-3 h-3 text-sky-400" />
-                        </a>
-                      </ActionTooltip>
-                      <span className="text-[10px] text-zinc-500 block">ID: {sub.id}</span>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className="font-semibold text-white block">{sub.clientName}</span>
-                      <span className="text-[11px] text-zinc-400">{sub.planName || 'Assinatura Mensal R$ 29,90'}</span>
-                    </td>
-                    <td className="py-3.5 px-4 font-mono text-zinc-300">
-                      {sub.clientPhone || '—'}
-                    </td>
-                    <td className="py-3.5 px-4 font-mono">
-                      <span className="text-white font-bold">R$ {sub.monthlyPrice?.toFixed(2) || '29.90'}/mês</span>
-                      <span className="text-[10px] text-emerald-400 block font-semibold">+R$ {(sub.operatorCommissionMonthly ?? 10.00).toFixed(2)} repasse</span>
-                    </td>
-                    <td className="py-3.5 px-4 space-y-1">
-                      <div>
-                        <ActionTooltip title="Status Asaas" description="Situação atual da assinatura no gateway e se o site está online ou bloqueado." side="top">
-                          <span
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border inline-block cursor-default ${
-                              sub.status === 'active'
-                                ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/40'
-                                : sub.status === 'suspended'
-                                ? 'bg-rose-950/40 text-rose-400 border-rose-800/40'
-                                : 'bg-amber-950/40 text-amber-400 border-amber-800/40'
-                            }`}
-                          >
-                            {sub.status === 'active' ? '● No Ar (Ativo)' : sub.status === 'suspended' ? '● Suspenso (Inadimplente)' : sub.status === 'cancelled' ? '● Cancelado' : '● Pendente'}
-                          </span>
-                        </ActionTooltip>
-                      </div>
-                      {(sub.cancellationRequested || sub.cancellation_requested) && (
-                        <div className="pt-0.5">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse">
-                            <AlertTriangle className="w-2.5 h-2.5" />
-                            <span>Cancelamento Solicitado pelo Operador</span>
-                          </span>
+                subscriptions.map((sub: any) => {
+                  const subDomain = getSubdomain(sub);
+                  const isPublished = Boolean(subDomain || sub.deployedUrl || sub.custom_domain || sub.customDomain);
+                  const isOnline = sub.status === 'active' && isPublished;
+                  const isSuspended = sub.status === 'suspended';
+                  const isCancelled = sub.status === 'cancelled';
+
+                  return (
+                    <tr key={sub.id} className="hover:bg-white/[0.02] transition">
+                      <td className="py-3.5 px-4 font-mono">
+                        {subDomain ? (
+                          <ActionTooltip title="Abrir Subdomínio" description="Acessa o site público do cliente hospedado no subdomínio oficial." side="top">
+                            <a
+                              href={`https://${subDomain}.webbilly.com.br`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="font-bold text-sky-400 hover:underline inline-flex items-center gap-1.5"
+                            >
+                              <span>{subDomain}.webbilly.com.br</span>
+                              <ExternalLink className="w-3 h-3 text-sky-400" />
+                            </a>
+                          </ActionTooltip>
+                        ) : (
+                          <span className="text-zinc-500 text-[11px] italic">Subdomínio não configurado</span>
+                        )}
+                        <span className="text-[10px] text-zinc-500 block">ID: {sub.id}</span>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span className="font-semibold text-white block">{sub.clientName}</span>
+                        <span className="text-[11px] text-zinc-400">{sub.planName || 'Assinatura Mensal R$ 29,90'}</span>
+                      </td>
+                      <td className="py-3.5 px-4 font-mono text-zinc-300">
+                        {sub.clientPhone || '—'}
+                      </td>
+                      <td className="py-3.5 px-4 font-mono">
+                        <span className="text-white font-bold">R$ {sub.monthlyPrice?.toFixed(2) || '29.90'}/mês</span>
+                        <span className="text-[10px] text-emerald-400 block font-semibold">+R$ {(sub.operatorCommissionMonthly ?? 10.00).toFixed(2)} repasse</span>
+                      </td>
+                      <td className="py-3.5 px-4 space-y-1">
+                        <div>
+                          <ActionTooltip title="Status Real da Assinatura" description="Situação real do site: online e publicado, suspenso por inadimplência ou offline." side="top">
+                            <span
+                              className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border inline-block cursor-default ${
+                                isOnline
+                                  ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/40'
+                                  : isSuspended
+                                  ? 'bg-rose-950/40 text-rose-400 border-rose-800/40'
+                                  : isCancelled
+                                  ? 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                                  : 'bg-amber-950/40 text-amber-400 border-amber-800/40'
+                              }`}
+                            >
+                              {isOnline
+                                ? '● No Ar (Ativo)'
+                                : isSuspended
+                                ? '● Suspenso (Inadimplente)'
+                                : isCancelled
+                                ? '● Cancelado'
+                                : '● Offline / Não Publicado'}
+                            </span>
+                          </ActionTooltip>
                         </div>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {/* Botão de Toggle Ativar/Suspender */}
-                        <ActionTooltip
-                          title={sub.status === 'active' ? 'Suspender Site' : 'Ativar Site'}
-                          description={sub.status === 'active' ? 'Bloqueia o acesso ao site via Edge Config por inadimplência.' : 'Libera o acesso ao site reativando o subdomínio.'}
-                          side="top"
-                        >
-                          <button
-                            onClick={() => handleToggleSubscription(sub.id, sub.status)}
-                            className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition cursor-pointer ${
-                              sub.status === 'active'
-                                ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/30'
-                                : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                            }`}
+                        {(sub.cancellationRequested || sub.cancellation_requested) && (
+                          <div className="pt-0.5">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse">
+                              <AlertTriangle className="w-2.5 h-2.5" />
+                              <span>Cancelamento Solicitado pelo Operador</span>
+                            </span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {/* Botão de Toggle Ativar/Suspender */}
+                          <ActionTooltip
+                            title={sub.status === 'active' ? 'Suspender Site' : 'Ativar Site'}
+                            description={sub.status === 'active' ? 'Bloqueia o acesso ao site via Edge Config por inadimplência.' : 'Libera o acesso ao site reativando o subdomínio.'}
+                            side="top"
                           >
-                            {sub.status === 'active' ? 'Suspender' : 'Ativar'}
-                          </button>
-                        </ActionTooltip>
+                            <button
+                              onClick={() => handleToggleSubscription(sub.id, sub.status)}
+                              className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition cursor-pointer ${
+                                sub.status === 'active'
+                                  ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/30'
+                                  : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                              }`}
+                            >
+                              {sub.status === 'active' ? 'Suspender' : 'Ativar'}
+                            </button>
+                          </ActionTooltip>
 
-                        {/* Botão de Cancelamento Definitivo */}
-                        <ActionTooltip
-                          title="Cancelar Definitivo"
-                          description="Cancela a assinatura no Asaas, desativa o subdomínio na Vercel e encerra o cliente."
-                          side="top"
-                        >
-                          <button
-                            onClick={() => {
-                              setCancelDefinitiveSub(sub);
-                              setCancelDefinitiveError(null);
-                              setCancelDefinitiveSuccess(null);
-                            }}
-                            className="px-2.5 py-1 rounded-lg bg-red-600/15 hover:bg-red-600/25 text-red-400 border border-red-600/30 text-[10px] font-bold transition cursor-pointer"
+                          {/* Botão de Cancelamento Definitivo */}
+                          <ActionTooltip
+                            title="Cancelar Definitivo"
+                            description="Cancela a assinatura no Asaas, desativa o subdomínio na Vercel e encerra o cliente."
+                            side="top"
                           >
-                            Cancelar Definitivo
-                          </button>
-                        </ActionTooltip>
+                            <button
+                              onClick={() => {
+                                setCancelDefinitiveSub(sub);
+                                setCancelDefinitiveError(null);
+                                setCancelDefinitiveSuccess(null);
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-red-600/15 hover:bg-red-600/25 text-red-400 border border-red-600/30 text-[10px] font-bold transition cursor-pointer"
+                            >
+                              Cancelar Definitivo
+                            </button>
+                          </ActionTooltip>
 
-                        <ActionTooltip title="Ver Site Online" description="Abre o site gerado em nova aba para conferir o visual e dados." side="top">
-                          <a
-                            href={`https://${sub.slug}.webbilly.com.br`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="p-1.5 rounded-lg bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 border border-sky-500/30 inline-flex items-center justify-center"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                          </a>
-                        </ActionTooltip>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                          {subDomain ? (
+                            <ActionTooltip title="Ver Site Online" description="Abre o site gerado em nova aba para conferir o visual e dados." side="top">
+                              <a
+                                href={`https://${subDomain}.webbilly.com.br`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="p-1.5 rounded-lg bg-sky-500/10 text-sky-400 hover:bg-sky-500/20 border border-sky-500/30 inline-flex items-center justify-center cursor-pointer"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            </ActionTooltip>
+                          ) : (
+                            <button
+                              disabled
+                              className="p-1.5 rounded-lg bg-zinc-800/40 text-zinc-600 border border-white/[0.05] inline-flex items-center justify-center cursor-not-allowed opacity-40"
+                              title="Subdomínio não configurado"
+                            >
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -313,7 +356,11 @@ export default function AdminSitesPage() {
               </div>
               <div>
                 <h3 className="font-bold text-white text-base">Executar Cancelamento Definitivo</h3>
-                <span className="text-xs text-zinc-400 font-mono">{cancelDefinitiveSub.slug}.webbilly.com.br</span>
+                <span className="text-xs text-zinc-400 font-mono">
+                  {getSubdomain(cancelDefinitiveSub)
+                    ? `${getSubdomain(cancelDefinitiveSub)}.webbilly.com.br`
+                    : cancelDefinitiveSub.clientName || cancelDefinitiveSub.id}
+                </span>
               </div>
             </div>
 

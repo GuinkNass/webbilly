@@ -191,11 +191,11 @@ export default function WebbillyHomePage() {
       {/* =====================================================================
           1. TOP INFO BAR (Inspirada em eco_top_info_wrapper)
          ===================================================================== */}
-      <div className="bg-[#0e121a] border-b border-white/[0.06] text-xs text-zinc-400 py-2.5 px-4 sm:px-8">
+      <div className="bg-[#0e121a] border-b border-white/[0.06] text-xs text-zinc-400 py-2 sm:py-2.5 px-4 sm:px-8">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <div className="flex items-center gap-6">
-            <span className="flex items-center gap-1.5 text-zinc-300">
-              <span className="w-2 h-2 rounded-full bg-[#7abf18] animate-pulse inline-block" />
+          <div className="flex items-center gap-4 sm:gap-6 text-center sm:text-left">
+            <span className="flex items-center gap-1.5 text-zinc-300 text-[11px] sm:text-xs">
+              <span className="w-2 h-2 rounded-full bg-[#7abf18] animate-pulse inline-block shrink-0" />
               <strong className="text-white">Webbilly:</strong> Sites Profissionais para Negócios Locais
             </span>
             <span className="hidden md:flex items-center gap-1.5 text-zinc-400">
@@ -204,7 +204,7 @@ export default function WebbillyHomePage() {
             </span>
           </div>
 
-          <div className="flex items-center gap-4 text-[11px]">
+          <div className="flex items-center gap-3 sm:gap-4 text-[10px] sm:text-[11px] flex-wrap justify-center">
             <a
               href="https://wa.me/5511943168939"
               target="_blank"
@@ -237,20 +237,20 @@ export default function WebbillyHomePage() {
           2. NAVBAR PRINCIPAL (Inspirada em eco_banner_box & navbar)
          ===================================================================== */}
       <header className="sticky top-0 z-40 bg-[#0f141d]/90 backdrop-blur-md border-b border-white/[0.08] px-4 sm:px-8 py-3.5">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           
           {/* Logo da Marca */}
-          <Link href="/" className="flex items-center gap-3.5 group">
+          <Link href="/" className="flex items-center gap-2.5 sm:gap-3.5 group shrink-0">
             <img
               src="/billy-logo.png"
               alt="Webbilly"
-              className="h-12 sm:h-14 w-auto object-contain drop-shadow-lg group-hover:scale-105 transition-transform duration-300"
+              className="h-10 sm:h-12 md:h-14 w-auto object-contain drop-shadow-lg group-hover:scale-105 transition-transform duration-300 shrink-0"
             />
-            <div>
-              <span className="text-2xl sm:text-[26px] font-black tracking-tight text-white font-heading block leading-none">
+            <div className="min-w-0">
+              <span className="text-xl sm:text-2xl md:text-[26px] font-black tracking-tight text-white font-heading block leading-none">
                 Web<span className="text-[#7abf18]">billy</span>
               </span>
-              <span className="text-[11px] text-zinc-400 uppercase tracking-widest block font-sans mt-1">
+              <span className="text-[9px] sm:text-[11px] text-zinc-400 uppercase tracking-wider sm:tracking-widest block font-sans mt-0.5 sm:mt-1 truncate">
                 Presença Web Recorrente
               </span>
             </div>
@@ -269,10 +269,10 @@ export default function WebbillyHomePage() {
           </nav>
 
           {/* CTA Header */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <a
               href="#demonstracao"
-              className="eco-btn-primary text-xs py-2.5 px-5 hidden sm:inline-flex"
+              className="eco-btn-primary text-xs py-2.5 px-5 hidden md:inline-flex"
             >
               <span>Solicitar Demonstração</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -281,7 +281,8 @@ export default function WebbillyHomePage() {
             {/* Botão Mobile */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white"
+              className="lg:hidden p-2 rounded-lg bg-zinc-800 text-zinc-300 hover:text-white cursor-pointer"
+              aria-label="Abrir menu"
             >
               <div className="w-5 h-4 flex flex-col justify-between">
                 <span className="w-full h-0.5 bg-current rounded" />
@@ -294,15 +295,24 @@ export default function WebbillyHomePage() {
 
         {/* Menu Mobile */}
         {mobileMenuOpen && (
-          <div className="lg:hidden pt-4 pb-2 border-t border-zinc-800 mt-3 space-y-2 text-sm font-semibold uppercase">
+          <div className="lg:hidden pt-4 pb-3 border-t border-zinc-800 mt-3 space-y-2 text-sm font-semibold uppercase">
             <a href="#inicio" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-[#7abf18]">Início</a>
-            <a href="#sobre" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-zinc-300">Sobre</a>
-            <a href="#servicos" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-zinc-300">Serviços</a>
-            <a href="#vantagens" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-zinc-300">Vantagens</a>
-            <a href="#modelos" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-zinc-300">Modelos</a>
+            <a href="#sobre" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-zinc-300 hover:text-white">Sobre</a>
+            <a href="#servicos" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-zinc-300 hover:text-white">Serviços</a>
+            <a href="#vantagens" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-zinc-300 hover:text-white">Vantagens</a>
+            <a href="#modelos" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-zinc-300 hover:text-white">Modelos</a>
             <a href="#trabalhe-aqui" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-emerald-400 font-bold">Trabalhe Aqui</a>
-            <a href="#contato" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-zinc-300">SAC & Atendimento</a>
-            <a href="#demonstracao" onClick={() => setMobileMenuOpen(false)} className="block py-2 text-[#7abf18] font-bold">Solicitar Demonstração →</a>
+            <a href="#contato" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-zinc-300 hover:text-white">SAC & Atendimento</a>
+            <div className="pt-2">
+              <a
+                href="#demonstracao"
+                onClick={() => setMobileMenuOpen(false)}
+                className="eco-btn-primary w-full text-center py-2.5 px-4 flex items-center justify-center gap-2"
+              >
+                <span>Solicitar Demonstração</span>
+                <ArrowRight className="w-4 h-4" />
+              </a>
+            </div>
           </div>
         )}
       </header>

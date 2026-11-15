@@ -123,14 +123,14 @@ export default function AdminOperatorsPage() {
     }
   };
 
-  // Aprovar Operador e Liberar Licença Desktop
-  const handleApproveOperator = async (serialToken: string, operatorId?: string) => {
-    if (!confirm(`Deseja aprovar o cadastro do operador e liberar imediatamente o acesso desta licença (${serialToken})?`)) return;
+  // Aprovar Operador / Candidato e Liberar Licença Desktop
+  const handleApproveOperator = async (serialToken: string, operatorId?: string, email?: string) => {
+    if (!confirm(`Deseja aprovar o cadastro e emitir a chave serial para este operador/candidato?`)) return;
     try {
       const res = await fetch('/api/admin/operators/approve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ serialToken, operatorId })
+        body: JSON.stringify({ serialToken, operatorId, candidateId: operatorId, email })
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
@@ -235,6 +235,7 @@ export default function AdminOperatorsPage() {
   });
 
   const candidates = (data?.candidates || []).filter((c: any) => {
+    if (c.status === 'APROVADO') return false;
     if (!candidateSearch) return true;
     const q = candidateSearch.toLowerCase();
     return (
@@ -509,7 +510,7 @@ export default function AdminOperatorsPage() {
                         ) : (
                           <ActionTooltip title="Aprovar Candidato" description="Aprova a inscrição, gera a licença desktop e ativa o acesso do operador." side="left">
                             <button
-                              onClick={() => handleApproveOperator(cand.serialToken || 'NOVO', cand.id)}
+                              onClick={() => handleApproveOperator(cand.serialToken || 'NOVO', cand.id, cand.email)}
                               className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-md shadow-emerald-950/40 cursor-pointer"
                             >
                               Aprovar & Emitir Serial

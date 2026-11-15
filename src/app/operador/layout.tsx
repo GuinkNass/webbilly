@@ -24,7 +24,9 @@ import {
   Menu,
   X,
   Lock,
-  Check
+  Check,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 function OperatorShell({ children }: { children: React.ReactNode }) {
@@ -56,6 +58,7 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPass, setShowPass] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
@@ -537,33 +540,68 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
                 )}
                 <div>
                   <label className="text-xs text-zinc-400 block mb-1">Senha Atual (ou Provisória)</label>
-                  <input
-                    type="password"
-                    required
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-black/50 border border-white/[0.08] text-xs text-white"
-                  />
+                  <div className="relative flex items-center">
+                    <input
+                      type={showPass ? 'text' : 'password'}
+                      required
+                      autoComplete="current-password"
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      className="w-full pl-3 pr-11 py-2 rounded-xl bg-black/50 border border-white/[0.08] text-xs text-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPass(!showPass)}
+                      tabIndex={-1}
+                      className="absolute right-3 text-zinc-400 hover:text-white transition p-1 cursor-pointer"
+                    >
+                      {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="text-xs text-zinc-400 block mb-1">Nova Senha (Mínimo 8 caracteres)</label>
-                  <input
-                    type="password"
-                    required
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-black/50 border border-white/[0.08] text-xs text-white"
-                  />
+                  <div className="relative flex items-center">
+                    <input
+                      type={showPass ? 'text' : 'password'}
+                      required
+                      minLength={8}
+                      autoComplete="new-password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full pl-3 pr-11 py-2 rounded-xl bg-black/50 border border-white/[0.08] text-xs text-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPass(!showPass)}
+                      tabIndex={-1}
+                      className="absolute right-3 text-zinc-400 hover:text-white transition p-1 cursor-pointer"
+                    >
+                      {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="text-xs text-zinc-400 block mb-1">Confirmar Nova Senha</label>
-                  <input
-                    type="password"
-                    required
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-black/50 border border-white/[0.08] text-xs text-white"
-                  />
+                  <div className="relative flex items-center">
+                    <input
+                      type={showPass ? 'text' : 'password'}
+                      required
+                      minLength={8}
+                      autoComplete="new-password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full pl-3 pr-11 py-2 rounded-xl bg-black/50 border border-white/[0.08] text-xs text-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPass(!showPass)}
+                      tabIndex={-1}
+                      className="absolute right-3 text-zinc-400 hover:text-white transition p-1 cursor-pointer"
+                    >
+                      {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
                 <div className="pt-2 flex items-center justify-end gap-2">
                   {!op?.mustChangePassword && (

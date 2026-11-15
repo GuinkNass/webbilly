@@ -453,7 +453,7 @@ export async function upsertSubscriptionInSupabase(sub: Partial<SubscriptionReco
 }
 
 /**
- * Insere ou atualiza um operador no Supabase
+ * Insere ou atualiza um operador no Supabase (Fonte de Verdade dos operadores)
  */
 export async function upsertOperatorInSupabase(op: Partial<Operator>): Promise<boolean> {
   if (!op || (!op.id && !op.email)) return false;
@@ -461,17 +461,12 @@ export async function upsertOperatorInSupabase(op: Partial<Operator>): Promise<b
   const id = op.id || `OP-${Date.now().toString(36).toUpperCase()}`;
   const nowIso = new Date().toISOString();
 
+  // Colunas compatíveis estritamente validadas na tabela public.operators
   const payload: any = {
     id,
     name: op.name || 'Operador Webbilly',
-    cpf: op.cpf || null,
     email: op.email || '',
     whatsapp: op.whatsapp || null,
-    cep: op.cep || null,
-    address: op.address || null,
-    neighborhood: op.neighborhood || null,
-    city_state: op.city_state || (op as any).cityState || null,
-    experience: op.experience || null,
     pix_type: op.pix_type || op.pixType || 'cpf',
     pix_key: op.pix_key || op.pixKey || '',
     serial_token: op.serialToken || null,
@@ -479,10 +474,6 @@ export async function upsertOperatorInSupabase(op: Partial<Operator>): Promise<b
     affiliate_enabled: Boolean(op.affiliate_enabled),
     affiliate_code: op.affiliate_code || null,
     referred_by_operator_id: op.referred_by_operator_id || null,
-    corporate_email: op.corporate_email || (op as any).corporateEmail || null,
-    password_hash: op.passwordHash || (op as any).password_hash || null,
-    must_change_password: op.mustChangePassword ?? (op as any).must_change_password ?? true,
-    lark_provisioned: Boolean(op.lark_provisioned ?? (op as any).larkProvisioned ?? false),
     updated_at: nowIso
   };
 
@@ -490,6 +481,13 @@ export async function upsertOperatorInSupabase(op: Partial<Operator>): Promise<b
     payload.accepted_terms_at = op.accepted_terms_at;
     payload.accepted_terms_ip = op.accepted_terms_ip || null;
     payload.accepted_terms_version = op.accepted_terms_version || 'v1.0';
+  }
+
+  if (op.avatar_config || (op as any).avatarConfig) {
+    payload.avatar_config = op.avatar_config || (op as any).avatarConfig;
+  }
+  if (op.avatar_svg || (op as any).avatarSvg) {
+    payload.avatar_svg = op.avatar_svg || (op as any).avatarSvg;
   }
 
   try {

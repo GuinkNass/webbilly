@@ -22,7 +22,9 @@ import {
   Check,
   AlertTriangle,
   Bell,
-  ExternalLink
+  ExternalLink,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 function AdminShell({ children }: { children: React.ReactNode }) {
@@ -52,6 +54,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   const [adminCurrentPassword, setAdminCurrentPassword] = useState('');
   const [adminNewPassword, setAdminNewPassword] = useState('');
   const [adminConfirmPassword, setAdminConfirmPassword] = useState('');
+  const [showAdminPass, setShowAdminPass] = useState(false);
   const [changePasswordLoading, setChangePasswordLoading] = useState(false);
   const [changePasswordError, setChangePasswordError] = useState<string | null>(null);
   const [changePasswordSuccess, setChangePasswordSuccess] = useState<string | null>(null);
@@ -546,37 +549,70 @@ function AdminShell({ children }: { children: React.ReactNode }) {
             <form onSubmit={handleChangePassword} className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-zinc-300 block mb-1">Senha Atual *</label>
-                <input
-                  type="password"
-                  required
-                  value={adminCurrentPassword}
-                  onChange={(e) => setAdminCurrentPassword(e.target.value)}
-                  className="w-full bg-[#161a26] border border-white/[0.08] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#84cc16]"
-                />
+                <div className="relative flex items-center">
+                  <input
+                    type={showAdminPass ? 'text' : 'password'}
+                    required
+                    autoComplete="current-password"
+                    value={adminCurrentPassword}
+                    onChange={(e) => setAdminCurrentPassword(e.target.value)}
+                    className="w-full bg-[#161a26] border border-white/[0.08] rounded-xl pl-3.5 pr-11 py-2 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminPass(!showAdminPass)}
+                    tabIndex={-1}
+                    className="absolute right-3 text-zinc-400 hover:text-white transition p-1 cursor-pointer"
+                  >
+                    {showAdminPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label className="text-xs font-semibold text-zinc-300 block mb-1">Nova Senha Master (mínimo 8 caracteres) *</label>
-                <input
-                  type="password"
-                  required
-                  minLength={8}
-                  value={adminNewPassword}
-                  onChange={(e) => setAdminNewPassword(e.target.value)}
-                  className="w-full bg-[#161a26] border border-white/[0.08] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#84cc16]"
-                />
+                <div className="relative flex items-center">
+                  <input
+                    type={showAdminPass ? 'text' : 'password'}
+                    required
+                    minLength={8}
+                    autoComplete="new-password"
+                    value={adminNewPassword}
+                    onChange={(e) => setAdminNewPassword(e.target.value)}
+                    className="w-full bg-[#161a26] border border-white/[0.08] rounded-xl pl-3.5 pr-11 py-2 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminPass(!showAdminPass)}
+                    tabIndex={-1}
+                    className="absolute right-3 text-zinc-400 hover:text-white transition p-1 cursor-pointer"
+                  >
+                    {showAdminPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <div>
                 <label className="text-xs font-semibold text-zinc-300 block mb-1">Confirmar Nova Senha *</label>
-                <input
-                  type="password"
-                  required
-                  minLength={8}
-                  value={adminConfirmPassword}
-                  onChange={(e) => setAdminConfirmPassword(e.target.value)}
-                  className="w-full bg-[#161a26] border border-white/[0.08] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#84cc16]"
-                />
+                <div className="relative flex items-center">
+                  <input
+                    type={showAdminPass ? 'text' : 'password'}
+                    required
+                    minLength={8}
+                    autoComplete="new-password"
+                    value={adminConfirmPassword}
+                    onChange={(e) => setAdminConfirmPassword(e.target.value)}
+                    className="w-full bg-[#161a26] border border-white/[0.08] rounded-xl pl-3.5 pr-11 py-2 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminPass(!showAdminPass)}
+                    tabIndex={-1}
+                    className="absolute right-3 text-zinc-400 hover:text-white transition p-1 cursor-pointer"
+                  >
+                    {showAdminPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-3">

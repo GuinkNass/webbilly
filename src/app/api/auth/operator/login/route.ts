@@ -12,17 +12,18 @@ export async function POST(req: NextRequest) {
     }
 
     const db = readDb();
-    const cleanEmail = email.toLowerCase().trim();
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPassword = (password || '').trim();
 
     // Se for um Administrador Master tentando logar pela tela do operador, direciona para o Painel Admin
     const adminUser = (db.adminUsers || []).find(
-      u => u.email.toLowerCase() === cleanEmail ||
-           ((u as any).personal_email && (u as any).personal_email.toLowerCase() === cleanEmail)
+      u => (u.email && u.email.trim().toLowerCase() === cleanEmail) ||
+           ((u as any).personal_email && (u as any).personal_email.trim().toLowerCase() === cleanEmail)
     );
     const isMasterAdmin =
-      (cleanEmail === 'admin@billysuite.com.br' && (password === 'admin123456' || (adminUser && bcrypt.compareSync(password, adminUser.passwordHash)))) ||
-      ((cleanEmail === 'lucas@webbilly.com.br' || cleanEmail === 'lucasklock@gmail.com') && (password === 'WebBilly@2026#Lucas' || (adminUser && bcrypt.compareSync(password, adminUser.passwordHash)))) ||
-      (adminUser && adminUser.passwordHash && bcrypt.compareSync(password, adminUser.passwordHash));
+      (cleanEmail === 'admin@billysuite.com.br' && (password === 'admin123456' || cleanPassword === 'admin123456' || (adminUser && bcrypt.compareSync(password, adminUser.passwordHash)))) ||
+      ((cleanEmail === 'lucas@webbilly.com.br' || cleanEmail === 'lucasklock@gmail.com') && (password === 'WebBilly@2026#Lucas' || cleanPassword === 'WebBilly@2026#Lucas' || (adminUser && bcrypt.compareSync(password, adminUser.passwordHash)))) ||
+      (adminUser && adminUser.passwordHash && (bcrypt.compareSync(password, adminUser.passwordHash) || bcrypt.compareSync(cleanPassword, adminUser.passwordHash)));
 
     if (isMasterAdmin && adminUser) {
       const token = signToken({
@@ -57,10 +58,10 @@ export async function POST(req: NextRequest) {
 
     // Busca o operador por e-mail pessoal, novo e-mail corporativo (@webbilly.com.br) ou chave serial
     let operator = db.operators.find(
-      o => o.email.toLowerCase() === cleanEmail ||
-           (o.corporate_email && o.corporate_email.toLowerCase() === cleanEmail) ||
-           (o.corporateEmail && o.corporateEmail.toLowerCase() === cleanEmail) ||
-           (o.serialToken && o.serialToken.toUpperCase() === cleanEmail.toUpperCase())
+      o => (o.email && o.email.trim().toLowerCase() === cleanEmail) ||
+           (o.corporate_email && o.corporate_email.trim().toLowerCase() === cleanEmail) ||
+           (o.corporateEmail && o.corporateEmail.trim().toLowerCase() === cleanEmail) ||
+           (o.serialToken && o.serialToken.trim().toUpperCase() === cleanEmail.toUpperCase())
     );
 
     // Se não encontrou no db local, consulta no Supabase (Fonte de Verdade)
@@ -69,14 +70,15 @@ export async function POST(req: NextRequest) {
         const { fetchAllOperatorsFromSupabase } = await import('@/lib/supabase');
         const supaOps = await fetchAllOperatorsFromSupabase();
         operator = supaOps.find(
-          o => o.email.toLowerCase() === cleanEmail ||
-               (o.corporate_email && o.corporate_email.toLowerCase() === cleanEmail) ||
-               (o.corporateEmail && o.corporateEmail.toLowerCase() === cleanEmail)
+          o => (o.email && o.email.trim().toLowerCase() === cleanEmail) ||
+               (o.corporate_email && o.corporate_email.trim().toLowerCase() === cleanEmail) ||
+               (o.corporateEmail && o.corporateEmail.trim().toLowerCase() === cleanEmail) ||
+               (o.serialToken && o.serialToken.trim().toUpperCase() === cleanEmail.toUpperCase())
         );
       } catch {}
     }
 
-    const isCarlosDefault = cleanEmail === 'carlos.operador@billysuite.com.br' && password === 'operador123';
+    const isCarlosDefault = cleanEmail === 'carlos.operador@billysuite.com.br' && (password === 'operador123' || cleanPassword === 'operador123');
     if (!operator && isCarlosDefault) {
       operator = {
         id: 'OP-1001',
@@ -108,7 +110,20 @@ export async function POST(req: NextRequest) {
       }, { status: 403 });
     }
 
-    const valid = isCarlosDefault || bcrypt.compareSync(password, operator.passwordHash);
+    const isPasswordHashValid = Boolean(
+      operator.passwordHash && (
+        bcrypt.compareSync(password, operator.passwordHash) ||
+        bcrypt.compareSync(cleanPassword, operator.passwordHash)
+      )
+    );
+    const isTempPasswordValid = Boolean(
+      operator.tempPasswordPlain && (
+        operator.tempPasswordPlain === password ||
+        operator.tempPasswordPlain === cleanPassword
+      )
+    );
+
+    const valid = isCarlosDefault || isPasswordHashValid || isTempPasswordValid;
     if (!valid) {
       return NextResponse.json({ error: 'E-mail ou senha incorretos.' }, { status: 401 });
     }

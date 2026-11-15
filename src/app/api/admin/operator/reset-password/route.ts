@@ -12,14 +12,57 @@ export async function POST(req: NextRequest) {
     }
 
     const { operatorId, serialToken } = await req.json();
-    if (!operatorId && !serialToken) {
+    const targetId = (operatorId || '').trim();
+    const cleanSerial = (serialToken || '').trim().toUpperCase();
+
+    if (!targetId && !cleanSerial) {
       return NextResponse.json({ error: 'Informe o ID ou Token Serial do operador.' }, { status: 400 });
     }
 
     const db = readDb();
-    const operator = db.operators.find(
-      o => (operatorId && o.id === operatorId) || (serialToken && o.serialToken.toUpperCase() === serialToken.toUpperCase())
+    let operator = db.operators.find(
+      o => (targetId && (o.id === targetId || o.candidateId === targetId)) ||
+           (cleanSerial && (o.serialToken || '').trim().toUpperCase() === cleanSerial)
     );
+
+    if (!operator) {
+      try {
+        const { fetchAllOperatorsFromSupabase } = await import('@/lib/supabase');
+        const supaOps = await fetchAllOperatorsFromSupabase();
+        operator = supaOps.find(
+          o => (targetId && (o.id === targetId || o.candidateId === targetId)) ||
+               (cleanSerial && (o.serialToken || '').trim().toUpperCase() === cleanSerial)
+        );
+        if (operator) {
+          db.operators.push(operator);
+        }
+      } catch {}
+    }
+
+    if (!operator) {
+      const cand = (db.candidates || []).find(c => targetId && c.id === targetId);
+      if (cand) {
+        operator = {
+          id: `OP-${Date.now().toString(36).toUpperCase()}`,
+          candidateId: cand.id,
+          name: cand.name,
+          email: cand.email.trim().toLowerCase(),
+          whatsapp: cand.whatsapp,
+          pixType: cand.pixType,
+          pixKey: cand.pixKey,
+          status: 'ATIVO',
+          serialToken: cleanSerial || '',
+          dailyLimit: 50,
+          todayGenerations: 0,
+          createdAt: new Date().toISOString(),
+          passwordHash: '',
+          mustChangePassword: true,
+          must_change_password: true
+        };
+        db.operators.push(operator);
+        cand.status = 'APROVADO';
+      }
+    }
 
     if (!operator) {
       return NextResponse.json({ error: 'Operador não encontrado no sistema.' }, { status: 404 });
