@@ -4,6 +4,9 @@ import { findOrCreateCustomer, createIndividualPayment } from '@/services/asaas'
 import { getSupabaseAdmin, upsertSubscriptionInSupabase } from '@/lib/supabase';
 import { getSiteFromCloudStorage, formatSlugToTitle, setSlugSuspended } from '@/lib/site-storage';
 
+export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
+
 function extractSlug(token: string): string {
   if (!token) return '';
   let s = token.trim().toLowerCase();
@@ -54,6 +57,18 @@ export async function GET(req: NextRequest) {
 }
 
 async function handleCreateCheckout(req: NextRequest, body: any) {
+  const asaasApiKey = (process.env.ASAAS_API_KEY || '').trim();
+  if (!asaasApiKey) {
+    console.error('[asaas/create-checkout] Chave ASAAS_API_KEY não configurada no servidor da Vercel.');
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Chave ASAAS_API_KEY não configurada no servidor da Vercel.'
+      },
+      { status: 400 }
+    );
+  }
+
   const leadToken = (body.leadToken || body.leadId || '').trim();
   const rawSlug = (body.slug || body.siteSlug || extractSlug(leadToken) || '').trim();
 
@@ -65,7 +80,7 @@ async function handleCreateCheckout(req: NextRequest, body: any) {
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '') || 'site';
 
-  const plan = body.plan === 'proprio' ? 'proprio' : 'mensal';
+  const plan = (body.planType || body.plan) === 'proprio' ? 'proprio' : 'mensal';
   const selectedDomain = body.domain?.trim() || `${cleanSlug}.com.br`;
 
   // Validação de CPF ou CNPJ
@@ -137,7 +152,7 @@ async function handleCreateCheckout(req: NextRequest, body: any) {
     formatSlugToTitle(cleanSlug);
 
   const clientName = (body.name || body.clientName || defaultBusinessName || 'Cliente Webbilly').trim();
-  const clientPhone = (body.phone || body.clientPhone || demo?.phone || sub?.clientPhone || '').replace(/\D/g, '');
+  const clientPhone = String(body.whatsapp || body.phone || body.clientPhone || demo?.phone || sub?.clientPhone || '').replace(/\D/g, '');
 
   // Operador
   const operatorSerial =
@@ -277,14 +292,8 @@ async function handleCreateCheckout(req: NextRequest, body: any) {
     console.warn('[Asaas Checkout setSlugSuspended warning]:', suspErr);
   }
 
-  // 6. Resposta
-  const acceptHeader = req.headers.get('accept') || '';
-  const isBrowserRequest =
-    req.method === 'GET' ||
-    acceptHeader.includes('text/html') ||
-    !acceptHeader.includes('application/json');
-
-  if (isBrowserRequest) {
+  // 6. Resposta: Apenas GET direto na barra do navegador redireciona 302; POST (fetch) sempre retorna JSON
+  if (req.method === 'GET') {
     return NextResponse.redirect(invoiceUrl, 302);
   }
 

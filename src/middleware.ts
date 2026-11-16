@@ -15,6 +15,22 @@ export const config = {
 
 export default function middleware(req: NextRequest) {
   const url = req.nextUrl;
+
+  // 0. Rotas públicas de API e do cliente que NUNCA devem ser interceptadas ou reescritas
+  if (
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/_next') ||
+    url.pathname.startsWith('/templates/') ||
+    url.pathname.startsWith('/proposta') ||
+    url.pathname.startsWith('/demo') ||
+    url.pathname.startsWith('/briefing') ||
+    url.pathname.startsWith('/cancelamento') ||
+    url.pathname.startsWith('/termos') ||
+    url.pathname.startsWith('/site/')
+  ) {
+    return NextResponse.next();
+  }
+
   const hostHeader =
     req.headers.get('x-forwarded-host') ||
     req.headers.get('host') ||

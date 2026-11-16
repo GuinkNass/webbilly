@@ -120,31 +120,53 @@ export default function ProposalPage() {
       return;
     }
 
+    const cleanPhone = customerPhone.replace(/\D/g, '');
+
     setCheckoutSubmitting(true);
     try {
+      const targetSlug =
+        data?.slug ||
+        data?.lead?.site_slug ||
+        (data?.lead?.subdomain ? data.lead.subdomain.replace('.webbilly.com.br', '') : '') ||
+        '';
+
       const res = await fetch('/api/asaas/create-checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({
           leadToken,
-          slug: data?.slug || '',
+          slug: targetSlug,
           name: customerName.trim(),
           cpfCnpj: cleanCpf,
           email: cleanEmail,
-          phone: customerPhone.replace(/\D/g, ''),
+          phone: cleanPhone,
+          whatsapp: cleanPhone,
           plan: selectedPlan,
+          planType: selectedPlan,
           domain: selectedDomain
         })
       });
 
-      const resJson = await res.json();
-      if (!res.ok || !resJson.success || !resJson.invoiceUrl) {
-        throw new Error(resJson.error || 'Falha ao gerar cobrança no gateway Asaas.');
+      const raw = await res.text();
+      let resJson: any = null;
+      try {
+        resJson = JSON.parse(raw);
+      } catch (parseErr) {
+        console.error('[Checkout parse error]:', raw);
+        throw new Error(`Resposta inesperada do servidor (${res.status}): ${raw.slice(0, 120)}`);
+      }
+
+      if (!res.ok || !resJson?.success || !resJson?.invoiceUrl) {
+        throw new Error(resJson?.error || 'Falha ao gerar cobrança no gateway Asaas.');
       }
 
       // Redireciona imediatamente para a fatura individual no Asaas
       window.location.href = resJson.invoiceUrl;
     } catch (err: any) {
+      console.error('[Checkout error]:', err);
       setCheckoutError(err.message || 'Erro ao conectar ao checkout seguro.');
       setCheckoutSubmitting(false);
     }
