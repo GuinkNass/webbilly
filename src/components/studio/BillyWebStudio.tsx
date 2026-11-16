@@ -1024,6 +1024,20 @@ export default function BillyWebStudio({
 
   return (
     <div className="space-y-6 select-none font-sans">
+      {/* Banner de Vídeo em Loop do Webbilly Studio */}
+      <div className="w-full h-36 md:h-44 rounded-2xl overflow-hidden relative border border-white/10 mb-5 shadow-2xl bg-[#090d0b]">
+        <video
+          src="/videos/webbilly-app-header.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="w-full h-full object-cover object-center"
+        />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#090d0b]/60 via-transparent to-[#090d0b]/30" />
+      </div>
+
       {/* =========================================================================
           CABEÇALHO NEON DO BILLY STUDIO WEB
          ========================================================================= */}
