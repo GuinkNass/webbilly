@@ -76,7 +76,7 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
       label: 'Dashboard',
       tooltipTitle: 'Dashboard',
       tooltipDesc: 'Visão geral com gráficos, faturamento, metas e indicadores em tempo real.',
-      iconSrc: '/icones/dashboard.svg',
+      iconSrc: '/icons/nav/dashboard.png',
       isTrophy: false,
       badge: stats?.activeSubscriptionsCount ? `${stats.activeSubscriptionsCount} sites` : null,
       badgeColor: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
@@ -86,7 +86,7 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
       label: 'Billy Studio Web',
       tooltipTitle: 'Billy Studio Web (IA & Maps)',
       tooltipDesc: 'Busque comércios no Google Maps, gere sites com IA, publique no subdomínio e envie propostas no WhatsApp.',
-      iconSrc: '/icones/app-newproject.svg',
+      iconSrc: '/icons/nav/studio.png',
       isTrophy: false,
       badge: 'NOVO ✨',
       badgeColor: 'bg-[#84cc16]/25 text-[#a3e635] border border-[#84cc16]/50 font-bold'
@@ -96,7 +96,7 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
       label: 'Sites Ativos (SaaS)',
       tooltipTitle: 'Sites Ativos',
       tooltipDesc: 'Gerencie os sites gerados, edite dados do cliente, copie links de demonstração e acompanhe o status.',
-      iconSrc: '/icones/sites.svg',
+      iconSrc: '/icons/nav/dominios.png',
       isTrophy: false,
       badge: stats?.activeSubscriptionsCount || (data?.subscriptions || []).length || 0,
       badgeColor: 'bg-zinc-800 text-zinc-300'
@@ -116,7 +116,7 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
       label: 'Minhas Vendas & Pix',
       tooltipTitle: 'Minhas Vendas & Pix',
       tooltipDesc: 'Acompanhe suas vendas fechadas, comissões (50%) e status de pagamentos Pix.',
-      iconSrc: '/icones/vendas.svg',
+      iconSrc: '/icons/nav/financeiro.png',
       isTrophy: false,
       badge: `R$ ${(stats?.monthlyCommissionMRR ?? ((stats?.activeSubscriptionsCount ?? 0) * 10)).toLocaleString('pt-BR')}`,
       badgeColor: 'bg-emerald-950/40 text-emerald-400'
@@ -126,8 +126,8 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
       label: 'Ranking & Medalhas',
       tooltipTitle: 'Ranking & Medalhas',
       tooltipDesc: 'Veja sua posição no ranking mensal, patentes e metas para desbloquear os troféus oficiais.',
-      iconSrc: '/trofeus/Ouro.png',
-      isTrophy: true,
+      iconSrc: '/icons/nav/ranking.png',
+      isTrophy: false,
       badge: data?.gamification?.currentMedal?.name || 'Iniciante',
       badgeColor: `${data?.gamification?.currentMedal?.badgeBg || 'bg-amber-500/20'} ${data?.gamification?.currentMedal?.badgeText || 'text-amber-300'} border ${data?.gamification?.currentMedal?.badgeBorder || 'border-amber-500/30'}`
     },
@@ -136,7 +136,7 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
       label: 'Billy Afiliados',
       tooltipTitle: 'Billy Afiliados',
       tooltipDesc: 'Copie seu link exclusivo para indicar novos operadores e ganhar bônus recorrente.',
-      iconSrc: '/icones/afiliados.svg',
+      iconSrc: '/icons/nav/operadores.png',
       isTrophy: false,
       badge: data?.affiliates?.enabled ? '5% Ativo' : data?.affiliates?.eligibility?.eligible ? 'Liberado!' : 'Bronze',
       badgeColor: data?.affiliates?.enabled ? 'bg-[#84cc16]/20 text-[#a3e635] border border-[#84cc16]/40' : 'bg-zinc-800 text-zinc-400'
@@ -268,14 +268,13 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
                         <img
                           src={item.iconSrc}
                           alt=""
-                          className={`w-7 h-7 object-contain transition-transform duration-200 group-hover:scale-110 ${
+                          className={`w-6 h-6 object-contain transition-all duration-200 group-hover:scale-110 ${
                             item.isTrophy
                               ? 'drop-shadow-[0_2px_8px_rgba(245,158,11,0.6)]'
                               : isActive
-                              ? 'brightness-0 invert [filter:invert(81%)_sepia(47%)_saturate(746%)_hue-rotate(36deg)_brightness(98%)_contrast(92%)] drop-shadow-[0_0_8px_rgba(132,204,22,0.8)]'
-                              : 'brightness-0 invert opacity-85 group-hover:opacity-100'
+                              ? 'brightness-0 invert opacity-100 drop-shadow-[0_0_6px_rgba(132,204,22,0.5)]'
+                              : 'brightness-0 invert opacity-80 group-hover:opacity-100'
                           }`}
-                          onError={(e) => { e.currentTarget.style.display = 'none'; }}
                         />
                         {/* Ponto indicador ativo no modo recolhido */}
                         {!isExpanded && isActive && (
@@ -372,29 +371,38 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
               </div>
 
               <nav className="space-y-1.5 mt-4">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold ${
-                      pathname === item.href
-                        ? 'bg-emerald-600/40 text-white border border-[#84cc16]/40'
-                        : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-[#84cc16]/10 border border-[#84cc16]/25 flex items-center justify-center shrink-0">
-                        <img
-                          src={item.iconSrc}
-                          alt=""
-                          className={`w-5 h-5 object-contain ${item.isTrophy ? '' : 'brightness-0 invert'}`}
-                        />
+                {navItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold ${
+                        isActive
+                          ? 'bg-emerald-600/40 text-white border border-[#84cc16]/40'
+                          : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-[#84cc16]/10 border border-[#84cc16]/25 flex items-center justify-center shrink-0">
+                          <img
+                            src={item.iconSrc}
+                            alt=""
+                            className={`w-5 h-5 object-contain transition-all ${
+                              item.isTrophy
+                                ? ''
+                                : isActive
+                                ? 'brightness-0 invert opacity-100 drop-shadow-[0_0_6px_rgba(132,204,22,0.5)]'
+                                : 'brightness-0 invert opacity-80'
+                            }`}
+                          />
+                        </div>
+                        <span>{item.label}</span>
                       </div>
-                      <span>{item.label}</span>
-                    </div>
-                  </Link>
-                ))}
+                    </Link>
+                  );
+                })}
               </nav>
             </div>
 

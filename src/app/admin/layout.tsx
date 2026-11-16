@@ -75,7 +75,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     {
       href: '/admin',
       label: 'Dashboard Executivo',
-      iconSrc: '/icones/dashboard.svg',
+      iconSrc: '/icons/nav/dashboard.png',
       isTrophy: false,
       badge: 'Geral',
       badgeColor: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
@@ -85,7 +85,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     {
       href: '/admin/estudio',
       label: 'Billy Studio Web',
-      iconSrc: '/icones/app-newproject.svg',
+      iconSrc: '/icons/nav/studio.png',
       isTrophy: false,
       badge: 'IA & MAPS ✨',
       badgeColor: 'bg-[#84cc16]/25 text-[#a3e635] border border-[#84cc16]/50 font-bold',
@@ -95,7 +95,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     {
       href: '/admin/sites',
       label: 'Gestão de Sites (SaaS)',
-      iconSrc: '/icones/sites.svg',
+      iconSrc: '/icons/nav/dominios.png',
       isTrophy: false,
       badge: (data?.subscriptions || []).length ? `${(data?.subscriptions || []).length}` : null,
       badgeColor: 'bg-zinc-800 text-zinc-300',
@@ -105,7 +105,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     {
       href: '/admin/operadores',
       label: 'Operadores & Licenças',
-      iconSrc: '/icones/operadores.svg',
+      iconSrc: '/icons/nav/operadores.png',
       isTrophy: false,
       badge: (data?.operators || []).length ? `${(data?.operators || []).length}` : null,
       badgeColor: 'bg-indigo-950/40 text-indigo-300 border border-indigo-800/40',
@@ -115,8 +115,8 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     {
       href: '/admin/ranking',
       label: 'Ranking & Medalhas',
-      iconSrc: '/trofeus/Ouro.png',
-      isTrophy: true,
+      iconSrc: '/icons/nav/ranking.png',
+      isTrophy: false,
       badge: 'Top 3',
       badgeColor: 'bg-amber-500/20 text-amber-300 border border-amber-500/40',
       tooltipTitle: 'Ranking & Medalhas',
@@ -125,7 +125,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     {
       href: '/admin/financeiro',
       label: 'Financeiro & APIs',
-      iconSrc: '/icones/financeiro.svg',
+      iconSrc: '/icons/nav/financeiro.png',
       isTrophy: false,
       badge: 'Caixa 70/30',
       badgeColor: 'bg-emerald-950/40 text-emerald-400',
@@ -413,12 +413,12 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                       <img
                         src={item.iconSrc}
                         alt=""
-                        className={`w-7 h-7 object-contain transition-transform duration-200 group-hover:scale-110 ${
+                        className={`w-6 h-6 object-contain transition-all duration-200 group-hover:scale-110 ${
                           item.isTrophy
                             ? 'drop-shadow-[0_2px_8px_rgba(245,158,11,0.6)]'
                             : isActive
-                            ? 'brightness-0 invert [filter:invert(81%)_sepia(47%)_saturate(746%)_hue-rotate(36deg)_brightness(98%)_contrast(92%)] drop-shadow-[0_0_8px_rgba(132,204,22,0.8)]'
-                            : 'brightness-0 invert opacity-85 group-hover:opacity-100'
+                            ? 'brightness-0 invert opacity-100 drop-shadow-[0_0_6px_rgba(132,204,22,0.5)]'
+                            : 'brightness-0 invert opacity-80 group-hover:opacity-100'
                         }`}
                       />
                       {isActive && (
@@ -502,7 +502,13 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                           <img
                             src={item.iconSrc}
                             alt=""
-                            className={`w-5 h-5 object-contain ${item.isTrophy ? '' : 'brightness-0 invert'}`}
+                            className={`w-5 h-5 object-contain transition-all ${
+                              item.isTrophy
+                                ? ''
+                                : isActive
+                                ? 'brightness-0 invert opacity-100 drop-shadow-[0_0_6px_rgba(132,204,22,0.5)]'
+                                : 'brightness-0 invert opacity-80'
+                            }`}
                           />
                         </div>
                         <span>{item.label}</span>
