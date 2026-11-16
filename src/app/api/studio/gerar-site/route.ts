@@ -14,6 +14,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const {
       businessName,
+      shortName = '',
+      headerName = '',
       niche = 'Barbearia',
       city = 'São Paulo - SP',
       phone,
@@ -24,6 +26,12 @@ export async function POST(req: NextRequest) {
       theme = 'dark-neon',
       templateId = 'barbearia-crop-vintage',
       accentColor = '#84cc16',
+      primaryColor,
+      backgroundColor,
+      surfaceColor,
+      textColor,
+      fontPair,
+      paletteId,
       logoUrl = '',
       heroPhoto = '',
       galleryPhotos = [],
@@ -80,6 +88,8 @@ export async function POST(req: NextRequest) {
     try {
       generationResult = await buildSiteHtml({
         businessName,
+        shortName,
+        headerName,
         niche,
         city,
         subdomain: cleanSlug,
@@ -92,6 +102,12 @@ export async function POST(req: NextRequest) {
         theme,
         templateId,
         accentColor,
+        primaryColor,
+        backgroundColor,
+        surfaceColor,
+        textColor,
+        fontPair,
+        paletteId,
         logoUrl,
         heroPhoto: finalHeroPhoto,
         galleryPhotos: finalGalleryPhotos,

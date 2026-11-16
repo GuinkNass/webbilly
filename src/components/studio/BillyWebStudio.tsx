@@ -626,6 +626,7 @@ export default function BillyWebStudio({
       handleSearchRealPhotos(businessPhotoQuery);
     }
 
+    setPhotoSearchMode('real');
     setPixabayQuery(niche);
     handleSearchPixabay(niche);
     setActiveTab('estudio');
@@ -660,6 +661,10 @@ export default function BillyWebStudio({
       accentColor: recommendation.template.accentColor
     }));
 
+    const businessPhotoQuery = `${manualName.trim()} ${city}`;
+    setRealPhotosQuery(businessPhotoQuery);
+    setPhotoSearchMode('real');
+    handleSearchRealPhotos(businessPhotoQuery);
     setPixabayQuery(niche);
     handleSearchPixabay(niche);
     setActiveTab('estudio');
@@ -849,12 +854,12 @@ export default function BillyWebStudio({
     setGenerationError(null);
     setDeploySuccessNotice(null);
     setDeployError(null);
-    setGenerationStep('Iniciando Motor Gemini do Billy Studio Web...');
+    setGenerationStep('IA adaptando o template escolhido e aplicando suas fotos...');
 
     try {
-      setTimeout(() => setGenerationStep('Montando template e curadoria de fotos de alta resolução...'), 1200);
-      setTimeout(() => setGenerationStep('Redigindo copywriting persuasivo e estrutura de alta conversão...'), 2600);
-      setTimeout(() => setGenerationStep('Compilando HTML completo e botões de WhatsApp...'), 4200);
+      setTimeout(() => setGenerationStep('IA Gemini adaptando o template estrutural e paleta de cores...'), 1200);
+      setTimeout(() => setGenerationStep('Distribuindo fotos reais do estabelecimento e redigindo copy do nicho...'), 2600);
+      setTimeout(() => setGenerationStep('Compilando HTML completo, classes CSS e botões de WhatsApp...'), 4200);
 
       const data = await safeFetchJson('/api/studio/gerar-site', {
         method: 'POST',
@@ -2426,7 +2431,7 @@ export default function BillyWebStudio({
                   }`}
                 >
                   <Camera className="w-3.5 h-3.5" />
-                  <span>Fotos Reais (Google / Insta)</span>
+                  <span>Fotos Reais (Google / Insta) {realPhotos.length > 0 ? `(${realPhotos.length})` : ''}</span>
                 </button>
                 <button
                   type="button"
@@ -2438,7 +2443,7 @@ export default function BillyWebStudio({
                   }`}
                 >
                   <ImageIcon className="w-3.5 h-3.5" />
-                  <span>Banco Pixabay HD</span>
+                  <span>Banco Pixabay HD {pixabayImages.length > 0 ? `(${pixabayImages.length})` : ''}</span>
                 </button>
                 <button
                   type="button"

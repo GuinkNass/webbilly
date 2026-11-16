@@ -202,6 +202,36 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // -------------------------------------------------------------------------
+    // 4. PROVEDOR: Radar Web de Imagens em Alta Resolução (Bing Engine - Sem Chaves)
+    // -------------------------------------------------------------------------
+    if (photos.length < 15) {
+      try {
+        const bingQuery = cleanInstagram ? `${cleanInstagram} instagram ${businessName}` : `${businessName} ${city}`;
+        const bingRes = await fetch(`https://www.bing.com/images/search?q=${encodeURIComponent(bingQuery)}&form=HDRSC2&first=1`, {
+          headers: {
+            'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8'
+          },
+          signal: AbortSignal.timeout(5000),
+          cache: 'no-store'
+        });
+
+        if (bingRes.ok) {
+          const html = await bingRes.text();
+          const matches = [...html.matchAll(/murl&quot;:&quot;(https?:\/\/[^&]+)&quot;/g)].map((m) => m[1]);
+          for (const rawImg of matches.slice(0, 20)) {
+            if (photos.length >= 25) break;
+            const isInsta = rawImg.includes('instagram') || rawImg.includes('fbcdn') || rawImg.includes('cdninstagram');
+            addPhoto(rawImg, `${businessName} (Foto Oficial)`, isInsta ? 'instagram' : 'web');
+          }
+        }
+      } catch (bingErr: any) {
+        console.warn('[Buscar Fotos] Erro Bing Images Radar:', bingErr?.message);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       query: searchQuery,
