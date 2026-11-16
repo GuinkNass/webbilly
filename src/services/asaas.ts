@@ -439,3 +439,95 @@ export async function cancelAllPendingCharges(params: {
 
   return { cancelledSubscriptions, cancelledPayments };
 }
+
+/**
+ * Lista cobranças do Asaas (GET /v3/payments)
+ */
+export async function listAsaasPayments(params?: {
+  limit?: number;
+  offset?: number;
+  status?: string;
+  customer?: string;
+}): Promise<{ totalCount: number; data: any[] }> {
+  try {
+    const limit = params?.limit || 50;
+    const offset = params?.offset || 0;
+    let url = `${getApiUrl()}/payments?limit=${limit}&offset=${offset}&sort=dateCreated&order=desc`;
+    if (params?.status) {
+      url += `&status=${encodeURIComponent(params.status)}`;
+    }
+    if (params?.customer) {
+      url += `&customer=${encodeURIComponent(params.customer)}`;
+    }
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: getHeaders(),
+      cache: 'no-store'
+    });
+    if (!res.ok) {
+      console.warn('[Asaas listAsaasPayments] Erro HTTP:', res.status);
+      return { totalCount: 0, data: [] };
+    }
+    const json = await res.json();
+    return {
+      totalCount: Number(json.totalCount || json.data?.length || 0),
+      data: Array.isArray(json.data) ? json.data : []
+    };
+  } catch (err) {
+    console.error('[Asaas listAsaasPayments] Exceção:', err);
+    return { totalCount: 0, data: [] };
+  }
+}
+
+/**
+ * Lista assinaturas do Asaas (GET /v3/subscriptions)
+ */
+export async function listAsaasSubscriptions(params?: {
+  limit?: number;
+  offset?: number;
+  status?: string;
+}): Promise<{ totalCount: number; data: any[] }> {
+  try {
+    const limit = params?.limit || 50;
+    const offset = params?.offset || 0;
+    let url = `${getApiUrl()}/subscriptions?limit=${limit}&offset=${offset}&sort=dateCreated&order=desc`;
+    if (params?.status) {
+      url += `&status=${encodeURIComponent(params.status)}`;
+    }
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: getHeaders(),
+      cache: 'no-store'
+    });
+    if (!res.ok) {
+      console.warn('[Asaas listAsaasSubscriptions] Erro HTTP:', res.status);
+      return { totalCount: 0, data: [] };
+    }
+    const json = await res.json();
+    return {
+      totalCount: Number(json.totalCount || json.data?.length || 0),
+      data: Array.isArray(json.data) ? json.data : []
+    };
+  } catch (err) {
+    console.error('[Asaas listAsaasSubscriptions] Exceção:', err);
+    return { totalCount: 0, data: [] };
+  }
+}
+
+/**
+ * Consulta detalhes de um cliente no Asaas (GET /v3/customers/{id})
+ */
+export async function getAsaasCustomer(customerId: string): Promise<any | null> {
+  if (!customerId) return null;
+  try {
+    const cleanId = encodeURIComponent(customerId.trim());
+    const res = await fetch(`${getApiUrl()}/customers/${cleanId}`, {
+      method: 'GET',
+      headers: getHeaders()
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    return null;
+  }
+}
