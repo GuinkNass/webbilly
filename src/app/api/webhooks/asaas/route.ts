@@ -162,28 +162,35 @@ export async function POST(req: NextRequest) {
 
         // Se for a primeira cobrança avulsa paga (R$ 29,90) e ainda não tem assinatura recorrente criada, agenda a recorrência (+30 dias)
         const paymentValue = Number(payment.value) || 29.90;
-        if (paymentValue < 100 && asaasCustId && (!sub?.asaasSubscriptionId || sub.asaasSubscriptionId.startsWith('pay_'))) {
+        const isFirstInstallment =
+          externalRef.includes('first_installment') ||
+          !sub?.asaasSubscriptionId ||
+          sub.asaasSubscriptionId.startsWith('pay_');
+
+        if (paymentValue < 100 && asaasCustId && isFirstInstallment) {
           try {
             const { createSubscription } = await import('@/services/asaas');
             const recurringSub = await createSubscription({
               customerId: asaasCustId,
               siteSlug: effectiveSlug,
               operatorSerial: operatorSerial || sub?.operatorToken,
-              value: 29.90
+              value: 29.90,
+              nextDueDateDays: 30,
+              description: `Mensalidade Presença Digital Oficial - ${effectiveSlug}.webbilly.com.br`
             });
             if (recurringSub?.subscriptionId) {
               if (sub) {
                 sub.asaasSubscriptionId = recurringSub.subscriptionId;
                 (sub as any).asaas_subscription_id = recurringSub.subscriptionId;
               }
-              console.log(`[Asaas Webhook] Assinatura recorrente mensal criada para ${effectiveSlug}: ${recurringSub.subscriptionId}`);
+              console.log(`[Asaas Webhook] Assinatura recorrente mensal criada com sucesso para ${effectiveSlug}: ${recurringSub.subscriptionId} (Vencimento em +30 dias)`);
             }
           } catch (recErr) {
             console.warn('[Asaas Webhook] Aviso ao criar assinatura recorrente no Asaas:', recErr);
           }
         }
 
-        // Localiza operador vinculado para registrar comissão de R$ 10,00 recorrentes
+        // Localiza operador vinculado para registrar comissão (50% na 1ª mensalidade = R$ 14,95)
         const opSerial = operatorSerial || sub?.operatorToken;
         const operator = opSerial
           ? db.operators.find(o => (o.serialToken || '').trim().toUpperCase() === opSerial.trim().toUpperCase())
@@ -194,7 +201,7 @@ export async function POST(req: NextRequest) {
 
         if (!alreadyCredited && operator) {
           const val = Number(payment.value) || 29.90;
-          let comm = 10.00; // R$ 10,00 por assinatura ativa no plano mensal
+          let comm = 14.95; // 50% de R$ 29,90 para o operador
           let niche = 'Assinatura Recorrente Mensal';
 
           if (val >= 450) {
@@ -211,7 +218,7 @@ export async function POST(req: NextRequest) {
             comm = 21.00;
             niche = 'Renovação Anual Domínio Próprio';
           } else if (val >= 25 && val <= 35) {
-            comm = 10.00;
+            comm = 14.95; // 50% de comissão oficial do operador
             niche = 'Assinatura Recorrente Mensal';
           }
 
@@ -272,26 +279,29 @@ export async function POST(req: NextRequest) {
       }
 
       case 'PAYMENT_OVERDUE': {
-        // Blindagem contra cobrança indevida:
-        // Se o cliente nunca pagou nada (1ª fatura em aberto não quitada), cancela imediatamente a assinatura no Asaas
-        const isFirstInvoice = !sub?.lastPaymentDate;
+        // Blindagem contra cobrança indevida / inadimplência fantasma:
+        // Se for a 1ª parcela não paga (asaas_subscription_id nulo/ausente ou never paid), cancela a cobrança avulsa e marca checkout abandonado
+        const isFirstInvoice =
+          externalRef.includes('first_installment') ||
+          !sub?.lastPaymentDate ||
+          !sub?.asaasSubscriptionId;
 
         if (isFirstInvoice) {
-          console.log(`[Asaas Webhook] 1ª fatura vencida sem pagamento para ${effectiveSlug}. Executando cancelamento automático de proteção no Asaas.`);
-          // 1. Cancela a assinatura e expurga cobranças pendentes no Asaas
-          if (asaasSubId) {
-            await cancelAsaasSubscription(asaasSubId);
-          }
+          console.log(`[Asaas Webhook] 1ª fatura vencida sem pagamento para ${effectiveSlug}. Cancelando cobrança avulsa no Asaas e marcando status 'abandoned_checkout'.`);
+          // 1. Cancela a cobrança avulsa no Asaas (DELETE /v3/payments/{id})
           if (payment.id) {
             await cancelAsaasPayment(payment.id);
           }
+          if (asaasSubId) {
+            await cancelAsaasSubscription(asaasSubId);
+          }
 
-          // 2. Marca status como cancelado e mantém site offline
+          // 2. Marca status como 'abandoned_checkout' sem gerar cobranças futuras nem inadimplência
           if (sub) {
-            sub.status = 'cancelled';
-            sub.siteStatus = 'cancelled';
-            (sub as any).site_status = 'cancelled';
-            sub.cancellationReason = '1ª fatura vencida sem pagamento (cancelamento automático de proteção)';
+            sub.status = 'abandoned_checkout';
+            sub.siteStatus = 'abandoned_checkout';
+            (sub as any).site_status = 'abandoned_checkout';
+            sub.cancellationReason = '1ª parcela vencida sem pagamento (checkout abandonado)';
             sub.cancelledAt = nowIso;
             sub.updatedAt = nowIso;
           }
@@ -321,12 +331,19 @@ export async function POST(req: NextRequest) {
       case 'PAYMENT_REFUNDED':
       case 'PAYMENT_DELETED':
       case 'SUBSCRIPTION_DELETED': {
-        // Cancelamento definitivo ou estorno
-        console.log(`[Asaas Webhook] Cancelamento definitivo recebido (${event}) para ${effectiveSlug}.`);
+        // Se foi deleção de 1ª parcela não paga, marca como abandoned_checkout
+        const isFirst =
+          externalRef.includes('first_installment') ||
+          !sub?.lastPaymentDate ||
+          !sub?.asaasSubscriptionId;
+
+        const targetStatus = isFirst ? 'abandoned_checkout' : 'cancelled';
+        console.log(`[Asaas Webhook] Cancelamento ou deleção recebido (${event}) para ${effectiveSlug}. Marcando ${targetStatus}.`);
+
         if (sub) {
-          sub.status = 'cancelled';
-          sub.siteStatus = 'cancelled';
-          (sub as any).site_status = 'cancelled';
+          sub.status = targetStatus;
+          sub.siteStatus = targetStatus;
+          (sub as any).site_status = targetStatus;
           sub.cancelledAt = nowIso;
           sub.updatedAt = nowIso;
         }
@@ -354,8 +371,11 @@ export async function POST(req: NextRequest) {
           updatePayload.status = sub.status;
           updatePayload.site_status = sub.status;
         }
-        if (asaasSubId) updatePayload.asaas_subscription_id = asaasSubId;
-        if (asaasCustId) updatePayload.asaas_customer_id = asaasCustId;
+        const finalSubId = sub?.asaasSubscriptionId || asaasSubId;
+        if (finalSubId) updatePayload.asaas_subscription_id = finalSubId;
+        const finalCustId = sub?.asaasCustomerId || asaasCustId;
+        if (finalCustId) updatePayload.asaas_customer_id = finalCustId;
+        if (payment.id) updatePayload.asaas_payment_id = payment.id;
         if (sub?.lastPaymentDate) updatePayload.last_payment_date = sub.lastPaymentDate;
         if (sub?.nextRenewalDate) updatePayload.next_renewal_date = sub.nextRenewalDate;
         if (sub?.asaasInvoiceUrl) updatePayload.checkout_url = sub.asaasInvoiceUrl;
@@ -364,6 +384,19 @@ export async function POST(req: NextRequest) {
           .from('subscriptions')
           .update(updatePayload)
           .or(`site_slug.eq.${siteSlug || sub?.siteSlug},id.eq.${sub?.id}`);
+
+        // Atualiza a tabela sites no Supabase para refletir o status de publicação
+        try {
+          const isPublished = sub?.status === 'active';
+          await supabase
+            .from('sites')
+            .update({
+              status: sub?.status || 'draft',
+              is_published: isPublished,
+              updated_at: nowIso
+            })
+            .eq('slug', siteSlug || sub?.siteSlug);
+        } catch {}
       } catch (sbErr) {
         console.warn('[Asaas Webhook] Aviso ao sincronizar com Supabase:', sbErr);
       }

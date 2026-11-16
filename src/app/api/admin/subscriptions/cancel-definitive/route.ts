@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDb, writeDb } from '@/lib/db';
-import { cancelDefinitiveInSupabase } from '@/lib/supabase';
-import { cancelAsaasSubscription } from '@/services/asaas';
+import { cancelDefinitiveInSupabase, getSupabaseAdmin } from '@/lib/supabase';
+import { cancelAsaasSubscription, cancelAsaasPayment, cancelAllPendingCharges } from '@/services/asaas';
 import { setSlugSuspended } from '@/lib/site-storage';
 
 const VERCEL_TOKEN =
@@ -32,15 +32,44 @@ export async function POST(req: NextRequest) {
       s => (cleanSlug && s.siteSlug?.toLowerCase() === cleanSlug) || (cleanId && s.id === cleanId)
     );
 
-    const asaasSubId = sub?.asaasSubscriptionId || sub?.asaas_subscription_id;
+    let asaasSubId = sub?.asaasSubscriptionId || sub?.asaas_subscription_id;
+    let asaasPayId = sub?.asaasPaymentId || (sub as any)?.asaas_payment_id;
+    let asaasCustId = sub?.asaasCustomerId || (sub as any)?.asaas_customer_id;
     const targetSlug = sub?.siteSlug || cleanSlug;
     const customDomain = sub?.custom_domain || sub?.customDomain;
     const vercelProjectId = sub?.vercel_project_id || sub?.vercelProjectId;
 
-    // 1. ASAAS: Deleta a assinatura e cessa futuras cobranças
+    // Se faltar algum identificador do Asaas, busca no Supabase
+    if (!asaasSubId || !asaasPayId || !asaasCustId) {
+      try {
+        const supabase = getSupabaseAdmin();
+        const { data: supaRows } = await supabase
+          .from('subscriptions')
+          .select('asaas_subscription_id, asaas_payment_id, asaas_customer_id')
+          .or(`site_slug.eq.${targetSlug},id.eq.${cleanId}`)
+          .limit(1);
+        if (supaRows && supaRows.length > 0) {
+          if (!asaasSubId) asaasSubId = supaRows[0].asaas_subscription_id;
+          if (!asaasPayId) asaasPayId = supaRows[0].asaas_payment_id;
+          if (!asaasCustId) asaasCustId = supaRows[0].asaas_customer_id;
+        }
+      } catch (e) {}
+    }
+
+    // 1. ASAAS: Cancela a assinatura e expurga cobranças avulsas pendentes
     let asaasCancelled = false;
     if (asaasSubId) {
       asaasCancelled = await cancelAsaasSubscription(asaasSubId);
+    }
+    if (asaasPayId) {
+      await cancelAsaasPayment(asaasPayId);
+    }
+    if (asaasSubId || asaasCustId) {
+      await cancelAllPendingCharges({
+        subscriptionId: asaasSubId || undefined,
+        customerId: asaasCustId || undefined,
+        siteSlug: targetSlug
+      });
     }
 
     // 2. VERCEL: Remove domínios vinculados e suspende no Edge Config

@@ -37,6 +37,9 @@ export interface SubscriptionParams {
   siteSlug: string;
   operatorSerial?: string;
   value?: number;
+  nextDueDateDays?: number;
+  nextDueDate?: string;
+  description?: string;
 }
 
 export interface IndividualPaymentParams {
@@ -47,6 +50,7 @@ export interface IndividualPaymentParams {
   value?: number;
   description?: string;
   dueDateDays?: number;
+  isFirstInstallment?: boolean;
 }
 
 /**
@@ -62,9 +66,15 @@ export async function createIndividualPayment(params: IndividualPaymentParams): 
   const dueDateObj = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
   const dueDate = dueDateObj.toISOString().split('T')[0];
 
-  const externalReference = `${params.leadToken || 'lead'}|${params.siteSlug}|${params.operatorId || 'OP-0001'}`;
+  const isFirst = params.isFirstInstallment !== false;
+  const externalReference = isFirst
+    ? `${params.leadToken || 'lead'}|${params.siteSlug}|${params.operatorId || 'OP-0001'}|first_installment`
+    : `${params.leadToken || 'lead'}|${params.siteSlug}|${params.operatorId || 'OP-0001'}`;
+
   const description =
-    params.description || `Presença Digital Oficial - ${params.siteSlug}.webbilly.com.br`;
+    params.description || (isFirst
+      ? `1ª Mensalidade - Presença Digital ${params.siteSlug}.webbilly.com.br`
+      : `Presença Digital Oficial - ${params.siteSlug}.webbilly.com.br`);
 
   const payload = {
     customer: params.customerId,
@@ -190,9 +200,10 @@ export async function createSubscription(params: SubscriptionParams): Promise<{
   invoiceUrl: string;
   nextDueDate: string;
 }> {
-  // Próximo vencimento: 3 dias a partir de hoje (formato YYYY-MM-DD)
-  const dueDateObj = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
-  const nextDueDate = dueDateObj.toISOString().split('T')[0];
+  // Próximo vencimento: 30 dias a partir de hoje (padrão) para não duplicar a 1ª parcela já paga
+  const days = params.nextDueDateDays !== undefined ? params.nextDueDateDays : 30;
+  const dueDateObj = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+  const nextDueDate = params.nextDueDate || dueDateObj.toISOString().split('T')[0];
 
   const externalReference = `${params.siteSlug}:::${params.operatorSerial || ''}`;
 
@@ -202,7 +213,7 @@ export async function createSubscription(params: SubscriptionParams): Promise<{
     value: params.value || 29.9,
     nextDueDate,
     cycle: 'MONTHLY',
-    description: 'Presença Digital Oficial - Webbilly',
+    description: params.description || `Presença Digital Oficial - ${params.siteSlug}.webbilly.com.br`,
     externalReference
   };
 

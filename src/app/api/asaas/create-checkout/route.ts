@@ -186,12 +186,12 @@ async function handleCreateCheckout(req: NextRequest, body: any) {
     );
   }
 
-  // 2. Cria cobrança individual no Asaas
+  // 2. Cria cobrança única/avulsa inicial no Asaas (JAMAIS cria assinatura recorrente aqui)
   const isProprio = plan === 'proprio';
   const chargeValue = isProprio ? 490.0 : 29.9;
   const description = isProprio
     ? `Site Completo + Domínio Próprio (${selectedDomain}) - Webbilly`
-    : `Presença Digital Oficial - ${cleanSlug}.webbilly.com.br`;
+    : `1ª Mensalidade - Presença Digital ${cleanSlug}.webbilly.com.br`;
 
   let paymentResult: { paymentId: string; invoiceUrl: string; dueDate: string };
   try {
@@ -202,7 +202,8 @@ async function handleCreateCheckout(req: NextRequest, body: any) {
       operatorId,
       value: chargeValue,
       description,
-      dueDateDays: 2
+      dueDateDays: 1,
+      isFirstInstallment: true
     });
   } catch (payErr: any) {
     console.error('[Asaas createIndividualPayment Error]:', payErr);
@@ -216,19 +217,26 @@ async function handleCreateCheckout(req: NextRequest, body: any) {
   const nowIso = new Date().toISOString();
 
   // 3. Atualiza db.subscriptions
+  let targetSub: SubscriptionRecord;
   if (sub) {
     sub.clientName = clientName;
     sub.clientPhone = clientPhone || sub.clientPhone;
     sub.clientEmail = cleanEmail;
     sub.clientCpfCnpj = cleanCpfCnpj;
+    sub.status = 'awaiting_first_payment';
+    sub.siteStatus = 'awaiting_first_payment';
+    (sub as any).site_status = 'awaiting_first_payment';
     sub.asaasCustomerId = asaasCustomerId;
     sub.asaasInvoiceUrl = invoiceUrl;
     sub.checkoutUrl = invoiceUrl;
     (sub as any).asaasPaymentId = paymentId;
     (sub as any).asaas_payment_id = paymentId;
+    sub.asaasSubscriptionId = null;
+    (sub as any).asaas_subscription_id = null;
     sub.updatedAt = nowIso;
+    targetSub = sub;
   } else {
-    sub = {
+    targetSub = {
       id: `sub_${cleanSlug}`,
       leadToken: leadToken || `lead_${cleanSlug}`,
       siteSlug: cleanSlug,
@@ -241,7 +249,7 @@ async function handleCreateCheckout(req: NextRequest, body: any) {
       operatorToken: operator?.serialToken || operatorSerial,
       monthlyPrice: chargeValue,
       commissionMonthly: isProprio ? 147.0 : 10.0,
-      status: 'pending',
+      status: 'awaiting_first_payment',
       deployedUrl: `https://${cleanSlug}.webbilly.com.br`,
       asaasCustomerId,
       asaasInvoiceUrl: invoiceUrl,
@@ -249,38 +257,56 @@ async function handleCreateCheckout(req: NextRequest, body: any) {
       createdAt: nowIso,
       updatedAt: nowIso
     };
-    (sub as any).asaasPaymentId = paymentId;
-    (sub as any).asaas_payment_id = paymentId;
-    db.subscriptions.unshift(sub);
+    (targetSub as any).asaasPaymentId = paymentId;
+    (targetSub as any).asaas_payment_id = paymentId;
+    targetSub.asaasSubscriptionId = null;
+    (targetSub as any).asaas_subscription_id = null;
+    db.subscriptions.unshift(targetSub);
   }
 
   writeDb(db);
 
-  // 4. Salva no Supabase
+  // 4. Salva no Supabase com status = 'awaiting_first_payment' e asaas_subscription_id = null
   try {
     await upsertSubscriptionInSupabase({
-      ...sub,
-      id: sub.id,
-      leadToken: sub.leadToken,
+      ...targetSub,
+      id: targetSub.id,
+      leadToken: targetSub.leadToken,
       siteSlug: cleanSlug,
       clientName,
       clientPhone,
       clientEmail: cleanEmail,
       checkoutUrl: invoiceUrl,
-      status: 'pending'
+      status: 'awaiting_first_payment',
+      asaasSubscriptionId: null
     });
 
     const supabase = getSupabaseAdmin();
     await supabase
       .from('subscriptions')
       .update({
+        status: 'awaiting_first_payment',
+        site_status: 'awaiting_first_payment',
         asaas_customer_id: asaasCustomerId,
         asaas_payment_id: paymentId,
+        asaas_subscription_id: null,
         checkout_url: invoiceUrl,
         client_cpf_cnpj: cleanCpfCnpj,
         updated_at: nowIso
       })
-      .or(`site_slug.eq.${cleanSlug},id.eq.${sub.id}`);
+      .or(`site_slug.eq.${cleanSlug},id.eq.${targetSub.id}`);
+
+    // Garante que a tabela sites permaneça em rascunho
+    try {
+      await supabase
+        .from('sites')
+        .update({
+          status: 'awaiting_first_payment',
+          is_published: false,
+          updated_at: nowIso
+        })
+        .eq('slug', cleanSlug);
+    } catch {}
   } catch (supaErr) {
     console.warn('[Asaas Checkout Supabase sync warning]:', supaErr);
   }

@@ -232,12 +232,14 @@ export interface SubscriptionRecord {
   operatorToken?: string;
   monthlyPrice: number;
   commissionMonthly?: number;
-  status: 'active' | 'pending' | 'suspended' | 'cancelled' | 'draft';
+  status: 'active' | 'pending' | 'suspended' | 'cancelled' | 'draft' | 'awaiting_first_payment' | 'abandoned_checkout';
   deployedUrl?: string;
   asaasCustomerId?: string;
   asaas_customer_id?: string;
-  asaasSubscriptionId?: string;
-  asaas_subscription_id?: string;
+  asaasSubscriptionId?: string | null;
+  asaas_subscription_id?: string | null;
+  asaasPaymentId?: string | null;
+  asaas_payment_id?: string | null;
   asaasInvoiceUrl?: string;
   vercelProjectId?: string;
   vercel_project_id?: string;

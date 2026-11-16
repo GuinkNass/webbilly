@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDb, writeDb } from '@/lib/db';
-import { cancelAllPendingCharges, cancelAsaasSubscription } from '@/services/asaas';
+import { cancelAllPendingCharges, cancelAsaasSubscription, cancelAsaasPayment } from '@/services/asaas';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { setSlugSuspended } from '@/lib/site-storage';
 
@@ -18,18 +18,22 @@ export async function POST(req: NextRequest) {
     // Caso solicite cancelamento em lote de todas as pendências não pagas
     if (cancelAll) {
       const pendingSubs = db.subscriptions.filter(
-        s => s.status === 'pending' && !s.lastPaymentDate
+        s => (s.status === 'pending' || s.status === 'awaiting_first_payment' || s.status === 'abandoned_checkout') && !s.lastPaymentDate
       );
 
       let totalCancelled = 0;
       for (const s of pendingSubs) {
         const asaasSubId = s.asaasSubscriptionId || (s as any).asaas_subscription_id;
         const asaasCustId = s.asaasCustomerId || (s as any).asaas_customer_id;
+        const asaasPayId = (s as any).asaasPaymentId || (s as any).asaas_payment_id;
 
+        if (asaasPayId) {
+          await cancelAsaasPayment(asaasPayId);
+        }
         if (asaasSubId || asaasCustId) {
           await cancelAllPendingCharges({
-            subscriptionId: asaasSubId,
-            customerId: asaasCustId,
+            subscriptionId: asaasSubId || undefined,
+            customerId: asaasCustId || undefined,
             siteSlug: s.siteSlug
           });
         }
@@ -62,14 +66,14 @@ export async function POST(req: NextRequest) {
             cancelled_at: nowIso,
             updated_at: nowIso
           })
-          .eq('status', 'pending');
+          .in('status', ['pending', 'awaiting_first_payment', 'abandoned_checkout']);
       } catch (sbErr) {
         console.warn('[Cancel Pending Batch] Aviso Supabase:', sbErr);
       }
 
       return NextResponse.json({
         success: true,
-        message: `${totalCancelled} assinaturas pendentes foram canceladas e limpas no Asaas.`,
+        message: `${totalCancelled} cobranças pendentes foram canceladas e limpas no Asaas.`,
         totalCancelled
       });
     }
@@ -92,16 +96,37 @@ export async function POST(req: NextRequest) {
         (cleanId && (s.asaasSubscriptionId === cleanId || (s as any).asaas_subscription_id === cleanId))
     );
 
-    const asaasSubId = sub?.asaasSubscriptionId || (sub as any)?.asaas_subscription_id || cleanId;
-    const asaasCustId = sub?.asaasCustomerId || (sub as any)?.asaas_customer_id;
+    let asaasSubId = sub?.asaasSubscriptionId || (sub as any)?.asaas_subscription_id || (cleanId.startsWith('sub_') ? cleanId : undefined);
+    let asaasPayId = (sub as any)?.asaasPaymentId || (sub as any)?.asaas_payment_id || (cleanId.startsWith('pay_') ? cleanId : undefined);
+    let asaasCustId = sub?.asaasCustomerId || (sub as any)?.asaas_customer_id;
     const targetSlug = sub?.siteSlug || cleanSlug;
+
+    // Se faltar algum identificador, busca no Supabase
+    if (!asaasSubId || !asaasPayId || !asaasCustId) {
+      try {
+        const supabase = getSupabaseAdmin();
+        const { data: supaRows } = await supabase
+          .from('subscriptions')
+          .select('asaas_subscription_id, asaas_payment_id, asaas_customer_id')
+          .or(`site_slug.eq.${targetSlug},id.eq.${cleanId}`)
+          .limit(1);
+        if (supaRows && supaRows.length > 0) {
+          if (!asaasSubId) asaasSubId = supaRows[0].asaas_subscription_id;
+          if (!asaasPayId) asaasPayId = supaRows[0].asaas_payment_id;
+          if (!asaasCustId) asaasCustId = supaRows[0].asaas_customer_id;
+        }
+      } catch (e) {}
+    }
 
     // Cancela no Asaas e expurga cobranças pendentes
     let asaasResult = { cancelledSubscriptions: 0, cancelledPayments: 0 };
+    if (asaasPayId) {
+      await cancelAsaasPayment(asaasPayId);
+    }
     if (asaasSubId || asaasCustId) {
       asaasResult = await cancelAllPendingCharges({
-        subscriptionId: asaasSubId,
-        customerId: asaasCustId,
+        subscriptionId: asaasSubId || undefined,
+        customerId: asaasCustId || undefined,
         siteSlug: targetSlug
       });
     } else if (asaasSubId) {

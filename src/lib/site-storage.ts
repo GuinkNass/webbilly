@@ -6,7 +6,7 @@ import { fetchSiteFromSupabase, updateSiteStatusInSupabase, getSupabaseAdmin } f
 export interface SiteRecord {
   siteSlug: string;
   clientName: string;
-  status: 'active' | 'suspended' | 'pending' | 'cancelled' | 'draft';
+  status: 'active' | 'suspended' | 'pending' | 'cancelled' | 'draft' | 'awaiting_first_payment' | 'abandoned_checkout';
   deployedUrl: string;
   monthlyPrice: number;
   checkoutUrl: string;
