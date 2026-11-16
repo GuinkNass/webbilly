@@ -164,6 +164,7 @@ export default function BillyWebStudio({
   // =========================================================================
   // TAB 2: GERADOR & IA (DESKTOP SUITE WIZARD)
   // =========================================================================
+  const MAX_PHOTOS = 25;
   const [selectedTemplateId, setSelectedTemplateId] = useState('barbearia-crop-vintage');
   const [isRecommendingTemplate, setIsRecommendingTemplate] = useState(false);
   const [templateRecommendationReason, setTemplateRecommendationReason] = useState('');
@@ -366,13 +367,13 @@ export default function BillyWebStudio({
         setRealPhotos(data.photos);
         setRealPhotosSuccessNotice(`✨ ${data.photos.length} fotos reais encontradas no Google / Instagram!`);
 
-        // Se a galeria atual só tem fotos padrão de stock, substitui automaticamente pelas reais
+        // Se a galeria atual só tem fotos padrão de stock, substitui automaticamente pelas reais (até MAX_PHOTOS)
         setSiteForm((prev) => {
           const hasCustomPhotos = prev.galleryPhotos.some(
             (p) => !p.includes('unsplash.com') && !p.includes('pixabay.com')
           );
           if (!hasCustomPhotos && data.photos.length > 0) {
-            const urls = data.photos.slice(0, 8).map((p: any) => p.url);
+            const urls = data.photos.slice(0, MAX_PHOTOS).map((p: any) => p.url);
             return {
               ...prev,
               heroPhoto: urls[0] || prev.heroPhoto,
@@ -393,10 +394,10 @@ export default function BillyWebStudio({
     }
   };
 
-  // Importar e aplicar todas as fotos reais selecionadas para o site
+  // Importar e aplicar todas as fotos reais selecionadas para o site (até MAX_PHOTOS = 25)
   const handleApplyRealPhotosToSite = () => {
     if (realPhotos.length === 0) return;
-    const urls = realPhotos.slice(0, 8).map((p) => p.url);
+    const urls = realPhotos.slice(0, MAX_PHOTOS).map((p) => p.url);
     setSiteForm((prev) => ({
       ...prev,
       heroPhoto: urls[0] || prev.heroPhoto,
@@ -668,20 +669,61 @@ export default function BillyWebStudio({
     reader.readAsDataURL(file);
   };
 
-  const handleAddCustomPhoto = () => {
-    if (!customPhotoUrl.trim()) return;
+  const handleTogglePhoto = (targetUrl: string) => {
+    if (!targetUrl) return;
+    setSiteForm((prev) => {
+      const isSelected = prev.galleryPhotos.includes(targetUrl);
+      if (isSelected) {
+        const nextGallery = prev.galleryPhotos.filter((p) => p !== targetUrl);
+        const nextHero = prev.heroPhoto === targetUrl ? (nextGallery[0] || '') : prev.heroPhoto;
+        return { ...prev, galleryPhotos: nextGallery, heroPhoto: nextHero };
+      } else {
+        if (prev.galleryPhotos.length >= MAX_PHOTOS) {
+          alert(`Limite máximo de ${MAX_PHOTOS} fotos atingido. Remova uma foto da seleção para adicionar outra.`);
+          return prev;
+        }
+        const nextGallery = [...prev.galleryPhotos, targetUrl];
+        const nextHero = !prev.heroPhoto ? targetUrl : prev.heroPhoto;
+        return { ...prev, galleryPhotos: nextGallery, heroPhoto: nextHero };
+      }
+    });
+  };
+
+  const handleClearSelectedPhotos = () => {
     setSiteForm((prev) => ({
       ...prev,
-      galleryPhotos: [customPhotoUrl.trim(), ...prev.galleryPhotos]
+      galleryPhotos: [],
+      heroPhoto: ''
+    }));
+    setRealPhotosSuccessNotice('Seleção de fotos limpa.');
+    setTimeout(() => setRealPhotosSuccessNotice(null), 3000);
+  };
+
+  const handleAddCustomPhoto = () => {
+    if (!customPhotoUrl.trim()) return;
+    const cleanUrl = customPhotoUrl.trim();
+    if (siteForm.galleryPhotos.length >= MAX_PHOTOS) {
+      alert(`Limite máximo de ${MAX_PHOTOS} fotos atingido.`);
+      return;
+    }
+    setSiteForm((prev) => ({
+      ...prev,
+      heroPhoto: prev.heroPhoto || cleanUrl,
+      galleryPhotos: prev.galleryPhotos.includes(cleanUrl) ? prev.galleryPhotos : [cleanUrl, ...prev.galleryPhotos]
     }));
     setCustomPhotoUrl('');
   };
 
   const handleRemovePhoto = (idx: number) => {
-    setSiteForm((prev) => ({
-      ...prev,
-      galleryPhotos: prev.galleryPhotos.filter((_, i) => i !== idx)
-    }));
+    setSiteForm((prev) => {
+      const nextGallery = prev.galleryPhotos.filter((_, i) => i !== idx);
+      const nextHero = prev.heroPhoto === prev.galleryPhotos[idx] ? (nextGallery[0] || '') : prev.heroPhoto;
+      return {
+        ...prev,
+        galleryPhotos: nextGallery,
+        heroPhoto: nextHero
+      };
+    });
   };
 
   const handleAddService = () => {
@@ -1815,14 +1857,27 @@ export default function BillyWebStudio({
                     <span>{realPhotosLoading ? 'Buscando...' : 'Buscar Fotos Reais'}</span>
                   </button>
                   {realPhotos.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={handleApplyRealPhotosToSite}
-                      className="px-4 py-2 rounded-xl text-xs font-bold bg-white/[0.08] hover:bg-white/[0.15] text-white border border-white/[0.1] transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-[#84cc16]" />
-                      <span>Aplicar Todas no Site</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleApplyRealPhotosToSite}
+                        className="px-4 py-2 rounded-xl text-xs font-bold bg-[#84cc16]/15 hover:bg-[#84cc16] text-[#84cc16] hover:text-black border border-[#84cc16]/30 transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Aplicar Todas ({Math.min(realPhotos.length, MAX_PHOTOS)}) no Site</span>
+                      </button>
+
+                      {siteForm.galleryPhotos.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={handleClearSelectedPhotos}
+                          className="px-3 py-2 rounded-xl text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/20 transition flex items-center justify-center gap-1 cursor-pointer shrink-0"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Limpar Seleção</span>
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
 
@@ -1852,7 +1907,7 @@ export default function BillyWebStudio({
                     </button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5 max-h-72 overflow-y-auto pr-1 scrollbar-thin">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5 max-h-80 overflow-y-auto pr-1 scrollbar-thin">
                     {realPhotos.map((item, i) => {
                       const target = item.url;
                       const isHero = siteForm.heroPhoto === target;
@@ -1862,12 +1917,13 @@ export default function BillyWebStudio({
                       return (
                         <div
                           key={item.id || i}
-                          className={`relative rounded-xl overflow-hidden aspect-square border group transition-all ${
+                          onClick={() => handleTogglePhoto(target)}
+                          className={`relative rounded-xl overflow-hidden aspect-square border cursor-pointer transition-all duration-200 select-none group ${
                             isHero
-                              ? 'border-[#84cc16] ring-2 ring-[#84cc16]'
+                              ? 'border-[#84cc16] ring-2 ring-[#84cc16] shadow-[0_0_15px_rgba(132,204,22,0.4)]'
                               : isGallery
-                              ? 'border-emerald-500 ring-1 ring-emerald-500'
-                              : 'border-white/[0.08]'
+                              ? 'border-[#84cc16] ring-2 ring-[#84cc16]/70 shadow-md'
+                              : 'border-white/[0.08] hover:border-white/40'
                           }`}
                         >
                           <img
@@ -1875,14 +1931,15 @@ export default function BillyWebStudio({
                             alt={item.title || ''}
                             referrerPolicy="no-referrer"
                             crossOrigin="anonymous"
-                            className="w-full h-full object-cover"
-                            onError={() => {
-                              // Remove automaticamente o card da imagem quebrada ou expirada
-                              setRealPhotos((prev) => prev.filter((p) => p.id !== item.id));
+                            className="w-full h-full object-cover pointer-events-none"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.opacity = '0.3';
                             }}
                           />
+
+                          {/* Badge de Origem */}
                           <span
-                            className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
+                            className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shadow-sm z-10 pointer-events-none ${
                               item.source === 'instagram'
                                 ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
                                 : 'bg-emerald-500 text-black'
@@ -1890,32 +1947,48 @@ export default function BillyWebStudio({
                           >
                             {item.source === 'instagram' ? 'Instagram' : 'Google'}
                           </span>
-                          <div className="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1.5 transition p-1.5">
+
+                          {/* Selo ✓ Selecionada / Hero ★ */}
+                          {(isGallery || isHero) && (
+                            <span
+                              className={`absolute top-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shadow-md z-10 flex items-center gap-1 pointer-events-none ${
+                                isHero
+                                  ? 'bg-[#84cc16] text-black font-extrabold ring-1 ring-black/40'
+                                  : 'bg-[#84cc16] text-black font-extrabold'
+                              }`}
+                            >
+                              <Check className="w-2.5 h-2.5 stroke-[3]" />
+                              <span>{isHero ? 'Hero ★' : '✓ Selecionada'}</span>
+                            </span>
+                          )}
+
+                          {/* Ações Rápidas no Hover */}
+                          <div className="absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-black/90 via-black/60 to-transparent opacity-0 group-hover:opacity-100 flex items-center justify-between gap-1 transition z-20">
                             <button
                               type="button"
-                              onClick={() => setSiteForm((prev) => ({ ...prev, heroPhoto: target }))}
-                              className="px-2 py-1 rounded text-[9px] font-bold bg-[#84cc16] text-black w-full text-center cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSiteForm((prev) => ({
+                                  ...prev,
+                                  heroPhoto: target,
+                                  galleryPhotos: prev.galleryPhotos.includes(target) ? prev.galleryPhotos : [...prev.galleryPhotos, target]
+                                }));
+                              }}
+                              className="px-2 py-0.5 rounded text-[8px] font-bold bg-[#84cc16] hover:bg-[#a3e635] text-black cursor-pointer shadow"
                             >
-                              Hero ★
+                              {isHero ? 'Hero ★' : 'Definir Hero'}
                             </button>
                             <button
                               type="button"
-                              onClick={() => {
-                                if (siteForm.galleryPhotos.includes(target)) {
-                                  setSiteForm((prev) => ({
-                                    ...prev,
-                                    galleryPhotos: prev.galleryPhotos.filter((p) => p !== target)
-                                  }));
-                                } else {
-                                  setSiteForm((prev) => ({
-                                    ...prev,
-                                    galleryPhotos: [...prev.galleryPhotos, target]
-                                  }));
-                                }
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleTogglePhoto(target);
                               }}
-                              className="px-2 py-1 rounded text-[9px] font-bold bg-white text-black w-full text-center cursor-pointer"
+                              className={`px-2 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                                isGallery ? 'bg-rose-500/80 hover:bg-rose-600 text-white' : 'bg-white hover:bg-zinc-200 text-black'
+                              }`}
                             >
-                              {isGallery ? 'Remover' : '+ Galeria'}
+                              {isGallery ? 'Remover' : '+ Selecionar'}
                             </button>
                           </div>
                         </div>
@@ -1958,39 +2031,43 @@ export default function BillyWebStudio({
                     return (
                       <div
                         key={i}
-                        className={`relative rounded-xl overflow-hidden aspect-video border group transition-all ${
+                        onClick={() => handleTogglePhoto(target)}
+                        className={`relative rounded-xl overflow-hidden aspect-video border cursor-pointer group transition-all ${
                           isHero
                             ? 'border-[#84cc16] ring-2 ring-[#84cc16]'
                             : isGallery
-                            ? 'border-emerald-500'
-                            : 'border-white/[0.08]'
+                            ? 'border-[#84cc16] ring-1 ring-[#84cc16]'
+                            : 'border-white/[0.08] hover:border-white/30'
                         }`}
                       >
-                        <img src={img.previewUrl} alt="" className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition p-1">
+                        <img src={img.previewUrl} alt="" className="w-full h-full object-cover pointer-events-none" />
+                        {(isGallery || isHero) && (
+                          <span className="absolute top-1 right-1 px-1 py-0.5 rounded text-[7px] font-black uppercase bg-[#84cc16] text-black shadow">
+                            {isHero ? 'Hero ★' : '✓'}
+                          </span>
+                        )}
+                        <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1 transition p-1">
                           <button
                             type="button"
-                            onClick={() => setSiteForm((prev) => ({ ...prev, heroPhoto: target }))}
-                            className="px-2 py-0.5 rounded text-[9px] font-bold bg-[#84cc16] text-black w-full text-center cursor-pointer"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSiteForm((prev) => ({
+                                ...prev,
+                                heroPhoto: target,
+                                galleryPhotos: prev.galleryPhotos.includes(target) ? prev.galleryPhotos : [...prev.galleryPhotos, target]
+                              }));
+                            }}
+                            className="px-2 py-0.5 rounded text-[8px] font-bold bg-[#84cc16] text-black cursor-pointer"
                           >
                             Hero ★
                           </button>
                           <button
                             type="button"
-                            onClick={() => {
-                              if (siteForm.galleryPhotos.includes(target)) {
-                                setSiteForm((prev) => ({
-                                  ...prev,
-                                  galleryPhotos: prev.galleryPhotos.filter((p) => p !== target)
-                                }));
-                              } else {
-                                setSiteForm((prev) => ({
-                                  ...prev,
-                                  galleryPhotos: [...prev.galleryPhotos, target]
-                                }));
-                              }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTogglePhoto(target);
                             }}
-                            className="px-2 py-0.5 rounded text-[9px] font-bold bg-white text-black w-full text-center cursor-pointer"
+                            className="px-2 py-0.5 rounded text-[8px] font-bold bg-white text-black cursor-pointer"
                           >
                             {isGallery ? 'Remover' : '+ Galeria'}
                           </button>
@@ -2024,55 +2101,81 @@ export default function BillyWebStudio({
               </div>
             )}
 
-            {/* Fotos Atualmente Selecionadas para o Site */}
-            <div className="pt-4 border-t border-white/[0.06] space-y-2">
+            {/* Fotos Atualmente Selecionadas para o Site (Até 25 Fotos) */}
+            <div className="pt-4 border-t border-white/[0.06] space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-zinc-300 block">
-                  Fotos Selecionadas para o Site ({siteForm.galleryPhotos.length}):
-                </span>
-                <span className="text-[10px] text-zinc-500 font-mono">
-                  Passe o mouse na miniatura para excluir
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold text-zinc-300 block">
+                    Fotos Selecionadas para o Site ({siteForm.galleryPhotos.length} / {MAX_PHOTOS}):
+                  </span>
+                  {siteForm.galleryPhotos.length > 0 && (
+                    <span className="text-[9px] uppercase font-mono px-2 py-0.5 rounded-full bg-[#84cc16]/15 text-[#a3e635] border border-[#84cc16]/30 font-bold">
+                      Prontas para o Site
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  {siteForm.galleryPhotos.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleClearSelectedPhotos}
+                      className="text-[10px] text-rose-400 hover:text-rose-300 underline underline-offset-2 cursor-pointer font-medium"
+                    >
+                      Limpar Todas
+                    </button>
+                  )}
+                  <span className="text-[10px] text-zinc-500 font-mono hidden sm:inline">
+                    Clique no X para remover
+                  </span>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {siteForm.galleryPhotos.map((photo, i) => {
-                  const isGoogle = photo.includes('googleusercontent.com') || photo.includes('places.googleapis.com');
-                  const isInstagram = photo.includes('cdninstagram.com') || photo.includes('fbcdn.net');
-                  const displayThumb = isGoogle || isInstagram
-                    ? `/api/studio/image-proxy?url=${encodeURIComponent(photo)}`
-                    : photo;
 
-                  return (
-                    <div key={i} className="relative w-24 h-24 rounded-xl overflow-hidden border border-white/[0.1] group">
-                      <img
-                        src={displayThumb}
-                        alt=""
-                        referrerPolicy="no-referrer"
-                        crossOrigin="anonymous"
-                        className="w-full h-full object-cover"
-                        onError={() => handleRemovePhoto(i)}
-                      />
-                      {(isGoogle || isInstagram) && (
-                        <span
-                          className={`absolute bottom-1 left-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase shadow-md flex items-center gap-0.5 z-10 pointer-events-none ${
-                            isInstagram ? 'bg-purple-600 text-white' : 'bg-[#84cc16] text-black'
-                          }`}
-                        >
-                          <Camera className="w-2.5 h-2.5" />
-                          <span>{isInstagram ? 'Instagram' : 'Google Maps'}</span>
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => handleRemovePhoto(i)}
-                        className="absolute inset-0 bg-rose-950/80 text-rose-300 opacity-0 group-hover:opacity-100 flex items-center justify-center transition cursor-pointer z-20"
+              {siteForm.galleryPhotos.length === 0 ? (
+                <div className="p-4 rounded-xl bg-[#07090e]/40 border border-dashed border-white/[0.08] text-center text-xs text-zinc-500">
+                  Nenhuma foto selecionada ainda. Clique nas fotos acima para selecionar ou em "Aplicar Todas no Site".
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2.5 max-h-56 overflow-y-auto p-1 scrollbar-thin">
+                  {siteForm.galleryPhotos.map((photo, i) => {
+                    const isHero = siteForm.heroPhoto === photo;
+                    const isGoogle = photo.includes('googleusercontent.com') || photo.includes('places.googleapis.com');
+                    const isInstagram = photo.includes('cdninstagram.com') || photo.includes('fbcdn.net');
+                    const displayThumb = isGoogle || isInstagram
+                      ? `/api/studio/image-proxy?url=${encodeURIComponent(photo)}`
+                      : photo;
+
+                    return (
+                      <div
+                        key={i}
+                        className={`relative w-20 h-20 rounded-xl overflow-hidden border group transition ${
+                          isHero ? 'border-[#84cc16] ring-2 ring-[#84cc16]' : 'border-white/[0.12] hover:border-white/30'
+                        }`}
                       >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
+                        <img
+                          src={displayThumb}
+                          alt=""
+                          referrerPolicy="no-referrer"
+                          crossOrigin="anonymous"
+                          className="w-full h-full object-cover"
+                        />
+                        {isHero && (
+                          <span className="absolute top-1 left-1 px-1 py-0.5 rounded text-[7px] font-black bg-[#84cc16] text-black uppercase shadow">
+                            Hero ★
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePhoto(i)}
+                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/80 hover:bg-rose-600 text-white flex items-center justify-center transition cursor-pointer z-20 shadow"
+                          title="Remover foto"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 

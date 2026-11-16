@@ -1,5 +1,6 @@
 import { findTemplateById } from './templates';
 import { BlockToggles, DEFAULT_BLOCK_TOGGLES } from './categories';
+import { renderDesktopTemplateHtml, getDesktopTemplatePromptSkeleton } from '../desktop-templates';
 
 export interface ServiceItem {
   name: string;
@@ -150,11 +151,13 @@ export async function buildSiteHtml(input: SiteGenerationInput): Promise<{ html:
     : (validGallery.length > 0 ? validGallery[0] : tpl.previewImg);
   const gallery = validGallery.length > 0 ? validGallery : [heroImg, tpl.previewImg];
 
+  const templateSkeleton = getDesktopTemplatePromptSkeleton(input.templateId || 'barbearia-crop-vintage', input);
+
   // 1. Tenta geração profunda via Gemini AI se houver API Key configurada
   if (apiKey) {
     try {
       const prompt = `Você é o compilador sênior de Landing Pages do Billy Suite Desktop.
-Sua missão é gerar o código HTML/Tailwind CSS COMPLETO, ultra-responsivo e de altíssima conversão para o seguinte comércio local:
+Sua missão é adaptar e preencher o template de Landing Page escolhido ("${tpl.name}" - ${input.templateId}) para o seguinte comércio local, preservando estritamente a arquitetura de layout, tipografia Google Fonts, seções e classes do template desktop de referência fornecido abaixo:
 
 1. DADOS DO NEGÓCIO:
 - Nome: "${input.businessName}"
@@ -171,7 +174,7 @@ Sua missão é gerar o código HTML/Tailwind CSS COMPLETO, ultra-responsivo e de
 - Cor de Destaque Primária (Hex): "${activeAccent}"
 - Logotipo: "${input.logoUrl || ''}"
 - Foto Hero Principal (OBRIGATÓRIO USAR ESTA URL NO HERO): "${heroImg}"
-- Galeria de Fotos Reais: ${JSON.stringify(gallery)}
+- Galeria de Fotos Reais Selecionadas pelo Operador (distribua até 25 fotos entre o Hero, Galeria e Cards de Serviços): ${JSON.stringify(gallery)}
 - Diferenciais Exclusivos: "${input.differentiators || input.tagline || 'Atendimento pontual, estrutura moderna, profissionais experientes e facilidade no pagamento.'}"
 
 2. CARDÁPIO / SERVIÇOS & PREÇOS FORNECIDOS:
@@ -185,25 +188,17 @@ ${JSON.stringify(input.reviews || [])}
 
 ${input.uploadedText ? `5. TEXTO ADICIONAL / EXTRAÇÃO DE CARDÁPIO:\n"""\n${input.uploadedText}\n"""\nIncorpore fielmente esses itens e preços na tabela do site.` : ''}
 
-6. STATUS DOS BLOCOS (LIGAR / DESLIGAR):
-- Top Notification Bar: ${blocks.topBar ? 'ATIVO' : 'DESLIGADO'}
-- Hero Principal: ${blocks.hero ? 'ATIVO' : 'DESLIGADO'}
-- Sobre Nós / História: ${blocks.about ? 'ATIVO' : 'DESLIGADO'}
-- Galeria de Fotos / Portfólio: ${blocks.gallery ? 'ATIVO' : 'DESLIGADO'}
-- Cardápio / Tabela de Preços: ${blocks.pricingTable ? 'ATIVO' : 'DESLIGADO'}
-- Horários de Funcionamento: ${blocks.hours ? 'ATIVO' : 'DESLIGADO'}
-- Mapa de Localização: ${blocks.map ? 'ATIVO' : 'DESLIGADO'}
-- Depoimentos e Avaliações: ${blocks.reviews ? 'ATIVO' : 'DESLIGADO'}
-- FAQ / Objeções: ${blocks.faq ? 'ATIVO' : 'DESLIGADO'}
-- Botão Flutuante de WhatsApp: ${blocks.whatsappFloat ? 'ATIVO' : 'DESLIGADO'}
+6. ESTRUTURA E ARQUITETURA DO TEMPLATE DESKTOP ESCOLHIDO (PRESERVE A IDENTIDADE VISUAL, TIPOGRAFIA E CLASSES):
+\`\`\`html
+${templateSkeleton}
+\`\`\`
 
 DIRETRIZES DE DESIGN E IMAGENS OBRIGATÓRIAS:
+- Mantenha a tipografia, estilo de fontes e estrutura HTML características do template escolhido ("${tpl.name}").
 - NUNCA renderize tags <img> com src vazio (""), nulo, "undefined" ou caminhos inventados.
 - Para o fundo ou destaque do Hero Principal, use EXATAMENTE a URL: "${heroImg}".
+- Na Galeria, use TODAS as fotos fornecidas no array de fotos reais (até 25 fotos).
 - Adicione SEMPRE em TODAS as tags <img> o atributo onerror="this.style.display='none'".
-- Inclua Tailwind CSS (<script src="https://cdn.tailwindcss.com"></script>) e FontAwesome 6 (<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">).
-- Inclua fontes Google Fonts modernas (Plus Jakarta Sans ou Inter).
-- O site deve ser escuro e premium (background #07090e ou #0b0f19) com toques luminosos na cor de destaque ${activeAccent}.
 - TODOS os botões de ação (Agendar, Pedir Orçamento, Falar com Especialista) DEVEM ter href="${whatsappLink}" target="_blank" rel="noopener noreferrer".
 - O botão flutuante de WhatsApp deve ficar fixo no canto inferior direito.
 - RETORNE EXCLUSIVAMENTE o código HTML completo final, iniciando em <!DOCTYPE html> e finalizando em </html>, sem blocos markdown (\`\`\`html) e sem qualquer texto adicional.`;
@@ -218,8 +213,8 @@ DIRETRIZES DE DESIGN E IMAGENS OBRIGATÓRIAS:
     }
   }
 
-  // 2. Motor Modular Cirúrgico do Billy Desktop (Garantia de 100% de sucesso sem mock)
-  const localHtml = generateSmartModularDesktopHtml(input, tpl, blocks, activeAccent, cleanPhone, whatsappLink);
+  // 2. Motor Modular Cirúrgico do Billy Desktop com Arquitetura Real de Templates
+  const localHtml = renderDesktopTemplateHtml(input.templateId || 'barbearia-crop-vintage', input);
   return { html: cleanHtmlResponse(localHtml, heroImg), usedAi: false };
 }
 
