@@ -41,22 +41,36 @@ import {
   Building2,
   ShieldCheck,
   SlidersHorizontal,
-  Camera
+  Camera,
+  Type,
+  CheckCheck,
+  FolderHeart,
+  Database
 } from 'lucide-react';
 import { ActionTooltip } from '@/components/ui/ActionTooltip';
 import {
   BILLY_DESKTOP_TEMPLATES,
   DesktopTemplate,
   findTemplateById,
-  recommendTemplateForNiche
+  recommendTemplateForNiche,
+  getSuggestedServicesForNiche,
+  getSuggestedCtaForNiche,
+  getSuggestedTaglineForNiche,
+  getSuggestedDescriptionForNiche,
+  getSuggestedReviewsForNiche
 } from '@/lib/billy-desktop-port/templates';
 import {
   CATEGORY_GROUPS,
   TONES_OF_VOICE,
   ACCENT_COLORS,
+  CURATED_PALETTES,
+  CuratedPalette,
+  TYPOGRAPHY_PAIRS,
+  TypographyPair,
   BlockToggles,
   DEFAULT_BLOCK_TOGGLES
 } from '@/lib/billy-desktop-port/categories';
+import { formatHeaderName } from '@/lib/desktop-templates';
 
 interface LeadResult {
   id?: string;
@@ -76,10 +90,22 @@ interface LeadResult {
   isHighOpportunity?: boolean;
   opportunityReason?: string;
   opportunity?: 'HOT_NO_WEBSITE' | 'HAS_WEBSITE';
+  cover_photo?: string | null;
+  coverPhoto?: string | null;
   photos?: string[];
   hours?: string;
   openingHours?: string;
   realReviews?: Array<{ author: string; rating: number; text: string }>;
+}
+
+function getInitials(name: string): string {
+  if (!name) return 'BL';
+  const clean = name.replace(/^(Dr\.|Dra\.|Sr\.|Sra\.|Studio|Clínica|Barbearia|Oficina|Escritório|Advocacia)\s+/i, '').trim();
+  const words = clean.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    return (words[0][0] + words[1][0]).toUpperCase();
+  }
+  return clean.slice(0, 2).toUpperCase() || 'BL';
 }
 
 interface ProjectItem {
@@ -111,8 +137,26 @@ interface BillyWebStudioProps {
  * Previne o erro "Unexpected token 'A', 'An error o'... is not valid JSON"
  * ao converter erros HTML do servidor em mensagens legíveis.
  */
-async function safeFetchJson(url: string, options?: RequestInit): Promise<any> {
-  const res = await fetch(url, options);
+async function safeFetchJson(url: string, options?: RequestInit, timeoutMs: number = 25000): Promise<any> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...options,
+      signal: options?.signal || controller.signal
+    });
+  } catch (fetchErr: any) {
+    clearTimeout(timeoutId);
+    if (fetchErr.name === 'AbortError') {
+      throw new Error(`Tempo limite de ${Math.round(timeoutMs / 1000)}s excedido na requisição (${url}).`);
+    }
+    throw fetchErr;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
   const rawText = await res.text().catch(() => '');
   let json: any = null;
   try {
@@ -145,6 +189,11 @@ export default function BillyWebStudio({
   // =========================================================================
   // TAB 1: PROSPECTAR LEADS
   // =========================================================================
+  const [leadSourceMode, setLeadSourceMode] = useState<'google' | 'saved'>('google');
+  const [savedLeadsList, setSavedLeadsList] = useState<LeadResult[]>([]);
+  const [savedLeadsFilter, setSavedLeadsFilter] = useState('');
+  const [savedLeadsLoading, setSavedLeadsLoading] = useState(false);
+
   const [nicheQuery, setNicheQuery] = useState('Barbearia');
   const [cityQuery, setCityQuery] = useState('São Paulo, SP');
   const [leadsLoading, setLeadsLoading] = useState(false);
@@ -166,11 +215,13 @@ export default function BillyWebStudio({
   // =========================================================================
   const MAX_PHOTOS = 25;
   const [selectedTemplateId, setSelectedTemplateId] = useState('barbearia-crop-vintage');
+  const [templateCategoryFilter, setTemplateCategoryFilter] = useState<string>('todos');
   const [isRecommendingTemplate, setIsRecommendingTemplate] = useState(false);
   const [templateRecommendationReason, setTemplateRecommendationReason] = useState('');
 
   const [siteForm, setSiteForm] = useState({
     businessName: 'Barbearia Vintage Imperial',
+    shortName: 'Barbearia Vintage',
     niche: 'Barbearia Tradicional & VIP',
     city: 'São Paulo - SP',
     phone: '(11) 98765-4321',
@@ -183,6 +234,12 @@ export default function BillyWebStudio({
     toneOfVoice: 'comercial',
     theme: 'dark-neon',
     accentColor: '#84cc16',
+    primaryColor: '#84cc16',
+    backgroundColor: '#090d16',
+    surfaceColor: '#111827',
+    textColor: '#f8fafc',
+    fontPair: 'moderno-executivo',
+    paletteId: 'tech-slate-neon',
     logoUrl: '',
     heroPhoto: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1200&q=80',
     galleryPhotos: [
@@ -300,6 +357,7 @@ export default function BillyWebStudio({
     } catch {}
     handleSearchPixabay('barbearia');
     loadProjects();
+    loadSavedLeads();
   }, []);
 
   // Salvar Preset Customizado
@@ -422,6 +480,23 @@ export default function BillyWebStudio({
     }
   };
 
+  // Carrega leads salvos do Supabase / DB local para reutilizar sem gastar cota de API
+  const loadSavedLeads = async (q?: string) => {
+    try {
+      setSavedLeadsLoading(true);
+      const queryParam = q !== undefined ? q : savedLeadsFilter;
+      const url = `/api/studio/leads-salvos?operatorId=${operatorId}${queryParam ? `&q=${encodeURIComponent(queryParam)}` : ''}`;
+      const data = await safeFetchJson(url);
+      if (data && data.success && Array.isArray(data.leads)) {
+        setSavedLeadsList(data.leads);
+      }
+    } catch (err) {
+      console.warn('Erro ao carregar leads salvos:', err);
+    } finally {
+      setSavedLeadsLoading(false);
+    }
+  };
+
   // Excluir projeto do histórico
   const handleDeleteProject = async (slug: string) => {
     if (!confirm(`Tem certeza que deseja excluir o site "${slug}" do histórico?`)) return;
@@ -452,7 +527,7 @@ export default function BillyWebStudio({
       const data = await safeFetchJson('/api/studio/buscar-leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ niche, city })
+        body: JSON.stringify({ niche, city, operatorId })
       });
 
       if (!data.success) {
@@ -464,6 +539,9 @@ export default function BillyWebStudio({
       setProviderLabel(data.provider || 'Radar Comercial');
       setSearchNotice(data.message || `${results.length} comércios encontrados em ${city}.`);
       if (data.googleNotice) setGoogleNotice(data.googleNotice);
+
+      // Atualiza lista de leads salvos no banco
+      loadSavedLeads();
 
       if (results.length === 0) {
         setShowManualForm(true);
@@ -489,6 +567,7 @@ export default function BillyWebStudio({
 
     const niche = lead.niche || lead.category || nicheQuery || 'Comércio Local';
     const city = lead.city || cityQuery || 'São Paulo - SP';
+    const shortName = formatHeaderName(lead.name);
 
     // Recomendação Automática de Template pelo Nicho
     const recommendation = recommendTemplateForNiche(niche);
@@ -499,28 +578,35 @@ export default function BillyWebStudio({
     const googlePhotos = Array.isArray(lead.photos) && lead.photos.length > 0 ? lead.photos : [];
     const leadHours = lead.hours || lead.openingHours || '';
 
+    // Serviços contextuais do nicho (ZERA contaminação de nichos anteriores!)
+    const suggestedServices = getSuggestedServicesForNiche(niche, lead.name);
+    const suggestedTagline = getSuggestedTaglineForNiche(niche, lead.name, city);
+    const suggestedDescription = getSuggestedDescriptionForNiche(niche, lead.name);
+    const suggestedReviews = (Array.isArray(lead.realReviews) && lead.realReviews.length > 0)
+      ? lead.realReviews
+      : getSuggestedReviewsForNiche(niche);
+
     setSiteForm((prev) => ({
       ...prev,
       businessName: lead.name,
+      shortName,
       niche,
       city,
       phone: lead.phone || lead.whatsapp || '',
       whatsapp: cleanPhone,
       subdomain: cleanSlug || 'site-' + Date.now().toString().slice(-4),
-      tagline: `Excelência em ${niche} em ${city} com atendimento exclusivo.`,
-      description: `Na ${lead.name}, oferecemos soluções completas com profissionais qualificados e padrão de alto nível.`,
+      tagline: suggestedTagline,
+      description: suggestedDescription,
       address: lead.address || prev.address,
       accentColor: recommendation.template.accentColor,
+      primaryColor: recommendation.template.accentColor,
+      services: suggestedServices, // <-- ZERA CONTAMINAÇÃO AQUI!
       heroPhoto: googlePhotos.length > 0 ? googlePhotos[0] : prev.heroPhoto,
       galleryPhotos: googlePhotos.length > 0 ? googlePhotos : prev.galleryPhotos,
       hours: leadHours || prev.hours
     }));
 
-    if (Array.isArray(lead.realReviews) && lead.realReviews.length > 0) {
-      setSelectedLeadReviews(lead.realReviews);
-    } else {
-      setSelectedLeadReviews([]);
-    }
+    setSelectedLeadReviews(suggestedReviews);
 
     // Prepara e dispara busca de fotos reais do Google / Instagram
     const businessPhotoQuery = `${lead.name} ${city}`;
@@ -775,6 +861,7 @@ export default function BillyWebStudio({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           businessName: siteForm.businessName,
+          shortName: siteForm.shortName,
           niche: siteForm.niche,
           city: siteForm.city,
           phone: siteForm.phone,
@@ -786,7 +873,13 @@ export default function BillyWebStudio({
           description: siteForm.description,
           theme: siteForm.theme,
           templateId: selectedTemplateId,
-          accentColor: siteForm.accentColor,
+          accentColor: siteForm.accentColor || siteForm.primaryColor,
+          primaryColor: siteForm.primaryColor,
+          backgroundColor: siteForm.backgroundColor,
+          surfaceColor: siteForm.surfaceColor,
+          textColor: siteForm.textColor,
+          fontPair: siteForm.fontPair,
+          paletteId: siteForm.paletteId,
           logoUrl: siteForm.logoUrl,
           heroPhoto: siteForm.heroPhoto,
           galleryPhotos: siteForm.galleryPhotos,
@@ -1010,112 +1103,186 @@ export default function BillyWebStudio({
       </div>
 
       {/* =========================================================================
-          TAB 1: PROSPECTAR LEADS COM FEEDBACK VISUAL REAL & FALLBACK
+          TAB 1: PROSPECTAR LEADS COM FEEDBACK VISUAL REAL & BANCO PERSISTENTE
          ========================================================================= */}
       {activeTab === 'prospectar' && (
         <div className="space-y-6">
-          {/* Formulário de Busca */}
-          <div className="p-6 rounded-3xl bg-[#0e121b] border border-white/[0.06] shadow-xl space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Search className="w-4 h-4 text-[#84cc16]" />
-                  <span>Buscar Comércios Locais Sem Site Oficial</span>
-                </h3>
-                <p className="text-xs text-zinc-400 mt-0.5">
-                  Filtre por nicho e cidade para prospectar empresas com alta probabilidade de fechamento.
-                </p>
-              </div>
-
+          {/* SELETOR TOPO: NOVA BUSCA GOOGLE MAPS VS BANCO DE LEADS SALVOS */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-2 bg-[#0a0d14] border border-white/[0.08] rounded-2xl">
+            <div className="flex items-center gap-1.5 p-1 bg-[#05070a] border border-white/[0.06] rounded-xl">
               <button
                 type="button"
-                onClick={() => setShowManualForm(!showManualForm)}
-                className="text-xs text-[#84cc16] hover:underline flex items-center gap-1 font-semibold cursor-pointer shrink-0"
+                onClick={() => setLeadSourceMode('google')}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                  leadSourceMode === 'google'
+                    ? 'bg-[#84cc16] text-black shadow-md shadow-[#84cc16]/20'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{showManualForm ? 'Ocultar Cadastro Manual' : '+ Adicionar Cliente Manualmente'}</span>
+                <Search className="w-3.5 h-3.5" />
+                <span>Nova Busca no Google Maps</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setLeadSourceMode('saved');
+                  loadSavedLeads();
+                }}
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
+                  leadSourceMode === 'saved'
+                    ? 'bg-[#84cc16] text-black shadow-md shadow-[#84cc16]/20'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                <Database className="w-3.5 h-3.5" />
+                <span>📁 Meus Leads Salvos ({savedLeadsList.length})</span>
               </button>
             </div>
 
-            <form onSubmit={handleSearchLeads} className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-              <div className="sm:col-span-5">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">
-                  Ramo / Nicho:
-                </label>
-                <input
-                  type="text"
-                  value={nicheQuery}
-                  onChange={(e) => setNicheQuery(e.target.value)}
-                  placeholder="Ex: Barbearia, Hamburgueria, Odontologia..."
-                  className="w-full bg-[#07090e] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#84cc16]"
-                />
-              </div>
-
-              <div className="sm:col-span-4">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">
-                  Cidade e Estado:
-                </label>
-                <input
-                  type="text"
-                  value={cityQuery}
-                  onChange={(e) => setCityQuery(e.target.value)}
-                  placeholder="Ex: São Paulo, SP ou Campinas, SP"
-                  className="w-full bg-[#07090e] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#84cc16]"
-                />
-              </div>
-
-              <div className="sm:col-span-3 flex items-end">
-                <button
-                  type="submit"
-                  disabled={leadsLoading}
-                  className="w-full py-3 px-5 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#9ae639] disabled:opacity-50 text-black shadow-lg shadow-[#84cc16]/20 transition flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  {leadsLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Buscando comércios...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Search className="w-4 h-4" />
-                      <span>Buscar Leads</span>
-                    </>
+            {leadSourceMode === 'saved' && (
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <div className="relative flex-1 sm:w-64">
+                  <input
+                    type="text"
+                    value={savedLeadsFilter}
+                    onChange={(e) => {
+                      setSavedLeadsFilter(e.target.value);
+                      loadSavedLeads(e.target.value);
+                    }}
+                    placeholder="Filtrar nome, nicho ou cidade..."
+                    className="w-full bg-[#05070a] border border-white/[0.1] rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#84cc16]"
+                  />
+                  {savedLeadsFilter && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSavedLeadsFilter('');
+                        loadSavedLeads('');
+                      }}
+                      className="absolute right-2.5 top-2.5 text-zinc-500 hover:text-white"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
                   )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => loadSavedLeads()}
+                  disabled={savedLeadsLoading}
+                  className="p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 border border-white/[0.08] transition cursor-pointer shrink-0"
+                  title="Atualizar lista de leads salvos"
+                >
+                  <RefreshCw className={`w-4 h-4 ${savedLeadsLoading ? 'animate-spin text-[#84cc16]' : ''}`} />
                 </button>
-              </div>
-            </form>
-
-            {/* BANNERS VISÍVEIS DE STATUS E ERRO (NUNCA ENGOLIR ERROS) */}
-            {leadsError && (
-              <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-3">
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-                <div className="flex-1">
-                  <strong>Aviso na busca:</strong> {leadsError}
-                </div>
-              </div>
-            )}
-
-            {googleNotice && (
-              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
-                <span>{googleNotice}</span>
-              </div>
-            )}
-
-            {searchNotice && !leadsError && (
-              <div className="p-3 rounded-xl bg-[#84cc16]/10 border border-[#84cc16]/30 text-[#a3e635] text-xs flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-[#84cc16]" />
-                  <span>{searchNotice}</span>
-                </div>
-                {providerLabel && (
-                  <span className="text-[10px] font-mono uppercase bg-black/40 px-2 py-0.5 rounded border border-[#84cc16]/30 text-zinc-300">
-                    Fonte: {providerLabel}
-                  </span>
-                )}
               </div>
             )}
           </div>
+
+          {/* MODO GOOGLE: FORMULÁRIO DE BUSCA & STATUS */}
+          {leadSourceMode === 'google' && (
+            <div className="p-6 rounded-3xl bg-[#0e121b] border border-white/[0.06] shadow-xl space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Search className="w-4 h-4 text-[#84cc16]" />
+                    <span>Buscar Comércios Locais Sem Site Oficial</span>
+                  </h3>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Filtre por nicho e cidade para prospectar empresas com alta probabilidade de fechamento.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowManualForm(!showManualForm)}
+                  className="text-xs text-[#84cc16] hover:underline flex items-center gap-1 font-semibold cursor-pointer shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{showManualForm ? 'Ocultar Cadastro Manual' : '+ Adicionar Cliente Manualmente'}</span>
+                </button>
+              </div>
+
+              <form onSubmit={handleSearchLeads} className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                <div className="sm:col-span-5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">
+                    Ramo / Nicho:
+                  </label>
+                  <input
+                    type="text"
+                    value={nicheQuery}
+                    onChange={(e) => setNicheQuery(e.target.value)}
+                    placeholder="Ex: Barbearia, Hamburgueria, Odontologia..."
+                    className="w-full bg-[#07090e] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#84cc16]"
+                  />
+                </div>
+
+                <div className="sm:col-span-4">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">
+                    Cidade e Estado:
+                  </label>
+                  <input
+                    type="text"
+                    value={cityQuery}
+                    onChange={(e) => setCityQuery(e.target.value)}
+                    placeholder="Ex: São Paulo, SP ou Campinas, SP"
+                    className="w-full bg-[#07090e] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#84cc16]"
+                  />
+                </div>
+
+                <div className="sm:col-span-3 flex items-end">
+                  <button
+                    type="submit"
+                    disabled={leadsLoading}
+                    className="w-full py-3 px-5 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#9ae639] disabled:opacity-50 text-black shadow-lg shadow-[#84cc16]/20 transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    {leadsLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Buscando comércios...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Search className="w-4 h-4" />
+                        <span>Buscar Leads</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+
+              {/* BANNERS VISÍVEIS DE STATUS E ERRO (NUNCA ENGOLIR ERROS) */}
+              {leadsError && (
+                <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-3">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
+                  <div className="flex-1">
+                    <strong>Aviso na busca:</strong> {leadsError}
+                  </div>
+                </div>
+              )}
+
+              {googleNotice && (
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />
+                  <span>{googleNotice}</span>
+                </div>
+              )}
+
+              {searchNotice && !leadsError && (
+                <div className="p-3 rounded-xl bg-[#84cc16]/10 border border-[#84cc16]/30 text-[#a3e635] text-xs flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-[#84cc16]" />
+                    <span>{searchNotice}</span>
+                  </div>
+                  {providerLabel && (
+                    <span className="text-[10px] font-mono uppercase bg-black/40 px-2 py-0.5 rounded border border-[#84cc16]/30 text-zinc-300">
+                      Fonte: {providerLabel}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Cadastro Manual de Lead */}
           {showManualForm && (
@@ -1165,11 +1332,11 @@ export default function BillyWebStudio({
             </div>
           )}
 
-          {/* Cards de Leads Encontrados */}
-          {leadsList.length > 0 && (
+          {/* MODO 1: CARDS DE LEADS ENCONTRADOS (NOVA BUSCA) */}
+          {leadSourceMode === 'google' && leadsList.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center justify-between text-xs text-zinc-400 px-1">
-                <span>Comércios Encontrados ({leadsList.length}):</span>
+                <span>Comércios Encontrados no Google ({leadsList.length}):</span>
                 <span>Clique em "Gerar Site com IA" para preencher o Wizard</span>
               </div>
 
@@ -1177,41 +1344,65 @@ export default function BillyWebStudio({
                 {leadsList.map((lead, idx) => {
                   const isHot = Boolean(lead.opportunity === 'HOT_NO_WEBSITE' || lead.isHighOpportunity || !lead.hasOwnWebsite);
                   const revCount = lead.reviewsCount || lead.reviews || 0;
+                  const coverUrl = lead.coverPhoto || lead.cover_photo || (lead.photos && lead.photos[0]) || null;
 
                   return (
                     <div
-                      key={idx}
+                      key={lead.id || idx}
                       className="p-5 rounded-2xl bg-[#0e121b] border border-white/[0.08] hover:border-[#84cc16]/50 transition-all duration-200 flex flex-col justify-between group shadow-lg"
                     >
-                      <div className="space-y-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <h4 className="font-extrabold text-white text-sm group-hover:text-[#a3e635] transition leading-snug">
-                            {lead.name}
-                          </h4>
-                          {isHot && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30 shrink-0 flex items-center gap-1">
-                              <Flame className="w-3 h-3 text-rose-400" />
-                              <span>Sem Site 🔥</span>
-                            </span>
-                          )}
-                        </div>
+                      <div className="space-y-3">
+                        {/* Topo do Card: Mini Foto Cover (56x56) + Dados Principais */}
+                        <div className="flex items-start gap-3">
+                          <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-zinc-900 border border-white/[0.1] relative flex items-center justify-center">
+                            {coverUrl ? (
+                              <img
+                                src={`/api/studio/image-proxy?url=${encodeURIComponent(coverUrl)}`}
+                                alt={lead.name}
+                                referrerPolicy="no-referrer"
+                                crossOrigin="anonymous"
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                            ) : null}
+                            <div className="absolute inset-0 flex items-center justify-center font-black text-xs text-[#84cc16] bg-gradient-to-br from-[#84cc16]/15 via-black/40 to-transparent pointer-events-none">
+                              {getInitials(lead.name)}
+                            </div>
+                          </div>
 
-                        <p className="text-xs text-zinc-400 flex items-center gap-1.5 truncate">
-                          <MapPin className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
-                          <span className="truncate">{lead.address || `${lead.city || cityQuery}`}</span>
-                        </p>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-1.5">
+                              <h4 className="font-extrabold text-white text-sm group-hover:text-[#a3e635] transition leading-snug truncate" title={lead.name}>
+                                {lead.name}
+                              </h4>
+                              {isHot && (
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30 shrink-0 flex items-center gap-1">
+                                  <Flame className="w-3 h-3 text-rose-400" />
+                                  <span>Sem Site 🔥</span>
+                                </span>
+                              )}
+                            </div>
 
-                        <div className="flex items-center gap-3 text-[11px] text-zinc-400 pt-1">
-                          {lead.phone && (
-                            <span className="flex items-center gap-1 text-emerald-400 font-mono">
-                              <Phone className="w-3 h-3" />
-                              <span>{lead.phone}</span>
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1 text-amber-400">
-                            <Star className="w-3 h-3 fill-amber-400" />
-                            <span>{lead.rating || 5.0} ({revCount})</span>
-                          </span>
+                            <p className="text-xs text-zinc-400 flex items-center gap-1.5 truncate mt-1">
+                              <MapPin className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                              <span className="truncate">{lead.address || `${lead.city || cityQuery}`}</span>
+                            </p>
+
+                            <div className="flex items-center gap-3 text-[11px] text-zinc-400 pt-1">
+                              {lead.phone && (
+                                <span className="flex items-center gap-1 text-emerald-400 font-mono">
+                                  <Phone className="w-3 h-3" />
+                                  <span>{lead.phone}</span>
+                                </span>
+                              )}
+                              <span className="flex items-center gap-1 text-amber-400">
+                                <Star className="w-3 h-3 fill-amber-400" />
+                                <span>{lead.rating || 5.0} ({revCount})</span>
+                              </span>
+                            </div>
+                          </div>
                         </div>
 
                         {/* Badges de Enriquecimento: Fotos do Google, Avaliações Reais e Horários */}
@@ -1219,7 +1410,7 @@ export default function BillyWebStudio({
                           {lead.photos && lead.photos.length > 0 && (
                             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
                               <Camera className="w-3 h-3 text-cyan-400" />
-                              <span>{lead.photos.length} fotos reais do Google</span>
+                              <span>{lead.photos.length} fotos reais</span>
                             </span>
                           )}
                           {lead.realReviews && lead.realReviews.length > 0 && (
@@ -1230,7 +1421,7 @@ export default function BillyWebStudio({
                           )}
                           {(lead.hours || lead.openingHours) && (
                             <span
-                              className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-800/80 text-zinc-300 border border-white/[0.08] flex items-center gap-1 max-w-[220px] truncate"
+                              className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-800/80 text-zinc-300 border border-white/[0.08] flex items-center gap-1 max-w-[200px] truncate"
                               title={lead.hours || lead.openingHours}
                             >
                               <Clock className="w-3 h-3 text-zinc-400 shrink-0" />
@@ -1248,7 +1439,7 @@ export default function BillyWebStudio({
                         <button
                           type="button"
                           onClick={() => handleSelectLead(lead)}
-                          className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#9ae639] text-black shadow-md shadow-[#84cc16]/20 transition flex items-center gap-1.5 cursor-pointer shrink-0"
+                          className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#9ae639] text-black shadow-md shadow-[#84cc16]/20 transition flex items-center gap-1.5 cursor-pointer shrink-0"
                         >
                           <Sparkles className="w-3.5 h-3.5" />
                           <span>Gerar Site com IA →</span>
@@ -1258,6 +1449,149 @@ export default function BillyWebStudio({
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {/* MODO 2: BANCO PERSISTENTE DE LEADS SALVOS (SUPABASE) */}
+          {leadSourceMode === 'saved' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between text-xs text-zinc-400 px-1">
+                <span className="font-bold text-white flex items-center gap-1.5">
+                  <Database className="w-4 h-4 text-[#84cc16]" />
+                  <span>Leads Salvos no Banco de Dados ({savedLeadsList.length}):</span>
+                </span>
+                <span>Pesquisas salvas para reaproveitar sem gastar cotas da API</span>
+              </div>
+
+              {savedLeadsLoading ? (
+                <div className="py-16 text-center text-zinc-500 space-y-2">
+                  <Loader2 className="w-8 h-8 border-2 border-[#84cc16] rounded-full animate-spin mx-auto text-[#84cc16]" />
+                  <p className="text-xs">Consultando banco de leads persistente...</p>
+                </div>
+              ) : savedLeadsList.length === 0 ? (
+                <div className="p-12 rounded-3xl bg-[#0e121b] border border-dashed border-white/[0.08] text-center space-y-3">
+                  <Database className="w-10 h-10 text-zinc-600 mx-auto" />
+                  <div>
+                    <h4 className="text-sm font-bold text-white">Nenhum lead encontrado no banco</h4>
+                    <p className="text-xs text-zinc-400 mt-1 max-w-md mx-auto">
+                      Realize uma busca no Google Maps na aba anterior. Todas as empresas encontradas serão salvas automaticamente no banco de dados com fotos e avaliações!
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setLeadSourceMode('google')}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#9ae639] text-black transition inline-flex items-center gap-2 cursor-pointer"
+                  >
+                    <Search className="w-3.5 h-3.5" />
+                    <span>Fazer Busca no Google Maps</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {savedLeadsList.map((lead, idx) => {
+                    const isHot = Boolean(lead.opportunity === 'HOT_NO_WEBSITE' || lead.isHighOpportunity || !lead.hasOwnWebsite);
+                    const revCount = lead.reviewsCount || lead.reviews || 0;
+                    const coverUrl = lead.coverPhoto || lead.cover_photo || (lead.photos && lead.photos[0]) || null;
+
+                    return (
+                      <div
+                        key={lead.id || idx}
+                        className="p-5 rounded-2xl bg-[#0e121b] border border-white/[0.08] hover:border-[#84cc16]/50 transition-all duration-200 flex flex-col justify-between group shadow-lg"
+                      >
+                        <div className="space-y-3">
+                          {/* Mini Foto + Dados */}
+                          <div className="flex items-start gap-3">
+                            <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-zinc-900 border border-white/[0.1] relative flex items-center justify-center">
+                              {coverUrl ? (
+                                <img
+                                  src={`/api/studio/image-proxy?url=${encodeURIComponent(coverUrl)}`}
+                                  alt={lead.name}
+                                  referrerPolicy="no-referrer"
+                                  crossOrigin="anonymous"
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                  }}
+                                />
+                              ) : null}
+                              <div className="absolute inset-0 flex items-center justify-center font-black text-xs text-[#84cc16] bg-gradient-to-br from-[#84cc16]/15 via-black/40 to-transparent pointer-events-none">
+                                {getInitials(lead.name)}
+                              </div>
+                            </div>
+
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-1.5">
+                                <h4 className="font-extrabold text-white text-sm group-hover:text-[#a3e635] transition leading-snug truncate" title={lead.name}>
+                                  {lead.name}
+                                </h4>
+                                {isHot && (
+                                  <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-500/30 shrink-0 flex items-center gap-1">
+                                    <Flame className="w-3 h-3 text-rose-400" />
+                                    <span>Sem Site 🔥</span>
+                                  </span>
+                                )}
+                              </div>
+
+                              <p className="text-xs text-zinc-400 flex items-center gap-1.5 truncate mt-1">
+                                <MapPin className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                                <span className="truncate">{lead.address || `${lead.city || ''}`}</span>
+                              </p>
+
+                              <div className="flex items-center gap-3 text-[11px] text-zinc-400 pt-1">
+                                {lead.phone && (
+                                  <span className="flex items-center gap-1 text-emerald-400 font-mono">
+                                    <Phone className="w-3 h-3" />
+                                    <span>{lead.phone}</span>
+                                  </span>
+                                )}
+                                <span className="flex items-center gap-1 text-amber-400">
+                                  <Star className="w-3 h-3 fill-amber-400" />
+                                  <span>{lead.rating || 5.0} ({revCount})</span>
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Badges de Enriquecimento */}
+                          <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                            {lead.photos && lead.photos.length > 0 && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
+                                <Camera className="w-3 h-3 text-cyan-400" />
+                                <span>{lead.photos.length} fotos reais</span>
+                              </span>
+                            )}
+                            {lead.realReviews && lead.realReviews.length > 0 && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                                <MessageCircle className="w-3 h-3 text-amber-400" />
+                                <span>{lead.realReviews.length} avaliações</span>
+                              </span>
+                            )}
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#84cc16]/10 text-[#84cc16] border border-[#84cc16]/20 flex items-center gap-1">
+                              <Database className="w-3 h-3" />
+                              <span>Salvo no Banco</span>
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="pt-4 mt-4 border-t border-white/[0.06] flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-mono text-zinc-500 uppercase truncate">
+                            {lead.niche || lead.category || 'Comércio Local'}
+                          </span>
+
+                          <button
+                            type="button"
+                            onClick={() => handleSelectLead(lead)}
+                            className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#9ae639] text-black shadow-md shadow-[#84cc16]/20 transition flex items-center gap-1.5 cursor-pointer shrink-0"
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>Gerar Site com IA →</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1338,9 +1672,49 @@ export default function BillyWebStudio({
               </div>
             )}
 
+            {/* Filtros de Categorias de Templates */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {[
+                { id: 'todos', label: 'Todos (20)' },
+                { id: 'barbearia', label: 'Barbearia & Beleza' },
+                { id: 'advocacia', label: 'Advocacia & B2B' },
+                { id: 'saude', label: 'Saúde & Clínicas' },
+                { id: 'gastronomia', label: 'Gastronomia' },
+                { id: 'fitness', label: 'Fitness & Tattoo' },
+                { id: 'automotivo', label: 'Automotivo & Serviços' }
+              ].map((cat) => {
+                const isCatActive = templateCategoryFilter === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setTemplateCategoryFilter(cat.id)}
+                    className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition cursor-pointer ${
+                      isCatActive
+                        ? 'bg-[#84cc16] text-black shadow-md shadow-[#84cc16]/20'
+                        : 'bg-black/40 text-zinc-400 hover:text-white border border-white/[0.06]'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                );
+              })}
+            </div>
+
             {/* Grid dos 20 Templates */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-h-[480px] overflow-y-auto pr-2 scrollbar-thin">
-              {BILLY_DESKTOP_TEMPLATES.map((tpl) => {
+              {BILLY_DESKTOP_TEMPLATES.filter((tpl) => {
+                if (templateCategoryFilter === 'todos') return true;
+                const matchCat = (tpl.category || '').toLowerCase();
+                const matchName = (tpl.name || '').toLowerCase();
+                if (templateCategoryFilter === 'barbearia') return matchCat.includes('barber') || matchCat.includes('beleza') || matchName.includes('barber') || matchName.includes('feminine') || matchName.includes('retrô');
+                if (templateCategoryFilter === 'advocacia') return matchCat.includes('advocacia') || matchCat.includes('b2b') || matchCat.includes('financeira') || matchCat.includes('corporate') || matchName.includes('advocacia') || matchName.includes('consultoria');
+                if (templateCategoryFilter === 'saude') return matchCat.includes('saúde') || matchCat.includes('clínica') || matchCat.includes('médica') || matchName.includes('clínica') || matchName.includes('odontologia') || matchName.includes('médica');
+                if (templateCategoryFilter === 'gastronomia') return matchCat.includes('gastronomia') || matchCat.includes('restaurante') || matchCat.includes('culinária') || matchName.includes('gourmet') || matchName.includes('artisan') || matchName.includes('café');
+                if (templateCategoryFilter === 'fitness') return matchCat.includes('fitness') || matchCat.includes('tattoo') || matchName.includes('crossfit') || matchName.includes('academia') || matchName.includes('street') || matchName.includes('tattoo');
+                if (templateCategoryFilter === 'automotivo') return matchCat.includes('automotivo') || matchCat.includes('serviços') || matchName.includes('auto') || matchName.includes('oficina') || matchName.includes('estética automotiva');
+                return true;
+              }).map((tpl) => {
                 const isSelected = selectedTemplateId === tpl.id;
 
                 return (
@@ -1348,7 +1722,7 @@ export default function BillyWebStudio({
                     key={tpl.id}
                     onClick={() => {
                       setSelectedTemplateId(tpl.id);
-                      setSiteForm((prev) => ({ ...prev, accentColor: tpl.accentColor }));
+                      setSiteForm((prev) => ({ ...prev, accentColor: tpl.accentColor, primaryColor: tpl.accentColor }));
                     }}
                     className={`relative rounded-2xl border p-4 cursor-pointer transition-all duration-200 flex flex-col justify-between group overflow-hidden ${
                       isSelected
@@ -1389,6 +1763,250 @@ export default function BillyWebStudio({
                   </div>
                 );
               })}
+            </div>
+          </div>
+
+          {/* =========================================================================
+              SEÇÃO 1.5: IDENTIDADE VISUAL, PALETAS CURADAS & TIPOGRAFIA
+             ========================================================================= */}
+          <div className="p-6 sm:p-8 rounded-3xl bg-[#0e121b] border border-white/[0.06] shadow-xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Palette className="w-5 h-5 text-[#84cc16]" />
+                  <span>Identidade Visual, Paletas & Tipografia</span>
+                </h3>
+                <p className="text-xs text-zinc-400 mt-1">
+                  Selecione paletas harmoniosas, personalize cores hexadecimais, tipografia Google Fonts e o nome reduzido para a navbar.
+                </p>
+              </div>
+
+              {/* Nome Curto no Header */}
+              <div className="flex items-center gap-2 bg-black/50 border border-white/[0.1] rounded-2xl p-2.5 shrink-0">
+                <div className="text-left">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+                    Nome no Header (Menu):
+                  </label>
+                  <input
+                    type="text"
+                    value={siteForm.shortName}
+                    onChange={(e) => setSiteForm((prev) => ({ ...prev, shortName: e.target.value }))}
+                    placeholder="Ex: Black Zone"
+                    className="bg-transparent border-none text-xs text-white font-bold focus:outline-none w-36 sm:w-44"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const formatted = formatHeaderName(siteForm.businessName);
+                    setSiteForm((prev) => ({ ...prev, shortName: formatted }));
+                  }}
+                  className="px-2.5 py-1.5 rounded-xl text-[10px] font-bold bg-[#84cc16]/20 hover:bg-[#84cc16] text-[#84cc16] hover:text-black border border-[#84cc16]/30 transition cursor-pointer shrink-0"
+                  title="Gerar nome encurtado inteligente para o navbar"
+                >
+                  🪄 Encurtar
+                </button>
+              </div>
+            </div>
+
+            {/* Subseção A: 12 Paletas Curadas com 4 Amostras */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-[#84cc16]" />
+                  <span>Paletas Curadas Profissionais ({CURATED_PALETTES.length}):</span>
+                </span>
+                <span className="text-[11px] text-zinc-400 hidden sm:inline">
+                  Destaque, Fundo Principal, Superfície de Cards e Texto
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 max-h-64 overflow-y-auto pr-1 scrollbar-thin">
+                {CURATED_PALETTES.map((pal) => {
+                  const isSelected = siteForm.paletteId === pal.id;
+
+                  return (
+                    <div
+                      key={pal.id}
+                      onClick={() => {
+                        setSiteForm((prev) => ({
+                          ...prev,
+                          paletteId: pal.id,
+                          primaryColor: pal.primary,
+                          backgroundColor: pal.background,
+                          surfaceColor: pal.surface,
+                          textColor: pal.text,
+                          accentColor: pal.primary
+                        }));
+                      }}
+                      className={`p-3 rounded-2xl border cursor-pointer transition-all duration-200 flex flex-col justify-between ${
+                        isSelected
+                          ? 'bg-[#0f1420] border-[#84cc16] ring-2 ring-[#84cc16]/40 shadow-lg'
+                          : 'bg-black/40 border-white/[0.06] hover:border-white/[0.2] hover:bg-black/60'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-1 mb-2">
+                        <span className="font-extrabold text-xs text-white truncate">{pal.name}</span>
+                        <span className="text-[9px] font-mono text-zinc-400 bg-white/[0.06] px-1.5 py-0.5 rounded truncate">
+                          {pal.nicheTag || pal.category}
+                        </span>
+                      </div>
+
+                      {/* 4 Amostras de Cores (Primary, Background, Surface, Text) */}
+                      <div className="h-6 rounded-lg overflow-hidden flex border border-white/[0.1] shadow-inner">
+                        <div className="flex-1" style={{ backgroundColor: pal.primary }} title={`Destaque: ${pal.primary}`} />
+                        <div className="flex-1" style={{ backgroundColor: pal.background }} title={`Fundo: ${pal.background}`} />
+                        <div className="flex-1" style={{ backgroundColor: pal.surface }} title={`Superfície: ${pal.surface}`} />
+                        <div className="flex-1" style={{ backgroundColor: pal.text }} title={`Texto: ${pal.text}`} />
+                      </div>
+
+                      <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 mt-2">
+                        <span>{pal.primary}</span>
+                        {isSelected && <span className="text-[#84cc16] font-bold">● Ativa</span>}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Subseção B: Color Pickers Individuais (Hex + Nativo) */}
+            <div className="pt-4 border-t border-white/[0.06] space-y-3">
+              <span className="text-xs font-bold text-white block">
+                Ajuste Fino de Cores (Seletor Hexadecimal + Nativo):
+              </span>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {/* 1. Primária / Destaque */}
+                <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06] space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+                    Cor Primária / Accent:
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={siteForm.primaryColor || '#84cc16'}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSiteForm((prev) => ({ ...prev, primaryColor: val, accentColor: val }));
+                      }}
+                      className="w-7 h-7 rounded-lg cursor-pointer bg-transparent border-0 p-0"
+                    />
+                    <input
+                      type="text"
+                      value={siteForm.primaryColor || '#84cc16'}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSiteForm((prev) => ({ ...prev, primaryColor: val, accentColor: val }));
+                      }}
+                      className="w-full bg-[#07090e] border border-white/[0.1] rounded-lg px-2 py-1 text-xs text-white font-mono uppercase focus:outline-none focus:border-[#84cc16]"
+                    />
+                  </div>
+                </div>
+
+                {/* 2. Fundo Principal */}
+                <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06] space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+                    Fundo Principal:
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={siteForm.backgroundColor || '#090d16'}
+                      onChange={(e) => setSiteForm((prev) => ({ ...prev, backgroundColor: e.target.value }))}
+                      className="w-7 h-7 rounded-lg cursor-pointer bg-transparent border-0 p-0"
+                    />
+                    <input
+                      type="text"
+                      value={siteForm.backgroundColor || '#090d16'}
+                      onChange={(e) => setSiteForm((prev) => ({ ...prev, backgroundColor: e.target.value }))}
+                      className="w-full bg-[#07090e] border border-white/[0.1] rounded-lg px-2 py-1 text-xs text-white font-mono uppercase focus:outline-none focus:border-[#84cc16]"
+                    />
+                  </div>
+                </div>
+
+                {/* 3. Superfície / Cards */}
+                <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06] space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+                    Superfície / Cards:
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={siteForm.surfaceColor || '#111827'}
+                      onChange={(e) => setSiteForm((prev) => ({ ...prev, surfaceColor: e.target.value }))}
+                      className="w-7 h-7 rounded-lg cursor-pointer bg-transparent border-0 p-0"
+                    />
+                    <input
+                      type="text"
+                      value={siteForm.surfaceColor || '#111827'}
+                      onChange={(e) => setSiteForm((prev) => ({ ...prev, surfaceColor: e.target.value }))}
+                      className="w-full bg-[#07090e] border border-white/[0.1] rounded-lg px-2 py-1 text-xs text-white font-mono uppercase focus:outline-none focus:border-[#84cc16]"
+                    />
+                  </div>
+                </div>
+
+                {/* 4. Texto Principal */}
+                <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06] space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+                    Texto Principal:
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={siteForm.textColor || '#f8fafc'}
+                      onChange={(e) => setSiteForm((prev) => ({ ...prev, textColor: e.target.value }))}
+                      className="w-7 h-7 rounded-lg cursor-pointer bg-transparent border-0 p-0"
+                    />
+                    <input
+                      type="text"
+                      value={siteForm.textColor || '#f8fafc'}
+                      onChange={(e) => setSiteForm((prev) => ({ ...prev, textColor: e.target.value }))}
+                      className="w-full bg-[#07090e] border border-white/[0.1] rounded-lg px-2 py-1 text-xs text-white font-mono uppercase focus:outline-none focus:border-[#84cc16]"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Subseção C: 4 Pares Tipográficos Google Fonts */}
+            <div className="pt-4 border-t border-white/[0.06] space-y-3">
+              <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                <Type className="w-3.5 h-3.5 text-[#84cc16]" />
+                <span>Pares Tipográficos Oficiais Google Fonts:</span>
+              </span>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {TYPOGRAPHY_PAIRS.map((font) => {
+                  const isSelected = siteForm.fontPair === font.id;
+
+                  return (
+                    <div
+                      key={font.id}
+                      onClick={() => setSiteForm((prev) => ({ ...prev, fontPair: font.id }))}
+                      className={`p-3.5 rounded-2xl border cursor-pointer transition-all duration-200 flex flex-col justify-between ${
+                        isSelected
+                          ? 'bg-[#0f1420] border-[#84cc16] ring-2 ring-[#84cc16]/40 shadow-lg'
+                          : 'bg-black/40 border-white/[0.06] hover:border-white/[0.2] hover:bg-black/60'
+                      }`}
+                    >
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-extrabold text-xs text-white">{font.name}</span>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-[#84cc16]" />}
+                        </div>
+                        <span className="text-[10px] font-mono text-zinc-400 block mb-2">{font.heading} + {font.body}</span>
+                        <p className="text-[11px] text-zinc-300 italic border-l-2 border-[#84cc16]/50 pl-2 py-0.5">
+                          "{font.sample}"
+                        </p>
+                      </div>
+                      <span className="text-[9px] font-mono text-zinc-500 mt-2 block">
+                        Ideal para: {font.bestFor}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -1918,7 +2536,7 @@ export default function BillyWebStudio({
                         <div
                           key={item.id || i}
                           onClick={() => handleTogglePhoto(target)}
-                          className={`relative rounded-xl overflow-hidden aspect-square border cursor-pointer transition-all duration-200 select-none group ${
+                          className={`real-photo-card relative rounded-xl overflow-hidden aspect-square border cursor-pointer transition-all duration-200 select-none group ${
                             isHero
                               ? 'border-[#84cc16] ring-2 ring-[#84cc16] shadow-[0_0_15px_rgba(132,204,22,0.4)]'
                               : isGallery
@@ -1933,7 +2551,14 @@ export default function BillyWebStudio({
                             crossOrigin="anonymous"
                             className="w-full h-full object-cover pointer-events-none"
                             onError={(e) => {
-                              (e.target as HTMLElement).style.opacity = '0.3';
+                              const el = e.currentTarget;
+                              const card = el.closest('.real-photo-card');
+                              if (card) (card as HTMLElement).style.display = 'none';
+                              setSiteForm((prev) => ({
+                                ...prev,
+                                galleryPhotos: prev.galleryPhotos.filter((p) => p !== target),
+                                heroPhoto: prev.heroPhoto === target ? '' : prev.heroPhoto
+                              }));
                             }}
                           />
 
@@ -2157,6 +2782,13 @@ export default function BillyWebStudio({
                           referrerPolicy="no-referrer"
                           crossOrigin="anonymous"
                           className="w-full h-full object-cover"
+                          onError={() => {
+                            setSiteForm((prev) => ({
+                              ...prev,
+                              galleryPhotos: prev.galleryPhotos.filter((p) => p !== photo),
+                              heroPhoto: prev.heroPhoto === photo ? (prev.galleryPhotos.find((p) => p !== photo) || '') : prev.heroPhoto
+                            }));
+                          }}
                         />
                         {isHero && (
                           <span className="absolute top-1 left-1 px-1 py-0.5 rounded text-[7px] font-black bg-[#84cc16] text-black uppercase shadow">

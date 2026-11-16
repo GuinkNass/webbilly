@@ -196,6 +196,7 @@ export async function POST(req: NextRequest) {
       clientName: businessName,
       clientPhone: rawPhone,
       clientEmail: `${cleanSlug}@webbilly.com.br`,
+      operatorId: operatorId,
       operatorToken: operatorId,
       operatorName: operatorName,
       monthlyPrice: 29.9,

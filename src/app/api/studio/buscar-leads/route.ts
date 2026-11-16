@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sanitizeSlug } from '@/lib/site-storage';
 import { getUserFromRequest } from '@/lib/auth';
+import { upsertProspectedLeadsInSupabase, fetchProspectedLeadsFromSupabase } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -25,16 +26,46 @@ export interface LeadBusiness {
   opportunityReason: string;
   suggestedSlug: string;
   instagram?: string;
+  cover_photo?: string | null;
+  coverPhoto?: string | null;
   photos?: string[];
   hours?: string;
   openingHours?: string;
   realReviews?: Array<{ author: string; rating: number; text: string }>;
 }
 
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const niche = searchParams.get('niche') || '';
+    const city = searchParams.get('city') || '';
+    const query = searchParams.get('q') || searchParams.get('query') || '';
+    const operatorId = searchParams.get('operatorId') || '';
+
+    const leads = await fetchProspectedLeadsFromSupabase({
+      niche,
+      city,
+      query,
+      operatorId
+    });
+
+    return NextResponse.json({
+      success: true,
+      total: leads.length,
+      leads
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error?.message || 'Erro ao carregar leads salvos.', leads: [] },
+      { status: 500 }
+    );
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const { niche = 'Barbearia', city = 'São Paulo - SP' } = body;
+    const { niche = 'Barbearia', city = 'São Paulo - SP', operatorId = 'OP-BILLY-01' } = body;
 
     const query = `${niche.trim()} em ${city.trim()}`;
     const GOOGLE_PLACES_KEY = (process.env.GOOGLE_PLACES_API_KEY || '').trim();
@@ -389,6 +420,8 @@ export async function POST(req: NextRequest) {
         opportunity: isHighOpportunity ? 'HOT_NO_WEBSITE' : 'HAS_WEBSITE',
         opportunityReason: oppReason,
         suggestedSlug,
+        cover_photo: (Array.isArray(item.photos) && item.photos.length > 0) ? item.photos[0] : null,
+        coverPhoto: (Array.isArray(item.photos) && item.photos.length > 0) ? item.photos[0] : null,
         photos: Array.isArray(item.photos) ? item.photos : [],
         hours: item.hours || item.openingHours || '',
         openingHours: item.hours || item.openingHours || '',
@@ -402,6 +435,13 @@ export async function POST(req: NextRequest) {
       if (!a.isHighOpportunity && b.isHighOpportunity) return 1;
       return b.reviewsCount - a.reviewsCount;
     });
+
+    // Salva automaticamente no Supabase (prospected_leads) e db.json local para reutilização sem custo de API
+    try {
+      await upsertProspectedLeadsInSupabase(leads, operatorId);
+    } catch (saveErr) {
+      console.warn('[Studio Buscar Leads] Aviso ao salvar leads no Supabase:', saveErr);
+    }
 
     const activeGoogleNotice =
       providerUsed === 'google_places' || providerUsed === 'serper'

@@ -59,9 +59,30 @@ interface CommonData {
   slogan: string;
   about: string;
   accent: string;
+  headerName: string;
+}
+
+export function formatHeaderName(businessName: string, shortName?: string): string {
+  if (shortName && shortName.trim()) {
+    return shortName.trim();
+  }
+  let clean = (businessName || '').trim();
+  if (clean.includes(' - ')) {
+    clean = clean.split(' - ')[0].trim();
+  } else if (clean.includes(' | ')) {
+    clean = clean.split(' | ')[0].trim();
+  }
+  if (clean.length > 26) {
+    const parts = clean.split(/\s+/);
+    if (parts.length > 3) {
+      clean = parts.slice(0, 3).join(' ');
+    }
+  }
+  return clean || businessName || 'Comércio Local';
 }
 
 function prepareCommonData(input: SiteGenerationInput, defaultAccent: string): CommonData {
+  const headerName = formatHeaderName(input.businessName, input.shortName || input.headerName);
   const rawPhone = (input.whatsapp || input.phone || '11999999999').replace(/\D/g, '');
   const cleanPhone = rawPhone.length <= 11 && !rawPhone.startsWith('55') ? `55${rawPhone}` : rawPhone;
   const whatsappLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
@@ -114,7 +135,7 @@ function prepareCommonData(input: SiteGenerationInput, defaultAccent: string): C
 
   const accent = (input.accentColor || defaultAccent).trim();
 
-  return { heroImg, gallery, services, faqs, reviews, cleanPhone, whatsappLink, slogan, about, accent };
+  return { heroImg, gallery, services, faqs, reviews, cleanPhone, whatsappLink, slogan, about, accent, headerName };
 }
 
 function renderGalleryGrid(gallery: string[], roundedClass: string = 'rounded-2xl', aspectClass: string = 'aspect-square'): string {
@@ -186,7 +207,7 @@ function renderVintageNavalha(input: SiteGenerationInput): string {
           ✂
         </div>
         <div>
-          <span class="font-serif-vintage text-xl font-black text-[#fef3c7] tracking-wider block">${input.businessName}</span>
+          <span class="font-serif-vintage text-xl font-black text-[#fef3c7] tracking-wider block truncate max-w-[240px] sm:max-w-[320px]" title="${input.businessName}">${data.headerName}</span>
           <span class="text-[10px] uppercase font-mono tracking-widest text-[#d97706] font-bold block">Barbearia Clássica</span>
         </div>
       </div>
@@ -347,7 +368,7 @@ function renderModernoNeon(input: SiteGenerationInput): string {
           ★
         </div>
         <div>
-          <span class="font-display font-black text-lg text-white tracking-tight block">${input.businessName}</span>
+          <span class="font-display font-black text-lg text-white tracking-tight block truncate max-w-[240px] sm:max-w-[320px]" title="${input.businessName}">${data.headerName}</span>
           <span class="font-mono-tag text-[10px] text-[#84cc16] font-bold uppercase tracking-widest block">${input.niche} VIP</span>
         </div>
       </div>
@@ -503,7 +524,7 @@ function renderEditorialLuxo(input: SiteGenerationInput): string {
   <header class="sticky top-0 z-40 bg-[#0a0a0c]/90 backdrop-blur-md border-b border-[#c59a63]/20">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 h-24 flex items-center justify-between">
       <div>
-        <span class="font-editorial text-2xl font-bold tracking-wider text-white block">${input.businessName}</span>
+        <span class="font-editorial text-2xl font-bold tracking-wider text-white block truncate max-w-[240px] sm:max-w-[320px]" title="${input.businessName}">${data.headerName}</span>
         <span class="text-[9px] uppercase tracking-[0.25em] gold-accent block font-medium">Boutique & Visagismo</span>
       </div>
 
@@ -753,7 +774,7 @@ function renderGastronomia(input: SiteGenerationInput): string {
   <header class="sticky top-0 z-40 bg-[#0c0a09]/95 backdrop-blur-md border-b border-white/[0.08]">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 h-22 flex items-center justify-between">
       <div>
-        <span class="font-serif-gastro text-2xl font-bold tracking-wide text-white block">${input.businessName}</span>
+        <span class="font-serif-gastro text-2xl font-bold tracking-wide text-white block truncate max-w-[240px] sm:max-w-[320px]" title="${input.businessName}">${data.headerName}</span>
         <span class="text-[10px] uppercase font-mono tracking-widest text-[${accent}] font-bold block">${input.niche}</span>
       </div>
 
@@ -878,7 +899,7 @@ function renderMinimalista(input: SiteGenerationInput): string {
 
   <header class="py-8 border-b border-zinc-900 sticky top-0 z-40 bg-black/90 backdrop-blur-md">
     <div class="max-w-7xl mx-auto px-6 flex items-center justify-between">
-      <span class="font-bodoni text-2xl tracking-tighter uppercase font-bold">${input.businessName}</span>
+      <span class="font-bodoni text-2xl tracking-tighter uppercase font-bold truncate max-w-[240px] sm:max-w-[320px] block" title="${input.businessName}">${data.headerName}</span>
       <span class="text-[10px] uppercase font-mono text-zinc-500 tracking-[0.3em] hidden sm:block">${input.city}</span>
       <a href="${data.whatsappLink}" target="_blank" rel="noopener noreferrer" class="px-6 py-2 border border-zinc-700 hover:border-white text-xs font-mono uppercase tracking-widest transition">
         Contato

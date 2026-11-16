@@ -919,3 +919,221 @@ export async function saveOperatorAvatarInSupabase(
 
   return persistedInSupabase || persistedInDb;
 }
+
+/**
+ * Salva leads prospectados no Supabase (tabela prospected_leads) e db.json local para reuso sem gastar API
+ */
+export async function upsertProspectedLeadsInSupabase(leads: any[], operatorId: string = 'OP-BILLY-01'): Promise<boolean> {
+  if (!Array.isArray(leads) || leads.length === 0) return false;
+
+  const nowIso = new Date().toISOString();
+
+  // 1. Persiste no Supabase
+  try {
+    const supabase = getSupabaseAdmin();
+    if (supabase) {
+      const records = leads.map((l, idx) => {
+        const placeId = l.place_id || l.placeId || l.id || `lead_${Date.now()}_${idx}`;
+        const photos = Array.isArray(l.photos) ? l.photos.slice(0, 10) : [];
+        const coverPhoto = l.cover_photo || (photos.length > 0 ? photos[0] : null);
+
+        return {
+          id: l.id || `lead_${Date.now()}_${idx}`,
+          place_id: placeId,
+          operator_id: operatorId,
+          business_name: l.name || l.business_name || 'Comércio Local',
+          niche: l.niche || l.category || 'Comércio Local',
+          city: l.city || '',
+          address: l.address || '',
+          phone: l.phone || '',
+          whatsapp: l.whatsapp || (l.phone ? String(l.phone).replace(/\D/g, '') : ''),
+          rating: Number(l.rating || 5.0),
+          reviews_count: Number(l.reviewsCount || l.reviews || 0),
+          website_uri: l.website || l.website_uri || null,
+          cover_photo: coverPhoto,
+          photos_json: photos,
+          opening_hours: l.hours || l.openingHours || '',
+          reviews_json: Array.isArray(l.realReviews) ? l.realReviews : (Array.isArray(l.reviews_json) ? l.reviews_json : []),
+          status: l.status || 'new',
+          updated_at: nowIso
+        };
+      });
+
+      // Upsert com onConflict por place_id se a constraint existir, ou por id
+      const { error } = await supabase
+        .from('prospected_leads')
+        .upsert(records, { onConflict: 'place_id' });
+
+      if (error) {
+        try {
+          await supabase.from('prospected_leads').upsert(records, { onConflict: 'id' });
+        } catch {}
+      }
+    }
+  } catch (err: any) {
+    console.warn('[Supabase Leads] Aviso ao salvar leads no Supabase:', err?.message || err);
+  }
+
+  // 2. Persiste em db.json local como redundância
+  try {
+    const db = readDb();
+    if (!Array.isArray((db as any).prospectedLeads)) {
+      (db as any).prospectedLeads = [];
+    }
+    const currentList: any[] = (db as any).prospectedLeads;
+
+    for (const l of leads) {
+      const key = l.place_id || l.id || l.name;
+      const existingIdx = currentList.findIndex(
+        (item: any) =>
+          (item.place_id && item.place_id === key) ||
+          (item.id && item.id === key) ||
+          (item.name === (l.name || l.business_name) && item.city === l.city)
+      );
+      const photos = Array.isArray(l.photos) ? l.photos.slice(0, 10) : [];
+      const coverPhoto = l.cover_photo || (photos.length > 0 ? photos[0] : null);
+
+      const formatted = {
+        id: l.id || `lead_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        place_id: l.place_id || l.id,
+        operator_id: operatorId,
+        business_name: l.name || l.business_name,
+        name: l.name || l.business_name,
+        niche: l.niche || l.category || 'Comércio Local',
+        category: l.category || l.niche || 'Comércio Local',
+        city: l.city || '',
+        address: l.address || '',
+        phone: l.phone || '',
+        whatsapp: l.whatsapp || (l.phone ? String(l.phone).replace(/\D/g, '') : ''),
+        rating: Number(l.rating || 5.0),
+        reviewsCount: Number(l.reviewsCount || l.reviews || 0),
+        website: l.website || l.website_uri || null,
+        cover_photo: coverPhoto,
+        photos,
+        hours: l.hours || l.openingHours || '',
+        openingHours: l.hours || l.openingHours || '',
+        realReviews: l.realReviews || l.reviews_json || [],
+        status: l.status || 'new',
+        updated_at: nowIso,
+        created_at: l.created_at || nowIso
+      };
+
+      if (existingIdx >= 0) {
+        currentList[existingIdx] = { ...currentList[existingIdx], ...formatted };
+      } else {
+        currentList.unshift(formatted);
+      }
+    }
+
+    // Mantém os 300 leads mais recentes no cache local
+    (db as any).prospectedLeads = currentList.slice(0, 300);
+    writeDb(db);
+  } catch (dbErr) {
+    console.warn('[DB Leads] Aviso db.json:', dbErr);
+  }
+
+  return true;
+}
+
+/**
+ * Consulta leads salvos no Supabase (ou db.json local) para reutilização sem gastar APIs externas
+ */
+export async function fetchProspectedLeadsFromSupabase(params?: {
+  niche?: string;
+  city?: string;
+  query?: string;
+  operatorId?: string;
+}): Promise<any[]> {
+  const { niche, city, query, operatorId } = params || {};
+  let supaLeads: any[] = [];
+
+  try {
+    const supabase = getSupabaseAdmin();
+    if (supabase) {
+      let q = supabase
+        .from('prospected_leads')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (operatorId && operatorId !== 'admin') {
+        q = q.eq('operator_id', operatorId);
+      }
+      if (niche && niche.trim()) {
+        q = q.ilike('niche', `%${niche.trim()}%`);
+      }
+      if (city && city.trim()) {
+        q = q.ilike('city', `%${city.trim()}%`);
+      }
+
+      const { data, error } = await q;
+      if (!error && Array.isArray(data) && data.length > 0) {
+        supaLeads = data.map((row: any) => ({
+          id: row.id,
+          place_id: row.place_id,
+          name: row.business_name || row.name,
+          business_name: row.business_name || row.name,
+          niche: row.niche,
+          category: row.niche,
+          city: row.city,
+          address: row.address,
+          phone: row.phone,
+          whatsapp: row.whatsapp,
+          website: row.website_uri,
+          rating: Number(row.rating || 5.0),
+          reviewsCount: Number(row.reviews_count || 0),
+          reviews: Number(row.reviews_count || 0),
+          cover_photo: row.cover_photo,
+          photos: Array.isArray(row.photos_json) ? row.photos_json : (row.cover_photo ? [row.cover_photo] : []),
+          hours: row.opening_hours,
+          openingHours: row.opening_hours,
+          realReviews: Array.isArray(row.reviews_json) ? row.reviews_json : [],
+          status: row.status || 'new',
+          created_at: row.created_at
+        }));
+      }
+    }
+  } catch (err: any) {
+    console.warn('[Supabase Leads] Erro ao buscar prospected_leads:', err?.message || err);
+  }
+
+  // Se o Supabase retornou leads, filtra por texto caso haja query
+  if (supaLeads.length > 0) {
+    if (query && query.trim()) {
+      const qLower = query.toLowerCase().trim();
+      return supaLeads.filter(
+        (l) =>
+          l.name.toLowerCase().includes(qLower) ||
+          (l.niche && l.niche.toLowerCase().includes(qLower)) ||
+          (l.city && l.city.toLowerCase().includes(qLower))
+      );
+    }
+    return supaLeads;
+  }
+
+  // Fallback: db.json local
+  try {
+    const db = readDb();
+    let localLeads: any[] = (db as any).prospectedLeads || [];
+    if (niche && niche.trim()) {
+      const nLower = niche.toLowerCase().trim();
+      localLeads = localLeads.filter((l) => (l.niche || l.category || '').toLowerCase().includes(nLower));
+    }
+    if (city && city.trim()) {
+      const cLower = city.toLowerCase().trim();
+      localLeads = localLeads.filter((l) => (l.city || '').toLowerCase().includes(cLower));
+    }
+    if (query && query.trim()) {
+      const qLower = query.toLowerCase().trim();
+      localLeads = localLeads.filter(
+        (l) =>
+          (l.name || l.business_name || '').toLowerCase().includes(qLower) ||
+          (l.niche || l.category || '').toLowerCase().includes(qLower) ||
+          (l.city || '').toLowerCase().includes(qLower)
+      );
+    }
+    return localLeads;
+  } catch {
+    return [];
+  }
+}

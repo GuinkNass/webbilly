@@ -22,6 +22,8 @@ export interface ReviewItem {
 
 export interface SiteGenerationInput {
   businessName: string;
+  shortName?: string;
+  headerName?: string;
   niche: string;
   city: string;
   subdomain: string;
@@ -34,6 +36,12 @@ export interface SiteGenerationInput {
   theme?: string;
   templateId?: string;
   accentColor?: string;
+  primaryColor?: string;
+  backgroundColor?: string;
+  surfaceColor?: string;
+  textColor?: string;
+  fontPair?: string;
+  paletteId?: string;
   logoUrl?: string;
   heroPhoto?: string;
   galleryPhotos?: string[];

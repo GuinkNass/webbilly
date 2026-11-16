@@ -299,7 +299,25 @@ export const BILLY_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Agendamento de reunião estratégica'
     ],
     previewImg: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&auto=format&fit=crop&q=80',
-    recommendedKeywords: ['contabilidade', 'advogado', 'advocacia', 'consultoria', 'financeiro', 'fiscal', 'empresarial']
+    recommendedKeywords: [
+      'contabilidade',
+      'advogado',
+      'advocacia',
+      'juridico',
+      'direito',
+      'defesa',
+      'oab',
+      'escritorio de advocacia',
+      'consultoria',
+      'financeiro',
+      'fiscal',
+      'empresarial',
+      'pericia',
+      'tributario',
+      'trabalhista',
+      'civel',
+      'penal'
+    ]
   },
   {
     id: 'commercial-vibrant',
@@ -316,7 +334,7 @@ export const BILLY_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Seção de depoimentos e prova social 5 estrelas'
     ],
     previewImg: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&auto=format&fit=crop&q=80',
-    recommendedKeywords: ['comercio', 'loja', 'roupa', 'calcados', 'vendas', 'produtos', 'distribuidora']
+    recommendedKeywords: ['comercio', 'loja', 'roupa', 'calcados', 'vendas', 'produtos', 'distribuidora', 'geral', 'mercado', 'servico']
   },
   {
     id: 'portfolio-dark',
@@ -368,8 +386,203 @@ export function recommendTemplateForNiche(nicheText: string): { template: Deskto
       };
     }
   }
+
+  // Fallback inteligente: se parecer corporativo/jurídico
+  if (/direito|advog|jurid|leis|tribut|fiscal|perito|imobili/i.test(clean)) {
+    const tpl = findTemplateById('consultoria-financeira-fo');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado pela autoridade corporativa para o segmento jurídico.`
+    };
+  }
+
+  // Fallback para saúde
+  if (/saude|odonto|dent|medic|clinica|psico|fisio/i.test(clean)) {
+    const tpl = findTemplateById('medico-medicalguide-clinica');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado para clínica e área da saúde.`
+    };
+  }
+
+  // Fallback geral
+  const fallback = findTemplateById('commercial-vibrant');
   return {
-    template: BILLY_DESKTOP_TEMPLATES[0],
-    reason: `Template "${BILLY_DESKTOP_TEMPLATES[0].name}" recomendado pela alta taxa de conversão em comércios locais.`
+    template: fallback,
+    reason: `Template "${fallback.name}" selecionado pela alta taxa de conversão em comércios e serviços locais.`
   };
+}
+
+/**
+ * Gera serviços profissionais estritamente contextualizados ao nicho do lead
+ * Evita contaminação de cortes de cabelo para advogados ou dentistas
+ */
+export function getSuggestedServicesForNiche(nicheText: string, businessName: string): Array<{ name: string; price: string; description: string }> {
+  const clean = (nicheText || '').toLowerCase();
+
+  // 1. Advocacia / Jurídico
+  if (/advog|jurid|direito|oab|criminal|penal|trabalh|civel|tribut/i.test(clean)) {
+    return [
+      { name: 'Consulta Jurídica & Parecer Inicial', price: 'Sob Consulta', description: 'Diagnóstico estratégico aprofundado do caso com orientação clara dos direitos e riscos.' },
+      { name: 'Assessoria & Acompanhamento Processual', price: 'Sob Consulta', description: 'Representação técnica integral perante fóruns, tribunais e instâncias superiores.' },
+      { name: 'Elaboração & Auditoria de Contratos', price: 'Sob Consulta', description: 'Redação blindada e revisão preventiva de acordos comerciais e civis.' },
+      { name: 'Atuação Preventiva & Conciliação Extrajudicial', price: 'Sob Consulta', description: 'Soluções rápidas e seguras para resolução de conflitos sem litígios prolongados.' }
+    ];
+  }
+
+  // 2. Odontologia
+  if (/odonto|dent|implante|sorriso|clareamento|ortodont/i.test(clean)) {
+    return [
+      { name: 'Avaliação & Check-up Digital Completo', price: 'Sob Consulta', description: 'Exame clínico detalhado com tecnologia digital para planejamento do seu sorriso.' },
+      { name: 'Implantes Dentários & Próteses de Alta Fixação', price: 'Sob Consulta', description: 'Recupere a mastigação e estética com tecnologia minimamente invasiva.' },
+      { name: 'Clareamento Dental a Laser & Estética', price: 'Sob Consulta', description: 'Dentes mais brancos com segurança e acompanhamento profissional.' },
+      { name: 'Alinhadores Invisíveis & Ortodontia', price: 'Sob Consulta', description: 'Correção rápida e discreta da mordida e alinhamento dos dentes.' }
+    ];
+  }
+
+  // 3. Medicina / Clínicas
+  if (/medic|clinica|doutor|consulta|pediatr|cardio|oftalmo|dermat/i.test(clean)) {
+    return [
+      { name: 'Consulta Médica Especializada', price: 'Sob Consulta', description: 'Atendimento humanizado, escuta atenta e investigação diagnóstica de precisão.' },
+      { name: 'Exames Preventivos & Check-up de Rotina', price: 'Sob Consulta', description: 'Bateria de exames essenciais para manutenção da sua saúde e longevidade.' },
+      { name: 'Acompanhamento Contínuo & Tratamentos', price: 'Sob Consulta', description: 'Planos terapêuticos individualizados focados no seu bem-estar completo.' }
+    ];
+  }
+
+  // 4. Barbearia
+  if (/barbe|barba|cabelo masculino|navalha/i.test(clean)) {
+    return [
+      { name: 'Corte Tradicional / Degradê Moderno', price: 'R$ 50,00', description: 'Corte na tesoura e máquina com alinhamento perfeito e finalização.' },
+      { name: 'Barba Terapia com Toalha Quente', price: 'R$ 45,00', description: 'Toalha quente, óleos hidratantes, esfoliação e navalha descartável.' },
+      { name: 'Combo Completo Cabelo + Barba', price: 'R$ 85,00', description: 'Experiência completa com desconto especial e café cortesia.' }
+    ];
+  }
+
+  // 5. Tatuagem & Piercing
+  if (/tatto|tatuag|piercing|estudio de tattoo/i.test(clean)) {
+    return [
+      { name: 'Projeto Autoral / Tatuagem Personalizada', price: 'Sob Consulta', description: 'Criação exclusiva do desenho com base na sua ideia e anatomia corporal.' },
+      { name: 'Cobertura (Cover-up) & Reforma', price: 'Sob Consulta', description: 'Restauração ou transformação de tatuagens antigas com alta técnica.' },
+      { name: 'Aplicação de Body Piercing em Titânio', price: 'A partir de R$ 90', description: 'Perfuração com materiais biocompatíveis e assepsia hospitalar.' }
+    ];
+  }
+
+  // 6. Gastronomia / Restaurantes
+  if (/restaurante|burger|pizz|sushi|lanch|bar|pub|gourmet/i.test(clean)) {
+    return [
+      { name: 'Pratos Principais & Especialidades da Casa', price: 'A partir de R$ 39,90', description: 'Receitas exclusivas preparadas com ingredientes frescos e selecionados.' },
+      { name: 'Cardápio Executivo & Combos Promocionais', price: 'A partir de R$ 29,90', description: 'Opção completa e equilibrada perfeita para o seu almoço ou jantar.' },
+      { name: 'Sobremesas Artesanais & Bebidas Especiais', price: 'A partir de R$ 16,00', description: 'Finalização perfeita com doces feitos na casa e drinks autorais.' }
+    ];
+  }
+
+  // 7. Estética & Beleza
+  if (/estetic|beleza|salao|spa|massag|cabelereir|unha|lash/i.test(clean)) {
+    return [
+      { name: 'Procedimentos Faciais & Limpeza Profunda', price: 'Sob Consulta', description: 'Renovação celular, extração suave e hidratação iluminadora.' },
+      { name: 'Protocolos Corporais & Massoterapia', price: 'Sob Consulta', description: 'Técnicas exclusivas para modelagem, drenagem e alívio de tensões.' },
+      { name: 'Tratamentos Capilares & Estética Completa', price: 'Sob Consulta', description: 'Nutrição intensiva, reconstrução dos fios e cuidados personalizados.' }
+    ];
+  }
+
+  // 8. Pet Shop & Veterinária
+  if (/pet|veterin|banho|tosa|animal|cao|gato/i.test(clean)) {
+    return [
+      { name: 'Banho & Tosa Higiênica Especializada', price: 'A partir de R$ 60,00', description: 'Produtos hipoalergênicos, toalhas esterilizadas e muito carinho.' },
+      { name: 'Consulta Veterinária & Vacinação', price: 'Sob Consulta', description: 'Acompanhamento preventivo e cuidados completos para a saúde do seu pet.' },
+      { name: 'Estética Animal & Hidratação de Pelos', price: 'A partir de R$ 45,00', description: 'Pelagem macia, desembaraço suave e perfumação delicada.' }
+    ];
+  }
+
+  // 9. Comércio & Serviços Gerais (Fallback Seguro)
+  return [
+    { name: `Atendimento & Serviços em ${nicheText}`, price: 'Sob Consulta', description: `Soluções completas com padrão de qualidade e dedicação total da equipe da ${businessName}.` },
+    { name: 'Pacote de Atendimento Completo', price: 'Sob Consulta', description: 'O serviço mais procurado pelos nossos clientes com garantia e suporte ágil.' },
+    { name: 'Orçamento Personalizado sem Compromisso', price: 'Gratuito', description: 'Analisamos a sua necessidade e apresentamos a melhor proposta com condições facilitadas.' }
+  ];
+}
+
+/**
+ * Retorna o texto de chamada para ação (CTA) perfeito para o nicho
+ */
+export function getSuggestedCtaForNiche(nicheText: string): string {
+  const clean = (nicheText || '').toLowerCase();
+  if (/advog|jurid|direito|oab/i.test(clean)) return 'Falar com Advogado no WhatsApp';
+  if (/odonto|dent/i.test(clean)) return 'Agendar Consulta Odontológica';
+  if (/medic|clinica|doutor/i.test(clean)) return 'Agendar Consulta Médica';
+  if (/barbe/i.test(clean)) return 'Agendar Horário na Barbearia';
+  if (/tatto/i.test(clean)) return 'Pedir Orçamento de Tatuagem';
+  if (/restaurante|burger|pizz|sushi/i.test(clean)) return 'Ver Cardápio & Pedir no WhatsApp';
+  if (/estetic|beleza|spa/i.test(clean)) return 'Agendar Avaliação Estética';
+  if (/pet|veterin/i.test(clean)) return 'Agendar Horário para o Pet';
+  return 'Falar Conosco no WhatsApp';
+}
+
+/**
+ * Retorna o slogan/tagline contextualizado
+ */
+export function getSuggestedTaglineForNiche(nicheText: string, businessName: string, city: string): string {
+  const clean = (nicheText || '').toLowerCase();
+  if (/advog|jurid|direito/i.test(clean)) {
+    return `Defesa estratégica, ética e rigor técnico em ${city}.`;
+  }
+  if (/odonto|dent/i.test(clean)) {
+    return `Transformando sorrisos com tecnologia e acolhimento em ${city}.`;
+  }
+  if (/medic|clinica/i.test(clean)) {
+    return `Cuidado humanizado e medicina de precisão para toda a sua família.`;
+  }
+  if (/barbe/i.test(clean)) {
+    return `Cortes clássicos, barba alinhada e ambiente exclusivo em ${city}.`;
+  }
+  if (/tatto/i.test(clean)) {
+    return `Arte na pele com originalidade, técnica refinada e biossegurança.`;
+  }
+  if (/restaurante|gastronomia/i.test(clean)) {
+    return `Sabores inesquecíveis e momentos marcantes para o seu paladar em ${city}.`;
+  }
+  return `Excelência, compromisso e atendimento de alto nível em ${city}.`;
+}
+
+/**
+ * Retorna a descrição de apresentação institucional
+ */
+export function getSuggestedDescriptionForNiche(nicheText: string, businessName: string): string {
+  const clean = (nicheText || '').toLowerCase();
+  if (/advog|jurid|direito/i.test(clean)) {
+    return `No ${businessName}, aliamos sólida formação técnica, discrição e dedicação incansável à defesa dos interesses de nossos clientes, buscando sempre a solução jurídica mais eficaz.`;
+  }
+  if (/odonto|dent/i.test(clean)) {
+    return `Na ${businessName}, nossa missão é devolver a você a confiança de sorrir livremente, oferecendo tratamentos odontológicos avançados em um ambiente acolhedor e seguro.`;
+  }
+  if (/medic|clinica/i.test(clean)) {
+    return `A ${businessName} nasceu com o compromisso de unir ciência médica de ponta a um acolhimento caloroso e individualizado para cada paciente.`;
+  }
+  return `Na ${businessName}, trabalhamos diariamente com paixão e excelência para oferecer o mais alto padrão em ${nicheText}, valorizando a pontualidade, a confiança e a satisfação de cada cliente.`;
+}
+
+/**
+ * Retorna depoimentos coerentes caso o comércio não possua reviews na API
+ */
+export function getSuggestedReviewsForNiche(nicheText: string): Array<{ author: string; rating: number; text: string }> {
+  const clean = (nicheText || '').toLowerCase();
+  if (/advog|jurid|direito/i.test(clean)) {
+    return [
+      { author: 'Dr. Roberto Silveira', rating: 5, text: 'Atendimento impecável! Profissionais extremamente éticos, me mantiveram informado sobre cada andamento do processo.' },
+      { author: 'Marcos Vinícius C.', rating: 5, text: 'Segurança e clareza desde a primeira consulta. Resolveram minha questão jurídica com extrema competência e agilidade.' },
+      { author: 'Juliana P. Almeida', rating: 5, text: 'Excelente assessoria jurídica. Transmitem muita confiança e demonstraram domínio técnico exemplar.' }
+    ];
+  }
+  if (/odonto|dent/i.test(clean)) {
+    return [
+      { author: 'Fernanda Martins', rating: 5, text: 'Tinha muito medo de dentista, mas aqui me senti super acolhida! Tratamento sem dor e resultado perfeito no meu sorriso.' },
+      { author: 'Lucas Andrade', rating: 5, text: 'Clínica moderna, profissionais atenciosos e pontualidade britânica. Melhor experiência odontológica que já tive.' },
+      { author: 'Beatriz Costa', rating: 5, text: 'Fiz meus implantes e clareamento aqui. Mudou minha autoestima! Super recomendo a todos da cidade.' }
+    ];
+  }
+  return [
+    { author: 'Guilherme Siqueira', rating: 5, text: 'Atendimento fantástico! Profissionais dedicados, pontuais e com resultado impecável. Recomendo de olhos fechados!' },
+    { author: 'Camila Fernandes', rating: 5, text: 'Melhor experiência da cidade! Fui super bem atendida e com certeza voltarei sempre.' },
+    { author: 'Rodrigo Medeiros', rating: 5, text: 'Estrutura impecável, preço justo e serviço de altíssima qualidade. Virei cliente fiel!' }
+  ];
 }

@@ -98,10 +98,12 @@ export async function POST(req: NextRequest) {
       clientName: businessName,
       clientPhone: rawPhone,
       clientEmail: `${cleanSlug}@webbilly.com.br`,
+      operatorId: operatorId,
       operatorToken: operatorId,
       operatorName: operatorName,
       monthlyPrice: 29.9,
       status: 'active' as const,
+      site_status: 'active',
       deployedUrl: `/api/public/site/${cleanSlug}/render`,
       checkoutUrl: `/proposta/${leadToken}`,
       createdAt: new Date().toISOString(),
@@ -122,9 +124,9 @@ export async function POST(req: NextRequest) {
       await upsertSubscriptionInSupabase(subRecord);
       const supabase = getSupabaseAdmin();
       if (supabase) {
-        await supabase.from('sites').upsert({
+        // Tenta salvar com esquema completo
+        const sitePayload = {
           id: cleanSlug,
-          subdomain: cleanSlug,
           business_name: businessName,
           niche,
           city,
@@ -133,12 +135,40 @@ export async function POST(req: NextRequest) {
           deployed_url: `/api/public/site/${cleanSlug}/render`,
           lead_token: leadToken,
           status: 'active',
+          is_published: true,
           operator_id: operatorId,
-          html_content: finalHtml,
-          html: finalHtml,
-          created_at: new Date().toISOString(),
+          template_id: templateId,
           updated_at: new Date().toISOString()
+        };
+
+        const { error: siteErr } = await supabase.from('sites').upsert({
+          ...sitePayload,
+          subdomain: cleanSlug,
+          slug: cleanSlug,
+          html_content: finalHtml,
+          html: finalHtml
         });
+
+        // Se falhou por colunas não criadas na tabela sites (ex: code 42703), salva versão resiliente
+        if (siteErr) {
+          console.warn('[Studio Deploy] Ajustando upsert em sites para colunas padrão:', siteErr.message);
+          try {
+            await supabase.from('sites').upsert({
+              id: cleanSlug,
+              business_name: businessName,
+              status: 'active',
+              updated_at: new Date().toISOString()
+            });
+          } catch {}
+        }
+
+        // Atualiza status do lead correspondente em prospected_leads
+        try {
+          await supabase
+            .from('prospected_leads')
+            .update({ status: 'deployed', updated_at: new Date().toISOString() })
+            .or(`business_name.eq.${businessName},place_id.eq.${cleanSlug}`);
+        } catch {}
       }
     } catch (supaErr) {
       console.warn('[Studio Deploy] Erro ao salvar no Supabase:', supaErr);
@@ -151,7 +181,7 @@ export async function POST(req: NextRequest) {
       console.warn('[Studio Deploy] Erro ao sincronizar suspensão:', suspErr);
     }
 
-    // 5. Registra o subdomínio na Vercel API se credenciais estiverem disponíveis
+    // 5. Registra o subdomínio na Vercel API com timeout seguro de 5 segundos
     let vercelDomainSuccess = false;
     if (VERCEL_TOKEN && VERCEL_PROJECT_ID) {
       try {
@@ -166,7 +196,8 @@ export async function POST(req: NextRequest) {
             Authorization: `Bearer ${VERCEL_TOKEN}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ name: domainName })
+          body: JSON.stringify({ name: domainName }),
+          signal: AbortSignal.timeout(5000)
         });
 
         if (vRes.ok || vRes.status === 409) {
