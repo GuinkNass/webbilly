@@ -3,6 +3,33 @@
  */
 
 /**
+ * Extrai o nome de usuário (@handle) limpo a partir de uma URL de perfil do Instagram
+ * Suporta formatos:
+ * - https://www.instagram.com/13pointtattoo/
+ * - https://instagram.com/13pointtattoo?igsh=...
+ * - instagram.com/13pointtattoo
+ * - @13pointtattoo
+ * Ignora rotas do sistema do Instagram (p, reel, explore, etc.)
+ */
+export function extractInstagramHandleFromUrl(url: string | null | undefined): string | null {
+  if (!url || typeof url !== 'string') return null;
+  const clean = url.trim();
+  if (clean.startsWith('@')) {
+    const handle = clean.replace(/^@+/, '').split('/')[0].split('?')[0].trim();
+    return handle.length >= 2 ? handle : null;
+  }
+  const match = clean.match(/(?:instagram\.com|instagr\.am)\/([a-zA-Z0-9._]{2,30})/i);
+  if (match) {
+    const handle = match[1].toLowerCase();
+    const reserved = ['p', 'reel', 'reels', 'tv', 'stories', 'explore', 'direct', 'accounts', 'tags', 'about', 'legal', 'help', 'developer'];
+    if (!reserved.includes(handle)) {
+      return match[1];
+    }
+  }
+  return null;
+}
+
+/**
  * Extrai a URL real da imagem de alta resolução de um post ou reel do Instagram
  * utilizando o crawler oficial da Meta (facebookexternalhit/1.1)
  */

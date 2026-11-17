@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sanitizeSlug } from '@/lib/site-storage';
 import { getUserFromRequest } from '@/lib/auth';
 import { upsertProspectedLeadsInSupabase, fetchProspectedLeadsFromSupabase } from '@/lib/supabase';
+import { extractInstagramHandleFromUrl } from '@/lib/instagram-extractor';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
 export interface LeadBusiness {
   id: string;
+  placeId?: string;
   name: string;
   niche: string;
   category: string;
@@ -16,6 +18,7 @@ export interface LeadBusiness {
   phone: string;
   whatsapp: string;
   website: string | null;
+  websiteUri?: string | null;
   rating: number;
   reviews: number;
   reviewsCount: number;
@@ -26,6 +29,7 @@ export interface LeadBusiness {
   opportunityReason: string;
   suggestedSlug: string;
   instagram?: string;
+  instagramHandle?: string;
   cover_photo?: string | null;
   coverPhoto?: string | null;
   photos?: string[];
@@ -68,7 +72,13 @@ export async function POST(req: NextRequest) {
     const { niche = 'Barbearia', city = 'São Paulo - SP', operatorId = 'OP-BILLY-01' } = body;
 
     const query = `${niche.trim()} em ${city.trim()}`;
-    const GOOGLE_PLACES_KEY = (process.env.GOOGLE_PLACES_API_KEY || '').trim();
+    const GOOGLE_PLACES_KEY = (
+      process.env.GOOGLE_MAPS_API_KEY ||
+      process.env.GOOGLE_PLACES_API_KEY ||
+      process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ||
+      process.env.GOOGLE_API_KEY ||
+      ''
+    ).trim();
     const SERPER_KEY = (process.env.SERPER_API_KEY || '').trim();
 
     let rawPlaces: any[] = [];
@@ -89,7 +99,7 @@ export async function POST(req: NextRequest) {
             'Content-Type': 'application/json',
             'X-Goog-Api-Key': GOOGLE_PLACES_KEY,
             'X-Goog-FieldMask':
-              'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.rating,places.userRatingCount,places.primaryTypeDisplayName,places.photos,places.regularOpeningHours,places.reviews'
+              'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.photos,places.rating,places.userRatingCount,places.regularOpeningHours,places.reviews,places.primaryTypeDisplayName'
           },
           body: JSON.stringify({
             textQuery: query,
@@ -112,7 +122,7 @@ export async function POST(req: NextRequest) {
               // 1. Fotos reais em alta resolução (maxWidthPx=1200) com skipHttpRedirect=true (extrai photoUri do googleusercontent)
               let resolvedPhotos: string[] = [];
               if (Array.isArray(p.photos) && p.photos.length > 0 && GOOGLE_PLACES_KEY) {
-                const targetPhotos = p.photos.slice(0, 6);
+                const targetPhotos = p.photos.slice(0, 10);
                 const photoPromises = targetPhotos.map(async (photoObj: any) => {
                   if (!photoObj?.name) return null;
                   try {
@@ -122,9 +132,12 @@ export async function POST(req: NextRequest) {
                       signal: AbortSignal.timeout(4000),
                       cache: 'no-store'
                     });
-                    if (!mediaRes.ok) return null;
-                    const mediaJson = await mediaRes.json().catch(() => ({}));
-                    return mediaJson.photoUri || null;
+                    if (mediaRes.ok) {
+                      const mediaJson = await mediaRes.json().catch(() => ({}));
+                      if (mediaJson.photoUri) return mediaJson.photoUri;
+                    }
+                    // Fallback para redirect direto
+                    return `https://places.googleapis.com/v1/${photoObj.name}/media?maxWidthPx=1200&key=${GOOGLE_PLACES_KEY}`;
                   } catch {
                     return null;
                   }
@@ -154,12 +167,19 @@ export async function POST(req: NextRequest) {
                   .filter((r: any) => r.text && r.text.length > 5);
               }
 
+              // Extrai @instagram diretamente do websiteUri da ficha do Google Places
+              const instaHandle = extractInstagramHandleFromUrl(p.websiteUri);
+
               return {
                 id: p.id || `places_${Math.random().toString(36).substring(2, 9)}`,
+                placeId: p.id,
                 name: p.displayName?.text || p.displayName || 'Comércio Local',
                 address: p.formattedAddress || `${city}`,
                 phone: p.nationalPhoneNumber || p.internationalPhoneNumber || '',
                 website: p.websiteUri || null,
+                websiteUri: p.websiteUri || null,
+                instagram: instaHandle ? `@${instaHandle}` : undefined,
+                instagramHandle: instaHandle || undefined,
                 rating: Number(p.rating || 5.0),
                 reviewsCount: Number(p.userRatingCount || 0),
                 category: p.primaryTypeDisplayName?.text || niche || 'Comércio Local',
@@ -205,12 +225,17 @@ export async function POST(req: NextRequest) {
           if (Array.isArray(sJson.places) && sJson.places.length > 0) {
             rawPlaces = sJson.places.map((p: any) => {
               const serperPhotos = [p.imageUrl, p.thumbnailUrl].filter(Boolean);
+              const instaHandle = extractInstagramHandleFromUrl(p.website);
               return {
                 id: p.cid || `serper_${Math.random().toString(36).substring(2, 9)}`,
+                placeId: p.cid,
                 name: p.title || p.name || 'Comércio Local',
                 address: p.address || `${city}`,
                 phone: p.phoneNumber || p.phone || '',
                 website: p.website || null,
+                websiteUri: p.website || null,
+                instagram: instaHandle ? `@${instaHandle}` : undefined,
+                instagramHandle: instaHandle || undefined,
                 rating: Number(p.rating || 5.0),
                 reviewsCount: Number(p.ratingCount || p.reviews || 0),
                 category: p.category || niche || 'Comércio Local',
@@ -311,13 +336,18 @@ export async function POST(req: NextRequest) {
                 const tags = item.extratags || {};
                 const realPhone = tags.phone || tags['contact:phone'] || tags['contact:whatsapp'] || tags['phone:mobile'] || '';
                 const realWebsite = tags.website || tags['contact:website'] || null;
+                const instaHandle = extractInstagramHandleFromUrl(realWebsite);
 
                 rawPlaces.push({
                   id: `osm_${item.place_id || Math.random().toString(36).substring(2, 9)}`,
+                  placeId: String(item.place_id || ''),
                   name: rawName,
                   address: fullAddr,
                   phone: realPhone,
                   website: realWebsite,
+                  websiteUri: realWebsite,
+                  instagram: instaHandle ? `@${instaHandle}` : undefined,
+                  instagramHandle: instaHandle || undefined,
                   rating: 5.0,
                   reviewsCount: realPhone ? 1 : 0,
                   category: niche || 'Comércio Local'
@@ -391,10 +421,11 @@ export async function POST(req: NextRequest) {
       const isHighOpportunity = !hasOwnWebsite;
 
       const suggestedSlug = sanitizeSlug(item.name || `empresa-${idx + 1}`);
+      const instaHandle = item.instagramHandle || extractInstagramHandleFromUrl(item.website);
 
       let oppReason = '🔥 Não possui site próprio indexado no Google. Alta oportunidade!';
-      if (rawWeb.includes('instagram.com')) {
-        oppReason = '📱 Usa apenas perfil do Instagram como link. Grande potencial para Landing Page oficial!';
+      if (instaHandle || rawWeb.includes('instagram.com')) {
+        oppReason = `📱 Usa apenas perfil do Instagram (@${instaHandle || 'perfil'}) como link. Grande potencial para Landing Page oficial!`;
       } else if (rawWeb.includes('linktr.ee') || rawWeb.includes('wa.me')) {
         oppReason = '🔗 Usa apenas agregador de links/WhatsApp. Falta autoridade profissional!';
       } else if (hasOwnWebsite) {
@@ -403,6 +434,7 @@ export async function POST(req: NextRequest) {
 
       return {
         id: item.id || `lead_${idx + 1}`,
+        placeId: item.placeId || item.id,
         name: item.name,
         niche: item.category || niche,
         category: item.category || niche,
@@ -411,6 +443,9 @@ export async function POST(req: NextRequest) {
         phone: item.phone,
         whatsapp: cleanPhone,
         website: item.website,
+        websiteUri: item.website,
+        instagram: instaHandle ? `@${instaHandle}` : undefined,
+        instagramHandle: instaHandle || undefined,
         rating: item.rating || 5.0,
         reviews: item.reviewsCount || 0,
         reviewsCount: item.reviewsCount || 0,

@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { extractInstagramPostImageUrl, validateImageUrl } from '@/lib/instagram-extractor';
+import {
+  extractInstagramPostImageUrl,
+  validateImageUrl,
+  extractInstagramHandleFromUrl
+} from '@/lib/instagram-extractor';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import fs from 'fs-extra';
 import path from 'path';
@@ -92,20 +96,72 @@ async function uploadImageToStorage(
   }
 }
 
+/**
+ * Resolve a foto da Places API (New) a partir do photo.name (places/.../photos/...)
+ * para uma URL de alta resolução válida (photoUri do googleusercontent ou Supabase permanente)
+ */
+async function resolveGooglePlacesPhoto(
+  photoName: string,
+  apiKey: string,
+  cleanSlug: string,
+  index: number,
+  supabase: any
+): Promise<string | null> {
+  if (!photoName || !apiKey) return null;
+  try {
+    // 1. Tenta skipHttpRedirect=true para pegar o photoUri direto do Google CDN sem expor key
+    const mediaUrl = `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=1200&skipHttpRedirect=true&key=${encodeURIComponent(apiKey)}`;
+    const res = await fetch(mediaUrl, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(5000),
+      cache: 'no-store'
+    });
+
+    if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (data?.photoUri && typeof data.photoUri === 'string') {
+        const savedUrl = await uploadImageToStorage(data.photoUri, 'google-maps', cleanSlug, index, supabase);
+        return savedUrl || data.photoUri;
+      }
+    }
+
+    // 2. Fallback: baixa o binário via redirect e salva permanentemente no Supabase Storage
+    const directMediaUrl = `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=1200&key=${encodeURIComponent(apiKey)}`;
+    const savedFallback = await uploadImageToStorage(directMediaUrl, 'google-maps', cleanSlug, index, supabase);
+    if (savedFallback) return savedFallback;
+
+    // 3. Fallback via image-proxy
+    return `/api/studio/image-proxy?url=${encodeURIComponent(directMediaUrl)}`;
+  } catch (err: any) {
+    console.warn(`[Google Photo Resolve] Erro ao resolver foto ${photoName}:`, err?.message);
+    return null;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
     const {
+      placeId = '',
+      websiteUri = '',
+      website = '',
+      instagramHandle = '',
+      instagram = '',
       businessName = '',
       city = '',
       niche = '',
-      instagram = '',
       query: customQuery = ''
     } = body;
 
     const APIFY_TOKEN = (process.env.APIFY_API_TOKEN || process.env.APIFY_TOKEN || '').trim();
     const SERPER_KEY = (process.env.SERPER_API_KEY || '').trim();
-    const GOOGLE_PLACES_KEY = (process.env.GOOGLE_PLACES_API_KEY || '').trim();
+    const GOOGLE_API_KEY = (
+      process.env.GOOGLE_MAPS_API_KEY ||
+      process.env.GOOGLE_PLACES_API_KEY ||
+      process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ||
+      process.env.GOOGLE_API_KEY ||
+      ''
+    ).trim();
     const supabase = getSupabaseAdmin();
 
     const cleanSlug = (businessName || 'estabelecimento')
@@ -116,29 +172,33 @@ export async function POST(req: NextRequest) {
       .replace(/^-|-$/g, '');
 
     // -------------------------------------------------------------------------
-    // IDENTIFICAÇÃO DO HANDLE DO INSTAGRAM (@username)
+    // 1. IDENTIFICAÇÃO DO HANDLE DO INSTAGRAM (@username)
     // -------------------------------------------------------------------------
-    let targetHandle = (instagram || '')
+    // Prioridade 1: Informado explicitamente no payload (instagramHandle ou instagram)
+    let targetHandle = (instagramHandle || instagram || '')
       .replace(/^@/, '')
       .replace(/https?:\/\/(?:www\.)?instagram\.com\//i, '')
       .split('/')[0]
       .split('?')[0]
       .trim();
 
-    // Se o usuário digitou "@handle" ou uma URL no campo de busca personalizada
-    if (!targetHandle && customQuery) {
-      const atMatch = customQuery.match(/@([a-zA-Z0-9._]{2,30})/);
-      if (atMatch) {
-        targetHandle = atMatch[1];
-      } else {
-        const urlMatch = customQuery.match(/(?:instagram\.com)\/([a-zA-Z0-9._]{2,30})/i);
-        if (urlMatch) {
-          targetHandle = urlMatch[1];
-        }
+    // Prioridade 2: Extraído do websiteUri enviado no payload
+    if (!targetHandle && (websiteUri || website)) {
+      const handleFromSite = extractInstagramHandleFromUrl(websiteUri || website);
+      if (handleFromSite) {
+        targetHandle = handleFromSite;
       }
     }
 
-    // Se ainda não temos o handle, busca automaticamente no Google/Serper o perfil do comércio
+    // Prioridade 3: Se o usuário digitou "@handle" ou uma URL no campo de busca personalizada
+    if (!targetHandle && customQuery) {
+      const handleFromQuery = extractInstagramHandleFromUrl(customQuery);
+      if (handleFromQuery) {
+        targetHandle = handleFromQuery;
+      }
+    }
+
+    // Prioridade 4: Se ainda não temos o handle, busca automaticamente no Google/Serper
     if (!targetHandle && SERPER_KEY && businessName) {
       try {
         const discoRes = await fetch('https://google.serper.dev/search', {
@@ -162,14 +222,9 @@ export async function POST(req: NextRequest) {
           const organic = discoJson.organic || [];
           for (const org of organic) {
             const link = org.link || '';
-            const match = link.match(/(?:instagram\.com)\/([a-zA-Z0-9._]{2,30})\/?$/i);
-            if (
-              match &&
-              !['p', 'reel', 'tv', 'explore', 'stories', 'direct', 'accounts', 'tags'].includes(
-                match[1].toLowerCase()
-              )
-            ) {
-              targetHandle = match[1];
+            const matchHandle = extractInstagramHandleFromUrl(link);
+            if (matchHandle) {
+              targetHandle = matchHandle;
               break;
             }
           }
@@ -203,12 +258,183 @@ export async function POST(req: NextRequest) {
       });
     };
 
-    // Coleção de tarefas assíncronas para execução paralela de alta performance
+    // Coleção de tarefas assíncronas para execução paralela
     const asyncTasks: Promise<void>[] = [];
+    let instaPromise: Promise<void> | null = null;
+    let instaScraped = false;
+
+    // Função para disparar a extração do Instagram via Apify
+    const triggerApifyInstagram = (handle: string) => {
+      if (!APIFY_TOKEN || !handle || instaScraped) return;
+      instaScraped = true;
+      instaPromise = (async () => {
+        try {
+          const apifyInstaUrl = `https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items?token=${encodeURIComponent(
+            APIFY_TOKEN
+          )}&timeout=25`;
+
+          const res = await fetch(apifyInstaUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              usernames: [handle],
+              resultsLimit: 15
+            }),
+            signal: AbortSignal.timeout(26000),
+            cache: 'no-store'
+          });
+
+          if (res.ok) {
+            const items = await res.json().catch(() => []);
+            if (Array.isArray(items) && items.length > 0) {
+              const profile = items[0] || {};
+              const instaUrls: string[] = [];
+
+              if (profile.profilePicUrlHD) instaUrls.push(profile.profilePicUrlHD);
+              else if (profile.profilePicUrl) instaUrls.push(profile.profilePicUrl);
+
+              if (Array.isArray(profile.latestPosts)) {
+                for (const post of profile.latestPosts) {
+                  if (instaUrls.length >= 20) break;
+                  if (post.displayUrl) instaUrls.push(post.displayUrl);
+                  if (Array.isArray(post.images)) {
+                    for (const sub of post.images) {
+                      if (typeof sub === 'string' && sub.startsWith('http')) instaUrls.push(sub);
+                    }
+                  }
+                }
+              }
+
+              const uniqueInstaUrls = Array.from(new Set(instaUrls)).slice(0, 15);
+
+              const uploadSettled = await Promise.allSettled(
+                uniqueInstaUrls.map((u, idx) =>
+                  uploadImageToStorage(u, 'instagram', handle, idx, supabase)
+                )
+              );
+
+              uploadSettled.forEach((r, idx) => {
+                const finalUrl = r.status === 'fulfilled' && r.value ? r.value : uniqueInstaUrls[idx];
+                if (finalUrl) {
+                  addVerifiedPhoto(
+                    finalUrl,
+                    `${businessName || handle} (@${handle} Instagram HD)`,
+                    'instagram',
+                    finalUrl
+                  );
+                }
+              });
+            }
+          }
+        } catch (err: any) {
+          console.warn('[Buscar Fotos] Erro Apify Instagram:', err?.message);
+        }
+      })();
+    };
+
+    // Se já conhecemos o handle do Instagram, inicia imediatamente em paralelo com a busca do Google
+    if (targetHandle) {
+      triggerApifyInstagram(targetHandle);
+    }
 
     // -------------------------------------------------------------------------
-    // 1. PROVEDOR: APIFY GOOGLE MAPS CRAWLER (compass~crawler-google-places)
-    // Extrai todas as fotos reais da galeria oficial do Google Maps (Fachada, Interior, Trabalhos)
+    // PASSO A: GOOGLE PLACES API (NEW) OFICIAL (placeId ou searchText)
+    // Extrai e resolve todas as photoUri reais da ficha oficial do Google
+    // -------------------------------------------------------------------------
+    if (GOOGLE_API_KEY && (placeId || businessName)) {
+      asyncTasks.push(
+        (async () => {
+          try {
+            let targetPlace: any = null;
+
+            // Se recebemos placeId, consulta direto o detalhe do lugar
+            if (placeId) {
+              const detailRes = await fetch(
+                `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}`,
+                {
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'X-Goog-Api-Key': GOOGLE_API_KEY,
+                    'X-Goog-FieldMask':
+                      'id,displayName,formattedAddress,nationalPhoneNumber,internationalPhoneNumber,websiteUri,photos,rating,userRatingCount,regularOpeningHours,reviews'
+                  },
+                  signal: AbortSignal.timeout(6000),
+                  cache: 'no-store'
+                }
+              );
+              if (detailRes.ok) {
+                targetPlace = await detailRes.json().catch(() => null);
+              }
+            }
+
+            // Se não encontrou por placeId, faz busca por texto
+            if (!targetPlace && businessName) {
+              const placesRes = await fetch('https://places.googleapis.com/v1/places:searchText', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-Goog-Api-Key': GOOGLE_API_KEY,
+                  'X-Goog-FieldMask':
+                    'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.websiteUri,places.photos,places.rating,places.userRatingCount,places.regularOpeningHours,places.reviews'
+                },
+                body: JSON.stringify({
+                  textQuery: `${businessName} em ${city}`,
+                  languageCode: 'pt-BR',
+                  maxResultCount: 2
+                }),
+                signal: AbortSignal.timeout(6000),
+                cache: 'no-store'
+              });
+
+              if (placesRes.ok) {
+                const pJson = await placesRes.json().catch(() => ({}));
+                targetPlace = pJson.places?.[0] || null;
+              }
+            }
+
+            if (targetPlace) {
+              // Extrai @instagram diretamente do websiteUri da ficha se ainda não tivermos
+              if (!targetHandle && targetPlace.websiteUri) {
+                const discoveredHandle = extractInstagramHandleFromUrl(targetPlace.websiteUri);
+                if (discoveredHandle) {
+                  targetHandle = discoveredHandle;
+                  triggerApifyInstagram(discoveredHandle);
+                }
+              }
+
+              // Resolve todas as fotos de place.photos (até 10 fotos)
+              if (Array.isArray(targetPlace.photos) && targetPlace.photos.length > 0) {
+                const targetPhotos = targetPlace.photos.slice(0, 10);
+                const placeTitle = targetPlace.displayName?.text || businessName;
+
+                const photoPromises = targetPhotos.map((p: any, idx: number) => {
+                  if (!p?.name) return Promise.resolve(null);
+                  return resolveGooglePlacesPhoto(p.name, GOOGLE_API_KEY, cleanSlug, idx, supabase);
+                });
+
+                const resolved = await Promise.allSettled(photoPromises);
+                resolved.forEach((r) => {
+                  if (r.status === 'fulfilled' && r.value) {
+                    addVerifiedPhoto(
+                      r.value,
+                      `${placeTitle} (Google Maps Oficial)`,
+                      'google',
+                      r.value
+                    );
+                  }
+                });
+              }
+            }
+          } catch (err: any) {
+            console.warn('[Buscar Fotos] Erro Google Places Photos:', err?.message);
+          }
+        })()
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // PASSO B: APIFY GOOGLE MAPS CRAWLER (compass~crawler-google-places)
+    // Galeria estendida do Google Maps (Fachada, Interior, Trabalhos)
     // -------------------------------------------------------------------------
     if (APIFY_TOKEN && businessName) {
       asyncTasks.push(
@@ -236,8 +462,17 @@ export async function POST(req: NextRequest) {
               const items = await res.json().catch(() => []);
               if (Array.isArray(items) && items.length > 0) {
                 const place = items[0] || {};
-                const mapsUrls: string[] = [];
 
+                // Se o crawler do Google Maps encontrar website com Instagram e ainda não temos o handle
+                if (!targetHandle && (place.website || place.url)) {
+                  const discovered = extractInstagramHandleFromUrl(place.website || place.url);
+                  if (discovered) {
+                    targetHandle = discovered;
+                    triggerApifyInstagram(discovered);
+                  }
+                }
+
+                const mapsUrls: string[] = [];
                 if (Array.isArray(place.imageUrls)) {
                   for (const u of place.imageUrls) {
                     if (typeof u === 'string' && u.startsWith('http')) mapsUrls.push(u);
@@ -256,28 +491,18 @@ export async function POST(req: NextRequest) {
                 if (typeof place.imageUrl === 'string' && place.imageUrl.startsWith('http')) {
                   mapsUrls.push(place.imageUrl);
                 }
-                if (Array.isArray(place.photos)) {
-                  for (const p of place.photos) {
-                    if (typeof p === 'string' && p.startsWith('http')) mapsUrls.push(p);
-                    else if (p && typeof p === 'object') {
-                      const u = p.photoUrl || p.url || p.imageUrl;
-                      if (typeof u === 'string' && u.startsWith('http')) mapsUrls.push(u);
-                    }
-                  }
-                }
 
-                const uniqueMapsUrls = Array.from(new Set(mapsUrls)).slice(0, 25);
+                const uniqueMapsUrls = Array.from(new Set(mapsUrls)).slice(0, 20);
                 const placeTitle = place.title || businessName;
 
-                // Salva permanentemente no Supabase Storage
                 const uploadSettled = await Promise.allSettled(
                   uniqueMapsUrls.map((u, idx) =>
-                    uploadImageToStorage(u, 'google-maps', cleanSlug, idx, supabase)
+                    uploadImageToStorage(u, 'google-maps', cleanSlug, idx + 10, supabase)
                   )
                 );
 
                 uploadSettled.forEach((r, idx) => {
-                  const finalUrl = (r.status === 'fulfilled' && r.value) ? r.value : uniqueMapsUrls[idx];
+                  const finalUrl = r.status === 'fulfilled' && r.value ? r.value : uniqueMapsUrls[idx];
                   if (finalUrl) {
                     addVerifiedPhoto(
                       finalUrl,
@@ -296,146 +521,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // -------------------------------------------------------------------------
-    // 2. PROVEDOR: APIFY INSTAGRAM PROFILE SCRAPER (apify~instagram-profile-scraper)
-    // Extrai as 12–15 fotos reais mais recentes do perfil oficial do estabelecimento
-    // -------------------------------------------------------------------------
-    if (APIFY_TOKEN && targetHandle) {
-      asyncTasks.push(
-        (async () => {
-          try {
-            const apifyInstaUrl = `https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items?token=${encodeURIComponent(
-              APIFY_TOKEN
-            )}&timeout=25`;
-
-            const res = await fetch(apifyInstaUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                usernames: [targetHandle],
-                resultsLimit: 15
-              }),
-              signal: AbortSignal.timeout(26000),
-              cache: 'no-store'
-            });
-
-            if (res.ok) {
-              const items = await res.json().catch(() => []);
-              if (Array.isArray(items) && items.length > 0) {
-                const profile = items[0] || {};
-                const instaUrls: string[] = [];
-
-                if (profile.profilePicUrlHD) instaUrls.push(profile.profilePicUrlHD);
-                else if (profile.profilePicUrl) instaUrls.push(profile.profilePicUrl);
-
-                if (Array.isArray(profile.latestPosts)) {
-                  for (const post of profile.latestPosts) {
-                    if (instaUrls.length >= 20) break;
-                    if (post.displayUrl) instaUrls.push(post.displayUrl);
-                    if (Array.isArray(post.images)) {
-                      for (const sub of post.images) {
-                        if (typeof sub === 'string' && sub.startsWith('http')) instaUrls.push(sub);
-                      }
-                    }
-                  }
-                }
-
-                const uniqueInstaUrls = Array.from(new Set(instaUrls)).slice(0, 15);
-
-                const uploadSettled = await Promise.allSettled(
-                  uniqueInstaUrls.map((u, idx) =>
-                    uploadImageToStorage(u, 'instagram', targetHandle, idx, supabase)
-                  )
-                );
-
-                uploadSettled.forEach((r, idx) => {
-                  const finalUrl = (r.status === 'fulfilled' && r.value) ? r.value : uniqueInstaUrls[idx];
-                  if (finalUrl) {
-                    addVerifiedPhoto(
-                      finalUrl,
-                      `${businessName || targetHandle} (@${targetHandle} Instagram HD)`,
-                      'instagram',
-                      finalUrl
-                    );
-                  }
-                });
-              }
-            }
-          } catch (err: any) {
-            console.warn('[Buscar Fotos] Erro Apify Instagram:', err?.message);
-          }
-        })()
-      );
-    }
-
-    // -------------------------------------------------------------------------
-    // 3. PROVEDOR: GOOGLE PLACES API (NEW) OFICIAL (places:searchText)
-    // -------------------------------------------------------------------------
-    if (GOOGLE_PLACES_KEY && businessName) {
-      asyncTasks.push(
-        (async () => {
-          try {
-            const placesRes = await fetch('https://places.googleapis.com/v1/places:searchText', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'X-Goog-Api-Key': GOOGLE_PLACES_KEY,
-                'X-Goog-FieldMask': 'places.id,places.displayName,places.photos,places.websiteUri'
-              },
-              body: JSON.stringify({
-                textQuery: `${businessName} em ${city}`,
-                languageCode: 'pt-BR',
-                maxResultCount: 2
-              }),
-              signal: AbortSignal.timeout(6000),
-              cache: 'no-store'
-            });
-
-            if (placesRes.ok) {
-              const pJson = await placesRes.json().catch(() => ({}));
-              const targetPlace = pJson.places?.[0];
-              if (Array.isArray(targetPlace?.photos)) {
-                const photoPromises = targetPlace.photos.slice(0, 10).map(async (p: any) => {
-                  if (!p?.name) return null;
-                  try {
-                    const mediaRes = await fetch(
-                      `https://places.googleapis.com/v1/${p.name}/media?maxWidthPx=1200&skipHttpRedirect=true&key=${GOOGLE_PLACES_KEY}`,
-                      { signal: AbortSignal.timeout(5000), cache: 'no-store' }
-                    );
-                    if (mediaRes.ok) {
-                      const mJson = await mediaRes.json().catch(() => ({}));
-                      return mJson.photoUri || null;
-                    }
-                  } catch {}
-                  return null;
-                });
-
-                const resolved = await Promise.allSettled(photoPromises);
-                resolved.forEach((r) => {
-                  if (r.status === 'fulfilled' && r.value) {
-                    addVerifiedPhoto(
-                      r.value,
-                      `${targetPlace.displayName?.text || businessName} (Google Maps Oficial)`,
-                      'google'
-                    );
-                  }
-                });
-              }
-            }
-          } catch (err: any) {
-            console.warn('[Buscar Fotos] Erro Places Photos:', err?.message);
-          }
-        })()
-      );
-    }
-
-    // Aguarda todas as tarefas de coleta oficial em paralelo
+    // Executa as buscas oficiais do Google Maps em paralelo
     await Promise.allSettled(asyncTasks);
 
+    // Aguarda o scraper do Instagram se ele foi disparado
+    if (instaPromise) {
+      await instaPromise;
+    }
+
     // -------------------------------------------------------------------------
-    // 4. RADAR ESPECÍFICO SERPER (Apenas fotos da própria empresa se houver poucas)
+    // PASSO C: SERPER GOOGLE IMAGES (Caso ainda tenhamos menos de 6 fotos reais)
     // -------------------------------------------------------------------------
-    if (verifiedPhotos.length < 8 && SERPER_KEY && businessName) {
+    if (verifiedPhotos.length < 6 && SERPER_KEY && businessName) {
       try {
         const serperRes = await fetch('https://google.serper.dev/images', {
           method: 'POST',
@@ -490,8 +587,6 @@ export async function POST(req: NextRequest) {
     }
 
     // Regra Rígida: NUNCA adiciona Pixabay ou fotos genéricas na aba de Fotos Reais!
-    // As fotos conceituais ficam exclusivamente na aba "Banco Pixabay HD"
-
     return NextResponse.json({
       success: true,
       query: customQuery || `${businessName} ${city}`,

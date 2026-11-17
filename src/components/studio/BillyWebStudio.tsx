@@ -71,6 +71,7 @@ import {
   DEFAULT_BLOCK_TOGGLES
 } from '@/lib/billy-desktop-port/categories';
 import { formatHeaderName } from '@/lib/desktop-templates';
+import { extractInstagramHandleFromUrl } from '@/lib/instagram-extractor';
 
 function InstagramIcon({ className = 'w-3.5 h-3.5' }: { className?: string }) {
   return (
@@ -84,6 +85,8 @@ function InstagramIcon({ className = 'w-3.5 h-3.5' }: { className?: string }) {
 
 interface LeadResult {
   id?: string;
+  placeId?: string;
+  place_id?: string;
   name: string;
   address?: string;
   city?: string;
@@ -95,6 +98,9 @@ interface LeadResult {
   category?: string;
   niche?: string;
   website?: string;
+  websiteUri?: string;
+  instagram?: string;
+  instagramHandle?: string;
   hasWebsite?: boolean;
   hasOwnWebsite?: boolean;
   isHighOpportunity?: boolean;
@@ -416,9 +422,23 @@ export default function BillyWebStudio({
     }
   };
 
-  // Busca Fotos Reais do Estabelecimento (Google Imagens & Instagram)
-  const handleSearchRealPhotos = async (qOverride?: string) => {
-    const targetQuery = qOverride !== undefined ? qOverride : (realPhotosQuery || `${siteForm.businessName} ${siteForm.city}`);
+  // Busca Fotos Reais do Estabelecimento (Google Maps & Instagram)
+  const handleSearchRealPhotos = async (
+    qOverride?: string,
+    options?: {
+      placeId?: string;
+      websiteUri?: string;
+      instagram?: string;
+      businessName?: string;
+      city?: string;
+      niche?: string;
+    }
+  ) => {
+    const targetBusiness = options?.businessName || siteForm.businessName;
+    const targetCity = options?.city || siteForm.city;
+    const targetNiche = options?.niche || siteForm.niche;
+    const targetInstagram = options?.instagram !== undefined ? options.instagram : siteForm.instagram;
+    const targetQuery = qOverride !== undefined ? qOverride : (realPhotosQuery || `${targetBusiness} ${targetCity}`);
     if (!targetQuery.trim()) return;
 
     setRealPhotosLoading(true);
@@ -428,17 +448,27 @@ export default function BillyWebStudio({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          businessName: siteForm.businessName,
-          city: siteForm.city,
-          niche: siteForm.niche,
-          instagram: siteForm.instagram,
+          businessName: targetBusiness,
+          city: targetCity,
+          niche: targetNiche,
+          instagram: targetInstagram,
+          placeId: options?.placeId,
+          websiteUri: options?.websiteUri,
           query: targetQuery
         })
       });
 
       if (data && data.success && Array.isArray(data.photos) && data.photos.length > 0) {
         setRealPhotos(data.photos);
-        setRealPhotosSuccessNotice(`✨ ${data.photos.length} fotos reais encontradas no Google / Instagram!`);
+        setRealPhotosSuccessNotice(`✨ ${data.photos.length} fotos reais encontradas no Google Maps / Instagram!`);
+
+        // Se a busca encontrou o @handle do Instagram, atualiza o formulário se estiver vazio
+        if (data.targetHandle) {
+          setSiteForm((prev) => ({
+            ...prev,
+            instagram: prev.instagram || `@${data.targetHandle}`
+          }));
+        }
 
         // Se a galeria atual só tem fotos padrão de stock, substitui automaticamente pelas reais (até MAX_PHOTOS)
         setSiteForm((prev) => {
@@ -708,6 +738,13 @@ export default function BillyWebStudio({
     const googlePhotos = Array.isArray(lead.photos) && lead.photos.length > 0 ? lead.photos : [];
     const leadHours = lead.hours || lead.openingHours || '';
 
+    // Extrai @instagram diretamente da ficha do Google (websiteUri / instagram / instagramHandle)
+    const detectedHandle =
+      lead.instagramHandle ||
+      (lead.website ? extractInstagramHandleFromUrl(lead.website) : null) ||
+      (lead.websiteUri ? extractInstagramHandleFromUrl(lead.websiteUri) : null);
+    const formattedInsta = lead.instagram || (detectedHandle ? `@${detectedHandle}` : '');
+
     // Serviços contextuais do nicho (ZERA contaminação de nichos anteriores!)
     const suggestedServices = getSuggestedServicesForNiche(niche, lead.name);
     const suggestedTagline = getSuggestedTaglineForNiche(niche, lead.name, city);
@@ -722,6 +759,7 @@ export default function BillyWebStudio({
       shortName,
       niche,
       city,
+      instagram: formattedInsta || prev.instagram,
       phone: lead.phone || lead.whatsapp || '',
       whatsapp: cleanPhone,
       subdomain: cleanSlug || 'site-' + Date.now().toString().slice(-4),
@@ -738,7 +776,7 @@ export default function BillyWebStudio({
 
     setSelectedLeadReviews(suggestedReviews);
 
-    // Prepara e dispara busca de fotos reais do Google / Instagram
+    // Prepara e dispara busca de fotos reais do Google Maps & Instagram
     const businessPhotoQuery = `${lead.name} ${city}`;
     setRealPhotosQuery(businessPhotoQuery);
 
@@ -747,14 +785,22 @@ export default function BillyWebStudio({
         googlePhotos.map((url, idx) => ({
           id: `lead_photo_${idx}`,
           url,
-          proxyUrl: `/api/studio/image-proxy?url=${encodeURIComponent(url)}`,
+          proxyUrl: url.startsWith('/uploads') ? url : `/api/studio/image-proxy?url=${encodeURIComponent(url)}`,
           title: `${lead.name} (Google Maps Oficial)`,
           source: 'google'
         }))
       );
-    } else {
-      handleSearchRealPhotos(businessPhotoQuery);
     }
+
+    // Executa em paralelo a busca completa (Google Maps Photos + Apify Instagram do websiteUri)
+    handleSearchRealPhotos(businessPhotoQuery, {
+      businessName: lead.name,
+      city,
+      niche,
+      instagram: formattedInsta,
+      placeId: lead.placeId || lead.place_id || lead.id,
+      websiteUri: lead.website || lead.websiteUri
+    });
 
     setPhotoSearchMode('real');
     setPixabayQuery(niche);
@@ -2762,10 +2808,10 @@ export default function BillyWebStudio({
                             className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider shadow-md z-10 pointer-events-none ${
                               item.source === 'instagram'
                                 ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white font-extrabold ring-1 ring-white/20'
-                                : 'bg-emerald-500 text-black font-black'
+                                : 'bg-emerald-500 text-black font-black ring-1 ring-black/20'
                             }`}
                           >
-                            {item.source === 'instagram' ? 'INSTAGRAM HD' : 'Google'}
+                            {item.source === 'instagram' ? 'INSTAGRAM HD' : 'GOOGLE MAPS'}
                           </span>
 
                           {/* Selo ✓ Selecionada / Hero ★ */}

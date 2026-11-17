@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { readDb, writeDb, SubscriptionRecord, Operator, AffiliateCommissionRecord, SiteChangeRequestRecord } from './db';
+import { extractInstagramHandleFromUrl } from './instagram-extractor';
 
 // Supabase URL & Service Role Key
 const supabaseUrl =
@@ -1070,29 +1071,36 @@ export async function fetchProspectedLeadsFromSupabase(params?: {
 
       const { data, error } = await q;
       if (!error && Array.isArray(data) && data.length > 0) {
-        supaLeads = data.map((row: any) => ({
-          id: row.id,
-          place_id: row.place_id,
-          name: row.business_name || row.name,
-          business_name: row.business_name || row.name,
-          niche: row.niche,
-          category: row.niche,
-          city: row.city,
-          address: row.address,
-          phone: row.phone,
-          whatsapp: row.whatsapp,
-          website: row.website_uri,
-          rating: Number(row.rating || 5.0),
-          reviewsCount: Number(row.reviews_count || 0),
-          reviews: Number(row.reviews_count || 0),
-          cover_photo: row.cover_photo,
-          photos: Array.isArray(row.photos_json) ? row.photos_json : (row.cover_photo ? [row.cover_photo] : []),
-          hours: row.opening_hours,
-          openingHours: row.opening_hours,
-          realReviews: Array.isArray(row.reviews_json) ? row.reviews_json : [],
-          status: row.status || 'new',
-          created_at: row.created_at
-        }));
+        supaLeads = data.map((row: any) => {
+          const insta = extractInstagramHandleFromUrl(row.website_uri);
+          return {
+            id: row.id,
+            place_id: row.place_id,
+            placeId: row.place_id || row.id,
+            name: row.business_name || row.name,
+            business_name: row.business_name || row.name,
+            niche: row.niche,
+            category: row.niche,
+            city: row.city,
+            address: row.address,
+            phone: row.phone,
+            whatsapp: row.whatsapp,
+            website: row.website_uri,
+            websiteUri: row.website_uri,
+            instagram: insta ? `@${insta}` : undefined,
+            instagramHandle: insta || undefined,
+            rating: Number(row.rating || 5.0),
+            reviewsCount: Number(row.reviews_count || 0),
+            reviews: Number(row.reviews_count || 0),
+            cover_photo: row.cover_photo,
+            photos: Array.isArray(row.photos_json) ? row.photos_json : (row.cover_photo ? [row.cover_photo] : []),
+            hours: row.opening_hours,
+            openingHours: row.opening_hours,
+            realReviews: Array.isArray(row.reviews_json) ? row.reviews_json : [],
+            status: row.status || 'new',
+            created_at: row.created_at
+          };
+        });
       }
     }
   } catch (err: any) {
