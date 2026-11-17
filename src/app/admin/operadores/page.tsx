@@ -22,7 +22,8 @@ import {
   ExternalLink,
   Laptop,
   Eye,
-  FileText
+  FileText,
+  Sparkles
 } from 'lucide-react';
 
 export default function AdminOperatorsPage() {
@@ -584,6 +585,14 @@ export default function AdminOperatorsPage() {
                           <span>{cand.name}</span>
                           <Eye className="w-3 h-3 text-zinc-500 group-hover:text-[#84cc16] opacity-0 group-hover:opacity-100 transition-opacity" />
                         </button>
+                        {(cand.sponsor_name || cand.sponsor_code || cand.affiliate_code_used || cand.referred_by_operator_id) && (
+                          <div className="mt-1">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#84cc16]/15 border border-[#84cc16]/30 text-[#a3e635] text-[10px] font-semibold">
+                              <Sparkles className="w-2.5 h-2.5" />
+                              Indicado por: {cand.sponsor_name || 'Operador'} (Código: {cand.sponsor_code || cand.affiliate_code_used})
+                            </span>
+                          </div>
+                        )}
                       </td>
                       <td className="py-3.5 px-4 font-mono text-zinc-300">
                         {cand.email}

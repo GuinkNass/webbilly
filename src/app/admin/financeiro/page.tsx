@@ -63,6 +63,31 @@ export default function AdminFinancialPage() {
   const [confirmCancelModal, setConfirmCancelModal] = useState<any | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  // Billy Afiliados Admin States
+  const [togglingOpId, setTogglingOpId] = useState<string | null>(null);
+  const [affiliateActionMsg, setAffiliateActionMsg] = useState<string | null>(null);
+
+  const handleToggleAffiliate = async (operatorId: string, currentEnabled: boolean) => {
+    setTogglingOpId(operatorId);
+    setAffiliateActionMsg(null);
+    try {
+      const res = await fetch('/api/admin/afiliados/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ operatorId, enabled: !currentEnabled })
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Erro ao alterar status do afiliado');
+      setAffiliateActionMsg(json.message);
+      setActionSuccess(json.message);
+      await loadData();
+    } catch (err: any) {
+      alert(`Erro ao alterar afiliado: ${err.message}`);
+    } finally {
+      setTogglingOpId(null);
+    }
+  };
+
   const loadAsaasData = async () => {
     setLoadingAsaas(true);
     setAsaasError(null);
@@ -769,30 +794,268 @@ export default function AdminFinancialPage() {
       {/* ABA 3: BILLY AFILIADOS */}
       {activeTabSub === 'affiliates' && (
         <div className="space-y-6">
+          {/* Header & 4 KPIs Globais */}
           <div className="p-6 rounded-2xl bg-gradient-to-br from-[#121c10] to-[#0f141d] border border-[#84cc16]/30 shadow-xl space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#84cc16]/20 border border-[#84cc16]/40 text-[#a3e635] flex items-center justify-center">
-                <Users className="w-5 h-5" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#84cc16]/20 border border-[#84cc16]/40 text-[#a3e635] flex items-center justify-center">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-base">Supervisão da Rede Billy Afiliados</h3>
+                  <p className="text-xs text-zinc-400">Regra oficial: 5% (R$ 24,50) para o padrinho em cada pacote de Domínio Próprio (R$ 490,00) vendido.</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold text-white text-base">Supervisão da Rede Billy Afiliados</h3>
-                <p className="text-xs text-zinc-400">Regra oficial: 5% (R$ 24,50) para o padrinho em cada pacote de domínio vendido.</p>
+
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-mono px-3 py-1 rounded-lg bg-zinc-900 border border-white/[0.08] text-[#a3e635] font-bold">
+                  Comissão Base: 5% (R$ 24,50/venda)
+                </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-              <div className="p-4 rounded-xl bg-black/40 border border-white/[0.06]">
-                <span className="text-[10px] uppercase font-bold text-zinc-400 block">Total de Padrinhos Ativos</span>
-                <span className="text-2xl font-black text-white font-mono">{affiliateMetrics.totalAffiliatesCount || (data?.operators || []).filter((o: any) => o.affiliate_enabled).length || 0}</span>
+            {/* 4 Cards de KPIs Globais */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+              <div className="p-4 rounded-xl bg-black/40 border border-white/[0.06] space-y-1">
+                <span className="text-[10px] uppercase font-bold text-zinc-400 block">Padrinhos Ativos</span>
+                <span className="text-2xl font-black text-white font-mono">
+                  {affiliateMetrics.totalAffiliatesCount || (data?.operators || []).filter((o: any) => o.affiliate_enabled).length || 0}
+                </span>
+                <span className="text-[10px] text-zinc-500 block">Com link liberado</span>
               </div>
-              <div className="p-4 rounded-xl bg-black/40 border border-white/[0.06]">
-                <span className="text-[10px] uppercase font-bold text-zinc-400 block">Vendas de Domínio por Rede</span>
-                <span className="text-2xl font-black text-[#a3e635] font-mono">{affiliateMetrics.totalNetworkSalesCount || 0}</span>
+
+              <div className="p-4 rounded-xl bg-black/40 border border-white/[0.06] space-y-1">
+                <span className="text-[10px] uppercase font-bold text-zinc-400 block">Total Indicados</span>
+                <span className="text-2xl font-black text-sky-400 font-mono">
+                  {affiliateMetrics.totalRecruitsCount || (data?.operators || []).filter((o: any) => o.referred_by_operator_id).length || 0}
+                </span>
+                <span className="text-[10px] text-zinc-500 block">Na rede de operadores</span>
               </div>
-              <div className="p-4 rounded-xl bg-black/40 border border-white/[0.06]">
-                <span className="text-[10px] uppercase font-bold text-emerald-400 block">Comissões Pagas à Rede</span>
-                <span className="text-2xl font-black text-emerald-400 font-mono">R$ {(affiliateMetrics.totalAffiliateCommissionsPaid || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+
+              <div className="p-4 rounded-xl bg-black/40 border border-white/[0.06] space-y-1">
+                <span className="text-[10px] uppercase font-bold text-zinc-400 block">Vendas de Domínio</span>
+                <span className="text-2xl font-black text-[#a3e635] font-mono">
+                  {affiliateMetrics.totalNetworkSalesCount || (affiliateMetrics.commissions || []).length || 0}
+                </span>
+                <span className="text-[10px] text-zinc-500 block">Pacotes R$ 490 na rede</span>
               </div>
+
+              <div className="p-4 rounded-xl bg-black/40 border border-emerald-500/30 space-y-1">
+                <span className="text-[10px] uppercase font-bold text-emerald-400 block">Total de Bônus</span>
+                <div className="text-xl font-black text-emerald-400 font-mono">
+                  R$ {(affiliateMetrics.totalAffiliateCommissionsGenerated || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </div>
+                <span className="text-[10px] text-zinc-500 block">
+                  Pagos: R$ {(affiliateMetrics.totalAffiliateCommissionsPaid || 0).toFixed(2).replace('.', ',')}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Feedback de Alteração */}
+          {affiliateActionMsg && (
+            <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-800 text-emerald-300 text-xs flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>{affiliateActionMsg}</span>
+            </div>
+          )}
+
+          {/* TABELA 1: GESTÃO DE OPERADORES & LIBERAÇÃO MANUAL */}
+          <div className="p-6 rounded-2xl bg-[#0f121a] border border-white/[0.08] shadow-xl space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-[#84cc16]" />
+                  <span>Gestão de Afiliados & Liberação Manual</span>
+                </h4>
+                <p className="text-[11px] text-zinc-400">
+                  Controle individual de acesso ao programa de afiliação e geração de códigos exclusivos.
+                </p>
+              </div>
+
+              <span className="text-xs font-mono text-zinc-400">
+                {(data?.operators || []).length} operadores cadastrados
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left">
+                <thead>
+                  <tr className="border-b border-white/[0.08] text-zinc-400 uppercase text-[10px]">
+                    <th className="py-3 px-4 font-bold">Operador</th>
+                    <th className="py-3 px-4 font-bold">Código Afiliado</th>
+                    <th className="py-3 px-4 font-bold text-center">Status Afiliado</th>
+                    <th className="py-3 px-4 font-bold text-center">Indicados</th>
+                    <th className="py-3 px-4 font-bold text-right">Comissões Geradas</th>
+                    <th className="py-3 px-4 font-bold text-right">Ação Admin Master</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.04]">
+                  {(() => {
+                    const ops = data?.operators || [];
+                    const allComms = affiliateMetrics.commissions || [];
+                    if (ops.length === 0) {
+                      return (
+                        <tr>
+                          <td colSpan={6} className="py-8 text-center text-zinc-500">
+                            Nenhum operador localizado no sistema.
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    return ops.map((op: any) => {
+                      const recruitsCount = ops.filter((o: any) => o.referred_by_operator_id === op.id).length;
+                      const opComms = allComms.filter((c: any) => c.affiliate_operator_id === op.id);
+                      const commsTotal = opComms.reduce((acc: number, c: any) => acc + (Number(c.commission_amount) || 24.50), 0);
+                      const isEnabled = Boolean(op.affiliate_enabled);
+                      const codeDisplay = op.affiliate_code || `BILLY-${op.id}`;
+
+                      return (
+                        <tr key={op.id} className="hover:bg-white/[0.02] transition">
+                          <td className="py-3 px-4">
+                            <div className="font-semibold text-white">{op.name}</div>
+                            <div className="text-[10px] text-zinc-500 font-mono">{op.email}</div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono text-zinc-200 bg-black/40 px-2 py-0.5 rounded border border-white/[0.06] text-[11px] font-bold">
+                                {codeDisplay}
+                              </span>
+                              <ActionTooltip title="Copiar Link" description={`Copiar link de convite: https://webbilly.com.br/?ref=${codeDisplay}#candidatura`} side="top">
+                                <button
+                                  onClick={() => copyToClipboard(`https://webbilly.com.br/?ref=${codeDisplay}#candidatura`, op.id)}
+                                  className="p-1 rounded hover:bg-white/[0.06] text-zinc-400 hover:text-white transition cursor-pointer"
+                                >
+                                  {copiedId === op.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                                </button>
+                              </ActionTooltip>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            {isEnabled ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#84cc16]/15 text-[#a3e635] border border-[#84cc16]/30">
+                                <Sparkles className="w-3 h-3" />
+                                Liberado VIP
+                              </span>
+                            ) : (
+                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-zinc-800 text-zinc-400 border border-white/[0.06]">
+                                Bloqueado
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-center font-mono font-bold text-sky-400">
+                            {recruitsCount}
+                          </td>
+                          <td className="py-3 px-4 text-right font-mono font-bold text-emerald-400">
+                            R$ {commsTotal.toFixed(2).replace('.', ',')}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <button
+                              onClick={() => handleToggleAffiliate(op.id, isEnabled)}
+                              disabled={togglingOpId === op.id}
+                              className={`px-3 py-1 rounded-xl text-[11px] font-bold transition cursor-pointer disabled:opacity-50 ${
+                                isEnabled
+                                  ? 'bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/60'
+                                  : 'bg-[#84cc16]/20 hover:bg-[#84cc16]/30 text-[#a3e635] border border-[#84cc16]/40'
+                              }`}
+                            >
+                              {togglingOpId === op.id ? (
+                                <span className="inline-block w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
+                              ) : isEnabled ? (
+                                'Bloquear Afiliado'
+                              ) : (
+                                'Liberar Afiliado'
+                              )}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    });
+                  })()}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* TABELA 2: ÁRVORE & HISTÓRICO DE INDICAÇÕES E BÔNUS */}
+          <div className="p-6 rounded-2xl bg-[#0f121a] border border-white/[0.08] shadow-xl space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-emerald-400" />
+                  <span>Árvore & Histórico de Indicações e Comissões (R$ 24,50)</span>
+                </h4>
+                <p className="text-[11px] text-zinc-400">
+                  Rastreabilidade perpétua de quem indicou quem e bonificações creditadas via webhook Asaas.
+                </p>
+              </div>
+
+              <span className="text-xs font-mono text-zinc-400">
+                {(affiliateMetrics.commissions || []).length} comissões registradas
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left">
+                <thead>
+                  <tr className="border-b border-white/[0.08] text-zinc-400 uppercase text-[10px]">
+                    <th className="py-3 px-4 font-bold">Padrinho (Quem Indicou)</th>
+                    <th className="py-3 px-4 font-bold">Operador Indicado (Quem Entrou)</th>
+                    <th className="py-3 px-4 font-bold">Data & Referência</th>
+                    <th className="py-3 px-4 font-bold text-center">Status Pagamento</th>
+                    <th className="py-3 px-4 font-bold text-right">Comissão Afiliado</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/[0.04]">
+                  {(() => {
+                    const comms = affiliateMetrics.commissions || [];
+                    if (comms.length === 0) {
+                      return (
+                        <tr>
+                          <td colSpan={5} className="py-8 text-center text-zinc-500">
+                            Nenhuma comissão de afiliado registrada ainda. Quando um operador indicado vender um pacote de R$ 490,00, a comissão de R$ 24,50 aparecerá aqui automaticamente.
+                          </td>
+                        </tr>
+                      );
+                    }
+
+                    return comms.map((c: any, idx: number) => {
+                      const d = c.created_at ? new Date(c.created_at).toLocaleDateString('pt-BR') : '-';
+                      return (
+                        <tr key={c.id || idx} className="hover:bg-white/[0.02] transition">
+                          <td className="py-3 px-4">
+                            <div className="font-semibold text-white">{c.sponsor_name || c.affiliate_operator_id}</div>
+                            {c.sponsor_code && (
+                              <div className="text-[10px] text-[#a3e635] font-mono">Código: {c.sponsor_code}</div>
+                            )}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="font-semibold text-zinc-200">{c.invited_name || c.invited_operator_id}</div>
+                            <div className="text-[10px] text-zinc-500 font-mono">Venda: {c.lead_or_sale_id || '-'}</div>
+                          </td>
+                          <td className="py-3 px-4 font-mono text-zinc-400 text-[11px]">
+                            <div>{d}</div>
+                            <div className="text-[10px] text-zinc-500">{c.month_ref || ''}</div>
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                              c.payout_status === 'paid'
+                                ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                                : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                            }`}>
+                              {c.payout_status === 'paid' ? 'Pago' : 'Disponível'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-right font-mono font-bold text-emerald-400">
+                            + R$ {(Number(c.commission_amount) || 24.50).toFixed(2).replace('.', ',')}
+                          </td>
+                        </tr>
+                      );
+                    });
+                  })()}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>

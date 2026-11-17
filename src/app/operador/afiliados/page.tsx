@@ -23,13 +23,23 @@ export default function OperatorAffiliatesPage() {
   const [affiliateActivationSuccess, setAffiliateActivationSuccess] = useState<string | null>(null);
   const [affiliateActivationError, setAffiliateActivationError] = useState<string | null>(null);
   const [copiedInvite, setCopiedInvite] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [masterPreview, setMasterPreview] = useState(false);
+
+  const isMasterUser = Boolean(
+    data?.isMaster ||
+    op?.id === 'OP-0001' ||
+    op?.email?.toLowerCase() === 'admin@billysuite.com.br'
+  );
+
+  const isAffiliateActive = Boolean(data?.affiliates?.enabled || (isMasterUser && masterPreview));
 
   const handleActivateAffiliates = async () => {
     setActivatingAffiliate(true);
     setAffiliateActivationError(null);
     setAffiliateActivationSuccess(null);
     try {
-      const res = await fetch('/api/operador/activate-affiliate', {
+      const res = await fetch('/api/operador/afiliados/ativar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -42,6 +52,14 @@ export default function OperatorAffiliatesPage() {
       setAffiliateActivationError(err.message || 'Erro ao ativar programa.');
     } finally {
       setActivatingAffiliate(false);
+    }
+  };
+
+  const handleCopyCode = (text: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 3000);
     }
   };
 
@@ -74,7 +92,7 @@ export default function OperatorAffiliatesPage() {
   }
 
   const code = data?.affiliates?.code || `BILLY-${op?.id || 'OP'}`;
-  const inviteUrl = data?.affiliates?.inviteUrl || `https://webbilly.com.br/?ref=${code}#trabalhe-aqui`;
+  const inviteUrl = data?.affiliates?.inviteUrl || `https://webbilly.com.br/?ref=${code}#candidatura`;
   const shareText = encodeURIComponent(
     `Olá! Estou trabalhando como parceiro oficial na plataforma Webbilly e convido você para a equipe. Acesse pelo meu link oficial e faça sua inscrição para começar:\n\n${inviteUrl}`
   );
@@ -97,14 +115,29 @@ export default function OperatorAffiliatesPage() {
           </p>
         </div>
 
-        {data?.affiliates?.enabled && (
-          <div className="px-4 py-2.5 rounded-xl bg-zinc-900 border border-white/[0.08] text-right">
-            <div className="text-[10px] uppercase font-bold text-zinc-400">Seu Código Ativo</div>
-            <div className="text-base font-black text-[#a3e635] font-mono tracking-wider">
-              {code}
+        <div className="flex items-center gap-2">
+          {isMasterUser && (
+            <button
+              onClick={() => setMasterPreview(!masterPreview)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold font-mono transition border cursor-pointer ${
+                masterPreview
+                  ? 'bg-purple-600/30 border-purple-500/60 text-purple-300'
+                  : 'bg-zinc-900 border-white/[0.08] text-zinc-400 hover:text-white'
+              }`}
+            >
+              👑 Preview Master: {masterPreview ? 'Ativo' : 'Inativo'}
+            </button>
+          )}
+
+          {isAffiliateActive && (
+            <div className="px-4 py-2.5 rounded-xl bg-zinc-900 border border-white/[0.08] text-right">
+              <div className="text-[10px] uppercase font-bold text-zinc-400">Seu Código Ativo</div>
+              <div className="text-base font-black text-[#a3e635] font-mono tracking-wider">
+                {code}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Mensagens de Feedback */}
@@ -122,7 +155,7 @@ export default function OperatorAffiliatesPage() {
       )}
 
       {/* CASO 1: BLOQUEADO (INICIANTE / NÃO ATINGIU BRONZE) */}
-      {!data?.affiliates?.enabled && !data?.affiliates?.eligibility?.eligible && (
+      {!isAffiliateActive && !data?.affiliates?.eligibility?.eligible && (
         <div className="space-y-6">
           <div className="p-6 rounded-2xl bg-[#0f121a] border border-amber-500/30 space-y-4">
             <div className="flex items-center gap-3">
@@ -225,7 +258,7 @@ export default function OperatorAffiliatesPage() {
       )}
 
       {/* CASO 2: ELEGÍVEL (BRONZE+ MAS AINDA NÃO ATIVADO) */}
-      {!data?.affiliates?.enabled && data?.affiliates?.eligibility?.eligible && (
+      {!isAffiliateActive && data?.affiliates?.eligibility?.eligible && (
         <div className="p-8 rounded-3xl bg-gradient-to-br from-[#121c10] via-[#0f141d] to-[#121c10] border border-[#84cc16]/40 shadow-2xl space-y-6 text-center max-w-2xl mx-auto">
           <div className="w-16 h-16 rounded-2xl bg-[#84cc16]/20 border border-[#84cc16]/40 flex items-center justify-center text-3xl mx-auto shadow-lg shadow-[#84cc16]/20">
             🎉
@@ -273,7 +306,7 @@ export default function OperatorAffiliatesPage() {
       )}
 
       {/* CASO 3: ATIVO */}
-      {data?.affiliates?.enabled && (
+      {isAffiliateActive && (
         <div className="space-y-6">
           {/* Box de Convite e Link Exclusivo */}
           <div className="p-6 rounded-2xl bg-gradient-to-br from-[#121c10] to-[#0f141d] border border-[#84cc16]/30 shadow-xl space-y-4">
@@ -288,7 +321,30 @@ export default function OperatorAffiliatesPage() {
                 </h3>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <ActionTooltip
+                  title="Copiar Código"
+                  description="Copia seu código de indicação oficial."
+                  side="top"
+                >
+                  <button
+                    onClick={() => handleCopyCode(code)}
+                    className="py-2 px-3.5 rounded-xl text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-white transition flex items-center gap-1.5 border border-white/[0.08] cursor-pointer"
+                  >
+                    {copiedCode ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-[#84cc16]" />
+                        <span className="text-[#84cc16]">Código Copiado!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copiar Código</span>
+                      </>
+                    )}
+                  </button>
+                </ActionTooltip>
+
                 <ActionTooltip
                   title="Copiar Link de Convite"
                   description="Copia seu link oficial de afiliado para convidar novos operadores parceiros."
@@ -301,7 +357,7 @@ export default function OperatorAffiliatesPage() {
                     {copiedInvite ? (
                       <>
                         <Check className="w-3.5 h-3.5" />
-                        <span>Copiado!</span>
+                        <span>Link Copiado!</span>
                       </>
                     ) : (
                       <>

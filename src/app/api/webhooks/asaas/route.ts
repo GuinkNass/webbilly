@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDb, writeDb, Sale, AffiliateCommissionRecord } from '@/lib/db';
-import { getSupabaseAdmin } from '@/lib/supabase';
+import { getSupabaseAdmin, upsertAffiliateCommissionInSupabase } from '@/lib/supabase';
 import { setSlugSuspended } from '@/lib/site-storage';
 import { cancelAsaasSubscription, cancelAsaasPayment, cancelAllPendingCharges } from '@/services/asaas';
 
@@ -240,37 +240,84 @@ export async function POST(req: NextRequest) {
           db.sales.unshift(newSale);
 
           // BILLY AFILIADOS: 5% (R$ 24,50) para o padrinho sobre venda de Domínio Próprio (R$ 490,00)
-          if (val >= 450 && operator.referred_by_operator_id) {
-            const sponsor = db.operators.find(
-              o => o.id === operator.referred_by_operator_id && o.status === 'ATIVO'
-            );
-            if (sponsor) {
-              if (!Array.isArray(db.affiliateCommissions)) {
-                db.affiliateCommissions = [];
-              }
-              const leadOrSaleKey = String(payment.id || saleId);
-              const alreadyHasAffComm = db.affiliateCommissions.some(
-                ac => ac.lead_or_sale_id === leadOrSaleKey
-              );
+          if (val >= 450) {
+            let sponsorId = operator.referred_by_operator_id;
+            if (!sponsorId) {
+              try {
+                const supabase = getSupabaseAdmin();
+                const { data: supaOp } = await supabase
+                  .from('operators')
+                  .select('referred_by_operator_id')
+                  .eq('id', operator.id)
+                  .maybeSingle();
+                if (supaOp?.referred_by_operator_id) {
+                  sponsorId = supaOp.referred_by_operator_id;
+                  operator.referred_by_operator_id = sponsorId;
+                }
+              } catch (_) {}
+            }
 
-              if (!alreadyHasAffComm) {
-                const saleDate = new Date();
-                const monthRef = `${saleDate.getFullYear()}-${String(saleDate.getMonth() + 1).padStart(2, '0')}`;
-                const affComm: AffiliateCommissionRecord = {
-                  id: `AFF-COMM-${payment.id || Date.now().toString(36)}`,
-                  affiliate_operator_id: sponsor.id,
-                  invited_operator_id: operator.id,
-                  invited_operator_name: operator.name,
-                  lead_or_sale_id: leadOrSaleKey,
-                  sale_amount: val,
-                  commission_rate: 0.05,
-                  commission_amount: 24.50, // 5% de R$ 490,00
-                  month_ref: monthRef,
-                  payout_status: 'available',
-                  created_at: nowIso
-                };
-                db.affiliateCommissions.unshift(affComm);
-                console.log(`[Asaas Webhook] Comissão de afiliado gerada: R$ 24,50 para ${sponsor.name} (venda de ${operator.name})`);
+            if (sponsorId) {
+              let sponsor = db.operators.find(
+                o => o.id === sponsorId && (o.status === 'ATIVO' || (o as any).status === 'active')
+              );
+              if (!sponsor) {
+                try {
+                  const supabase = getSupabaseAdmin();
+                  const { data: supaSponsor } = await supabase
+                    .from('operators')
+                    .select('*')
+                    .eq('id', sponsorId)
+                    .maybeSingle();
+                  if (supaSponsor) {
+                    sponsor = {
+                      id: supaSponsor.id,
+                      name: supaSponsor.name,
+                      email: supaSponsor.email,
+                      status: supaSponsor.status,
+                      affiliate_code: supaSponsor.affiliate_code,
+                      affiliate_enabled: supaSponsor.affiliate_enabled
+                    } as any;
+                  }
+                } catch (_) {}
+              }
+
+              if (sponsor) {
+                if (!Array.isArray(db.affiliateCommissions)) {
+                  db.affiliateCommissions = [];
+                }
+                const leadOrSaleKey = String(payment.id || saleId);
+                const alreadyHasAffComm = db.affiliateCommissions.some(
+                  ac => ac.lead_or_sale_id === leadOrSaleKey
+                );
+
+                if (!alreadyHasAffComm) {
+                  const saleDate = new Date();
+                  const monthRef = `${saleDate.getFullYear()}-${String(saleDate.getMonth() + 1).padStart(2, '0')}`;
+                  const affComm: AffiliateCommissionRecord = {
+                    id: `AFF-COMM-${payment.id || Date.now().toString(36)}`,
+                    affiliate_operator_id: sponsor.id,
+                    invited_operator_id: operator.id,
+                    invited_operator_name: operator.name,
+                    lead_or_sale_id: leadOrSaleKey,
+                    sale_amount: val,
+                    commission_rate: 0.05,
+                    commission_amount: 24.50, // 5% de R$ 490,00
+                    month_ref: monthRef,
+                    payout_status: 'available',
+                    created_at: nowIso
+                  };
+                  db.affiliateCommissions.unshift(affComm);
+
+                  // Persiste no Supabase
+                  try {
+                    await upsertAffiliateCommissionInSupabase(affComm);
+                  } catch (supaAffErr) {
+                    console.warn('[Asaas Webhook] Erro ao gravar comissão no Supabase:', supaAffErr);
+                  }
+
+                  console.log(`[Asaas Webhook] Comissão de afiliado gerada: R$ 24,50 para ${sponsor.name} (venda de ${operator.name})`);
+                }
               }
             }
           }

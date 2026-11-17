@@ -202,6 +202,34 @@ export async function GET(req: NextRequest) {
            (currentAdmin?.name && o.name?.toLowerCase() === currentAdmin.name.toLowerCase())
     );
 
+    // Métricas e Histórico Global do Billy Afiliados
+    const totalAffiliatesCount = combinedOperators.filter(o => o.affiliate_enabled).length;
+    const totalRecruitsCount = combinedOperators.filter(o => o.referred_by_operator_id).length;
+    const totalNetworkSalesCount = commissions.length;
+    const totalAffiliateCommissionsPaid = commissions
+      .filter(c => c.payout_status === 'paid')
+      .reduce((acc, c) => acc + (Number(c.commission_amount) || 24.50), 0);
+    const totalAffiliateCommissionsGenerated = commissions
+      .reduce((acc, c) => acc + (Number(c.commission_amount) || 24.50), 0);
+
+    const affiliatesAdmin = {
+      totalAffiliatesCount,
+      totalRecruitsCount,
+      totalNetworkSalesCount,
+      totalAffiliateCommissionsPaid,
+      totalAffiliateCommissionsGenerated,
+      commissions: commissions.map(c => {
+        const sponsor = combinedOperators.find(o => o.id === c.affiliate_operator_id);
+        const invited = combinedOperators.find(o => o.id === c.invited_operator_id);
+        return {
+          ...c,
+          sponsor_name: sponsor?.name || 'Padrinho',
+          sponsor_code: sponsor?.affiliate_code || '',
+          invited_name: invited?.name || c.invited_operator_name || 'Operador Convidado'
+        };
+      })
+    };
+
     return NextResponse.json({
       metrics: {
         totalActiveSites,
@@ -224,6 +252,7 @@ export async function GET(req: NextRequest) {
       },
       leaderboard,
       affiliateSponsors,
+      affiliatesAdmin,
       subscriptions,
       candidates: allCandidates,
       operators: combinedOperators.map(op => {

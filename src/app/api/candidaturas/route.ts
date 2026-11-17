@@ -125,11 +125,25 @@ export async function POST(req: NextRequest) {
     let usedCode: string | null = null;
     if (rawRef) {
       const sponsor = (db.operators || []).find(
-        o => (o.affiliate_code || '').trim().toUpperCase() === rawRef && o.status === 'ATIVO'
+        o => (o.affiliate_code || '').trim().toUpperCase() === rawRef && (o.status === 'ATIVO' || (o as any).status === 'active')
       );
       if (sponsor) {
         sponsorId = sponsor.id;
         usedCode = sponsor.affiliate_code || rawRef;
+      } else {
+        try {
+          const supabase = getSupabaseAdmin();
+          const { data: supaOp } = await supabase
+            .from('operators')
+            .select('id, name, affiliate_code, status')
+            .ilike('affiliate_code', rawRef)
+            .maybeSingle();
+
+          if (supaOp && (supaOp.status?.toUpperCase() === 'ATIVO' || supaOp.status?.toLowerCase() === 'active')) {
+            sponsorId = supaOp.id;
+            usedCode = supaOp.affiliate_code || rawRef;
+          }
+        } catch (_) {}
       }
     }
 

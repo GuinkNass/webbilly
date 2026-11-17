@@ -48,11 +48,71 @@ function CandidaturaForm() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Validação em tempo real do Código de Indicação (Padrinho)
+  const [refInput, setRefInput] = useState(refParam);
+  const [validatingRef, setValidatingRef] = useState(false);
+  const [refValidation, setRefValidation] = useState<{
+    valid: boolean;
+    operatorName?: string;
+    code?: string;
+    message?: string;
+  } | null>(null);
+
+  const checkRefCode = async (codeToCheck: string) => {
+    const clean = codeToCheck.trim().toUpperCase();
+    if (!clean) {
+      setRefValidation(null);
+      setFormData(prev => ({ ...prev, ref: '' }));
+      return;
+    }
+
+    setValidatingRef(true);
+    try {
+      const res = await fetch(`/api/afiliados/validar-codigo?code=${encodeURIComponent(clean)}`);
+      const json = await res.json();
+      if (res.ok && json.valid) {
+        setRefValidation({
+          valid: true,
+          operatorName: json.operatorName || json.sponsorName,
+          code: json.code
+        });
+        setFormData(prev => ({ ...prev, ref: json.code }));
+      } else {
+        setRefValidation({
+          valid: false,
+          message: json.message || 'Código de indicação não localizado.'
+        });
+        setFormData(prev => ({ ...prev, ref: clean }));
+      }
+    } catch {
+      setRefValidation({
+        valid: false,
+        message: 'Falha ao consultar código de indicação.'
+      });
+      setFormData(prev => ({ ...prev, ref: clean }));
+    } finally {
+      setValidatingRef(false);
+    }
+  };
+
   useEffect(() => {
     if (refParam) {
-      setFormData(prev => ({ ...prev, ref: refParam }));
+      setRefInput(refParam);
+      checkRefCode(refParam);
     }
   }, [refParam]);
+
+  useEffect(() => {
+    if (!refInput.trim()) {
+      setRefValidation(null);
+      setFormData(prev => ({ ...prev, ref: '' }));
+      return;
+    }
+    const timer = setTimeout(() => {
+      checkRefCode(refInput);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [refInput]);
 
   // Máscaras de entrada
   const maskCpf = (value: string) => {
@@ -271,12 +331,17 @@ function CandidaturaForm() {
                 Atue como parceiro autônomo da Webbilly: receba <strong className="text-white font-mono">R$ 10,00/mês</strong> por assinatura ativa, <strong className="text-[#84cc16] font-mono">30% (R$ 147,00)</strong> nas vendas de Domínio Próprio, bônus por medalhas de produtividade e comissão de afiliados.
               </p>
 
-              {formData.ref && (
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-medium mt-2">
-                  <span>Indicação de Operador Padrinho:</span>
-                  <strong className="text-white font-mono">{formData.ref}</strong>
+              {refValidation?.valid ? (
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-semibold mt-2 shadow-sm">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Código válido • Indicado por <strong className="text-white">{refValidation.operatorName}</strong> ({refValidation.code})</span>
                 </div>
-              )}
+              ) : refInput && !validatingRef && refValidation?.valid === false ? (
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-medium mt-2">
+                  <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>Código <strong className="font-mono">{refInput}</strong> não localizado. Você ainda pode prosseguir sua candidatura normalmente.</span>
+                </div>
+              ) : null}
             </div>
 
             {/* Mensagem de Erro Geral */}
@@ -289,6 +354,54 @@ function CandidaturaForm() {
 
             {/* Formulário Dividido em 3 Seções */}
             <form onSubmit={handleSubmit} className="bg-[#0f121a] border border-white/[0.08] rounded-3xl p-6 sm:p-10 shadow-2xl space-y-8">
+              {/* =============================================================
+                  BLOCO: CÓDIGO DE INDICAÇÃO / PADRINHO
+                 ============================================================= */}
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950/20 via-[#111624] to-[#111624] border border-emerald-500/20 space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <label className="block text-xs font-bold text-white flex items-center gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-[#84cc16]" />
+                      <span>Código de Indicação / Padrinho</span>
+                      <span className="text-[10px] font-normal text-zinc-400 uppercase font-mono">(Opcional)</span>
+                    </label>
+                    <p className="text-[11px] text-zinc-400 mt-0.5">
+                      Se você foi convidado por um operador oficial da Webbilly, insira o código aqui para vincular sua candidatura.
+                    </p>
+                  </div>
+
+                  {refValidation?.valid && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold font-mono shrink-0">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                      Indicado por: {refValidation.operatorName}
+                    </span>
+                  )}
+                </div>
+
+                <div className="relative max-w-sm pt-1">
+                  <input
+                    type="text"
+                    value={refInput}
+                    onChange={(e) => setRefInput(e.target.value.toUpperCase())}
+                    placeholder="Ex: BILLY-XXXX"
+                    className="w-full px-4 py-2.5 rounded-xl bg-[#141824] border border-white/[0.08] text-white text-xs font-mono uppercase tracking-wider placeholder-zinc-500 focus:outline-none focus:border-[#84cc16] transition"
+                  />
+                  {validatingRef && (
+                    <div className="w-3.5 h-3.5 border-2 border-[#84cc16]/30 border-t-[#84cc16] rounded-full animate-spin absolute right-3 top-4" />
+                  )}
+                </div>
+
+                {refValidation?.valid && (
+                  <p className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1 pt-0.5">
+                    ✓ Código validado com sucesso! Seu vínculo de indicação está assegurado com {refValidation.operatorName}.
+                  </p>
+                )}
+                {refInput && !validatingRef && refValidation?.valid === false && (
+                  <p className="text-[11px] text-amber-400 flex items-center gap-1 pt-0.5">
+                    ⚠️ {refValidation.message || 'Código não encontrado. Se não possuir indicação, deixe em branco.'}
+                  </p>
+                )}
+              </div>
               {/* =============================================================
                   SEÇÃO 1 — DADOS PESSOAIS
                  ============================================================= */}

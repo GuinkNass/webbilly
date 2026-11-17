@@ -38,6 +38,15 @@ import {
 
 export default function WebbillyHomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [refParam, setRefParam] = useState('');
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const p = new URLSearchParams(window.location.search);
+      const r = p.get('ref') || p.get('affiliate') || '';
+      if (r) setRefParam(r);
+    }
+  }, []);
   const [formData, setFormData] = useState({
     responsibleName: '',
     businessName: '',
@@ -1132,6 +1141,7 @@ export default function WebbillyHomePage() {
           11.5. TRABALHE AQUI (CHAMADA COMERCIAL OBJETIVA & LINK CANDIDATURA)
          ===================================================================== */}
       <section id="trabalhe-aqui" className="py-20 px-4 sm:px-8 bg-[#0a0d14] border-t border-white/[0.06] relative overflow-hidden">
+        <div id="candidatura" className="-mt-24 pt-24" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#84cc16]/5 rounded-full blur-[140px] pointer-events-none" />
 
         <div className="max-w-4xl mx-auto relative z-10 text-center space-y-8">
@@ -1147,6 +1157,12 @@ export default function WebbillyHomePage() {
             <p className="text-sm sm:text-base text-zinc-400 max-w-2xl mx-auto leading-relaxed">
               Leve presença digital de alta conversão para estabelecimentos da sua cidade. Você prospecta, nosso robô IA gera o site em 45 segundos e você fatura comissões recorrentes todo mês.
             </p>
+            {refParam && (
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-semibold">
+                <span>✓ Convidado por Operador Oficial:</span>
+                <strong className="text-white">{refParam}</strong>
+              </div>
+            )}
           </div>
 
           {/* Grid de Ganhos Objetivos */}
@@ -1179,7 +1195,7 @@ export default function WebbillyHomePage() {
           {/* CTA Principal para a Página Dedicada */}
           <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href="/trabalheconosco/candidatura"
+              href={refParam ? `/trabalheconosco/candidatura?ref=${encodeURIComponent(refParam)}` : '/trabalheconosco/candidatura'}
               className="w-full sm:w-auto px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-wider text-zinc-950 bg-[#84cc16] hover:bg-[#65a30d] transition flex items-center justify-center gap-2.5 shadow-xl shadow-[#84cc16]/25 cursor-pointer"
             >
               <span>Preencher Ficha de Candidatura</span>

@@ -206,6 +206,15 @@ export async function POST(req: NextRequest) {
 
     const finalOp = op!;
 
+    // Vincula patrocinador caso o candidato tenha se inscrito com código
+    const sponsorId = candidate?.referred_by_operator_id ||
+      (candidate as any)?.raw_payload?.referred_by_operator_id ||
+      (finalOp as any)?.referred_by_operator_id || null;
+
+    if (sponsorId && !finalOp.referred_by_operator_id) {
+      finalOp.referred_by_operator_id = sponsorId;
+    }
+
     // Marca status do candidato como APROVADO para remover da triagem pendente
     if (candidate) {
       candidate.status = 'APROVADO';
@@ -219,6 +228,9 @@ export async function POST(req: NextRequest) {
       if (matchingCand) {
         matchingCand.status = 'APROVADO';
         matchingCand.reviewedAt = new Date().toISOString();
+        if (matchingCand.referred_by_operator_id && !finalOp.referred_by_operator_id) {
+          finalOp.referred_by_operator_id = matchingCand.referred_by_operator_id;
+        }
       }
     }
 
@@ -273,7 +285,10 @@ export async function POST(req: NextRequest) {
       mustChangePassword: true,
       must_change_password: true,
       lark_provisioned: larkResult.success,
-      larkProvisioned: larkResult.success
+      larkProvisioned: larkResult.success,
+      referred_by_operator_id: finalOp.referred_by_operator_id || undefined,
+      affiliate_enabled: Boolean(finalOp.affiliate_enabled),
+      affiliate_code: finalOp.affiliate_code || undefined
     });
 
     try {

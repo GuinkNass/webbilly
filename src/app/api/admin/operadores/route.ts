@@ -173,8 +173,30 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const candidates = Array.from(candidateMap.values());
     const operators = allOperatorsList.length > 0 ? allOperatorsList : (db.operators || []);
+
+    // Resolve dados do padrinho/afiliado para cada candidato
+    const candidates = Array.from(candidateMap.values()).map(cand => {
+      const extra = cand.raw_payload || {};
+      const sponsorId = cand.referred_by_operator_id || extra.referred_by_operator_id || null;
+      const refCode = extra.ref || extra.refCode || extra.affiliateCode || cand.ref || null;
+
+      let sponsor = null;
+      if (sponsorId) {
+        sponsor = operators.find((o: any) => o.id === sponsorId);
+      } else if (refCode) {
+        sponsor = operators.find((o: any) => (o.affiliate_code || '').toUpperCase() === String(refCode).toUpperCase());
+      }
+
+      return {
+        ...cand,
+        referred_by_operator_id: sponsorId || sponsor?.id || null,
+        affiliate_code_used: refCode || sponsor?.affiliate_code || null,
+        sponsor_name: sponsor?.name || null,
+        sponsor_code: sponsor?.affiliate_code || refCode || null
+      };
+    });
+
     const licenses = db.licenses || [];
 
     return NextResponse.json({
