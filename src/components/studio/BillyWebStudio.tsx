@@ -137,7 +137,7 @@ interface BillyWebStudioProps {
  * Previne o erro "Unexpected token 'A', 'An error o'... is not valid JSON"
  * ao converter erros HTML do servidor em mensagens legíveis.
  */
-async function safeFetchJson(url: string, options?: RequestInit, timeoutMs: number = 25000): Promise<any> {
+async function safeFetchJson(url: string, options?: RequestInit, timeoutMs: number = 65000): Promise<any> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -299,6 +299,7 @@ export default function BillyWebStudio({
   // Site Generation State
   const [generating, setGenerating] = useState(false);
   const [generationStep, setGenerationStep] = useState('');
+  const [generationProgress, setGenerationProgress] = useState(0);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [selectedLeadReviews, setSelectedLeadReviews] = useState<Array<{ author: string; rating: number; text: string }>>([]);
 
@@ -851,55 +852,70 @@ export default function BillyWebStudio({
     }
 
     setGenerating(true);
+    setGenerationProgress(25);
     setGenerationError(null);
     setDeploySuccessNotice(null);
     setDeployError(null);
-    setGenerationStep('IA adaptando o template escolhido e aplicando suas fotos...');
+    setGenerationStep('1/3 Validando fotos HD e estrutura do estabelecimento...');
+
+    const stepTimer1 = setTimeout(() => {
+      setGenerationStep('2/3 Adaptando copy ao nicho com IA Gemini...');
+      setGenerationProgress(65);
+    }, 1500);
+
+    const stepTimer2 = setTimeout(() => {
+      setGenerationStep('3/3 Compilando template oficial do Billy Desktop e estilos...');
+      setGenerationProgress(90);
+    }, 3500);
 
     try {
-      setTimeout(() => setGenerationStep('IA Gemini adaptando o template estrutural e paleta de cores...'), 1200);
-      setTimeout(() => setGenerationStep('Distribuindo fotos reais do estabelecimento e redigindo copy do nicho...'), 2600);
-      setTimeout(() => setGenerationStep('Compilando HTML completo, classes CSS e botões de WhatsApp...'), 4200);
+      const data = await safeFetchJson(
+        '/api/studio/gerar-site',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            businessName: siteForm.businessName,
+            shortName: siteForm.shortName,
+            niche: siteForm.niche,
+            city: siteForm.city,
+            phone: siteForm.phone,
+            whatsapp: siteForm.whatsapp,
+            instagram: siteForm.instagram,
+            address: siteForm.address,
+            subdomain: siteForm.subdomain,
+            tagline: siteForm.tagline,
+            description: siteForm.description,
+            theme: siteForm.theme,
+            templateId: selectedTemplateId,
+            accentColor: siteForm.accentColor || siteForm.primaryColor,
+            primaryColor: siteForm.primaryColor,
+            backgroundColor: siteForm.backgroundColor,
+            surfaceColor: siteForm.surfaceColor,
+            textColor: siteForm.textColor,
+            fontPair: siteForm.fontPair,
+            paletteId: siteForm.paletteId,
+            logoUrl: siteForm.logoUrl,
+            heroPhoto: siteForm.heroPhoto,
+            galleryPhotos: siteForm.galleryPhotos,
+            services: siteForm.services,
+            features: siteForm.features,
+            faqs: siteForm.faqs,
+            hours: siteForm.hours,
+            reviews: selectedLeadReviews,
+            blocks,
+            toneOfVoice: siteForm.toneOfVoice,
+            uploadedText: ocrText,
+            operatorId,
+            operatorName
+          })
+        },
+        65000
+      );
 
-      const data = await safeFetchJson('/api/studio/gerar-site', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          businessName: siteForm.businessName,
-          shortName: siteForm.shortName,
-          niche: siteForm.niche,
-          city: siteForm.city,
-          phone: siteForm.phone,
-          whatsapp: siteForm.whatsapp,
-          instagram: siteForm.instagram,
-          address: siteForm.address,
-          subdomain: siteForm.subdomain,
-          tagline: siteForm.tagline,
-          description: siteForm.description,
-          theme: siteForm.theme,
-          templateId: selectedTemplateId,
-          accentColor: siteForm.accentColor || siteForm.primaryColor,
-          primaryColor: siteForm.primaryColor,
-          backgroundColor: siteForm.backgroundColor,
-          surfaceColor: siteForm.surfaceColor,
-          textColor: siteForm.textColor,
-          fontPair: siteForm.fontPair,
-          paletteId: siteForm.paletteId,
-          logoUrl: siteForm.logoUrl,
-          heroPhoto: siteForm.heroPhoto,
-          galleryPhotos: siteForm.galleryPhotos,
-          services: siteForm.services,
-          features: siteForm.features,
-          faqs: siteForm.faqs,
-          hours: siteForm.hours,
-          reviews: selectedLeadReviews,
-          blocks,
-          toneOfVoice: siteForm.toneOfVoice,
-          uploadedText: ocrText,
-          operatorId,
-          operatorName
-        })
-      });
+      clearTimeout(stepTimer1);
+      clearTimeout(stepTimer2);
+      setGenerationProgress(100);
 
       if (!data.success) {
         throw new Error(data.error || 'Erro ao gerar site');
@@ -2859,13 +2875,32 @@ export default function BillyWebStudio({
           </div>
 
           {generating && (
-            <div className="p-5 rounded-2xl bg-[#84cc16]/10 border border-[#84cc16]/30 flex items-center gap-4 animate-pulse">
-              <div className="w-8 h-8 rounded-xl bg-[#84cc16]/20 border border-[#84cc16]/40 flex items-center justify-center text-[#84cc16] shrink-0">
-                <Sparkles className="w-4 h-4 animate-spin" />
+            <div className="p-5 rounded-2xl bg-[#0c1410] border border-[#84cc16]/40 space-y-3 shadow-xl">
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-[#84cc16]/20 border border-[#84cc16]/40 flex items-center justify-center text-[#84cc16] shrink-0">
+                    <Sparkles className="w-4 h-4 animate-spin" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Gerando Presença Digital:</h4>
+                    <p className="text-xs font-semibold text-[#a3e635] mt-0.5">{generationStep}</p>
+                  </div>
+                </div>
+                <span className="font-mono font-bold text-xs text-[#84cc16]">{generationProgress}%</span>
               </div>
-              <div>
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider">Processando:</h4>
-                <p className="text-sm font-semibold text-[#a3e635] mt-0.5">{generationStep}</p>
+
+              {/* Barra de Progresso Animada */}
+              <div className="w-full h-2 bg-black/60 rounded-full overflow-hidden border border-white/[0.08]">
+                <div
+                  className="h-full bg-gradient-to-r from-[#84cc16] via-[#a3e635] to-[#65a30d] transition-all duration-500 ease-out rounded-full"
+                  style={{ width: `${generationProgress}%` }}
+                />
+              </div>
+
+              <div className="flex items-center justify-between text-[10px] text-zinc-500 font-mono pt-1">
+                <span className={generationProgress >= 25 ? 'text-[#84cc16] font-bold' : ''}>1. Fotos & Assets</span>
+                <span className={generationProgress >= 65 ? 'text-[#84cc16] font-bold' : ''}>2. Copy & IA Gemini</span>
+                <span className={generationProgress >= 90 ? 'text-[#84cc16] font-bold' : ''}>3. Template Billy</span>
               </div>
             </div>
           )}

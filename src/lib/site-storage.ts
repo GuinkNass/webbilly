@@ -832,9 +832,11 @@ export function renderPreparationHtml(businessName: string, slug: string): strin
 </html>`;
 }
 
+let siteAssetsBucketCreated = false;
+
 /**
  * Baixa uma imagem externa (Google, Instagram, etc) pelo servidor e faz upload permanente no Supabase Storage (bucket 'site-assets')
- * Retorna a URL pública permanente ou a original como fallback seguro.
+ * Executa com timeout individual estrito de 4s para nunca travar a rota.
  */
 export async function persistImageToSupabaseStorage(
   imageUrl: string,
@@ -856,14 +858,19 @@ export async function persistImageToSupabaseStorage(
     const supabase = getSupabaseAdmin();
     if (!supabase) return imageUrl;
 
-    // Garante que o bucket 'site-assets' exista
-    try {
-      await supabase.storage.createBucket('site-assets', { public: true });
-    } catch (_) {}
+    // Garante que o bucket 'site-assets' exista (apenas uma vez em memória)
+    if (!siteAssetsBucketCreated) {
+      try {
+        await supabase.storage.createBucket('site-assets', { public: true });
+        siteAssetsBucketCreated = true;
+      } catch (_) {
+        siteAssetsBucketCreated = true;
+      }
+    }
 
-    // Baixa o arquivo da imagem pelo servidor (sem Referer do cliente)
+    // Baixa o arquivo da imagem pelo servidor com timeout individual de 4 segundos
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
 
     const res = await fetch(imageUrl, {
       headers: {
@@ -880,13 +887,11 @@ export async function persistImageToSupabaseStorage(
     clearTimeout(timeoutId);
 
     if (!res || !res.ok) {
-      console.warn(`[PersistImage] Falha ao baixar imagem externa (${res?.status}):`, imageUrl);
       return imageUrl;
     }
 
     const contentType = res.headers.get('content-type') || 'image/jpeg';
     if (contentType.includes('text/html') || contentType.includes('application/json')) {
-      console.warn('[PersistImage] Resposta não é imagem válida:', contentType);
       return imageUrl;
     }
 
@@ -910,7 +915,6 @@ export async function persistImageToSupabaseStorage(
       });
 
     if (uploadErr || !uploadData) {
-      console.warn('[PersistImage] Erro ao fazer upload no Supabase Storage:', uploadErr?.message);
       return imageUrl;
     }
 
@@ -919,60 +923,59 @@ export async function persistImageToSupabaseStorage(
       .getPublicUrl(filePath);
 
     if (pubUrlData?.publicUrl) {
-      console.log(`[PersistImage] Imagem persistida com sucesso: ${imageUrl} -> ${pubUrlData.publicUrl}`);
       return pubUrlData.publicUrl;
     }
   } catch (err: any) {
-    console.warn('[PersistImage] Erro ao persistir imagem:', err?.message || err);
+    // Timeout ou erro de rede mantém a URL original sem travar a rota
   }
 
   return imageUrl;
 }
 
 /**
- * Persiste um conjunto de fotos (heroPhoto e galleryPhotos) no Supabase Storage em paralelo
+ * Persiste um conjunto de fotos (heroPhoto e galleryPhotos) no Supabase Storage 100% em paralelo
+ * com timeout individual de 4s por foto (se alguma demorar, mantém a URL original imediatamente sem travar a rota).
  */
 export async function persistSiteImages(
   heroPhoto: string,
   galleryPhotos: string[],
   slug: string
 ): Promise<{ heroPhoto: string; galleryPhotos: string[] }> {
-  let persistedHero = heroPhoto;
-  if (
-    heroPhoto &&
-    (heroPhoto.includes('googleusercontent.com') ||
-      heroPhoto.includes('places.googleapis.com') ||
-      heroPhoto.includes('cdninstagram.com') ||
-      heroPhoto.includes('fbcdn.net') ||
-      heroPhoto.includes('duckduckgo.com'))
-  ) {
-    persistedHero = await persistImageToSupabaseStorage(heroPhoto, slug, 0);
-  }
+  const cleanSlug = sanitizeSlug(slug) || 'site';
+  const isExternal = (url?: string) =>
+    Boolean(
+      url &&
+      typeof url === 'string' &&
+      url.startsWith('http') &&
+      !url.includes('supabase.co/storage/v1/object/public/site-assets/') &&
+      (url.includes('googleusercontent.com') ||
+        url.includes('places.googleapis.com') ||
+        url.includes('cdninstagram.com') ||
+        url.includes('fbcdn.net') ||
+        url.includes('duckduckgo.com') ||
+        url.includes('pixabay.com'))
+    );
 
-  const persistedGallery: string[] = [];
-  if (Array.isArray(galleryPhotos) && galleryPhotos.length > 0) {
-    const promises = galleryPhotos.map((url, idx) => {
-      if (
-        url &&
-        (url.includes('googleusercontent.com') ||
-          url.includes('places.googleapis.com') ||
-          url.includes('cdninstagram.com') ||
-          url.includes('fbcdn.net') ||
-          url.includes('duckduckgo.com'))
-      ) {
-        return persistImageToSupabaseStorage(url, slug, idx + 1);
-      }
-      return Promise.resolve(url);
-    });
-    const results = await Promise.allSettled(promises);
-    results.forEach((r, idx) => {
-      if (r.status === 'fulfilled' && r.value) {
-        persistedGallery.push(r.value);
-      } else {
-        persistedGallery.push(galleryPhotos[idx]);
-      }
-    });
-  }
+  const heroPromise = isExternal(heroPhoto)
+    ? persistImageToSupabaseStorage(heroPhoto, cleanSlug, 0)
+    : Promise.resolve(heroPhoto);
+
+  const galleryList = Array.isArray(galleryPhotos) ? galleryPhotos : [];
+  const galleryPromises = galleryList.map((url, idx) =>
+    isExternal(url) ? persistImageToSupabaseStorage(url, cleanSlug, idx + 1) : Promise.resolve(url)
+  );
+
+  const [heroResult, ...galleryResults] = await Promise.allSettled([
+    heroPromise,
+    ...galleryPromises
+  ]);
+
+  const persistedHero =
+    heroResult.status === 'fulfilled' && heroResult.value ? heroResult.value : heroPhoto;
+
+  const persistedGallery = galleryResults.map((r, idx) =>
+    r.status === 'fulfilled' && r.value ? r.value : galleryList[idx]
+  );
 
   return {
     heroPhoto: persistedHero,
