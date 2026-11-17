@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { extractInstagramPostImageUrl, validateImageUrl } from '@/lib/instagram-extractor';
+import { getSupabaseAdmin } from '@/lib/supabase';
+import fs from 'fs-extra';
+import path from 'path';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 45;
+export const maxDuration = 60;
 
 export interface RealPhotoItem {
   id: string;
@@ -43,6 +46,80 @@ const CURATED_NICHE_BACKUP: Record<string, Array<{ url: string; title: string }>
   ]
 };
 
+let siteAssetsBucketCreated = false;
+
+async function ensureSiteAssetsBucket(supabase: any) {
+  if (!supabase || siteAssetsBucketCreated) return;
+  try {
+    await supabase.storage.createBucket('site-assets', { public: true });
+  } catch (_) {}
+  siteAssetsBucketCreated = true;
+}
+
+/**
+ * Faz download da imagem externa e salva de forma permanente no Supabase Storage (bucket 'site-assets')
+ * ou no FS local como fallback, garantindo que o token de CDN do Instagram nunca expire.
+ */
+async function uploadImageToStorage(
+  imageUrl: string,
+  handle: string,
+  index: number,
+  supabase: any
+): Promise<string | null> {
+  try {
+    const res = await fetch(imageUrl, {
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+      },
+      signal: AbortSignal.timeout(8000)
+    });
+
+    if (!res.ok) return null;
+    const contentType = res.headers.get('content-type') || 'image/jpeg';
+    if (!contentType.toLowerCase().startsWith('image/')) return null;
+
+    const arrayBuffer = await res.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    if (buffer.length < 2000) return null; // descarta imagens vazias ou trackers
+
+    const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
+    const cleanHandle = handle.replace(/[^a-zA-Z0-9_-]/g, '') || 'perfil';
+    const filePath = `instagram/${cleanHandle}/${Date.now()}-${index}.${ext}`;
+
+    // 1. Upload no Supabase Storage
+    if (supabase) {
+      await ensureSiteAssetsBucket(supabase);
+      const { data, error } = await supabase.storage.from('site-assets').upload(filePath, buffer, {
+        contentType,
+        upsert: true
+      });
+      if (!error && data) {
+        const { data: pubData } = supabase.storage.from('site-assets').getPublicUrl(filePath);
+        if (pubData?.publicUrl) {
+          return pubData.publicUrl;
+        }
+      }
+    }
+
+    // 2. Fallback FS local caso o Supabase não esteja conectado
+    try {
+      const publicUploadsDir = path.join(process.cwd(), 'public', 'uploads', 'instagram', cleanHandle);
+      await fs.ensureDir(publicUploadsDir);
+      const localFileName = `${Date.now()}-${index}.${ext}`;
+      await fs.writeFile(path.join(publicUploadsDir, localFileName), buffer);
+      return `/uploads/instagram/${cleanHandle}/${localFileName}`;
+    } catch {
+      // 3. Fallback via proxyUrl seguro
+      return `/api/studio/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+    }
+  } catch (err: any) {
+    console.warn(`[Apify Upload] Falha ao processar foto ${index} de @${handle}:`, err?.message);
+    return null;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
@@ -54,96 +131,194 @@ export async function POST(req: NextRequest) {
       query: customQuery = ''
     } = body;
 
+    const APIFY_TOKEN = (process.env.APIFY_API_TOKEN || process.env.APIFY_TOKEN || '').trim();
     const SERPER_KEY = (process.env.SERPER_API_KEY || '').trim();
     const GOOGLE_PLACES_KEY = (process.env.GOOGLE_PLACES_API_KEY || '').trim();
     const PIXABAY_KEY = (process.env.PIXABAY_API_KEY || '').trim();
+    const supabase = getSupabaseAdmin();
 
-    const cleanInstagram = (instagram || '').replace(/^@/, '').replace(/https?:\/\/(?:www\.)?instagram\.com\//i, '').trim();
+    // -------------------------------------------------------------------------
+    // IDENTIFICAÇÃO DO HANDLE DO INSTAGRAM (@username)
+    // -------------------------------------------------------------------------
+    let targetHandle = (instagram || '')
+      .replace(/^@/, '')
+      .replace(/https?:\/\/(?:www\.)?instagram\.com\//i, '')
+      .split('/')[0]
+      .split('?')[0]
+      .trim();
 
-    // Monta o termo de busca principal
-    let searchQuery = customQuery.trim();
-    if (!searchQuery) {
-      if (cleanInstagram) {
-        searchQuery = `${cleanInstagram} ${businessName} ${city}`.trim();
+    // Se o usuário digitou "@handle" ou uma URL no campo de busca personalizada
+    if (!targetHandle && customQuery) {
+      const atMatch = customQuery.match(/@([a-zA-Z0-9._]{2,30})/);
+      if (atMatch) {
+        targetHandle = atMatch[1];
       } else {
-        searchQuery = `${businessName} ${city} ${niche}`.trim() || 'Comércio Local';
+        const urlMatch = customQuery.match(/(?:instagram\.com)\/([a-zA-Z0-9._]{2,30})/i);
+        if (urlMatch) {
+          targetHandle = urlMatch[1];
+        }
       }
     }
 
-    // Lista de candidatos brutos a foto
-    const rawCandidates: Array<{ url: string; title: string; source: 'google' | 'instagram' | 'web' }> = [];
-    const seenRawUrls = new Set<string>();
-
-    const addCandidate = (url: string, title: string, source: 'google' | 'instagram' | 'web') => {
-      if (!url || typeof url !== 'string') return;
-      const cleanUrl = url.trim();
-      if (!cleanUrl.startsWith('http')) return;
-
-      const lower = cleanUrl.toLowerCase();
-      // Descarta ícones, trackers, svgs, tiktok e páginas de login
-      if (
-        lower.includes('favicon') ||
-        lower.includes('tracking') ||
-        lower.includes('.svg') ||
-        lower.includes('tiktok.com') ||
-        lower.includes('/accounts/login') ||
-        lower.includes('/login/') ||
-        lower.endsWith('.html') ||
-        lower.endsWith('.htm') ||
-        lower.endsWith('.php')
-      ) {
-        return;
-      }
-
-      if (seenRawUrls.has(cleanUrl)) return;
-      seenRawUrls.add(cleanUrl);
-
-      rawCandidates.push({
-        url: cleanUrl,
-        title: title || businessName || 'Foto do Estabelecimento',
-        source
-      });
-    };
-
-    // -------------------------------------------------------------------------
-    // 1. PROVEDOR: Serper Images API (Google Imagens Real com Chave Oficial)
-    // -------------------------------------------------------------------------
-    if (SERPER_KEY) {
+    // Se ainda não temos o handle, busca automaticamente no Google/Serper o perfil do comércio
+    if (!targetHandle && SERPER_KEY && businessName) {
       try {
-        const serperRes = await fetch('https://google.serper.dev/images', {
+        const discoRes = await fetch('https://google.serper.dev/search', {
           method: 'POST',
           headers: {
             'X-API-KEY': SERPER_KEY,
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            q: searchQuery,
+            q: `site:instagram.com "${businessName}" ${city}`,
             gl: 'br',
             hl: 'pt-br',
-            num: 20
+            num: 5
           }),
-          signal: AbortSignal.timeout(6000),
+          signal: AbortSignal.timeout(4000),
           cache: 'no-store'
         });
 
-        if (serperRes.ok) {
-          const serperJson = await serperRes.json().catch(() => ({}));
-          if (Array.isArray(serperJson.images)) {
-            serperJson.images.forEach((img: any) => {
-              const src = img.source?.toLowerCase().includes('instagram') ? 'instagram' : 'google';
-              addCandidate(img.imageUrl || img.thumbnailUrl, img.title, src);
-            });
+        if (discoRes.ok) {
+          const discoJson = await discoRes.json().catch(() => ({}));
+          const organic = discoJson.organic || [];
+          for (const org of organic) {
+            const link = org.link || '';
+            const match = link.match(/(?:instagram\.com)\/([a-zA-Z0-9._]{2,30})\/?$/i);
+            if (
+              match &&
+              !['p', 'reel', 'tv', 'explore', 'stories', 'direct', 'accounts', 'tags'].includes(
+                match[1].toLowerCase()
+              )
+            ) {
+              targetHandle = match[1];
+              break;
+            }
           }
         }
       } catch (err: any) {
-        console.warn('[Buscar Fotos] Erro Serper Images:', err.message);
+        console.warn('[Buscar Fotos] Erro autodescoberta handle Instagram:', err?.message);
+      }
+    }
+
+    // Termo de busca genérico para provedores auxiliares
+    let searchQuery = customQuery.trim();
+    if (!searchQuery) {
+      if (targetHandle) {
+        searchQuery = `${targetHandle} ${businessName} ${city}`.trim();
+      } else {
+        searchQuery = `${businessName} ${city} ${niche}`.trim() || 'Comércio Local';
+      }
+    }
+
+    const verifiedPhotos: RealPhotoItem[] = [];
+    const seenUrls = new Set<string>();
+
+    const addVerifiedPhoto = (
+      url: string,
+      title: string,
+      source: 'google' | 'instagram' | 'web',
+      proxyUrl?: string
+    ) => {
+      if (!url || typeof url !== 'string') return;
+      const cleanUrl = url.trim();
+      if (!cleanUrl.startsWith('http') && !cleanUrl.startsWith('/uploads')) return;
+      if (seenUrls.has(cleanUrl)) return;
+      seenUrls.add(cleanUrl);
+
+      verifiedPhotos.push({
+        id: `photo_${verifiedPhotos.length + 1}_${Math.random().toString(36).substring(2, 7)}`,
+        url: cleanUrl,
+        proxyUrl: proxyUrl || (cleanUrl.startsWith('/uploads') ? cleanUrl : `/api/studio/image-proxy?url=${encodeURIComponent(cleanUrl)}`),
+        title: title || businessName || 'Foto do Estabelecimento',
+        source
+      });
+    };
+
+    // -------------------------------------------------------------------------
+    // 1. PROVEDOR PRINCIPAL: APIFY INSTAGRAM PROFILE SCRAPER COM PERSISTÊNCIA SUPABASE
+    // -------------------------------------------------------------------------
+    if (APIFY_TOKEN && targetHandle) {
+      try {
+        const apifyUrl = `https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items?token=${encodeURIComponent(
+          APIFY_TOKEN
+        )}&timeout=25`;
+
+        const apifyRes = await fetch(apifyUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            usernames: [targetHandle],
+            resultsLimit: 12
+          }),
+          signal: AbortSignal.timeout(26000),
+          cache: 'no-store'
+        });
+
+        if (apifyRes.ok) {
+          const items = await apifyRes.json().catch(() => []);
+          if (Array.isArray(items) && items.length > 0) {
+            const profile = items[0] || {};
+            const rawApifyUrls: string[] = [];
+
+            // Foto de perfil HD
+            if (profile.profilePicUrlHD) {
+              rawApifyUrls.push(profile.profilePicUrlHD);
+            } else if (profile.profilePicUrl) {
+              rawApifyUrls.push(profile.profilePicUrl);
+            }
+
+            // Posts recentes
+            if (Array.isArray(profile.latestPosts)) {
+              for (const post of profile.latestPosts) {
+                if (rawApifyUrls.length >= 18) break;
+                if (post.displayUrl) {
+                  rawApifyUrls.push(post.displayUrl);
+                }
+                if (Array.isArray(post.images)) {
+                  for (const subImg of post.images) {
+                    if (typeof subImg === 'string' && subImg) {
+                      rawApifyUrls.push(subImg);
+                    }
+                  }
+                }
+              }
+            }
+
+            // Deduplica e limita
+            const uniqueApifyUrls = Array.from(new Set(rawApifyUrls)).slice(0, 16);
+
+            // Upload em paralelo para o Supabase Storage
+            const uploadSettled = await Promise.allSettled(
+              uniqueApifyUrls.map((imgUrl, idx) =>
+                uploadImageToStorage(imgUrl, targetHandle, idx, supabase)
+              )
+            );
+
+            uploadSettled.forEach((res, idx) => {
+              if (res.status === 'fulfilled' && res.value) {
+                const finalStoredUrl = res.value;
+                addVerifiedPhoto(
+                  finalStoredUrl,
+                  `${businessName || targetHandle} (@${targetHandle})`,
+                  'instagram',
+                  finalStoredUrl
+                );
+              }
+            });
+          }
+        }
+      } catch (apifyErr: any) {
+        console.warn('[Buscar Fotos] Erro Apify Instagram Scraper:', apifyErr?.message);
       }
     }
 
     // -------------------------------------------------------------------------
-    // 2. PROVEDOR: Google Places API Fotos Diretas
+    // 2. PROVEDOR: Google Places API Fotos Diretas Oficiais (se disponíveis)
     // -------------------------------------------------------------------------
-    if (GOOGLE_PLACES_KEY && rawCandidates.length < 8) {
+    if (GOOGLE_PLACES_KEY && verifiedPhotos.length < 12) {
       try {
         const placesRes = await fetch('https://places.googleapis.com/v1/places:searchText', {
           method: 'POST',
@@ -182,7 +357,7 @@ export async function POST(req: NextRequest) {
             const resolved = await Promise.allSettled(photoPromises);
             resolved.forEach((r) => {
               if (r.status === 'fulfilled' && r.value) {
-                addCandidate(r.value, `${businessName} (Google Maps Oficial)`, 'google');
+                addVerifiedPhoto(r.value, `${businessName} (Google Maps Oficial)`, 'google');
               }
             });
           }
@@ -193,19 +368,73 @@ export async function POST(req: NextRequest) {
     }
 
     // -------------------------------------------------------------------------
-    // 3. PROVEDOR: Radar Web de Fotos Reais (DuckDuckGo Engine)
+    // 3. RADAR DE FOTOS COMPLEMENTARES (Serper + DuckDuckGo + Bing)
     // -------------------------------------------------------------------------
-    if (rawCandidates.length < 15) {
-      try {
-        const queryVariants = [
-          searchQuery,
-          cleanInstagram ? `site:instagram.com ${cleanInstagram}` : `${businessName} ${niche} ${city}`
-        ].filter(Boolean);
+    if (verifiedPhotos.length < 12) {
+      const rawRadarCandidates: Array<{ url: string; title: string; source: 'google' | 'instagram' | 'web' }> = [];
+      const seenRaw = new Set<string>();
 
-        for (const variant of queryVariants) {
-          if (rawCandidates.length >= 25) break;
+      const addRawCandidate = (url: string, title: string, source: 'google' | 'instagram' | 'web') => {
+        if (!url || typeof url !== 'string') return;
+        const clean = url.trim();
+        if (!clean.startsWith('http')) return;
+        const lower = clean.toLowerCase();
+        if (
+          lower.includes('favicon') ||
+          lower.includes('tracking') ||
+          lower.includes('.svg') ||
+          lower.includes('tiktok.com') ||
+          lower.includes('/accounts/login') ||
+          lower.includes('/login/') ||
+          lower.endsWith('.html') ||
+          lower.endsWith('.htm') ||
+          lower.endsWith('.php')
+        ) {
+          return;
+        }
+        if (seenRaw.has(clean) || seenUrls.has(clean)) return;
+        seenRaw.add(clean);
+        rawRadarCandidates.push({ url: clean, title, source });
+      };
 
-          const tokenRes = await fetch(`https://duckduckgo.com/?q=${encodeURIComponent(variant)}`, {
+      // Serper Images API
+      if (SERPER_KEY) {
+        try {
+          const serperRes = await fetch('https://google.serper.dev/images', {
+            method: 'POST',
+            headers: {
+              'X-API-KEY': SERPER_KEY,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              q: searchQuery,
+              gl: 'br',
+              hl: 'pt-br',
+              num: 15
+            }),
+            signal: AbortSignal.timeout(5000),
+            cache: 'no-store'
+          });
+
+          if (serperRes.ok) {
+            const serperJson = await serperRes.json().catch(() => ({}));
+            if (Array.isArray(serperJson.images)) {
+              serperJson.images.forEach((img: any) => {
+                const isInsta = img.source?.toLowerCase().includes('instagram');
+                addRawCandidate(img.imageUrl || img.thumbnailUrl, img.title, isInsta ? 'instagram' : 'google');
+              });
+            }
+          }
+        } catch (err: any) {
+          console.warn('[Buscar Fotos] Erro Serper Images Radar:', err?.message);
+        }
+      }
+
+      // DuckDuckGo Radar
+      if (rawRadarCandidates.length < 10) {
+        try {
+          const ddgQuery = targetHandle ? `site:instagram.com ${targetHandle}` : `${businessName} ${city}`;
+          const tokenRes = await fetch(`https://duckduckgo.com/?q=${encodeURIComponent(ddgQuery)}`, {
             headers: {
               'User-Agent':
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -220,142 +449,83 @@ export async function POST(req: NextRequest) {
             const vqd = vqdMatch ? vqdMatch[1] : '';
 
             if (vqd) {
-              const imgUrl = `https://duckduckgo.com/i.js?l=wt-wt&o=json&q=${encodeURIComponent(variant)}&vqd=${vqd}`;
+              const imgUrl = `https://duckduckgo.com/i.js?l=wt-wt&o=json&q=${encodeURIComponent(ddgQuery)}&vqd=${vqd}`;
               const imgRes = await fetch(imgUrl, {
                 headers: {
                   'User-Agent':
                     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
                 },
-                signal: AbortSignal.timeout(5000),
+                signal: AbortSignal.timeout(4000),
                 cache: 'no-store'
               });
 
               if (imgRes.ok) {
                 const imgData = await imgRes.json().catch(() => ({}));
                 if (Array.isArray(imgData.results)) {
-                  imgData.results.slice(0, 15).forEach((item: any) => {
-                    const isInsta = (item.url || item.image || '').includes('instagram') || (item.title || '').includes('Instagram');
-                    addCandidate(item.image, item.title, isInsta ? 'instagram' : 'web');
+                  imgData.results.slice(0, 10).forEach((item: any) => {
+                    const isInsta =
+                      (item.url || item.image || '').includes('instagram') ||
+                      (item.title || '').includes('Instagram');
+                    addRawCandidate(item.image, item.title, isInsta ? 'instagram' : 'web');
                   });
                 }
               }
             }
           }
+        } catch (err: any) {
+          console.warn('[Buscar Fotos] Erro Web Radar DDG:', err?.message);
         }
-      } catch (err: any) {
-        console.warn('[Buscar Fotos] Erro Web Radar:', err.message);
       }
-    }
 
-    // -------------------------------------------------------------------------
-    // 4. PROVEDOR: Radar Web Bing Imagens
-    // -------------------------------------------------------------------------
-    if (rawCandidates.length < 20) {
-      try {
-        const bingQuery = cleanInstagram ? `${cleanInstagram} instagram ${businessName}` : `${businessName} ${city}`;
-        const bingRes = await fetch(`https://www.bing.com/images/search?q=${encodeURIComponent(bingQuery)}&form=HDRSC2&first=1`, {
-          headers: {
-            'User-Agent':
-              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-            'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8'
-          },
-          signal: AbortSignal.timeout(5000),
-          cache: 'no-store'
-        });
-
-        if (bingRes.ok) {
-          const html = await bingRes.text();
-          const matches = [...html.matchAll(/murl&quot;:&quot;(https?:\/\/[^&]+)&quot;/g)].map((m) => m[1]);
-          for (const rawImg of matches.slice(0, 20)) {
-            if (rawCandidates.length >= 35) break;
-            const isInsta = rawImg.includes('instagram') || rawImg.includes('fbcdn') || rawImg.includes('cdninstagram');
-            addCandidate(rawImg, `${businessName} (Foto Oficial)`, isInsta ? 'instagram' : 'web');
+      // Processamento e validação binária dos candidatos do radar
+      const resolvedRadar = await Promise.allSettled(
+        rawRadarCandidates.map(async (item) => {
+          let finalUrl = item.url;
+          if (/(?:instagram\.com|instagr\.am)\/(?:p|reel|tv)\//i.test(item.url)) {
+            const directImg = await extractInstagramPostImageUrl(item.url);
+            if (directImg) {
+              finalUrl = directImg;
+            } else {
+              return null;
+            }
           }
-        }
-      } catch (bingErr: any) {
-        console.warn('[Buscar Fotos] Erro Bing Images Radar:', bingErr?.message);
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // 5. PROCESSAMENTO: Extração Real de Posts do Instagram (facebookexternalhit)
-    // -------------------------------------------------------------------------
-    const resolvedCandidates = await Promise.allSettled(
-      rawCandidates.map(async (item) => {
-        let finalUrl = item.url;
-        // Se for URL de post/reel/tv do Instagram, extrai a imagem real og:image
-        if (/(?:instagram\.com|instagr\.am)\/(?:p|reel|tv)\//i.test(item.url)) {
-          const directImg = await extractInstagramPostImageUrl(item.url);
-          if (directImg) {
-            finalUrl = directImg;
-          } else {
-            // Se falhou em extrair o post do Instagram, descarta para não quebrar no frontend
-            return null;
+          const val = await validateImageUrl(finalUrl, 2500);
+          if (val.valid) {
+            return { ...item, url: finalUrl };
           }
-        }
-        return { ...item, url: finalUrl };
-      })
-    );
+          return null;
+        })
+      );
 
-    const extractedCandidates = resolvedCandidates
-      .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled' && r.value !== null)
-      .map((r) => r.value);
-
-    // -------------------------------------------------------------------------
-    // 6. FILTRO RÍGIDO: Validação Binária em Paralelo (Content-Type image/*)
-    // -------------------------------------------------------------------------
-    const validationResults = await Promise.allSettled(
-      extractedCandidates.map(async (item) => {
-        const val = await validateImageUrl(item.url, 2800);
-        return { item, valid: val.valid };
-      })
-    );
-
-    const verifiedPhotos: RealPhotoItem[] = [];
-    const verifiedUrls = new Set<string>();
-
-    for (const res of validationResults) {
-      if (res.status === 'fulfilled' && res.value.valid) {
-        const { item } = res.value;
-        if (!verifiedUrls.has(item.url)) {
-          verifiedUrls.add(item.url);
-          verifiedPhotos.push({
-            id: `photo_${verifiedPhotos.length + 1}_${Math.random().toString(36).substring(2, 7)}`,
-            url: item.url,
-            proxyUrl: `/api/studio/image-proxy?url=${encodeURIComponent(item.url)}`,
-            title: item.title,
-            source: item.source
-          });
+      for (const r of resolvedRadar) {
+        if (r.status === 'fulfilled' && r.value) {
+          if (verifiedPhotos.length >= 20) break;
+          addVerifiedPhoto(r.value.url, r.value.title, r.value.source);
         }
       }
     }
 
     // -------------------------------------------------------------------------
-    // 7. COMPLEMENTAÇÃO AUTOMÁTICA VIA PIXABAY / CURATED CASO FALTEM FOTOS
+    // 4. SMART FALLBACK: PIXABAY & ACERVO CURADO HD SE FALTAR FOTOS (< 8)
     // -------------------------------------------------------------------------
-    if (verifiedPhotos.length < 12) {
+    if (verifiedPhotos.length < 8) {
       const nicheQuery = niche || businessName || 'comercio local';
 
-      // Tenta Pixabay se houver chave configurada
+      // Pixabay API se houver chave configurada
       if (PIXABAY_KEY) {
         try {
-          const pixEndpoint = `https://pixabay.com/api/?key=${encodeURIComponent(PIXABAY_KEY)}&q=${encodeURIComponent(nicheQuery)}&image_type=photo&per_page=15&safesearch=true&lang=pt`;
+          const pixEndpoint = `https://pixabay.com/api/?key=${encodeURIComponent(
+            PIXABAY_KEY
+          )}&q=${encodeURIComponent(nicheQuery)}&image_type=photo&per_page=12&safesearch=true&lang=pt`;
           const pixRes = await fetch(pixEndpoint, { signal: AbortSignal.timeout(4000) });
           if (pixRes.ok) {
             const pixData = await pixRes.json().catch(() => ({}));
             if (Array.isArray(pixData.hits)) {
               for (const hit of pixData.hits) {
-                if (verifiedPhotos.length >= 20) break;
+                if (verifiedPhotos.length >= 18) break;
                 const imgUrl = hit.largeImageURL || hit.webformatURL;
-                if (imgUrl && !verifiedUrls.has(imgUrl)) {
-                  verifiedUrls.add(imgUrl);
-                  verifiedPhotos.push({
-                    id: `pix_${hit.id || verifiedPhotos.length + 1}`,
-                    url: imgUrl,
-                    proxyUrl: `/api/studio/image-proxy?url=${encodeURIComponent(imgUrl)}`,
-                    title: `${businessName} (Foto Conceitual HD)`,
-                    source: 'web'
-                  });
+                if (imgUrl) {
+                  addVerifiedPhoto(imgUrl, `${businessName} (Foto Conceitual HD)`, 'web');
                 }
               }
             }
@@ -365,8 +535,8 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Se ainda faltar, adiciona fotos do Acervo Curado do Nicho
-      if (verifiedPhotos.length < 12) {
+      // Acervo Curado do Nicho
+      if (verifiedPhotos.length < 8) {
         const lowerNiche = (niche || businessName).toLowerCase();
         let nicheCategory = 'tattoo';
         if (/barbe|barba|corte/i.test(lowerNiche)) nicheCategory = 'barbearia';
@@ -375,17 +545,8 @@ export async function POST(req: NextRequest) {
 
         const backupList = CURATED_NICHE_BACKUP[nicheCategory] || CURATED_NICHE_BACKUP.tattoo;
         for (const item of backupList) {
-          if (verifiedPhotos.length >= 18) break;
-          if (!verifiedUrls.has(item.url)) {
-            verifiedUrls.add(item.url);
-            verifiedPhotos.push({
-              id: `curated_${verifiedPhotos.length + 1}`,
-              url: item.url,
-              proxyUrl: `/api/studio/image-proxy?url=${encodeURIComponent(item.url)}`,
-              title: `${businessName} (${item.title})`,
-              source: 'google'
-            });
-          }
+          if (verifiedPhotos.length >= 16) break;
+          addVerifiedPhoto(item.url, `${businessName} (${item.title})`, 'google');
         }
       }
     }
@@ -393,6 +554,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       query: searchQuery,
+      targetHandle: targetHandle || null,
       total: verifiedPhotos.length,
       photos: verifiedPhotos
     });

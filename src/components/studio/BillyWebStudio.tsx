@@ -72,6 +72,16 @@ import {
 } from '@/lib/billy-desktop-port/categories';
 import { formatHeaderName } from '@/lib/desktop-templates';
 
+function InstagramIcon({ className = 'w-3.5 h-3.5' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  );
+}
+
 interface LeadResult {
   id?: string;
   name: string;
@@ -2631,7 +2641,7 @@ export default function BillyWebStudio({
                       value={realPhotosQuery}
                       onChange={(e) => setRealPhotosQuery(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSearchRealPhotos()}
-                      placeholder="Nome da empresa, cidade ou @Instagram (ex: Caixa Preta Tattoo São Paulo)..."
+                      placeholder="Nome da empresa, cidade ou @Instagram (ex: @13pointtattoo)..."
                       className="w-full bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#84cc16]"
                     />
                   </div>
@@ -2644,6 +2654,22 @@ export default function BillyWebStudio({
                     {realPhotosLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
                     <span>{realPhotosLoading ? 'Buscando...' : 'Buscar Fotos Reais'}</span>
                   </button>
+                  {siteForm.instagram && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const clean = siteForm.instagram.replace(/^@/, '').trim();
+                        setRealPhotosQuery(`@${clean}`);
+                        handleSearchRealPhotos(`@${clean}`);
+                      }}
+                      disabled={realPhotosLoading}
+                      className="px-3.5 py-2 rounded-xl text-xs font-extrabold bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-amber-500/20 hover:from-purple-600 hover:via-pink-600 hover:to-amber-500 text-pink-300 hover:text-white border border-pink-500/40 transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                      title="Buscar fotos HD oficiais do perfil do Instagram via Apify"
+                    >
+                      <InstagramIcon className="w-3.5 h-3.5 text-pink-400 group-hover:text-white" />
+                      <span>Buscar @{siteForm.instagram.replace(/^@/, '').trim()}</span>
+                    </button>
+                  )}
                   {realPhotos.length > 0 && (
                     <div className="flex items-center gap-2">
                       <button
@@ -2724,13 +2750,13 @@ export default function BillyWebStudio({
 
                           {/* Badge de Origem */}
                           <span
-                            className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shadow-sm z-10 pointer-events-none ${
+                            className={`absolute top-1 left-1 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider shadow-md z-10 pointer-events-none ${
                               item.source === 'instagram'
-                                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
-                                : 'bg-emerald-500 text-black'
+                                ? 'bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white font-extrabold ring-1 ring-white/20'
+                                : 'bg-emerald-500 text-black font-black'
                             }`}
                           >
-                            {item.source === 'instagram' ? 'Instagram' : 'Google'}
+                            {item.source === 'instagram' ? 'INSTAGRAM HD' : 'Google'}
                           </span>
 
                           {/* Selo ✓ Selecionada / Hero ★ */}
