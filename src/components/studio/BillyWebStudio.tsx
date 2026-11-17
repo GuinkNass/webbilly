@@ -1885,13 +1885,19 @@ export default function BillyWebStudio({
             {/* Filtros de Categorias de Templates */}
             <div className="flex flex-wrap items-center gap-1.5">
               {[
-                { id: 'todos', label: 'Todos (20)' },
-                { id: 'barbearia', label: 'Barbearia & Beleza' },
+                { id: 'todos', label: `Todos (${BILLY_DESKTOP_TEMPLATES.length})` },
+                { id: 'tatuagem', label: 'Tatuagem & Piercing' },
+                { id: 'gastronomia', label: 'Gastronomia & Cafés' },
+                { id: 'estetica', label: 'Estética & Beleza' },
+                { id: 'fitness', label: 'Fitness, Lutas & Yoga' },
+                { id: 'arquitetura', label: 'Arquitetura & Interiores' },
+                { id: 'automotivo', label: 'Mecânica & Auto' },
+                { id: 'saude', label: 'Odontologia & Saúde' },
+                { id: 'pet', label: 'Pet Shop' },
+                { id: 'servicos', label: 'Serviços & Reformas' },
+                { id: 'portfolio', label: 'Portfólio & Foto' },
+                { id: 'barbearia', label: 'Barbearias' },
                 { id: 'advocacia', label: 'Advocacia & B2B' },
-                { id: 'saude', label: 'Saúde & Clínicas' },
-                { id: 'gastronomia', label: 'Gastronomia' },
-                { id: 'fitness', label: 'Fitness & Tattoo' },
-                { id: 'automotivo', label: 'Automotivo & Serviços' }
               ].map((cat) => {
                 const isCatActive = templateCategoryFilter === cat.id;
                 return (
@@ -1911,18 +1917,50 @@ export default function BillyWebStudio({
               })}
             </div>
 
-            {/* Grid dos 20 Templates */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-h-[480px] overflow-y-auto pr-2 scrollbar-thin">
+            {/* Grid dos Templates Oficiais */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-h-[520px] overflow-y-auto pr-2 scrollbar-thin">
               {BILLY_DESKTOP_TEMPLATES.filter((tpl) => {
                 if (templateCategoryFilter === 'todos') return true;
                 const matchCat = (tpl.category || '').toLowerCase();
                 const matchName = (tpl.name || '').toLowerCase();
-                if (templateCategoryFilter === 'barbearia') return matchCat.includes('barber') || matchCat.includes('beleza') || matchName.includes('barber') || matchName.includes('feminine') || matchName.includes('retrô');
-                if (templateCategoryFilter === 'advocacia') return matchCat.includes('advocacia') || matchCat.includes('b2b') || matchCat.includes('financeira') || matchCat.includes('corporate') || matchName.includes('advocacia') || matchName.includes('consultoria');
-                if (templateCategoryFilter === 'saude') return matchCat.includes('saúde') || matchCat.includes('clínica') || matchCat.includes('médica') || matchName.includes('clínica') || matchName.includes('odontologia') || matchName.includes('médica');
-                if (templateCategoryFilter === 'gastronomia') return matchCat.includes('gastronomia') || matchCat.includes('restaurante') || matchCat.includes('culinária') || matchName.includes('gourmet') || matchName.includes('artisan') || matchName.includes('café');
-                if (templateCategoryFilter === 'fitness') return matchCat.includes('fitness') || matchCat.includes('tattoo') || matchName.includes('crossfit') || matchName.includes('academia') || matchName.includes('street') || matchName.includes('tattoo');
-                if (templateCategoryFilter === 'automotivo') return matchCat.includes('automotivo') || matchCat.includes('serviços') || matchName.includes('auto') || matchName.includes('oficina') || matchName.includes('estética automotiva');
+                const matchNiche = (tpl.niche || '').toLowerCase();
+
+                if (templateCategoryFilter === 'tatuagem') {
+                  return matchCat.includes('tattoo') || matchCat.includes('tatuag') || matchNiche.includes('tattoo') || matchNiche.includes('tatuag') || matchName.includes('tattoo') || matchName.includes('piercing');
+                }
+                if (templateCategoryFilter === 'gastronomia') {
+                  return matchCat.includes('gastronomia') || matchCat.includes('restaurante') || matchCat.includes('café') || matchNiche.includes('gastronomia') || matchNiche.includes('pizz') || matchNiche.includes('café') || matchName.includes('pizz') || matchName.includes('restaurante') || matchName.includes('coffee') || matchName.includes('gourmet') || matchName.includes('heritaste') || matchName.includes('dbento') || matchName.includes('granny') || matchName.includes('bruin') || matchName.includes('royate');
+                }
+                if (templateCategoryFilter === 'estetica') {
+                  return matchCat.includes('estética') || matchCat.includes('dermato') || matchCat.includes('maquiag') || matchCat.includes('massagem') || matchNiche.includes('estética') || matchNiche.includes('dermato') || matchNiche.includes('maquiagem') || matchNiche.includes('massagem') || matchName.includes('spa') || matchName.includes('dermato') || matchName.includes('makeup') || matchName.includes('victoria') || matchName.includes('beauta') || matchName.includes('glow');
+                }
+                if (templateCategoryFilter === 'fitness') {
+                  return matchCat.includes('fitness') || matchCat.includes('academia') || matchCat.includes('luta') || matchCat.includes('yoga') || matchNiche.includes('fitness') || matchNiche.includes('academia') || matchNiche.includes('personal') || matchNiche.includes('luta') || matchNiche.includes('yoga') || matchNiche.includes('suplemento') || matchName.includes('crossfit') || matchName.includes('gym') || matchName.includes('sword') || matchName.includes('yogana') || matchName.includes('sparta') || matchName.includes('progym') || matchName.includes('nutri') || matchName.includes('martialarts');
+                }
+                if (templateCategoryFilter === 'arquitetura') {
+                  return matchCat.includes('arquitetura') || matchCat.includes('interiores') || matchNiche.includes('arquitetura') || matchNiche.includes('interiores') || matchName.includes('arquiteto') || matchName.includes('interiores') || matchName.includes('arch') || matchName.includes('shelder') || matchName.includes('fauxis');
+                }
+                if (templateCategoryFilter === 'automotivo') {
+                  return matchCat.includes('automotivo') || matchCat.includes('mecânica') || matchNiche.includes('mecânica') || matchName.includes('mecanic') || matchName.includes('auto') || matchName.includes('oficina') || matchName.includes('audeck') || matchName.includes('cardinal') || matchName.includes('automec');
+                }
+                if (templateCategoryFilter === 'saude') {
+                  return matchCat.includes('saúde') || matchCat.includes('odonto') || matchNiche.includes('odonto') || matchNiche.includes('saúde') || matchNiche.includes('medicina') || matchName.includes('dentia') || matchName.includes('dental') || matchName.includes('medicore') || matchName.includes('clínica') || matchName.includes('prime');
+                }
+                if (templateCategoryFilter === 'pet') {
+                  return matchCat.includes('pet') || matchNiche.includes('pet') || matchName.includes('pet') || matchName.includes('veterin');
+                }
+                if (templateCategoryFilter === 'servicos') {
+                  return matchCat.includes('serviços gerais') || matchCat.includes('marido de aluguel') || matchNiche.includes('serviços') || matchNiche.includes('reforma') || matchName.includes('marido') || matchName.includes('repair') || matchName.includes('reroof') || matchName.includes('welbim') || matchName.includes('soldagem');
+                }
+                if (templateCategoryFilter === 'portfolio') {
+                  return matchCat.includes('portfólio') || matchCat.includes('fotografia') || matchCat.includes('minimalista') || matchNiche.includes('fotografia') || matchNiche.includes('portfólio') || matchNiche.includes('design') || matchName.includes('fotografia') || matchName.includes('portfolio') || matchName.includes('anglo') || matchName.includes('jonna') || matchName.includes('elarisse') || matchName.includes('slider');
+                }
+                if (templateCategoryFilter === 'barbearia') {
+                  return matchCat.includes('barber') || matchCat.includes('barbearia') || matchNiche.includes('barbearia') || matchName.includes('barber') || matchName.includes('crop') || matchName.includes('navalha') || matchName.includes('hair salon');
+                }
+                if (templateCategoryFilter === 'advocacia') {
+                  return matchCat.includes('advocacia') || matchCat.includes('b2b') || matchCat.includes('financeira') || matchCat.includes('corporate') || matchName.includes('advocacia') || matchName.includes('consultoria') || matchName.includes('jurid');
+                }
                 return true;
               }).map((tpl) => {
                 const isSelected = selectedTemplateId === tpl.id;

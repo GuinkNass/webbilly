@@ -1,7 +1,8 @@
 /**
- * BILLY REAL TEMPLATES - Catalogo 1:1 Oficial dos 20 Templates do Billy Desktop
+ * BILLY REAL TEMPLATES - Catalogo 1:1 Oficial dos Templates do Billy Desktop e Google Drive
  * Portabilidade completa dos layouts estruturais com tipografias, grids e identidades unicas.
  */
+import { getDriveTemplateHtml } from './templates-catalog';
 
 export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
   "autoescola-drivepro": `<!DOCTYPE html>
@@ -4010,10 +4011,20 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
 
 export function getBillyRealTemplateHtml(templateId?: string): string {
   const clean = (templateId || '').toLowerCase().trim();
+
+  // 1. Checa primeiro no catálogo de templates do Google Drive
+  if (clean) {
+    const driveHtml = getDriveTemplateHtml(clean);
+    if (driveHtml) {
+      return driveHtml;
+    }
+  }
+
+  // 2. Checa nos templates base do desktop
   if (clean && BILLY_REAL_TEMPLATES_HTML[clean]) {
     return BILLY_REAL_TEMPLATES_HTML[clean];
   }
-  // Busca por correspondência parcial
+  // Busca por correspondência parcial nos templates base
   for (const [key, html] of Object.entries(BILLY_REAL_TEMPLATES_HTML)) {
     if (key.includes(clean) || clean.includes(key)) {
       return html;

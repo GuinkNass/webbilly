@@ -1,3 +1,5 @@
+import { DRIVE_TEMPLATES_METADATA } from '@/lib/templates-catalog/metadata';
+
 export interface DesktopTemplate {
   id: string;
   name: string;
@@ -11,7 +13,7 @@ export interface DesktopTemplate {
   recommendedKeywords: string[];
 }
 
-export const BILLY_DESKTOP_TEMPLATES: DesktopTemplate[] = [
+const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
   {
     id: 'barbearia-crop-vintage',
     name: 'BarberCrop — Barbearia Clássica & Navalha',
@@ -372,6 +374,11 @@ export const BILLY_DESKTOP_TEMPLATES: DesktopTemplate[] = [
   }
 ];
 
+export const BILLY_DESKTOP_TEMPLATES: DesktopTemplate[] = [
+  ...BASE_DESKTOP_TEMPLATES,
+  ...(DRIVE_TEMPLATES_METADATA as DesktopTemplate[]),
+];
+
 export function findTemplateById(id: string): DesktopTemplate {
   return BILLY_DESKTOP_TEMPLATES.find((t) => t.id === id) || BILLY_DESKTOP_TEMPLATES[0];
 }
@@ -379,15 +386,187 @@ export function findTemplateById(id: string): DesktopTemplate {
 export function recommendTemplateForNiche(nicheText: string): { template: DesktopTemplate; reason: string } {
   const clean = (nicheText || '').toLowerCase();
 
-  // 1. Prioridades diretas por Nicho Principal
+  // 1. Tatuagem & Piercing
   if (/tattoo|tatuag|piercing|ink|body\s*art/i.test(clean)) {
-    const tpl = findTemplateById('portfolio-dark');
+    const tpl = findTemplateById('tattoo-portfolio-themestarz') || findTemplateById('tattoo-estudio-portfolio-blaxcut') || findTemplateById('portfolio-dark');
     return {
       template: tpl,
-      reason: `Template "${tpl.name}" selecionado pelo visual escuro moderno ideal para estúdios de Tatuagem & Piercing.`
+      reason: `Template "${tpl.name}" selecionado pelo visual escuro autoral com galeria de flashs e agendamento para estúdios de Tatuagem & Piercing.`
     };
   }
 
+  // 2. Pizzarias & Culinária Italiana
+  if (/pizz|pizza|pizzaria|calzone|massas/i.test(clean)) {
+    const tpl = findTemplateById('pizzaria-clean-royate') || findTemplateById('restaurante-foores-gourmet');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado pelo cardápio gourmet detalhado de pizzas artesanais e delivery.`
+    };
+  }
+
+  // 3. Cafeterias & Coffee Shops
+  if (/cafe|cafeteria|coffee|espresso|graos|barista|padaria|confeitaria/i.test(clean)) {
+    const tpl = findTemplateById('coffee-shop-escuro-bruin') || findTemplateById('coffee-shop-moderno-max') || findTemplateById('restaurante-foores-gourmet');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado pelo design acolhedor focado em cafés especiais, doces e ambiente aconchegante.`
+    };
+  }
+
+  // 4. Restaurantes & Gastronomia Geral
+  if (/restaurante|burger|hamburguer|sushi|culinaria|gastronom|bistro|churrascaria/i.test(clean)) {
+    const tpl = findTemplateById('restaurante-cafe-heritaste') || findTemplateById('restaurante-cardapio-dbento') || findTemplateById('restaurante-classico-granny') || findTemplateById('restaurante-foores-gourmet');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado pela estrutura de cardápio gourmet e pedidos via WhatsApp.`
+    };
+  }
+
+  // 5. Dermatologia & Skincare
+  if (/dermat|pele|acne|melasma|tricologia|skincare/i.test(clean)) {
+    const tpl = findTemplateById('dermato-clean-skincare') || findTemplateById('estetica-pureglow-spa');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado pela credibilidade médica clínica para consultas dermatológicas e tratamentos de pele.`
+    };
+  }
+
+  // 6. Maquiadora & Noivas
+  if (/maqui|makeup|noiva|penteado|make/i.test(clean)) {
+    const tpl = findTemplateById('maquiadora-portfolio-makeup') || findTemplateById('estetica-pureglow-spa');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado pelo portfólio visual focado em maquiagem para noivas e eventos.`
+    };
+  }
+
+  // 7. Massagista & Spa
+  if (/massag|drenagem|relaxamento|terapia corporal|shiatsu/i.test(clean)) {
+    const tpl = findTemplateById('massagista-portfolio-victoria') || findTemplateById('massagista-clean-beauta') || findTemplateById('estetica-pureglow-spa');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado pelo ambiente de bem-estar, aromaterapia e agendamento de sessões.`
+    };
+  }
+
+  // 8. Estética Facial & Corporal
+  if (/estetic|beleza|depilacao|botox|harmonizacao|limpeza de pele|cilios|sobrancelha/i.test(clean)) {
+    const tpl = findTemplateById('estetica-completo-spa') || findTemplateById('estetica-elegante-minimalista') || findTemplateById('estetica-simples-paradise') || findTemplateById('estetica-pureglow-spa');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado para protocolos estéticos, agendamento de avaliação e prova social.`
+    };
+  }
+
+  // 9. Lutas & Artes Marciais
+  if (/luta|boxe|jiu|jud|muay|artes marciais|karate|mma/i.test(clean)) {
+    const tpl = findTemplateById('luta-moderno-sword') || findTemplateById('luta-completa-martialarts');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado pelo visual dinâmico e impactante ideal para centros de artes marciais.`
+    };
+  }
+
+  // 10. Yoga, Meditação & Pilates
+  if (/yoga|meditacao|pilates|respiracao|mindfulness/i.test(clean)) {
+    const tpl = findTemplateById('yoga-completo-yogana') || findTemplateById('yoga-agendamento-yogazone') || findTemplateById('yoga-fitness-exclusivo');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado pela atmosfera zen e agendamento de aulas experimentais.`
+    };
+  }
+
+  // 11. Personal Trainer
+  if (/personal|treinador|consultoria fitness|treino individual/i.test(clean)) {
+    const tpl = findTemplateById('personal-gym-progym') || findTemplateById('personal-claro-moderno') || findTemplateById('personal-moderno-energetico');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado pela apresentação de consultoria individual e planos de treino.`
+    };
+  }
+
+  // 12. Academias & Crossfit
+  if (/academia|crossfit|fitness|musculacao|gym|treino funcional/i.test(clean)) {
+    const tpl = findTemplateById('academia-crossfit-fitmax') || findTemplateById('academia-preta-sparta') || findTemplateById('academia-moderna-gymx');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado com foco em planos de mensalidade e estrutura de musculação/crossfit.`
+    };
+  }
+
+  // 13. Suplementos Esportivos
+  if (/suplement|whey|creatina|nutricao esportiva/i.test(clean)) {
+    const tpl = findTemplateById('suplementos-fitness-nutri');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado para catálogo de suplementação e nutrição de alta performance.`
+    };
+  }
+
+  // 14. Arquitetura & Urbanismo
+  if (/arquitet|arquiteto|projeto residencial|construcao civil|urbanismo/i.test(clean)) {
+    const tpl = findTemplateById('arquiteto-detalhado-shelder') || findTemplateById('arquitetura-elegante-arch') || findTemplateById('studio-minimal');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado pela sofisticação de apresentação de projetos arquitetônicos e portfólio.`
+    };
+  }
+
+  // 15. Design de Interiores & Decoração
+  if (/interiores|decoracao|moveis planejados|marcenaria/i.test(clean)) {
+    const tpl = findTemplateById('design-interiores-fauxis') || findTemplateById('studio-minimal');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado pelo design refinado para ambientação de interiores e reformas.`
+    };
+  }
+
+  // 16. Mecânica & Auto Center
+  if (/mecanic|oficina|auto center|troca de oleo|freio|suspensao|motor|injecao/i.test(clean)) {
+    const tpl = findTemplateById('mecanica-completo-audeck') || findTemplateById('mecanica-portfolio-automec') || findTemplateById('mecanica-simples-cardinal');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado pelo catálogo de serviços automotivos, revisão preventiva e orçamentos.`
+    };
+  }
+
+  // 17. Odontologia & Dentistas
+  if (/odonto|dentis|sorriso|dental|implante|aparelho|clareamento/i.test(clean)) {
+    const tpl = findTemplateById('dentista-criativo-dentia') || findTemplateById('dentista-detalhado-prime') || findTemplateById('dentista-medicina-medicore') || findTemplateById('odontologia-dentia-clinica');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado pela autoridade clínica e apresentação de tratamentos odontológicos.`
+    };
+  }
+
+  // 18. Pet Shop & Veterinária
+  if (/pet|veterin|banho e tosa|cao|gato|animal/i.test(clean)) {
+    const tpl = findTemplateById('petshop-completo-petz') || findTemplateById('petshop-petly-veterinaria');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado para serviços de banho, tosa e cuidados veterinários acolhedores.`
+    };
+  }
+
+  // 19. Marido de Aluguel, Reformas & Reparos
+  if (/marido de aluguel|reforma|reparo|encanador|eletricista|pintor|manutencao/i.test(clean)) {
+    const tpl = findTemplateById('marido-aluguel-portfolio') || findTemplateById('marido-aluguel-simples-reroof') || findTemplateById('servicos-gerais-limpo-erepair');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado para pedidos rápidos de orçamento e assistência residencial.`
+    };
+  }
+
+  // 20. Fotografia & Ensaios
+  if (/fotograf|foto|ensaio|casamento|evento/i.test(clean)) {
+    const tpl = findTemplateById('fotografia-minimalista-elarisse') || findTemplateById('portfolio-dark');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado pelo grid de alta definição para portfólios fotográficos.`
+    };
+  }
+
+  // 21. Barbearias Clássicas & Modernas
   if (/barbe|barba|navalha|fade|corte masculino/i.test(clean)) {
     const tpl = findTemplateById('barbearia-barberon-moderno') || findTemplateById('barbearia-crop-vintage');
     return {
@@ -396,22 +575,7 @@ export function recommendTemplateForNiche(nicheText: string): { template: Deskto
     };
   }
 
-  if (/odonto|dentis|sorriso|dental|implante/i.test(clean)) {
-    const tpl = findTemplateById('odontologia-dentia-clinica');
-    return {
-      template: tpl,
-      reason: `Template "${tpl.name}" selecionado pela autoridade clínica e apresentação de tratamentos odontológicos.`
-    };
-  }
-
-  if (/pizza|restaurante|burger|hamburguer|sushi|culinaria|gastronom/i.test(clean)) {
-    const tpl = findTemplateById('restaurante-foores-gourmet');
-    return {
-      template: tpl,
-      reason: `Template "${tpl.name}" selecionado pela estrutura de cardápio gourmet e pedidos via WhatsApp.`
-    };
-  }
-
+  // 22. Autoescola & CFC
   if (/autoescola|cfc|cnh|habilitacao/i.test(clean)) {
     const tpl = findTemplateById('autoescola-drivepro');
     return {
@@ -420,14 +584,7 @@ export function recommendTemplateForNiche(nicheText: string): { template: Deskto
     };
   }
 
-  if (/pet|veterin|banho e tosa|cao|gato/i.test(clean)) {
-    const tpl = findTemplateById('petshop-petly-veterinaria');
-    return {
-      template: tpl,
-      reason: `Template "${tpl.name}" selecionado para serviços de banho, tosa e cuidados veterinários.`
-    };
-  }
-
+  // 23. Serralheria & Estruturas Metálicas
   if (/serralh|solda|portao|grade|estrutura metalica|calha/i.test(clean)) {
     const tpl = findTemplateById('serralheria-welbim-soldagem');
     return {
@@ -436,6 +593,7 @@ export function recommendTemplateForNiche(nicheText: string): { template: Deskto
     };
   }
 
+  // Loop dinâmico por palavras-chave
   for (const tpl of BILLY_DESKTOP_TEMPLATES) {
     if (tpl.recommendedKeywords.some((kw) => clean.includes(kw))) {
       return {
