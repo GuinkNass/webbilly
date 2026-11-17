@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { extractInstagramPostImageUrl } from '@/lib/instagram-extractor';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -24,20 +25,34 @@ export async function GET(req: NextRequest) {
       return new NextResponse('Protocolo de imagem inválido.', { status: 400 });
     }
 
-    // Faz a requisição pelo servidor sem enviar o Referer do Webbilly
+    // Se for URL de post/reel/página do Instagram, tenta extrair a imagem og:image real
+    if (/(?:instagram\.com|instagr\.am)\/(?:p|reel|tv)\//i.test(targetUrl)) {
+      const extracted = await extractInstagramPostImageUrl(targetUrl);
+      if (extracted) {
+        targetUrl = extracted;
+      }
+    }
+
+    const isMetaDomain =
+      targetUrl.includes('instagram.com') ||
+      targetUrl.includes('cdninstagram.com') ||
+      targetUrl.includes('fbcdn.net');
+
+    // Faz a requisição pelo servidor
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+    const userAgent = isMetaDomain
+      ? 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)'
+      : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 
     const imageRes = await fetch(targetUrl, {
       method: 'GET',
       headers: {
-        'User-Agent':
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'User-Agent': userAgent,
         'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
         'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
-        'Sec-Fetch-Dest': 'image',
-        'Sec-Fetch-Mode': 'no-cors',
-        'Sec-Fetch-Site': 'cross-site'
+        'Referer': isMetaDomain ? 'https://www.instagram.com/' : 'https://www.google.com/'
       },
       redirect: 'follow',
       signal: controller.signal,
@@ -50,10 +65,10 @@ export async function GET(req: NextRequest) {
       return new NextResponse('Imagem não encontrada na origem.', { status: 404 });
     }
 
-    const contentType = imageRes.headers.get('content-type') || 'image/jpeg';
+    const contentType = (imageRes.headers.get('content-type') || '').toLowerCase();
 
-    // Se a resposta retornou HTML (ex: página de login ou erro disfarçado), trata como 404
-    if (contentType.includes('text/html') || contentType.includes('application/json')) {
+    // Validação estrita: DEVE começar com image/
+    if (!contentType.startsWith('image/')) {
       return new NextResponse('Resposta não é uma imagem válida.', { status: 404 });
     }
 

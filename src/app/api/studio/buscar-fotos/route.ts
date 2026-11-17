@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { extractInstagramPostImageUrl, validateImageUrl } from '@/lib/instagram-extractor';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 30;
+export const maxDuration = 45;
 
 export interface RealPhotoItem {
   id: string;
@@ -12,6 +13,35 @@ export interface RealPhotoItem {
   width?: number;
   height?: number;
 }
+
+// Acervo curado HD por nicho caso a web retorne poucas fotos válidas
+const CURATED_NICHE_BACKUP: Record<string, Array<{ url: string; title: string }>> = {
+  tattoo: [
+    { url: 'https://images.unsplash.com/photo-1598256989800-fe5f95da9787?w=1200&auto=format&fit=crop&q=80', title: 'Tatuagem Autoral Fine Line' },
+    { url: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?w=1200&auto=format&fit=crop&q=80', title: 'Estúdio de Tatuagem Profissional' },
+    { url: 'https://images.unsplash.com/photo-1562962230-16e4623d36e6?w=1200&auto=format&fit=crop&q=80', title: 'Aplicação de Piercing em Titânio' },
+    { url: 'https://images.unsplash.com/photo-1590246814883-578336214150?w=1200&auto=format&fit=crop&q=80', title: 'Materiais Esterilizados e Biossegurança' },
+    { url: 'https://images.unsplash.com/photo-1542385151-efd9000785a0?w=1200&auto=format&fit=crop&q=80', title: 'Arte Autoral na Pele' },
+    { url: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=1200&auto=format&fit=crop&q=80', title: 'Ilustração e Criação de Projetos' }
+  ],
+  barbearia: [
+    { url: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1200&auto=format&fit=crop&q=80', title: 'Corte Tradicional e Navalha' },
+    { url: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=1200&auto=format&fit=crop&q=80', title: 'Ambiente Vintage e Clássico' },
+    { url: 'https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=1200&auto=format&fit=crop&q=80', title: 'Barboterapia com Toalha Quente' },
+    { url: 'https://images.unsplash.com/photo-1512690459411-b9245aed614b?w=1200&auto=format&fit=crop&q=80', title: 'Corte Degradê Fade Master' }
+  ],
+  gastronomia: [
+    { url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&auto=format&fit=crop&q=80', title: 'Prato Assinatura do Chef' },
+    { url: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1200&auto=format&fit=crop&q=80', title: 'Burger Artesanal Especial' },
+    { url: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1200&auto=format&fit=crop&q=80', title: 'Pizza Forno a Lenha' },
+    { url: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=1200&auto=format&fit=crop&q=80', title: 'Combinado Sushi Especial' }
+  ],
+  clinica: [
+    { url: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=1200&auto=format&fit=crop&q=80', title: 'Consultório Odontológico Moderno' },
+    { url: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=1200&auto=format&fit=crop&q=80', title: 'Recepção e Atendimento Clínico' },
+    { url: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=1200&auto=format&fit=crop&q=80', title: 'Procedimentos Estéticos Avançados' }
+  ]
+};
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,6 +56,7 @@ export async function POST(req: NextRequest) {
 
     const SERPER_KEY = (process.env.SERPER_API_KEY || '').trim();
     const GOOGLE_PLACES_KEY = (process.env.GOOGLE_PLACES_API_KEY || '').trim();
+    const PIXABAY_KEY = (process.env.PIXABAY_API_KEY || '').trim();
 
     const cleanInstagram = (instagram || '').replace(/^@/, '').replace(/https?:\/\/(?:www\.)?instagram\.com\//i, '').trim();
 
@@ -39,21 +70,36 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const photos: RealPhotoItem[] = [];
-    const seenUrls = new Set<string>();
+    // Lista de candidatos brutos a foto
+    const rawCandidates: Array<{ url: string; title: string; source: 'google' | 'instagram' | 'web' }> = [];
+    const seenRawUrls = new Set<string>();
 
-    const addPhoto = (url: string, title: string, source: 'google' | 'instagram' | 'web') => {
+    const addCandidate = (url: string, title: string, source: 'google' | 'instagram' | 'web') => {
       if (!url || typeof url !== 'string') return;
       const cleanUrl = url.trim();
       if (!cleanUrl.startsWith('http')) return;
-      // Filtra ícones minúsculos ou trackers
-      if (cleanUrl.includes('favicon') || cleanUrl.includes('tracking') || cleanUrl.includes('.svg')) return;
-      if (seenUrls.has(cleanUrl)) return;
-      seenUrls.add(cleanUrl);
-      photos.push({
-        id: `photo_${photos.length + 1}_${Math.random().toString(36).substring(2, 7)}`,
+
+      const lower = cleanUrl.toLowerCase();
+      // Descarta ícones, trackers, svgs, tiktok e páginas de login
+      if (
+        lower.includes('favicon') ||
+        lower.includes('tracking') ||
+        lower.includes('.svg') ||
+        lower.includes('tiktok.com') ||
+        lower.includes('/accounts/login') ||
+        lower.includes('/login/') ||
+        lower.endsWith('.html') ||
+        lower.endsWith('.htm') ||
+        lower.endsWith('.php')
+      ) {
+        return;
+      }
+
+      if (seenRawUrls.has(cleanUrl)) return;
+      seenRawUrls.add(cleanUrl);
+
+      rawCandidates.push({
         url: cleanUrl,
-        proxyUrl: `/api/studio/image-proxy?url=${encodeURIComponent(cleanUrl)}`,
         title: title || businessName || 'Foto do Estabelecimento',
         source
       });
@@ -64,7 +110,6 @@ export async function POST(req: NextRequest) {
     // -------------------------------------------------------------------------
     if (SERPER_KEY) {
       try {
-        console.log('[Buscar Fotos] Consultando Serper Images API para:', searchQuery);
         const serperRes = await fetch('https://google.serper.dev/images', {
           method: 'POST',
           headers: {
@@ -86,7 +131,7 @@ export async function POST(req: NextRequest) {
           if (Array.isArray(serperJson.images)) {
             serperJson.images.forEach((img: any) => {
               const src = img.source?.toLowerCase().includes('instagram') ? 'instagram' : 'google';
-              addPhoto(img.imageUrl || img.thumbnailUrl, img.title, src);
+              addCandidate(img.imageUrl || img.thumbnailUrl, img.title, src);
             });
           }
         }
@@ -96,9 +141,9 @@ export async function POST(req: NextRequest) {
     }
 
     // -------------------------------------------------------------------------
-    // 2. PROVEDOR: Google Places API (New) Fotos Diretas (se chave válida)
+    // 2. PROVEDOR: Google Places API Fotos Diretas
     // -------------------------------------------------------------------------
-    if (GOOGLE_PLACES_KEY && photos.length < 6) {
+    if (GOOGLE_PLACES_KEY && rawCandidates.length < 8) {
       try {
         const placesRes = await fetch('https://places.googleapis.com/v1/places:searchText', {
           method: 'POST',
@@ -120,7 +165,7 @@ export async function POST(req: NextRequest) {
           const pJson = await placesRes.json().catch(() => ({}));
           const targetPlace = pJson.places?.[0];
           if (Array.isArray(targetPlace?.photos)) {
-            const photoPromises = targetPlace.photos.slice(0, 6).map(async (p: any) => {
+            const photoPromises = targetPlace.photos.slice(0, 8).map(async (p: any) => {
               if (!p?.name) return null;
               try {
                 const mediaRes = await fetch(
@@ -137,7 +182,7 @@ export async function POST(req: NextRequest) {
             const resolved = await Promise.allSettled(photoPromises);
             resolved.forEach((r) => {
               if (r.status === 'fulfilled' && r.value) {
-                addPhoto(r.value, `${businessName} (Google Maps Oficial)`, 'google');
+                addCandidate(r.value, `${businessName} (Google Maps Oficial)`, 'google');
               }
             });
           }
@@ -148,9 +193,9 @@ export async function POST(req: NextRequest) {
     }
 
     // -------------------------------------------------------------------------
-    // 3. PROVEDOR: Radar Web de Fotos Reais (DuckDuckGo Engine - Sem Chaves)
+    // 3. PROVEDOR: Radar Web de Fotos Reais (DuckDuckGo Engine)
     // -------------------------------------------------------------------------
-    if (photos.length < 6) {
+    if (rawCandidates.length < 15) {
       try {
         const queryVariants = [
           searchQuery,
@@ -158,7 +203,7 @@ export async function POST(req: NextRequest) {
         ].filter(Boolean);
 
         for (const variant of queryVariants) {
-          if (photos.length >= 15) break;
+          if (rawCandidates.length >= 25) break;
 
           const tokenRes = await fetch(`https://duckduckgo.com/?q=${encodeURIComponent(variant)}`, {
             headers: {
@@ -190,7 +235,7 @@ export async function POST(req: NextRequest) {
                 if (Array.isArray(imgData.results)) {
                   imgData.results.slice(0, 15).forEach((item: any) => {
                     const isInsta = (item.url || item.image || '').includes('instagram') || (item.title || '').includes('Instagram');
-                    addPhoto(item.image, item.title, isInsta ? 'instagram' : 'web');
+                    addCandidate(item.image, item.title, isInsta ? 'instagram' : 'web');
                   });
                 }
               }
@@ -203,9 +248,9 @@ export async function POST(req: NextRequest) {
     }
 
     // -------------------------------------------------------------------------
-    // 4. PROVEDOR: Radar Web de Imagens em Alta Resolução (Bing Engine - Sem Chaves)
+    // 4. PROVEDOR: Radar Web Bing Imagens
     // -------------------------------------------------------------------------
-    if (photos.length < 15) {
+    if (rawCandidates.length < 20) {
       try {
         const bingQuery = cleanInstagram ? `${cleanInstagram} instagram ${businessName}` : `${businessName} ${city}`;
         const bingRes = await fetch(`https://www.bing.com/images/search?q=${encodeURIComponent(bingQuery)}&form=HDRSC2&first=1`, {
@@ -222,9 +267,9 @@ export async function POST(req: NextRequest) {
           const html = await bingRes.text();
           const matches = [...html.matchAll(/murl&quot;:&quot;(https?:\/\/[^&]+)&quot;/g)].map((m) => m[1]);
           for (const rawImg of matches.slice(0, 20)) {
-            if (photos.length >= 25) break;
+            if (rawCandidates.length >= 35) break;
             const isInsta = rawImg.includes('instagram') || rawImg.includes('fbcdn') || rawImg.includes('cdninstagram');
-            addPhoto(rawImg, `${businessName} (Foto Oficial)`, isInsta ? 'instagram' : 'web');
+            addCandidate(rawImg, `${businessName} (Foto Oficial)`, isInsta ? 'instagram' : 'web');
           }
         }
       } catch (bingErr: any) {
@@ -232,11 +277,124 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // -------------------------------------------------------------------------
+    // 5. PROCESSAMENTO: Extração Real de Posts do Instagram (facebookexternalhit)
+    // -------------------------------------------------------------------------
+    const resolvedCandidates = await Promise.allSettled(
+      rawCandidates.map(async (item) => {
+        let finalUrl = item.url;
+        // Se for URL de post/reel/tv do Instagram, extrai a imagem real og:image
+        if (/(?:instagram\.com|instagr\.am)\/(?:p|reel|tv)\//i.test(item.url)) {
+          const directImg = await extractInstagramPostImageUrl(item.url);
+          if (directImg) {
+            finalUrl = directImg;
+          } else {
+            // Se falhou em extrair o post do Instagram, descarta para não quebrar no frontend
+            return null;
+          }
+        }
+        return { ...item, url: finalUrl };
+      })
+    );
+
+    const extractedCandidates = resolvedCandidates
+      .filter((r): r is PromiseFulfilledResult<any> => r.status === 'fulfilled' && r.value !== null)
+      .map((r) => r.value);
+
+    // -------------------------------------------------------------------------
+    // 6. FILTRO RÍGIDO: Validação Binária em Paralelo (Content-Type image/*)
+    // -------------------------------------------------------------------------
+    const validationResults = await Promise.allSettled(
+      extractedCandidates.map(async (item) => {
+        const val = await validateImageUrl(item.url, 2800);
+        return { item, valid: val.valid };
+      })
+    );
+
+    const verifiedPhotos: RealPhotoItem[] = [];
+    const verifiedUrls = new Set<string>();
+
+    for (const res of validationResults) {
+      if (res.status === 'fulfilled' && res.value.valid) {
+        const { item } = res.value;
+        if (!verifiedUrls.has(item.url)) {
+          verifiedUrls.add(item.url);
+          verifiedPhotos.push({
+            id: `photo_${verifiedPhotos.length + 1}_${Math.random().toString(36).substring(2, 7)}`,
+            url: item.url,
+            proxyUrl: `/api/studio/image-proxy?url=${encodeURIComponent(item.url)}`,
+            title: item.title,
+            source: item.source
+          });
+        }
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // 7. COMPLEMENTAÇÃO AUTOMÁTICA VIA PIXABAY / CURATED CASO FALTEM FOTOS
+    // -------------------------------------------------------------------------
+    if (verifiedPhotos.length < 12) {
+      const nicheQuery = niche || businessName || 'comercio local';
+
+      // Tenta Pixabay se houver chave configurada
+      if (PIXABAY_KEY) {
+        try {
+          const pixEndpoint = `https://pixabay.com/api/?key=${encodeURIComponent(PIXABAY_KEY)}&q=${encodeURIComponent(nicheQuery)}&image_type=photo&per_page=15&safesearch=true&lang=pt`;
+          const pixRes = await fetch(pixEndpoint, { signal: AbortSignal.timeout(4000) });
+          if (pixRes.ok) {
+            const pixData = await pixRes.json().catch(() => ({}));
+            if (Array.isArray(pixData.hits)) {
+              for (const hit of pixData.hits) {
+                if (verifiedPhotos.length >= 20) break;
+                const imgUrl = hit.largeImageURL || hit.webformatURL;
+                if (imgUrl && !verifiedUrls.has(imgUrl)) {
+                  verifiedUrls.add(imgUrl);
+                  verifiedPhotos.push({
+                    id: `pix_${hit.id || verifiedPhotos.length + 1}`,
+                    url: imgUrl,
+                    proxyUrl: `/api/studio/image-proxy?url=${encodeURIComponent(imgUrl)}`,
+                    title: `${businessName} (Foto Conceitual HD)`,
+                    source: 'web'
+                  });
+                }
+              }
+            }
+          }
+        } catch (pixErr: any) {
+          console.warn('[Buscar Fotos] Erro Pixabay Backup:', pixErr?.message);
+        }
+      }
+
+      // Se ainda faltar, adiciona fotos do Acervo Curado do Nicho
+      if (verifiedPhotos.length < 12) {
+        const lowerNiche = (niche || businessName).toLowerCase();
+        let nicheCategory = 'tattoo';
+        if (/barbe|barba|corte/i.test(lowerNiche)) nicheCategory = 'barbearia';
+        else if (/restaurante|pizza|burger|comida|gourmet/i.test(lowerNiche)) nicheCategory = 'gastronomia';
+        else if (/clinica|odonto|medico|estetic|saude/i.test(lowerNiche)) nicheCategory = 'clinica';
+
+        const backupList = CURATED_NICHE_BACKUP[nicheCategory] || CURATED_NICHE_BACKUP.tattoo;
+        for (const item of backupList) {
+          if (verifiedPhotos.length >= 18) break;
+          if (!verifiedUrls.has(item.url)) {
+            verifiedUrls.add(item.url);
+            verifiedPhotos.push({
+              id: `curated_${verifiedPhotos.length + 1}`,
+              url: item.url,
+              proxyUrl: `/api/studio/image-proxy?url=${encodeURIComponent(item.url)}`,
+              title: `${businessName} (${item.title})`,
+              source: 'google'
+            });
+          }
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       query: searchQuery,
-      total: photos.length,
-      photos
+      total: verifiedPhotos.length,
+      photos: verifiedPhotos
     });
   } catch (error: any) {
     console.error('[Buscar Fotos Fatal Error]', error);

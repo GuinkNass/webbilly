@@ -291,6 +291,8 @@ export default function BillyWebStudio({
   const [realPhotos, setRealPhotos] = useState<Array<{ id: string; url: string; proxyUrl?: string; title: string; source: 'google' | 'instagram' | 'web' }>>([]);
   const [realPhotosLoading, setRealPhotosLoading] = useState(false);
   const [realPhotosSuccessNotice, setRealPhotosSuccessNotice] = useState<string | null>(null);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const photoFileInputRef = useRef<HTMLInputElement>(null);
 
   // AI Copy Generation
   const [copyGenerating, setCopyGenerating] = useState(false);
@@ -464,6 +466,68 @@ export default function BillyWebStudio({
     }));
     setRealPhotosSuccessNotice(`✅ ${urls.length} fotos reais aplicadas com sucesso no site!`);
     setTimeout(() => setRealPhotosSuccessNotice(null), 4000);
+  };
+
+  // Remove automaticamente fotos quebradas garantindo zero quadrados pretos vazios
+  const handlePhotoError = (failedUrl: string) => {
+    if (!failedUrl) return;
+    setRealPhotos((prev) => prev.filter((p) => p.url !== failedUrl && p.proxyUrl !== failedUrl));
+    setSiteForm((prev) => {
+      const newGallery = prev.galleryPhotos.filter((u) => u !== failedUrl);
+      const newHero = prev.heroPhoto === failedUrl ? (newGallery[0] || '') : prev.heroPhoto;
+      return {
+        ...prev,
+        heroPhoto: newHero,
+        galleryPhotos: newGallery
+      };
+    });
+  };
+
+  // Upload direto de fotos do computador/celular para o Supabase Storage
+  const handleUploadDirectPhotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingPhotos(true);
+    setRealPhotosSuccessNotice(null);
+    try {
+      const formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        formData.append('files', files[i]);
+      }
+
+      const res = await fetch('/api/studio/upload-foto', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (data && data.success && Array.isArray(data.photos) && data.photos.length > 0) {
+        const newPhotos = data.photos;
+        setRealPhotos((prev) => [...newPhotos, ...prev]);
+
+        // Aplica automaticamente na galeria do site
+        const uploadedUrls = newPhotos.map((p: any) => p.url);
+        setSiteForm((prev) => ({
+          ...prev,
+          heroPhoto: prev.heroPhoto || uploadedUrls[0],
+          galleryPhotos: [...uploadedUrls, ...prev.galleryPhotos.filter((u) => !uploadedUrls.includes(u))].slice(0, MAX_PHOTOS)
+        }));
+
+        setRealPhotosSuccessNotice(`✨ ${newPhotos.length} foto(s) enviada(s) do computador e adicionadas ao site!`);
+        setTimeout(() => setRealPhotosSuccessNotice(null), 5000);
+      } else {
+        alert(data.error || 'Falha ao enviar fotos. Tente novamente.');
+      }
+    } catch (err: any) {
+      alert('Erro ao enviar fotos do computador: ' + (err?.message || err));
+    } finally {
+      setUploadingPhotos(false);
+      if (photoFileInputRef.current) {
+        photoFileInputRef.current.value = '';
+      }
+    }
   };
 
   // Load projects list
@@ -2526,6 +2590,24 @@ export default function BillyWebStudio({
                   <Upload className="w-3.5 h-3.5" />
                   <span>Colar URL</span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => photoFileInputRef.current?.click()}
+                  disabled={uploadingPhotos}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer bg-emerald-500/15 hover:bg-emerald-500 text-emerald-400 hover:text-black border border-emerald-500/30 shrink-0"
+                  title="Subir fotos enviadas pelo cliente ou prints direto para o site"
+                >
+                  {uploadingPhotos ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
+                  <span>{uploadingPhotos ? 'Enviando...' : '+ Enviar Fotos do PC / Celular'}</span>
+                </button>
+                <input
+                  type="file"
+                  ref={photoFileInputRef}
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleUploadDirectPhotos}
+                />
               </div>
             </div>
 
@@ -2634,15 +2716,10 @@ export default function BillyWebStudio({
                         >
                           <img
                             src={displayThumb}
-                            alt={item.title || ''}
+                            alt=""
                             referrerPolicy="no-referrer"
                             className="w-full h-full object-cover pointer-events-none"
-                            onError={(e) => {
-                              const el = e.currentTarget;
-                              if (el.src !== target) {
-                                el.src = target;
-                              }
-                            }}
+                            onError={() => handlePhotoError(target)}
                           />
 
                           {/* Badge de Origem */}
@@ -2787,10 +2864,10 @@ export default function BillyWebStudio({
               </div>
             )}
 
-            {/* MODO 3: ADICIONAR URL DIRETA */}
+            {/* MODO 3: ADICIONAR URL DIRETA OU UPLOAD */}
             {photoSearchMode === 'custom' && (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <input
                     type="text"
                     value={customPhotoUrl}
@@ -2801,9 +2878,18 @@ export default function BillyWebStudio({
                   <button
                     type="button"
                     onClick={handleAddCustomPhoto}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-white/[0.06] hover:bg-white/[0.12] text-white transition cursor-pointer"
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#9ae639] text-black transition cursor-pointer shrink-0"
                   >
-                    + Adicionar Foto
+                    + Adicionar URL
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => photoFileInputRef.current?.click()}
+                    disabled={uploadingPhotos}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-500/15 hover:bg-emerald-500 text-emerald-400 hover:text-black border border-emerald-500/30 transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                  >
+                    {uploadingPhotos ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                    <span>{uploadingPhotos ? 'Enviando...' : 'Enviar do Computador'}</span>
                   </button>
                 </div>
               </div>
@@ -2864,12 +2950,7 @@ export default function BillyWebStudio({
                           alt=""
                           referrerPolicy="no-referrer"
                           className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const el = e.currentTarget;
-                            if (el.src !== photo) {
-                              el.src = photo;
-                            }
-                          }}
+                          onError={() => handlePhotoError(photo)}
                         />
                         {isHero && (
                           <span className="absolute top-1 left-1 px-1 py-0.5 rounded text-[7px] font-black bg-[#84cc16] text-black uppercase shadow">
