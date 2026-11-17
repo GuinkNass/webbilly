@@ -2583,17 +2583,12 @@ export default function BillyWebStudio({
                             src={displayThumb}
                             alt={item.title || ''}
                             referrerPolicy="no-referrer"
-                            crossOrigin="anonymous"
                             className="w-full h-full object-cover pointer-events-none"
                             onError={(e) => {
                               const el = e.currentTarget;
-                              const card = el.closest('.real-photo-card');
-                              if (card) (card as HTMLElement).style.display = 'none';
-                              setSiteForm((prev) => ({
-                                ...prev,
-                                galleryPhotos: prev.galleryPhotos.filter((p) => p !== target),
-                                heroPhoto: prev.heroPhoto === target ? '' : prev.heroPhoto
-                              }));
+                              if (el.src !== target) {
+                                el.src = target;
+                              }
                             }}
                           />
 
@@ -2815,14 +2810,12 @@ export default function BillyWebStudio({
                           src={displayThumb}
                           alt=""
                           referrerPolicy="no-referrer"
-                          crossOrigin="anonymous"
                           className="w-full h-full object-cover"
-                          onError={() => {
-                            setSiteForm((prev) => ({
-                              ...prev,
-                              galleryPhotos: prev.galleryPhotos.filter((p) => p !== photo),
-                              heroPhoto: prev.heroPhoto === photo ? (prev.galleryPhotos.find((p) => p !== photo) || '') : prev.heroPhoto
-                            }));
+                          onError={(e) => {
+                            const el = e.currentTarget;
+                            if (el.src !== photo) {
+                              el.src = photo;
+                            }
                           }}
                         />
                         {isHero && (

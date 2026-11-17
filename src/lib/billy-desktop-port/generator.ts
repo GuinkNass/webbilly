@@ -1,6 +1,6 @@
 import { findTemplateById } from './templates';
 import { BlockToggles, DEFAULT_BLOCK_TOGGLES } from './categories';
-import { getDesktopTemplateHtml } from '../desktop-templates-html';
+import { getBillyRealTemplateHtml } from '../billy-real-templates';
 import { formatHeaderName } from '../desktop-templates';
 
 export interface ServiceItem {
@@ -438,7 +438,7 @@ export async function buildSiteHtml(
   input: SiteGenerationInput
 ): Promise<{ html: string; usedAi: boolean; modelUsed?: string }> {
   const tpl = findTemplateById(input.templateId || 'barbearia-crop-vintage');
-  const baseTemplateHtml = getDesktopTemplateHtml(input.templateId);
+  const baseTemplateHtml = getBillyRealTemplateHtml(input.templateId);
 
   const rawPhone = (input.whatsapp || input.phone || '11999999999').replace(/\D/g, '');
   const cleanPhone = rawPhone.length <= 11 && !rawPhone.startsWith('55') ? `55${rawPhone}` : rawPhone;
