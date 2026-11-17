@@ -486,7 +486,7 @@ export default function BillyWebStudio({
     try {
       setSavedLeadsLoading(true);
       const queryParam = q !== undefined ? q : savedLeadsFilter;
-      const url = `/api/studio/leads-salvos?operatorId=${operatorId}${queryParam ? `&q=${encodeURIComponent(queryParam)}` : ''}`;
+      const url = `/api/studio/leads-salvos?role=${role}&operatorId=${operatorId}${queryParam ? `&q=${encodeURIComponent(queryParam)}` : ''}`;
       const data = await safeFetchJson(url);
       if (data && data.success && Array.isArray(data.leads)) {
         setSavedLeadsList(data.leads);
@@ -555,6 +555,59 @@ export default function BillyWebStudio({
     }
   };
 
+  // Detecção inteligente e precisa do nicho pelo nome e categoria
+  const detectAccurateNiche = (leadName: string, category?: string, currentNicheQuery?: string): string => {
+    const nameLower = (leadName || '').toLowerCase();
+    const catLower = (category || '').toLowerCase();
+
+    // 1. Tatuagem & Piercing (alta prioridade para evitar cair em massoterapia/estética genérica)
+    if (/tattoo|tatuag|piercing|ink|body\s*art/i.test(nameLower) || /tattoo|tatuag|piercing|ink/i.test(catLower)) {
+      return 'Tatuagem & Piercing';
+    }
+
+    // 2. Barbearia
+    if (/barbe|barba|navalha|fade|mens\s*hair/i.test(nameLower) || /barbe|barba/i.test(catLower)) {
+      return 'Barbearia';
+    }
+
+    // 3. Odontologia / Dentista
+    if (/odonto|dentis|sorriso|dental|implante/i.test(nameLower) || /odonto|dentis/i.test(catLower)) {
+      return 'Odontologia';
+    }
+
+    // 4. Restaurante / Gastronomia
+    if (/pizza|pizzaria|burger|hamburguer|restaurante|sushi|lanchonete|gourmet|churrascaria|pastel/i.test(nameLower) || /restaurante|comida|gastronom/i.test(catLower)) {
+      return 'Gastronomia & Restaurante';
+    }
+
+    // 5. Pet Shop / Veterinário
+    if (/pet|vet|veterin|banho e tosa|animal|cao|gato/i.test(nameLower) || /pet|veterin/i.test(catLower)) {
+      return 'Pet Shop & Veterinária';
+    }
+
+    // 6. Autoescola
+    if (/autoescola|auto\s*escola|cfc|cnh|habilitacao/i.test(nameLower) || /autoescola/i.test(catLower)) {
+      return 'Autoescola';
+    }
+
+    // 7. Advocacia
+    if (/advog|advocacia|jurid|direito|oab/i.test(nameLower) || /advog|jurid/i.test(catLower)) {
+      return 'Advocacia & Jurídico';
+    }
+
+    // 8. Serralheria
+    if (/serralh|calha|vidraç|alumin/i.test(nameLower) || /serralh|calha|vidro/i.test(catLower)) {
+      return 'Serralheria & Esquadrias';
+    }
+
+    // 9. Estética & Beleza Feminina (apenas se não for os anteriores)
+    if (/estetic|sobrancelha|cilios|depila|unha|manicure|spa|massag/i.test(nameLower) || /estetic|spa/i.test(catLower)) {
+      return 'Estética & SPA';
+    }
+
+    return category || currentNicheQuery || 'Comércio Local';
+  };
+
   const handleSelectLead = (lead: LeadResult) => {
     const rawPhone = (lead.whatsapp || lead.phone || '').replace(/\D/g, '');
     const cleanPhone = rawPhone.length <= 11 && !rawPhone.startsWith('55') ? `55${rawPhone}` : rawPhone;
@@ -566,7 +619,7 @@ export default function BillyWebStudio({
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
 
-    const niche = lead.niche || lead.category || nicheQuery || 'Comércio Local';
+    const niche = detectAccurateNiche(lead.name, lead.category || lead.niche, nicheQuery);
     const city = lead.city || cityQuery || 'São Paulo - SP';
     const shortName = formatHeaderName(lead.name);
 

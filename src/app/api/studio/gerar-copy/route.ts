@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { safeParseGeminiJson } from '@/lib/gemini-json';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 45;
@@ -16,32 +17,34 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.GEMINI_API_KEY || '';
     const modelName = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
+    const fallbackData = {
+      headline: `A melhor experiência em ${niche} em ${city}`,
+      subheadline: `Qualidade inegociável, atendimento personalizado e estrutura de ponta para você e sua família.`,
+      description: `Com tradição e foco absoluto na satisfação dos nossos clientes, a ${businessName} é referência em ${niche} na região de ${city}. Nossa equipe é altamente qualificada e pronta para oferecer um atendimento exclusivo.`,
+      services: [
+        { name: `Serviço Especializado de ${niche}`, price: 'R$ 49,00', description: 'Atendimento completo com os melhores produtos e procedimentos do mercado.' },
+        { name: 'Pacote Especial Completo', price: 'R$ 89,00', description: 'Combinação perfeita com o melhor custo-benefício da região.' },
+        { name: 'Atendimento Expresso', price: 'R$ 35,00', description: 'Rapidez e precisão para quem tem o dia a dia corrido.' }
+      ],
+      features: [
+        'Ambiente acolhedor, climatizado e confortável',
+        'Profissionais certificados com vasta experiência',
+        'Facilidade no pagamento: Pix, cartões e parcelamento',
+        'Agendamento rápido e prioritário via WhatsApp'
+      ],
+      faqs: [
+        { question: 'Como faço para agendar um horário?', answer: 'Basta clicar no botão do WhatsApp e nossa equipe responderá em minutos!' },
+        { question: 'Quais formas de pagamento são aceitas?', answer: 'Aceitamos Pix com desconto, dinheiro e todos os cartões de crédito/débito.' },
+        { question: 'Onde vocês estão localizados?', answer: `Estamos convenientemente localizados em ${city}, com fácil acesso e estacionamento.` }
+      ],
+      hours: 'Segunda a Sábado das 08h30 às 19h30'
+    };
+
     if (!apiKey) {
       // Fallback estático caso não haja API key configurada
       return NextResponse.json({
         success: true,
-        data: {
-          headline: `A melhor experiência em ${niche} em ${city}`,
-          subheadline: `Qualidade inegociável, atendimento personalizado e estrutura de ponta para você e sua família.`,
-          description: `Com anos de tradição e foco absoluto na satisfação dos nossos clientes, a ${businessName} é referência em ${niche} na região de ${city}. Nossa equipe é altamente qualificada e pronta para oferecer um atendimento exclusivo.`,
-          services: [
-            { name: `Serviço Premium de ${niche}`, price: 'R$ 49,00', description: 'Atendimento completo com os melhores produtos do mercado.' },
-            { name: 'Pacote Especial Completo', price: 'R$ 89,00', description: 'Combinação perfeita com o melhor custo-benefício da região.' },
-            { name: 'Atendimento Expresso', price: 'R$ 35,00', description: 'Rapidez e precisão para quem tem o dia a dia corrido.' }
-          ],
-          features: [
-            'Ambiente acolhedor, climatizado e confortável',
-            'Profissionais certificados com vasta experiência',
-            'Facilidade no pagamento: Pix, cartões e parcelamento',
-            'Agendamento rápido e prioritário via WhatsApp'
-          ],
-          faqs: [
-            { question: 'Como faço para agendar um horário?', answer: 'Basta clicar no botão do WhatsApp e nossa equipe responderá em minutos!' },
-            { question: 'Quais formas de pagamento são aceitas?', answer: 'Aceitamos Pix com desconto, dinheiro e todos os cartões de crédito/débito.' },
-            { question: 'Onde vocês estão localizados?', answer: `Estamos convenientemente localizados em ${city}, com fácil acesso e estacionamento.` }
-          ],
-          hours: 'Segunda a Sábado das 08h30 às 19h30'
-        }
+        data: fallbackData
       });
     }
 
@@ -86,20 +89,23 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido (sem tags markdown \`\`\`json) com
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.3,
-          maxOutputTokens: 2048,
+          maxOutputTokens: 8192,
           responseMimeType: 'application/json'
         }
       })
     });
 
     if (!res.ok) {
-      throw new Error(`Gemini API retornou status ${res.status}`);
+      console.warn(`[API Gerar Copy] Gemini API retornou status ${res.status}. Usando fallback contextual.`);
+      return NextResponse.json({
+        success: true,
+        data: fallbackData
+      });
     }
 
     const data = await res.json();
     const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const cleanJson = candidateText.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
-    const parsed = JSON.parse(cleanJson);
+    const parsed = safeParseGeminiJson(candidateText, fallbackData);
 
     return NextResponse.json({
       success: true,

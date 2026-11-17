@@ -378,6 +378,64 @@ export function findTemplateById(id: string): DesktopTemplate {
 
 export function recommendTemplateForNiche(nicheText: string): { template: DesktopTemplate; reason: string } {
   const clean = (nicheText || '').toLowerCase();
+
+  // 1. Prioridades diretas por Nicho Principal
+  if (/tattoo|tatuag|piercing|ink|body\s*art/i.test(clean)) {
+    const tpl = findTemplateById('portfolio-dark');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado pelo visual escuro moderno ideal para estúdios de Tatuagem & Piercing.`
+    };
+  }
+
+  if (/barbe|barba|navalha|fade|corte masculino/i.test(clean)) {
+    const tpl = findTemplateById('barbearia-barberon-moderno') || findTemplateById('barbearia-crop-vintage');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado pela atmosfera de alta conversão para barbearias.`
+    };
+  }
+
+  if (/odonto|dentis|sorriso|dental|implante/i.test(clean)) {
+    const tpl = findTemplateById('odontologia-dentia-clinica');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado pela autoridade clínica e apresentação de tratamentos odontológicos.`
+    };
+  }
+
+  if (/pizza|restaurante|burger|hamburguer|sushi|culinaria|gastronom/i.test(clean)) {
+    const tpl = findTemplateById('restaurante-foores-gourmet');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado pela estrutura de cardápio gourmet e pedidos via WhatsApp.`
+    };
+  }
+
+  if (/autoescola|cfc|cnh|habilitacao/i.test(clean)) {
+    const tpl = findTemplateById('autoescola-drivepro');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado com foco em matrículas e pacotes de habilitação.`
+    };
+  }
+
+  if (/pet|veterin|banho e tosa|cao|gato/i.test(clean)) {
+    const tpl = findTemplateById('petshop-petly-veterinaria');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado para serviços de banho, tosa e cuidados veterinários.`
+    };
+  }
+
+  if (/serralh|solda|portao|grade|estrutura metalica|calha/i.test(clean)) {
+    const tpl = findTemplateById('serralheria-welbim-soldagem');
+    return {
+      template: tpl,
+      reason: `Template "${tpl.name}" selecionado para catálogo de estruturas metálicas e orçamentos de obras.`
+    };
+  }
+
   for (const tpl of BILLY_DESKTOP_TEMPLATES) {
     if (tpl.recommendedKeywords.some((kw) => clean.includes(kw))) {
       return {

@@ -305,7 +305,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{BUSINESS_NAME}} | Barbearia Clássica & Navalha</title>
+  <title>{{BUSINESS_NAME}} | {{TAGLINE}}</title>
   <meta name="description" content="{{DESCRIPTION}}">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -350,8 +350,8 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
       </a>
 
       <nav class="hidden md:flex items-center gap-6 text-sm font-semibold text-zinc-300">
-        <a href="#sobre" class="hover:text-white transition">Sobre a Barbearia</a>
-        <a href="#servicos" class="hover:text-white transition">Serviços & Navalha</a>
+        <a href="#sobre" class="hover:text-white transition">{{NAV_ABOUT}}</a>
+        <a href="#servicos" class="hover:text-white transition">{{NAV_SERVICES}}</a>
         <a href="#galeria" class="hover:text-white transition">Fotos de Cortes</a>
         <a href="#depoimentos" class="hover:text-white transition">Avaliações</a>
         <a href="#contato" class="hover:text-white transition">Localização</a>
@@ -371,7 +371,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
       <div class="lg:col-span-7 space-y-6">
         <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-white/[0.1] surface-card">
           <span class="w-2 h-2 rounded-full accent-bg animate-pulse"></span>
-          <span class="accent-color">ESTILO CLÁSSICO & NAVALHA AFIADA</span>
+          <span class="accent-color">{{NICHE_LABEL}}</span>
         </div>
 
         <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight font-heading">
@@ -395,11 +395,11 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
         <div class="grid grid-cols-3 gap-4 pt-4 border-t border-white/[0.08]">
           <div>
             <div class="text-2xl font-black accent-color font-heading">100%</div>
-            <div class="text-[11px] text-zinc-400">Navalha Afiada</div>
+            <div class="text-[11px] text-zinc-400">{{METRIC_1_LABEL}}</div>
           </div>
           <div>
             <div class="text-2xl font-black accent-color font-heading">VIP</div>
-            <div class="text-[11px] text-zinc-400">Toalha Quente</div>
+            <div class="text-[11px] text-zinc-400">{{METRIC_2_LABEL}}</div>
           </div>
           <div>
             <div class="text-2xl font-black accent-color font-heading">5.0 ★</div>
@@ -450,7 +450,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
     <div class="max-w-7xl mx-auto px-4 sm:px-6 space-y-12">
       <div class="text-center space-y-3 max-w-2xl mx-auto">
         <span class="text-xs uppercase font-extrabold tracking-widest accent-color">CARDÁPIO DE SERVIÇOS</span>
-        <h2 class="text-3xl sm:text-4xl font-black text-white font-heading">Cortes, Barba & Tratamentos Masculinos</h2>
+        <h2 class="text-3xl sm:text-4xl font-black text-white font-heading">{{SERVICES_TITLE}}</h2>
         <p class="text-xs text-zinc-400">Atendimento de primeira linha com produtos premium e mestres barbeiros experientes.</p>
       </div>
 
@@ -467,7 +467,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
           <span class="text-xs uppercase font-extrabold tracking-widest accent-color">PORTFÓLIO VISUAL</span>
           <h2 class="text-3xl font-black text-white font-heading">Galeria de Estilo & Transformações</h2>
         </div>
-        <p class="text-xs text-zinc-400 max-w-md">Confira alguns dos nossos trabalhos mais recentes realizados na barbearia.</p>
+        <p class="text-xs text-zinc-400 max-w-md">{{GALLERY_SUBTITLE}}</p>
       </div>
 
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -543,7 +543,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{BUSINESS_NAME}} | Barbearia VIP & Neon Urbano</title>
+  <title>{{BUSINESS_NAME}} | {{TAGLINE}}</title>
   <meta name="description" content="{{DESCRIPTION}}">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -577,7 +577,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
 
   <div class="bg-black border-b border-white/[0.08] overflow-hidden py-2 whitespace-nowrap text-[10px] font-mono tracking-widest uppercase text-zinc-400">
     <div class="inline-block animate-marquee">
-      ⚡ CORTE FADE MASTER • BARBOTERAPIA VIP • PIGMENTAÇÃO • CERVEJA GELADA • ATENDIMENTO COM HORA MARCADA • WI-FI ULTRA RÁPIDO • AMBIENTE CLIMATIZADO ⚡
+      ⚡ {{MARQUEE_TEXT}} ⚡
     </div>
   </div>
 
@@ -595,7 +595,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
 
       <nav class="hidden md:flex items-center gap-6 text-sm font-semibold text-zinc-300">
         <a href="#servicos" class="hover:accent-color transition">Serviços VIP</a>
-        <a href="#sobre" class="hover:accent-color transition">A Barbearia</a>
+        <a href="#sobre" class="hover:accent-color transition">{{NAV_ABOUT}}</a>
         <a href="#galeria" class="hover:accent-color transition">Transformações</a>
         <a href="#depoimentos" class="hover:accent-color transition">Reviews</a>
       </nav>
@@ -603,7 +603,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
       <div class="flex items-center gap-3">
         <a href="{{WHATSAPP_LINK}}" target="_blank" rel="noopener noreferrer" class="px-5 py-2.5 rounded-xl accent-bg text-black font-black text-xs uppercase tracking-wider hover:brightness-110 shadow-lg transition flex items-center gap-2">
           <i class="fab fa-whatsapp text-sm"></i>
-          <span>Agendar Horário VIP</span>
+          <span>{{HEADER_CTA}}</span>
         </a>
       </div>
     </div>
@@ -614,7 +614,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
       <div class="lg:col-span-7 space-y-6">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider border border-[#84cc16]/30 bg-[#84cc16]/10 text-[#a3e635]">
           <span class="w-2 h-2 rounded-full bg-[#84cc16] animate-ping"></span>
-          <span>CORTE FADE • BARBA • PIGMENTAÇÃO</span>
+          <span>{{NICHE_LABEL}}</span>
         </div>
 
         <h1 class="text-4xl sm:text-6xl font-black text-white tracking-tight leading-none font-heading uppercase">
@@ -640,7 +640,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
         <div class="relative rounded-3xl overflow-hidden border border-white/[0.1] shadow-2xl surface-card aspect-square group neon-border">
           <img src="{{HERO_IMG}}" alt="{{BUSINESS_NAME}}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onerror="this.style.display='none'">
           <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent flex flex-col justify-end p-6">
-            <span class="px-2.5 py-1 rounded-md bg-[#84cc16] text-black font-black text-[10px] uppercase w-max mb-2">Barbearia VIP</span>
+            <span class="px-2.5 py-1 rounded-md bg-[#84cc16] text-black font-black text-[10px] uppercase w-max mb-2">{{CARD_BADGE}}</span>
             <h3 class="text-2xl font-black text-white font-heading">{{BUSINESS_NAME}}</h3>
             <p class="text-xs text-zinc-300">{{ADDRESS}}</p>
           </div>
@@ -668,7 +668,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
   <section id="sobre" class="py-16 border-t border-white/[0.08] surface-card">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
       <div class="lg:col-span-7 space-y-6">
-        <span class="text-xs uppercase font-mono font-bold tracking-widest accent-color">A BARBEARIA</span>
+        <span class="text-xs uppercase font-mono font-bold tracking-widest accent-color">{{NAV_ABOUT_UPPER}}</span>
         <h2 class="text-3xl sm:text-4xl font-black text-white font-heading uppercase">O Seu Refúgio de Estilo & Conforto</h2>
         <p class="text-sm text-zinc-300 leading-relaxed">{{ABOUT_TEXT}}</p>
         <div class="pt-2">
@@ -2199,8 +2199,8 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
       </a>
 
       <nav class="hidden md:flex items-center gap-6 text-sm font-semibold text-zinc-300">
-        <a href="#sobre" class="hover:text-white transition">Sobre a Barbearia</a>
-        <a href="#servicos" class="hover:text-white transition">Serviços & Navalha</a>
+        <a href="#sobre" class="hover:text-white transition">{{NAV_ABOUT}}</a>
+        <a href="#servicos" class="hover:text-white transition">{{NAV_SERVICES}}</a>
         <a href="#galeria" class="hover:text-white transition">Fotos de Cortes</a>
         <a href="#depoimentos" class="hover:text-white transition">Avaliações</a>
         <a href="#contato" class="hover:text-white transition">Localização</a>
@@ -2220,7 +2220,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
       <div class="lg:col-span-7 space-y-6">
         <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-white/[0.1] surface-card">
           <span class="w-2 h-2 rounded-full accent-bg animate-pulse"></span>
-          <span class="accent-color">ESTILO CLÁSSICO & NAVALHA AFIADA</span>
+          <span class="accent-color">{{NICHE_LABEL}}</span>
         </div>
 
         <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight font-heading">
@@ -2244,11 +2244,11 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
         <div class="grid grid-cols-3 gap-4 pt-4 border-t border-white/[0.08]">
           <div>
             <div class="text-2xl font-black accent-color font-heading">100%</div>
-            <div class="text-[11px] text-zinc-400">Navalha Afiada</div>
+            <div class="text-[11px] text-zinc-400">{{METRIC_1_LABEL}}</div>
           </div>
           <div>
             <div class="text-2xl font-black accent-color font-heading">VIP</div>
-            <div class="text-[11px] text-zinc-400">Toalha Quente</div>
+            <div class="text-[11px] text-zinc-400">{{METRIC_2_LABEL}}</div>
           </div>
           <div>
             <div class="text-2xl font-black accent-color font-heading">5.0 ★</div>
@@ -2316,7 +2316,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
           <span class="text-xs uppercase font-extrabold tracking-widest accent-color">PORTFÓLIO VISUAL</span>
           <h2 class="text-3xl font-black text-white font-heading">Galeria de Estilo & Transformações</h2>
         </div>
-        <p class="text-xs text-zinc-400 max-w-md">Confira alguns dos nossos trabalhos mais recentes realizados na barbearia.</p>
+        <p class="text-xs text-zinc-400 max-w-md">{{GALLERY_SUBTITLE}}</p>
       </div>
 
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -2787,7 +2787,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
 
   <div class="bg-black border-b border-white/[0.08] overflow-hidden py-2 whitespace-nowrap text-[10px] font-mono tracking-widest uppercase text-zinc-400">
     <div class="inline-block animate-marquee">
-      ⚡ CORTE FADE MASTER • BARBOTERAPIA VIP • PIGMENTAÇÃO • CERVEJA GELADA • ATENDIMENTO COM HORA MARCADA • WI-FI ULTRA RÁPIDO • AMBIENTE CLIMATIZADO ⚡
+      ⚡ {{MARQUEE_TEXT}} ⚡
     </div>
   </div>
 
@@ -2805,7 +2805,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
 
       <nav class="hidden md:flex items-center gap-6 text-sm font-semibold text-zinc-300">
         <a href="#servicos" class="hover:accent-color transition">Serviços VIP</a>
-        <a href="#sobre" class="hover:accent-color transition">A Barbearia</a>
+        <a href="#sobre" class="hover:accent-color transition">{{NAV_ABOUT}}</a>
         <a href="#galeria" class="hover:accent-color transition">Transformações</a>
         <a href="#depoimentos" class="hover:accent-color transition">Reviews</a>
       </nav>
@@ -2813,7 +2813,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
       <div class="flex items-center gap-3">
         <a href="{{WHATSAPP_LINK}}" target="_blank" rel="noopener noreferrer" class="px-5 py-2.5 rounded-xl accent-bg text-black font-black text-xs uppercase tracking-wider hover:brightness-110 shadow-lg transition flex items-center gap-2">
           <i class="fab fa-whatsapp text-sm"></i>
-          <span>Agendar Horário VIP</span>
+          <span>{{HEADER_CTA}}</span>
         </a>
       </div>
     </div>
@@ -2824,7 +2824,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
       <div class="lg:col-span-7 space-y-6">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider border border-[#84cc16]/30 bg-[#84cc16]/10 text-[#a3e635]">
           <span class="w-2 h-2 rounded-full bg-[#84cc16] animate-ping"></span>
-          <span>CORTE FADE • BARBA • PIGMENTAÇÃO</span>
+          <span>{{NICHE_LABEL}}</span>
         </div>
 
         <h1 class="text-4xl sm:text-6xl font-black text-white tracking-tight leading-none font-heading uppercase">
@@ -2850,7 +2850,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
         <div class="relative rounded-3xl overflow-hidden border border-white/[0.1] shadow-2xl surface-card aspect-square group neon-border">
           <img src="{{HERO_IMG}}" alt="{{BUSINESS_NAME}}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onerror="this.style.display='none'">
           <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent flex flex-col justify-end p-6">
-            <span class="px-2.5 py-1 rounded-md bg-[#84cc16] text-black font-black text-[10px] uppercase w-max mb-2">Barbearia VIP</span>
+            <span class="px-2.5 py-1 rounded-md bg-[#84cc16] text-black font-black text-[10px] uppercase w-max mb-2">{{CARD_BADGE}}</span>
             <h3 class="text-2xl font-black text-white font-heading">{{BUSINESS_NAME}}</h3>
             <p class="text-xs text-zinc-300">{{ADDRESS}}</p>
           </div>
@@ -2878,7 +2878,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
   <section id="sobre" class="py-16 border-t border-white/[0.08] surface-card">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
       <div class="lg:col-span-7 space-y-6">
-        <span class="text-xs uppercase font-mono font-bold tracking-widest accent-color">A BARBEARIA</span>
+        <span class="text-xs uppercase font-mono font-bold tracking-widest accent-color">{{NAV_ABOUT_UPPER}}</span>
         <h2 class="text-3xl sm:text-4xl font-black text-white font-heading uppercase">O Seu Refúgio de Estilo & Conforto</h2>
         <p class="text-sm text-zinc-300 leading-relaxed">{{ABOUT_TEXT}}</p>
         <div class="pt-2">
@@ -3459,7 +3459,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
 
   <div class="bg-black border-b border-white/[0.08] overflow-hidden py-2 whitespace-nowrap text-[10px] font-mono tracking-widest uppercase text-zinc-400">
     <div class="inline-block animate-marquee">
-      ⚡ CORTE FADE MASTER • BARBOTERAPIA VIP • PIGMENTAÇÃO • CERVEJA GELADA • ATENDIMENTO COM HORA MARCADA • WI-FI ULTRA RÁPIDO • AMBIENTE CLIMATIZADO ⚡
+      ⚡ {{MARQUEE_TEXT}} ⚡
     </div>
   </div>
 
@@ -3477,7 +3477,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
 
       <nav class="hidden md:flex items-center gap-6 text-sm font-semibold text-zinc-300">
         <a href="#servicos" class="hover:accent-color transition">Serviços VIP</a>
-        <a href="#sobre" class="hover:accent-color transition">A Barbearia</a>
+        <a href="#sobre" class="hover:accent-color transition">{{NAV_ABOUT}}</a>
         <a href="#galeria" class="hover:accent-color transition">Transformações</a>
         <a href="#depoimentos" class="hover:accent-color transition">Reviews</a>
       </nav>
@@ -3485,7 +3485,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
       <div class="flex items-center gap-3">
         <a href="{{WHATSAPP_LINK}}" target="_blank" rel="noopener noreferrer" class="px-5 py-2.5 rounded-xl accent-bg text-black font-black text-xs uppercase tracking-wider hover:brightness-110 shadow-lg transition flex items-center gap-2">
           <i class="fab fa-whatsapp text-sm"></i>
-          <span>Agendar Horário VIP</span>
+          <span>{{HEADER_CTA}}</span>
         </a>
       </div>
     </div>
@@ -3496,7 +3496,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
       <div class="lg:col-span-7 space-y-6">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider border border-[#84cc16]/30 bg-[#84cc16]/10 text-[#a3e635]">
           <span class="w-2 h-2 rounded-full bg-[#84cc16] animate-ping"></span>
-          <span>CORTE FADE • BARBA • PIGMENTAÇÃO</span>
+          <span>{{NICHE_LABEL}}</span>
         </div>
 
         <h1 class="text-4xl sm:text-6xl font-black text-white tracking-tight leading-none font-heading uppercase">
@@ -3522,7 +3522,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
         <div class="relative rounded-3xl overflow-hidden border border-white/[0.1] shadow-2xl surface-card aspect-square group neon-border">
           <img src="{{HERO_IMG}}" alt="{{BUSINESS_NAME}}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" onerror="this.style.display='none'">
           <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent flex flex-col justify-end p-6">
-            <span class="px-2.5 py-1 rounded-md bg-[#84cc16] text-black font-black text-[10px] uppercase w-max mb-2">Barbearia VIP</span>
+            <span class="px-2.5 py-1 rounded-md bg-[#84cc16] text-black font-black text-[10px] uppercase w-max mb-2">{{CARD_BADGE}}</span>
             <h3 class="text-2xl font-black text-white font-heading">{{BUSINESS_NAME}}</h3>
             <p class="text-xs text-zinc-300">{{ADDRESS}}</p>
           </div>
@@ -3550,7 +3550,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
   <section id="sobre" class="py-16 border-t border-white/[0.08] surface-card">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
       <div class="lg:col-span-7 space-y-6">
-        <span class="text-xs uppercase font-mono font-bold tracking-widest accent-color">A BARBEARIA</span>
+        <span class="text-xs uppercase font-mono font-bold tracking-widest accent-color">{{NAV_ABOUT_UPPER}}</span>
         <h2 class="text-3xl sm:text-4xl font-black text-white font-heading uppercase">O Seu Refúgio de Estilo & Conforto</h2>
         <p class="text-sm text-zinc-300 leading-relaxed">{{ABOUT_TEXT}}</p>
         <div class="pt-2">
@@ -3818,8 +3818,8 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
       </a>
 
       <nav class="hidden md:flex items-center gap-6 text-sm font-semibold text-zinc-300">
-        <a href="#sobre" class="hover:text-white transition">Sobre a Barbearia</a>
-        <a href="#servicos" class="hover:text-white transition">Serviços & Navalha</a>
+        <a href="#sobre" class="hover:text-white transition">{{NAV_ABOUT}}</a>
+        <a href="#servicos" class="hover:text-white transition">{{NAV_SERVICES}}</a>
         <a href="#galeria" class="hover:text-white transition">Fotos de Cortes</a>
         <a href="#depoimentos" class="hover:text-white transition">Avaliações</a>
         <a href="#contato" class="hover:text-white transition">Localização</a>
@@ -3839,7 +3839,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
       <div class="lg:col-span-7 space-y-6">
         <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider border border-white/[0.1] surface-card">
           <span class="w-2 h-2 rounded-full accent-bg animate-pulse"></span>
-          <span class="accent-color">ESTILO CLÁSSICO & NAVALHA AFIADA</span>
+          <span class="accent-color">{{NICHE_LABEL}}</span>
         </div>
 
         <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight font-heading">
@@ -3863,11 +3863,11 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
         <div class="grid grid-cols-3 gap-4 pt-4 border-t border-white/[0.08]">
           <div>
             <div class="text-2xl font-black accent-color font-heading">100%</div>
-            <div class="text-[11px] text-zinc-400">Navalha Afiada</div>
+            <div class="text-[11px] text-zinc-400">{{METRIC_1_LABEL}}</div>
           </div>
           <div>
             <div class="text-2xl font-black accent-color font-heading">VIP</div>
-            <div class="text-[11px] text-zinc-400">Toalha Quente</div>
+            <div class="text-[11px] text-zinc-400">{{METRIC_2_LABEL}}</div>
           </div>
           <div>
             <div class="text-2xl font-black accent-color font-heading">5.0 ★</div>
@@ -3918,7 +3918,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
     <div class="max-w-7xl mx-auto px-4 sm:px-6 space-y-12">
       <div class="text-center space-y-3 max-w-2xl mx-auto">
         <span class="text-xs uppercase font-extrabold tracking-widest accent-color">CARDÁPIO DE SERVIÇOS</span>
-        <h2 class="text-3xl sm:text-4xl font-black text-white font-heading">Cortes, Barba & Tratamentos Masculinos</h2>
+        <h2 class="text-3xl sm:text-4xl font-black text-white font-heading">{{SERVICES_TITLE}}</h2>
         <p class="text-xs text-zinc-400">Atendimento de primeira linha com produtos premium e mestres barbeiros experientes.</p>
       </div>
 
@@ -3935,7 +3935,7 @@ export const BILLY_REAL_TEMPLATES_HTML: Record<string, string> = {
           <span class="text-xs uppercase font-extrabold tracking-widest accent-color">PORTFÓLIO VISUAL</span>
           <h2 class="text-3xl font-black text-white font-heading">Galeria de Estilo & Transformações</h2>
         </div>
-        <p class="text-xs text-zinc-400 max-w-md">Confira alguns dos nossos trabalhos mais recentes realizados na barbearia.</p>
+        <p class="text-xs text-zinc-400 max-w-md">{{GALLERY_SUBTITLE}}</p>
       </div>
 
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">

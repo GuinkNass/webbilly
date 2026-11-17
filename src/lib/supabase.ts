@@ -1043,8 +1043,9 @@ export async function fetchProspectedLeadsFromSupabase(params?: {
   city?: string;
   query?: string;
   operatorId?: string;
+  role?: string;
 }): Promise<any[]> {
-  const { niche, city, query, operatorId } = params || {};
+  const { niche, city, query, operatorId, role } = params || {};
   let supaLeads: any[] = [];
 
   try {
@@ -1056,7 +1057,8 @@ export async function fetchProspectedLeadsFromSupabase(params?: {
         .order('created_at', { ascending: false })
         .limit(100);
 
-      if (operatorId && operatorId !== 'admin') {
+      const isAdmin = role === 'admin' || (operatorId && (operatorId.toLowerCase().includes('admin') || operatorId === 'all'));
+      if (operatorId && !isAdmin) {
         q = q.eq('operator_id', operatorId);
       }
       if (niche && niche.trim()) {

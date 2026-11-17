@@ -10,12 +10,14 @@ export async function GET(req: NextRequest) {
     const city = searchParams.get('city') || '';
     const query = searchParams.get('q') || searchParams.get('query') || '';
     const operatorId = searchParams.get('operatorId') || '';
+    const role = searchParams.get('role') || '';
 
     const leads = await fetchProspectedLeadsFromSupabase({
       niche,
       city,
       query,
-      operatorId
+      operatorId,
+      role
     });
 
     return NextResponse.json({

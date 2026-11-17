@@ -2,6 +2,7 @@ import { findTemplateById } from './templates';
 import { BlockToggles, DEFAULT_BLOCK_TOGGLES } from './categories';
 import { getBillyRealTemplateHtml } from '../billy-real-templates';
 import { formatHeaderName } from '../desktop-templates';
+import { safeParseGeminiJson } from '../gemini-json';
 
 export interface ServiceItem {
   name: string;
@@ -70,6 +71,16 @@ export interface NicheCopyJson {
   depoimentos?: ReviewItem[];
   faqs?: FaqItem[];
   footer_tagline?: string;
+  marquee_text?: string;
+  nav_about?: string;
+  nav_services?: string;
+  header_cta?: string;
+  card_badge?: string;
+  services_title?: string;
+  services_subtitle?: string;
+  gallery_subtitle?: string;
+  metric_1_label?: string;
+  metric_2_label?: string;
 }
 
 /**
@@ -78,9 +89,49 @@ export interface NicheCopyJson {
  */
 function getNicheIntelligentCopy(input: SiteGenerationInput): NicheCopyJson {
   const nicheLower = (input.niche || '').toLowerCase();
+  const nameLower = (input.businessName || '').toLowerCase();
   const city = input.city || 'São Paulo - SP';
   const name = input.businessName;
 
+  // 1. Tatuagem e Piercing (prioridade alta para evitar cair em estética genérica)
+  if (/tattoo|tatuag|piercing|ink|body\s*art/i.test(nicheLower) || /tattoo|tatuag|piercing|ink/i.test(nameLower)) {
+    return {
+      headline: input.tagline || `Arte Autoral, Biossegurança & Estilo Único em ${city}`,
+      subheadline: input.description || `No ${name}, transformamos ideias em arte viva na pele com máxima precisão, tintas importadas certificadas e piercings em titânio grau implante.`,
+      badge_nicho: 'TATUAGEM AUTORAL • PIERCING • BIOSSEGURANÇA',
+      primary_cta: 'Orçar Projeto no WhatsApp',
+      sobre_titulo: 'Arte na Pele com Segurança e Identidade',
+      sobre_texto: input.differentiators || `O ${name} foi idealizado para oferecer uma experiência acolhedora e segura. Nossos artistas dominam técnicas autorais e seguimos rigorosamente todas as normas da ANVISA com materiais 100% descartáveis e esterilização hospitalar.`,
+      marquee_text: 'ARTE AUTORAL • PIERCING TITÂNIO • BIOSSEGURANÇA ANVISA • PROJETOS EXCLUSIVOS • ATENDIMENTO COM HORA MARCADA',
+      nav_about: 'O Estúdio',
+      nav_services: 'Tattoos & Piercings',
+      header_cta: 'Orçar no WhatsApp',
+      card_badge: 'Estúdio Autoral',
+      services_title: 'Tatuagens, Piercings & Procedimentos',
+      services_subtitle: 'Linhas finas, realismo, projetos autorais e perfurações corporais com cicatrização assistida.',
+      gallery_subtitle: 'Confira trabalhos reais de tatuagens e perfurações realizadas em nosso estúdio.',
+      metric_1_label: 'Arte Autoral',
+      metric_2_label: 'Biossegurança',
+      servicos: [
+        { name: 'Tatuagem Autoral / Projeto Exclusivo', price: 'Sob Consulta', description: 'Criação sob medida do seu desenho com base nas suas referências e anatomia corporal.' },
+        { name: 'Aplicação de Piercing em Titânio', price: 'R$ 80,00', description: 'Perfuração com joalheria em titânio grau implante antialérgico e agulha americana.' },
+        { name: 'Flash Tattoo / Fine Line & Traço Fino', price: 'A partir de R$ 150,00', description: 'Desenhos delicados com agulha fina para aplicação rápida e cicatrização suave.' },
+        { name: 'Reforma & Cobertura (Cover-up)', price: 'Sob Consulta', description: 'Renovação estética de tatuagens antigas com camuflagem de altíssima precisão.' }
+      ],
+      faqs: [
+        { question: 'Como faço para pedir um orçamento de tatuagem?', answer: 'Basta clicar no botão de WhatsApp e nos enviar sua ideia de referência, o tamanho aproximado em centímetros e onde no corpo deseja fazer!' },
+        { question: 'Os materiais e agulhas são 100% esterilizados?', answer: 'Sim! Utilizamos exclusivamente materiais descartáveis de uso único e autoclave hospitalar com laudo rigoroso da ANVISA.' },
+        { question: 'Menores de 18 anos podem tatuar ou colocar piercing?', answer: 'Somente a partir de 16 anos acompanhados de pai, mãe ou responsável legal munidos de documentação com foto.' }
+      ],
+      depoimentos: [
+        { author: 'Camila Rocha', rating: 5, text: 'Traço finíssimo e cicatrização perfeita! O estúdio é impecável de limpo e o tatuador foi super paciente.' },
+        { author: 'Diego Navarro', rating: 5, text: 'Fiz um fechamento de braço que ficou surreal. Atendimento de outro nível pelo WhatsApp.' },
+        { author: 'Beatriz Vasconcelos', rating: 5, text: 'Coloquei dois piercings de titânio, não doeu nada e não inflamou. Profissionais fantásticos!' }
+      ]
+    };
+  }
+
+  // 2. Barbearia e Cabelo Masculino
   if (/barbe|corte|cabelo|salon|barba/i.test(nicheLower)) {
     return {
       headline: input.tagline || `Estilo, Precisão e Navalha Afiada em ${city}`,
@@ -89,6 +140,16 @@ function getNicheIntelligentCopy(input: SiteGenerationInput): NicheCopyJson {
       primary_cta: 'Agendar Horário no WhatsApp',
       sobre_titulo: 'Tradição & Excelência em Cada Corte',
       sobre_texto: input.differentiators || `A ${name} nasceu para resgatar a verdadeira essência da barbearia clássica aliada às técnicas mais inovadoras do mercado. Nosso espaço é planejado para ser seu refúgio de estilo e conforto em ${city}.`,
+      marquee_text: 'CORTE FADE MASTER • BARBOTERAPIA VIP • PIGMENTAÇÃO • CERVEJA GELADA • ATENDIMENTO COM HORA MARCADA',
+      nav_about: 'A Barbearia',
+      nav_services: 'Cortes & Barba',
+      header_cta: 'Agendar Horário VIP',
+      card_badge: 'Barbearia VIP',
+      services_title: 'Cortes, Barba & Cuidados Masculinos',
+      services_subtitle: 'Cortes clássicos e degradê milimétrico executados por especialistas com produtos premium.',
+      gallery_subtitle: 'Confira alguns dos cortes e barboterapias mais recentes realizados em nossa bancada.',
+      metric_1_label: 'Navalha Afiada',
+      metric_2_label: 'Toalha Quente',
       servicos: [
         { name: 'Corte Degradê / Fade Master', price: 'R$ 55,00', description: 'Acabamento milimétrico com tesoura, máquina e finalização premium.' },
         { name: 'Barboterapia com Toalha Quente', price: 'R$ 45,00', description: 'Esfoliação facial, hidratação profunda e lâmina afiada.' },
@@ -101,7 +162,7 @@ function getNicheIntelligentCopy(input: SiteGenerationInput): NicheCopyJson {
         { question: 'Onde a barbearia está localizada?', answer: `${input.address || `Estamos em localização privilegiada em ${city}, com fácil acesso e estacionamento nas proximidades.`}` }
       ],
       depoimentos: [
-        { author: 'Rodrigo Silveira', rating: 5, text: 'Melhor barbearia de São Paulo! Atendimento impecável, corte perfeito e chopp sempre gelado.' },
+        { author: 'Rodrigo Silveira', rating: 5, text: 'Melhor barbearia da região! Atendimento impecável, corte perfeito e cerveja sempre gelada.' },
         { author: 'Lucas Martins', rating: 5, text: 'Pontualidade britânica e profissionais muito detalhistas. Não corto cabelo em outro lugar!' },
         { author: 'Felipe Alencar', rating: 5, text: 'Barboterapia sensacional, saí renovado. Ambiente agradável demais.' }
       ]
@@ -116,6 +177,16 @@ function getNicheIntelligentCopy(input: SiteGenerationInput): NicheCopyJson {
       primary_cta: 'Fazer Pedido no WhatsApp',
       sobre_titulo: 'Nossa Paixão pela Culinária',
       sobre_texto: input.differentiators || `Na ${name}, cada prato conta uma história. Priorizamos ingredientes frescos de produtores selecionados, respeitando o tempo de preparo para levar à sua mesa sabor e aconchego.`,
+      marquee_text: 'ALTA GASTRONOMIA • INGREDIENTES FRESCOS • RECEITAS EXCLUSIVAS • DELIVERY RÁPIDO • SABOR INCOMPARÁVEL',
+      nav_about: 'Nossa História',
+      nav_services: 'Cardápio & Pratos',
+      header_cta: 'Pedir no WhatsApp',
+      card_badge: 'Gastronomia',
+      services_title: 'Cardápio & Especialidades da Casa',
+      services_subtitle: 'Pratos preparados na hora com receitas exclusivas e os melhores ingredientes.',
+      gallery_subtitle: 'Fotos reais dos pratos mais pedidos e do nosso ambiente acolhedor.',
+      metric_1_label: 'Sabor Artesanal',
+      metric_2_label: 'Entrega Quente',
       servicos: [
         { name: 'Especial da Casa / Prato Assinatura', price: 'R$ 68,00', description: 'Receita exclusiva desenvolvida pelo chef com os melhores ingredientes da estação.' },
         { name: 'Combo Degustação para Compartilhar', price: 'R$ 115,00', description: 'Porção generosa para 2 pessoas com acompanhamentos especiais.' },
@@ -143,6 +214,16 @@ function getNicheIntelligentCopy(input: SiteGenerationInput): NicheCopyJson {
       primary_cta: 'Agendar Consulta no WhatsApp',
       sobre_titulo: 'Compromisso com o Seu Bem-Estar',
       sobre_texto: input.differentiators || `A ${name} reúne especialistas dedicados a um atendimento ético e acolhedor. Nossa clínica é equipada com os aparelhos mais modernos para diagnósticos precisos e tratamentos confortáveis.`,
+      marquee_text: 'ATENDIMENTO HUMANIZADO • EQUIPE MULTIDISCIPLINAR • TECNOLOGIA DE PONTA • ESTRUTURA MODERNA • CONFORTO TOTAL',
+      nav_about: 'A Clínica',
+      nav_services: 'Procedimentos',
+      header_cta: 'Agendar Consulta',
+      card_badge: 'Clínica Especializada',
+      services_title: 'Tratamentos & Procedimentos Especializados',
+      services_subtitle: 'Cuidado individualizado com métodos modernos e recuperação confortável.',
+      gallery_subtitle: 'Conheça nossa estrutura clínica, consultórios e equipamentos de ponta.',
+      metric_1_label: 'Cuidado Seguro',
+      metric_2_label: 'Tecnologia Avançada',
       servicos: [
         { name: 'Avaliação Inicial & Diagnóstico Completo', price: 'Sob Consulta', description: 'Exame clínico detalhado para planejamento do seu tratamento ideal.' },
         { name: 'Procedimento Especializado de Ponta', price: 'Sob Consulta', description: 'Tecnologia avançada com máxima precisão e recuperação rápida.' },
@@ -170,6 +251,16 @@ function getNicheIntelligentCopy(input: SiteGenerationInput): NicheCopyJson {
     primary_cta: 'Falar no WhatsApp',
     sobre_titulo: 'Compromisso com o Padrão de Qualidade',
     sobre_texto: input.differentiators || `Com atuação de destaque em ${city}, a ${name} se consolidou pela seriedade, pontualidade e respeito aos seus clientes. Conte com nossa equipe especializada para atender suas expectativas.`,
+    marquee_text: 'ATENDIMENTO PREMIUM • EXCELÊNCIA & QUALIDADE • PONTUALIDADE RIGOROSA • SATISFAÇÃO GARANTIDA • REFERÊNCIA LOCAL',
+    nav_about: 'Sobre Nós',
+    nav_services: 'Serviços',
+    header_cta: 'Falar no WhatsApp',
+    card_badge: 'Referência Local',
+    services_title: 'Nossos Serviços & Especialidades',
+    services_subtitle: 'Soluções sob medida executadas por especialistas dedicados ao seu sucesso.',
+    gallery_subtitle: 'Confira fotos reais da nossa estrutura e dos serviços entregues aos nossos clientes.',
+    metric_1_label: 'Alto Padrão',
+    metric_2_label: 'Garantia Total',
     servicos: [
       { name: `Serviço Especializado de ${input.niche}`, price: 'Sob Consulta', description: 'Atendimento de alto padrão com materiais e métodos certificados.' },
       { name: 'Solução Completa Personalizada', price: 'Sob Consulta', description: 'Planejamento sob medida para atender perfeitamente a sua necessidade.' },
@@ -256,7 +347,7 @@ DIRETRIZES FUNDAMENTAIS:
           generationConfig: {
             temperature: 0.25,
             responseMimeType: 'application/json',
-            maxOutputTokens: 2048
+            maxOutputTokens: 8192
           }
         }),
         signal: AbortSignal.timeout(8000) // 8s de timeout máximo por tentativa
@@ -267,8 +358,8 @@ DIRETRIZES FUNDAMENTAIS:
       const data = await res.json();
       const rawJson = data?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (rawJson) {
-        const parsed = JSON.parse(rawJson);
-        if (parsed.headline && parsed.primary_cta) {
+        const parsed = safeParseGeminiJson<any>(rawJson, null);
+        if (parsed && (parsed.headline || parsed.primary_cta)) {
           return parsed;
         }
       }
@@ -389,7 +480,7 @@ export function adaptDesktopTemplateLocally(
 
   let result = baseTemplateHtml;
 
-  // Substituição cirúrgica dos 24 Tokens estruturais oficiais do Billy Desktop
+  // Substituição cirúrgica dos Tokens estruturais oficiais do Billy Desktop
   const replacements: Record<string, string> = {
     '{{BUSINESS_NAME}}': input.businessName,
     '{{HEADER_NAME}}': headerName,
@@ -404,6 +495,17 @@ export function adaptDesktopTemplateLocally(
     '{{HERO_TITLE}}': copy.headline,
     '{{HERO_SUBTITLE}}': copy.subheadline,
     '{{PRIMARY_CTA}}': copy.primary_cta || 'Falar no WhatsApp',
+    '{{HEADER_CTA}}': copy.header_cta || copy.primary_cta || 'Falar no WhatsApp',
+    '{{CARD_BADGE}}': copy.card_badge || copy.badge_nicho || input.niche || 'Destaque',
+    '{{MARQUEE_TEXT}}': copy.marquee_text || 'ATENDIMENTO PREMIUM • EXCELÊNCIA & QUALIDADE • PONTUALIDADE • SATISFAÇÃO GARANTIDA',
+    '{{NAV_ABOUT}}': copy.nav_about || 'Sobre Nós',
+    '{{NAV_ABOUT_UPPER}}': (copy.nav_about || 'SOBRE NÓS').toUpperCase(),
+    '{{NAV_SERVICES}}': copy.nav_services || 'Serviços',
+    '{{SERVICES_TITLE}}': copy.services_title || 'Nossos Serviços & Especialidades',
+    '{{SERVICES_SUBTITLE}}': copy.services_subtitle || 'Conheça nossos procedimentos com alto padrão de excelência.',
+    '{{GALLERY_SUBTITLE}}': copy.gallery_subtitle || 'Confira alguns dos nossos trabalhos mais recentes.',
+    '{{METRIC_1_LABEL}}': copy.metric_1_label || 'Qualidade Superior',
+    '{{METRIC_2_LABEL}}': copy.metric_2_label || 'Atendimento Ágil',
     '{{HERO_IMG}}': heroImg,
     '{{ABOUT_TEXT}}': copy.sobre_texto,
     '{{SERVICES_CARDS}}': servicesCardsHtml,
