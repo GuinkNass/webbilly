@@ -17,35 +17,6 @@ export interface RealPhotoItem {
   height?: number;
 }
 
-// Acervo curado HD por nicho caso a web retorne poucas fotos válidas
-const CURATED_NICHE_BACKUP: Record<string, Array<{ url: string; title: string }>> = {
-  tattoo: [
-    { url: 'https://images.unsplash.com/photo-1598256989800-fe5f95da9787?w=1200&auto=format&fit=crop&q=80', title: 'Tatuagem Autoral Fine Line' },
-    { url: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?w=1200&auto=format&fit=crop&q=80', title: 'Estúdio de Tatuagem Profissional' },
-    { url: 'https://images.unsplash.com/photo-1562962230-16e4623d36e6?w=1200&auto=format&fit=crop&q=80', title: 'Aplicação de Piercing em Titânio' },
-    { url: 'https://images.unsplash.com/photo-1590246814883-578336214150?w=1200&auto=format&fit=crop&q=80', title: 'Materiais Esterilizados e Biossegurança' },
-    { url: 'https://images.unsplash.com/photo-1542385151-efd9000785a0?w=1200&auto=format&fit=crop&q=80', title: 'Arte Autoral na Pele' },
-    { url: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=1200&auto=format&fit=crop&q=80', title: 'Ilustração e Criação de Projetos' }
-  ],
-  barbearia: [
-    { url: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=1200&auto=format&fit=crop&q=80', title: 'Corte Tradicional e Navalha' },
-    { url: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=1200&auto=format&fit=crop&q=80', title: 'Ambiente Vintage e Clássico' },
-    { url: 'https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=1200&auto=format&fit=crop&q=80', title: 'Barboterapia com Toalha Quente' },
-    { url: 'https://images.unsplash.com/photo-1512690459411-b9245aed614b?w=1200&auto=format&fit=crop&q=80', title: 'Corte Degradê Fade Master' }
-  ],
-  gastronomia: [
-    { url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&auto=format&fit=crop&q=80', title: 'Prato Assinatura do Chef' },
-    { url: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1200&auto=format&fit=crop&q=80', title: 'Burger Artesanal Especial' },
-    { url: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1200&auto=format&fit=crop&q=80', title: 'Pizza Forno a Lenha' },
-    { url: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=1200&auto=format&fit=crop&q=80', title: 'Combinado Sushi Especial' }
-  ],
-  clinica: [
-    { url: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=1200&auto=format&fit=crop&q=80', title: 'Consultório Odontológico Moderno' },
-    { url: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=1200&auto=format&fit=crop&q=80', title: 'Recepção e Atendimento Clínico' },
-    { url: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=1200&auto=format&fit=crop&q=80', title: 'Procedimentos Estéticos Avançados' }
-  ]
-};
-
 let siteAssetsBucketCreated = false;
 
 async function ensureSiteAssetsBucket(supabase: any) {
@@ -58,11 +29,12 @@ async function ensureSiteAssetsBucket(supabase: any) {
 
 /**
  * Faz download da imagem externa e salva de forma permanente no Supabase Storage (bucket 'site-assets')
- * ou no FS local como fallback, garantindo que o token de CDN do Instagram nunca expire.
+ * ou no FS local como fallback, garantindo que URLs externas do Instagram ou Google Maps nunca expirem.
  */
 async function uploadImageToStorage(
   imageUrl: string,
-  handle: string,
+  folder: 'instagram' | 'google-maps',
+  prefix: string,
   index: number,
   supabase: any
 ): Promise<string | null> {
@@ -85,8 +57,8 @@ async function uploadImageToStorage(
     if (buffer.length < 2000) return null; // descarta imagens vazias ou trackers
 
     const ext = contentType.includes('png') ? 'png' : contentType.includes('webp') ? 'webp' : 'jpg';
-    const cleanHandle = handle.replace(/[^a-zA-Z0-9_-]/g, '') || 'perfil';
-    const filePath = `instagram/${cleanHandle}/${Date.now()}-${index}.${ext}`;
+    const cleanPrefix = prefix.replace(/[^a-zA-Z0-9_-]/g, '') || 'item';
+    const filePath = `${folder}/${cleanPrefix}/${Date.now()}-${index}.${ext}`;
 
     // 1. Upload no Supabase Storage
     if (supabase) {
@@ -105,17 +77,17 @@ async function uploadImageToStorage(
 
     // 2. Fallback FS local caso o Supabase não esteja conectado
     try {
-      const publicUploadsDir = path.join(process.cwd(), 'public', 'uploads', 'instagram', cleanHandle);
+      const publicUploadsDir = path.join(process.cwd(), 'public', 'uploads', folder, cleanPrefix);
       await fs.ensureDir(publicUploadsDir);
       const localFileName = `${Date.now()}-${index}.${ext}`;
       await fs.writeFile(path.join(publicUploadsDir, localFileName), buffer);
-      return `/uploads/instagram/${cleanHandle}/${localFileName}`;
+      return `/uploads/${folder}/${cleanPrefix}/${localFileName}`;
     } catch {
       // 3. Fallback via proxyUrl seguro
       return `/api/studio/image-proxy?url=${encodeURIComponent(imageUrl)}`;
     }
   } catch (err: any) {
-    console.warn(`[Apify Upload] Falha ao processar foto ${index} de @${handle}:`, err?.message);
+    console.warn(`[Storage Upload] Falha ao processar foto ${index} em ${folder}/${prefix}:`, err?.message);
     return null;
   }
 }
@@ -134,8 +106,14 @@ export async function POST(req: NextRequest) {
     const APIFY_TOKEN = (process.env.APIFY_API_TOKEN || process.env.APIFY_TOKEN || '').trim();
     const SERPER_KEY = (process.env.SERPER_API_KEY || '').trim();
     const GOOGLE_PLACES_KEY = (process.env.GOOGLE_PLACES_API_KEY || '').trim();
-    const PIXABAY_KEY = (process.env.PIXABAY_API_KEY || '').trim();
     const supabase = getSupabaseAdmin();
+
+    const cleanSlug = (businessName || 'estabelecimento')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
 
     // -------------------------------------------------------------------------
     // IDENTIFICAÇÃO DO HANDLE DO INSTAGRAM (@username)
@@ -201,16 +179,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Termo de busca genérico para provedores auxiliares
-    let searchQuery = customQuery.trim();
-    if (!searchQuery) {
-      if (targetHandle) {
-        searchQuery = `${targetHandle} ${businessName} ${city}`.trim();
-      } else {
-        searchQuery = `${businessName} ${city} ${niche}`.trim() || 'Comércio Local';
-      }
-    }
-
     const verifiedPhotos: RealPhotoItem[] = [];
     const seenUrls = new Set<string>();
 
@@ -235,325 +203,298 @@ export async function POST(req: NextRequest) {
       });
     };
 
+    // Coleção de tarefas assíncronas para execução paralela de alta performance
+    const asyncTasks: Promise<void>[] = [];
+
     // -------------------------------------------------------------------------
-    // 1. PROVEDOR PRINCIPAL: APIFY INSTAGRAM PROFILE SCRAPER COM PERSISTÊNCIA SUPABASE
+    // 1. PROVEDOR: APIFY GOOGLE MAPS CRAWLER (compass~crawler-google-places)
+    // Extrai todas as fotos reais da galeria oficial do Google Maps (Fachada, Interior, Trabalhos)
     // -------------------------------------------------------------------------
-    if (APIFY_TOKEN && targetHandle) {
-      try {
-        const apifyUrl = `https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items?token=${encodeURIComponent(
-          APIFY_TOKEN
-        )}&timeout=25`;
+    if (APIFY_TOKEN && businessName) {
+      asyncTasks.push(
+        (async () => {
+          try {
+            const apifyMapsUrl = `https://api.apify.com/v2/acts/compass~crawler-google-places/run-sync-get-dataset-items?token=${encodeURIComponent(
+              APIFY_TOKEN
+            )}&timeout=25`;
 
-        const apifyRes = await fetch(apifyUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            usernames: [targetHandle],
-            resultsLimit: 12
-          }),
-          signal: AbortSignal.timeout(26000),
-          cache: 'no-store'
-        });
+            const mapsQuery = city ? `${businessName} ${city}` : businessName;
 
-        if (apifyRes.ok) {
-          const items = await apifyRes.json().catch(() => []);
-          if (Array.isArray(items) && items.length > 0) {
-            const profile = items[0] || {};
-            const rawApifyUrls: string[] = [];
+            const res = await fetch(apifyMapsUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                searchStringsArray: [mapsQuery],
+                maxCrawledPlacesPerSearch: 1,
+                maxImages: 25
+              }),
+              signal: AbortSignal.timeout(26000),
+              cache: 'no-store'
+            });
 
-            // Foto de perfil HD
-            if (profile.profilePicUrlHD) {
-              rawApifyUrls.push(profile.profilePicUrlHD);
-            } else if (profile.profilePicUrl) {
-              rawApifyUrls.push(profile.profilePicUrl);
-            }
+            if (res.ok) {
+              const items = await res.json().catch(() => []);
+              if (Array.isArray(items) && items.length > 0) {
+                const place = items[0] || {};
+                const mapsUrls: string[] = [];
 
-            // Posts recentes
-            if (Array.isArray(profile.latestPosts)) {
-              for (const post of profile.latestPosts) {
-                if (rawApifyUrls.length >= 18) break;
-                if (post.displayUrl) {
-                  rawApifyUrls.push(post.displayUrl);
+                if (Array.isArray(place.imageUrls)) {
+                  for (const u of place.imageUrls) {
+                    if (typeof u === 'string' && u.startsWith('http')) mapsUrls.push(u);
+                  }
                 }
-                if (Array.isArray(post.images)) {
-                  for (const subImg of post.images) {
-                    if (typeof subImg === 'string' && subImg) {
-                      rawApifyUrls.push(subImg);
+                if (Array.isArray(place.images)) {
+                  for (const img of place.images) {
+                    if (typeof img === 'string' && img.startsWith('http')) {
+                      mapsUrls.push(img);
+                    } else if (img && typeof img === 'object') {
+                      const u = img.imageUrl || img.url || img.link || img.thumbnail;
+                      if (typeof u === 'string' && u.startsWith('http')) mapsUrls.push(u);
                     }
                   }
                 }
+                if (typeof place.imageUrl === 'string' && place.imageUrl.startsWith('http')) {
+                  mapsUrls.push(place.imageUrl);
+                }
+                if (Array.isArray(place.photos)) {
+                  for (const p of place.photos) {
+                    if (typeof p === 'string' && p.startsWith('http')) mapsUrls.push(p);
+                    else if (p && typeof p === 'object') {
+                      const u = p.photoUrl || p.url || p.imageUrl;
+                      if (typeof u === 'string' && u.startsWith('http')) mapsUrls.push(u);
+                    }
+                  }
+                }
+
+                const uniqueMapsUrls = Array.from(new Set(mapsUrls)).slice(0, 25);
+                const placeTitle = place.title || businessName;
+
+                // Salva permanentemente no Supabase Storage
+                const uploadSettled = await Promise.allSettled(
+                  uniqueMapsUrls.map((u, idx) =>
+                    uploadImageToStorage(u, 'google-maps', cleanSlug, idx, supabase)
+                  )
+                );
+
+                uploadSettled.forEach((r, idx) => {
+                  const finalUrl = (r.status === 'fulfilled' && r.value) ? r.value : uniqueMapsUrls[idx];
+                  if (finalUrl) {
+                    addVerifiedPhoto(
+                      finalUrl,
+                      `${placeTitle} (Google Maps Galeria)`,
+                      'google',
+                      finalUrl
+                    );
+                  }
+                });
               }
             }
-
-            // Deduplica e limita
-            const uniqueApifyUrls = Array.from(new Set(rawApifyUrls)).slice(0, 16);
-
-            // Upload em paralelo para o Supabase Storage
-            const uploadSettled = await Promise.allSettled(
-              uniqueApifyUrls.map((imgUrl, idx) =>
-                uploadImageToStorage(imgUrl, targetHandle, idx, supabase)
-              )
-            );
-
-            uploadSettled.forEach((res, idx) => {
-              if (res.status === 'fulfilled' && res.value) {
-                const finalStoredUrl = res.value;
-                addVerifiedPhoto(
-                  finalStoredUrl,
-                  `${businessName || targetHandle} (@${targetHandle})`,
-                  'instagram',
-                  finalStoredUrl
-                );
-              }
-            });
+          } catch (err: any) {
+            console.warn('[Buscar Fotos] Erro Apify Google Places Crawler:', err?.message);
           }
-        }
-      } catch (apifyErr: any) {
-        console.warn('[Buscar Fotos] Erro Apify Instagram Scraper:', apifyErr?.message);
-      }
+        })()
+      );
     }
 
     // -------------------------------------------------------------------------
-    // 2. PROVEDOR: Google Places API Fotos Diretas Oficiais (se disponíveis)
+    // 2. PROVEDOR: APIFY INSTAGRAM PROFILE SCRAPER (apify~instagram-profile-scraper)
+    // Extrai as 12–15 fotos reais mais recentes do perfil oficial do estabelecimento
     // -------------------------------------------------------------------------
-    if (GOOGLE_PLACES_KEY && verifiedPhotos.length < 12) {
+    if (APIFY_TOKEN && targetHandle) {
+      asyncTasks.push(
+        (async () => {
+          try {
+            const apifyInstaUrl = `https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items?token=${encodeURIComponent(
+              APIFY_TOKEN
+            )}&timeout=25`;
+
+            const res = await fetch(apifyInstaUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                usernames: [targetHandle],
+                resultsLimit: 15
+              }),
+              signal: AbortSignal.timeout(26000),
+              cache: 'no-store'
+            });
+
+            if (res.ok) {
+              const items = await res.json().catch(() => []);
+              if (Array.isArray(items) && items.length > 0) {
+                const profile = items[0] || {};
+                const instaUrls: string[] = [];
+
+                if (profile.profilePicUrlHD) instaUrls.push(profile.profilePicUrlHD);
+                else if (profile.profilePicUrl) instaUrls.push(profile.profilePicUrl);
+
+                if (Array.isArray(profile.latestPosts)) {
+                  for (const post of profile.latestPosts) {
+                    if (instaUrls.length >= 20) break;
+                    if (post.displayUrl) instaUrls.push(post.displayUrl);
+                    if (Array.isArray(post.images)) {
+                      for (const sub of post.images) {
+                        if (typeof sub === 'string' && sub.startsWith('http')) instaUrls.push(sub);
+                      }
+                    }
+                  }
+                }
+
+                const uniqueInstaUrls = Array.from(new Set(instaUrls)).slice(0, 15);
+
+                const uploadSettled = await Promise.allSettled(
+                  uniqueInstaUrls.map((u, idx) =>
+                    uploadImageToStorage(u, 'instagram', targetHandle, idx, supabase)
+                  )
+                );
+
+                uploadSettled.forEach((r, idx) => {
+                  const finalUrl = (r.status === 'fulfilled' && r.value) ? r.value : uniqueInstaUrls[idx];
+                  if (finalUrl) {
+                    addVerifiedPhoto(
+                      finalUrl,
+                      `${businessName || targetHandle} (@${targetHandle} Instagram HD)`,
+                      'instagram',
+                      finalUrl
+                    );
+                  }
+                });
+              }
+            }
+          } catch (err: any) {
+            console.warn('[Buscar Fotos] Erro Apify Instagram:', err?.message);
+          }
+        })()
+      );
+    }
+
+    // -------------------------------------------------------------------------
+    // 3. PROVEDOR: GOOGLE PLACES API (NEW) OFICIAL (places:searchText)
+    // -------------------------------------------------------------------------
+    if (GOOGLE_PLACES_KEY && businessName) {
+      asyncTasks.push(
+        (async () => {
+          try {
+            const placesRes = await fetch('https://places.googleapis.com/v1/places:searchText', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Goog-Api-Key': GOOGLE_PLACES_KEY,
+                'X-Goog-FieldMask': 'places.id,places.displayName,places.photos,places.websiteUri'
+              },
+              body: JSON.stringify({
+                textQuery: `${businessName} em ${city}`,
+                languageCode: 'pt-BR',
+                maxResultCount: 2
+              }),
+              signal: AbortSignal.timeout(6000),
+              cache: 'no-store'
+            });
+
+            if (placesRes.ok) {
+              const pJson = await placesRes.json().catch(() => ({}));
+              const targetPlace = pJson.places?.[0];
+              if (Array.isArray(targetPlace?.photos)) {
+                const photoPromises = targetPlace.photos.slice(0, 10).map(async (p: any) => {
+                  if (!p?.name) return null;
+                  try {
+                    const mediaRes = await fetch(
+                      `https://places.googleapis.com/v1/${p.name}/media?maxWidthPx=1200&skipHttpRedirect=true&key=${GOOGLE_PLACES_KEY}`,
+                      { signal: AbortSignal.timeout(5000), cache: 'no-store' }
+                    );
+                    if (mediaRes.ok) {
+                      const mJson = await mediaRes.json().catch(() => ({}));
+                      return mJson.photoUri || null;
+                    }
+                  } catch {}
+                  return null;
+                });
+
+                const resolved = await Promise.allSettled(photoPromises);
+                resolved.forEach((r) => {
+                  if (r.status === 'fulfilled' && r.value) {
+                    addVerifiedPhoto(
+                      r.value,
+                      `${targetPlace.displayName?.text || businessName} (Google Maps Oficial)`,
+                      'google'
+                    );
+                  }
+                });
+              }
+            }
+          } catch (err: any) {
+            console.warn('[Buscar Fotos] Erro Places Photos:', err?.message);
+          }
+        })()
+      );
+    }
+
+    // Aguarda todas as tarefas de coleta oficial em paralelo
+    await Promise.allSettled(asyncTasks);
+
+    // -------------------------------------------------------------------------
+    // 4. RADAR ESPECÍFICO SERPER (Apenas fotos da própria empresa se houver poucas)
+    // -------------------------------------------------------------------------
+    if (verifiedPhotos.length < 8 && SERPER_KEY && businessName) {
       try {
-        const placesRes = await fetch('https://places.googleapis.com/v1/places:searchText', {
+        const serperRes = await fetch('https://google.serper.dev/images', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'X-Goog-Api-Key': GOOGLE_PLACES_KEY,
-            'X-Goog-FieldMask': 'places.id,places.displayName,places.photos'
+            'X-API-KEY': SERPER_KEY,
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            textQuery: `${businessName} em ${city}`,
-            languageCode: 'pt-BR',
-            maxResultCount: 2
+            q: `"${businessName}" "${city}"`,
+            gl: 'br',
+            hl: 'pt-br',
+            num: 12
           }),
           signal: AbortSignal.timeout(5000),
           cache: 'no-store'
         });
 
-        if (placesRes.ok) {
-          const pJson = await placesRes.json().catch(() => ({}));
-          const targetPlace = pJson.places?.[0];
-          if (Array.isArray(targetPlace?.photos)) {
-            const photoPromises = targetPlace.photos.slice(0, 8).map(async (p: any) => {
-              if (!p?.name) return null;
-              try {
-                const mediaRes = await fetch(
-                  `https://places.googleapis.com/v1/${p.name}/media?maxWidthPx=1200&skipHttpRedirect=true&key=${GOOGLE_PLACES_KEY}`,
-                  { signal: AbortSignal.timeout(4000), cache: 'no-store' }
-                );
-                if (mediaRes.ok) {
-                  const mJson = await mediaRes.json().catch(() => ({}));
-                  return mJson.photoUri || null;
-                }
-              } catch {}
-              return null;
-            });
-            const resolved = await Promise.allSettled(photoPromises);
-            resolved.forEach((r) => {
+        if (serperRes.ok) {
+          const serperJson = await serperRes.json().catch(() => ({}));
+          if (Array.isArray(serperJson.images)) {
+            const rawCandidates = serperJson.images.map((img: any) => ({
+              url: img.imageUrl || img.thumbnailUrl,
+              title: img.title || `${businessName} (Google Fotos)`
+            }));
+
+            const valResults = await Promise.allSettled(
+              rawCandidates.map(async (c: any) => {
+                if (!c.url || typeof c.url !== 'string') return null;
+                if (c.url.includes('.svg') || c.url.includes('favicon')) return null;
+                const val = await validateImageUrl(c.url, 2500);
+                if (val.valid) return c;
+                return null;
+              })
+            );
+
+            valResults.forEach((r) => {
               if (r.status === 'fulfilled' && r.value) {
-                addVerifiedPhoto(r.value, `${businessName} (Google Maps Oficial)`, 'google');
+                if (verifiedPhotos.length >= 25) return;
+                const isInsta = r.value.url.includes('instagram') || r.value.url.includes('cdninstagram');
+                addVerifiedPhoto(
+                  r.value.url,
+                  r.value.title,
+                  isInsta ? 'instagram' : 'google'
+                );
               }
             });
           }
         }
       } catch (err: any) {
-        console.warn('[Buscar Fotos] Erro Places Photos:', err.message);
+        console.warn('[Buscar Fotos] Erro Serper fallback:', err?.message);
       }
     }
 
-    // -------------------------------------------------------------------------
-    // 3. RADAR DE FOTOS COMPLEMENTARES (Serper + DuckDuckGo + Bing)
-    // -------------------------------------------------------------------------
-    if (verifiedPhotos.length < 12) {
-      const rawRadarCandidates: Array<{ url: string; title: string; source: 'google' | 'instagram' | 'web' }> = [];
-      const seenRaw = new Set<string>();
-
-      const addRawCandidate = (url: string, title: string, source: 'google' | 'instagram' | 'web') => {
-        if (!url || typeof url !== 'string') return;
-        const clean = url.trim();
-        if (!clean.startsWith('http')) return;
-        const lower = clean.toLowerCase();
-        if (
-          lower.includes('favicon') ||
-          lower.includes('tracking') ||
-          lower.includes('.svg') ||
-          lower.includes('tiktok.com') ||
-          lower.includes('/accounts/login') ||
-          lower.includes('/login/') ||
-          lower.endsWith('.html') ||
-          lower.endsWith('.htm') ||
-          lower.endsWith('.php')
-        ) {
-          return;
-        }
-        if (seenRaw.has(clean) || seenUrls.has(clean)) return;
-        seenRaw.add(clean);
-        rawRadarCandidates.push({ url: clean, title, source });
-      };
-
-      // Serper Images API
-      if (SERPER_KEY) {
-        try {
-          const serperRes = await fetch('https://google.serper.dev/images', {
-            method: 'POST',
-            headers: {
-              'X-API-KEY': SERPER_KEY,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              q: searchQuery,
-              gl: 'br',
-              hl: 'pt-br',
-              num: 15
-            }),
-            signal: AbortSignal.timeout(5000),
-            cache: 'no-store'
-          });
-
-          if (serperRes.ok) {
-            const serperJson = await serperRes.json().catch(() => ({}));
-            if (Array.isArray(serperJson.images)) {
-              serperJson.images.forEach((img: any) => {
-                const isInsta = img.source?.toLowerCase().includes('instagram');
-                addRawCandidate(img.imageUrl || img.thumbnailUrl, img.title, isInsta ? 'instagram' : 'google');
-              });
-            }
-          }
-        } catch (err: any) {
-          console.warn('[Buscar Fotos] Erro Serper Images Radar:', err?.message);
-        }
-      }
-
-      // DuckDuckGo Radar
-      if (rawRadarCandidates.length < 10) {
-        try {
-          const ddgQuery = targetHandle ? `site:instagram.com ${targetHandle}` : `${businessName} ${city}`;
-          const tokenRes = await fetch(`https://duckduckgo.com/?q=${encodeURIComponent(ddgQuery)}`, {
-            headers: {
-              'User-Agent':
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            },
-            signal: AbortSignal.timeout(4000),
-            cache: 'no-store'
-          });
-
-          if (tokenRes.ok) {
-            const html = await tokenRes.text();
-            const vqdMatch = html.match(/vqd=["']?([0-9-]+)["']?/);
-            const vqd = vqdMatch ? vqdMatch[1] : '';
-
-            if (vqd) {
-              const imgUrl = `https://duckduckgo.com/i.js?l=wt-wt&o=json&q=${encodeURIComponent(ddgQuery)}&vqd=${vqd}`;
-              const imgRes = await fetch(imgUrl, {
-                headers: {
-                  'User-Agent':
-                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-                },
-                signal: AbortSignal.timeout(4000),
-                cache: 'no-store'
-              });
-
-              if (imgRes.ok) {
-                const imgData = await imgRes.json().catch(() => ({}));
-                if (Array.isArray(imgData.results)) {
-                  imgData.results.slice(0, 10).forEach((item: any) => {
-                    const isInsta =
-                      (item.url || item.image || '').includes('instagram') ||
-                      (item.title || '').includes('Instagram');
-                    addRawCandidate(item.image, item.title, isInsta ? 'instagram' : 'web');
-                  });
-                }
-              }
-            }
-          }
-        } catch (err: any) {
-          console.warn('[Buscar Fotos] Erro Web Radar DDG:', err?.message);
-        }
-      }
-
-      // Processamento e validação binária dos candidatos do radar
-      const resolvedRadar = await Promise.allSettled(
-        rawRadarCandidates.map(async (item) => {
-          let finalUrl = item.url;
-          if (/(?:instagram\.com|instagr\.am)\/(?:p|reel|tv)\//i.test(item.url)) {
-            const directImg = await extractInstagramPostImageUrl(item.url);
-            if (directImg) {
-              finalUrl = directImg;
-            } else {
-              return null;
-            }
-          }
-          const val = await validateImageUrl(finalUrl, 2500);
-          if (val.valid) {
-            return { ...item, url: finalUrl };
-          }
-          return null;
-        })
-      );
-
-      for (const r of resolvedRadar) {
-        if (r.status === 'fulfilled' && r.value) {
-          if (verifiedPhotos.length >= 20) break;
-          addVerifiedPhoto(r.value.url, r.value.title, r.value.source);
-        }
-      }
-    }
-
-    // -------------------------------------------------------------------------
-    // 4. SMART FALLBACK: PIXABAY & ACERVO CURADO HD SE FALTAR FOTOS (< 8)
-    // -------------------------------------------------------------------------
-    if (verifiedPhotos.length < 8) {
-      const nicheQuery = niche || businessName || 'comercio local';
-
-      // Pixabay API se houver chave configurada
-      if (PIXABAY_KEY) {
-        try {
-          const pixEndpoint = `https://pixabay.com/api/?key=${encodeURIComponent(
-            PIXABAY_KEY
-          )}&q=${encodeURIComponent(nicheQuery)}&image_type=photo&per_page=12&safesearch=true&lang=pt`;
-          const pixRes = await fetch(pixEndpoint, { signal: AbortSignal.timeout(4000) });
-          if (pixRes.ok) {
-            const pixData = await pixRes.json().catch(() => ({}));
-            if (Array.isArray(pixData.hits)) {
-              for (const hit of pixData.hits) {
-                if (verifiedPhotos.length >= 18) break;
-                const imgUrl = hit.largeImageURL || hit.webformatURL;
-                if (imgUrl) {
-                  addVerifiedPhoto(imgUrl, `${businessName} (Foto Conceitual HD)`, 'web');
-                }
-              }
-            }
-          }
-        } catch (pixErr: any) {
-          console.warn('[Buscar Fotos] Erro Pixabay Backup:', pixErr?.message);
-        }
-      }
-
-      // Acervo Curado do Nicho
-      if (verifiedPhotos.length < 8) {
-        const lowerNiche = (niche || businessName).toLowerCase();
-        let nicheCategory = 'tattoo';
-        if (/barbe|barba|corte/i.test(lowerNiche)) nicheCategory = 'barbearia';
-        else if (/restaurante|pizza|burger|comida|gourmet/i.test(lowerNiche)) nicheCategory = 'gastronomia';
-        else if (/clinica|odonto|medico|estetic|saude/i.test(lowerNiche)) nicheCategory = 'clinica';
-
-        const backupList = CURATED_NICHE_BACKUP[nicheCategory] || CURATED_NICHE_BACKUP.tattoo;
-        for (const item of backupList) {
-          if (verifiedPhotos.length >= 16) break;
-          addVerifiedPhoto(item.url, `${businessName} (${item.title})`, 'google');
-        }
-      }
-    }
+    // Regra Rígida: NUNCA adiciona Pixabay ou fotos genéricas na aba de Fotos Reais!
+    // As fotos conceituais ficam exclusivamente na aba "Banco Pixabay HD"
 
     return NextResponse.json({
       success: true,
-      query: searchQuery,
+      query: customQuery || `${businessName} ${city}`,
       targetHandle: targetHandle || null,
       total: verifiedPhotos.length,
       photos: verifiedPhotos

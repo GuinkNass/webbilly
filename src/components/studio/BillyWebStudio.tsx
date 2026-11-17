@@ -290,7 +290,7 @@ export default function BillyWebStudio({
   const [showSavePresetInput, setShowSavePresetInput] = useState(false);
 
   // Pixabay Interactive Search
-  const [pixabayQuery, setPixabayQuery] = useState('barbearia');
+  const [pixabayQuery, setPixabayQuery] = useState('');
   const [pixabayImages, setPixabayImages] = useState<any[]>([]);
   const [pixabayLoading, setPixabayLoading] = useState(false);
   const [customPhotoUrl, setCustomPhotoUrl] = useState('');
@@ -368,7 +368,9 @@ export default function BillyWebStudio({
         if (Array.isArray(parsed)) setSavedPresets(parsed);
       }
     } catch {}
-    handleSearchPixabay('barbearia');
+    const initNiche = siteForm.niche || 'tattoo';
+    setPixabayQuery(initNiche);
+    handleSearchPixabay(initNiche);
     loadProjects();
     loadSavedLeads();
   }, []);
@@ -2578,7 +2580,14 @@ export default function BillyWebStudio({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setPhotoSearchMode('pixabay')}
+                  onClick={() => {
+                    setPhotoSearchMode('pixabay');
+                    if (pixabayImages.length === 0) {
+                      const q = pixabayQuery || siteForm.niche || siteForm.businessName || 'comercio';
+                      setPixabayQuery(q);
+                      handleSearchPixabay(q);
+                    }
+                  }}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                     photoSearchMode === 'pixabay'
                       ? 'bg-[#84cc16] text-black shadow-md shadow-[#84cc16]/20'
@@ -2852,6 +2861,10 @@ export default function BillyWebStudio({
                         }`}
                       >
                         <img src={img.previewUrl} alt="" className="w-full h-full object-cover pointer-events-none" />
+                        {/* Selo PIXABAY */}
+                        <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider shadow-md z-10 pointer-events-none bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold ring-1 ring-white/20">
+                          PIXABAY
+                        </span>
                         {(isGallery || isHero) && (
                           <span className="absolute top-1 right-1 px-1 py-0.5 rounded text-[7px] font-black uppercase bg-[#84cc16] text-black shadow">
                             {isHero ? 'Hero ★' : '✓'}
