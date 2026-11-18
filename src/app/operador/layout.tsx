@@ -151,12 +151,11 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
     }
   ];
 
-  // Ações da Bottom Navigation Bar no celular (< 768px)
+  // Ações da Bottom Navigation Bar no celular (< 768px) - Exatamente 3 links + 1 botão Menu
   const mobileNavItems = [
     { href: '/operador', label: 'Início', icon: LayoutDashboard },
-    { href: '/operador/estudio', label: 'Studio IA', icon: Sparkles },
+    { href: '/operador/estudio', label: 'Criar Site', icon: Sparkles },
     { href: '/operador/sites', label: 'Meus Sites', icon: Globe },
-    { href: '/operador/afiliados', label: 'Afiliados', icon: Users }
   ];
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
@@ -408,13 +407,33 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
               </nav>
             </div>
 
-            <button
-              onClick={handleLogout}
-              className="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Sair da Conta</span>
-            </button>
+            <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-white/[0.08]">
+              <div className="flex items-center justify-between px-2 py-1 bg-slate-50 dark:bg-white/[0.03] rounded-xl">
+                <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">Tema Visual</span>
+                <ThemeToggle />
+              </div>
+
+              <a
+                href="https://mail.larksuite.com"
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-2 px-3 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] flex items-center justify-between cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span>Webmail Corporativo</span>
+                </div>
+                <ExternalLink className="w-3.5 h-3.5 opacity-60" />
+              </a>
+
+              <button
+                onClick={handleLogout}
+                className="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Sair da Conta</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -566,7 +585,7 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
           className="flex flex-col items-center justify-center flex-1 h-full py-1 text-center text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer min-h-[44px]"
         >
           <Menu className="w-5 h-5 mb-0.5" />
-          <span className="text-[10px]">Mais</span>
+          <span className="text-[10px]">Menu</span>
         </button>
       </div>
 

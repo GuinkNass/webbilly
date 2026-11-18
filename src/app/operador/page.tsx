@@ -53,41 +53,52 @@ export default function OperatorDashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* =========================================================================
-          4 CARDS DE MÉTRICAS / KPIS PRINCIPAIS (EXCLUSIVOS DO DASHBOARD)
+          BOTÃO DE AÇÃO RÁPIDA MOBILE: CRIAR NOVO SITE COM IA
          ========================================================================= */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <Link
+        href="/operador/estudio"
+        className="sm:hidden w-full min-h-[48px] py-3.5 px-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-blue-600/25 active:scale-98 transition cursor-pointer"
+      >
+        <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+        <span>+ Criar Novo Site com IA</span>
+      </Link>
+
+      {/* =========================================================================
+          CARDS DE MÉTRICAS / KPIS (2 PRINCIPAIS NO CELULAR, 4 NO DESKTOP)
+         ========================================================================= */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Card 1: Sites Ativos */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-slate-200 dark:border-white/10 shadow-xs flex items-center justify-between">
+        <div className="p-3 sm:p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/10 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <div>
-            <span className="text-[11px] uppercase font-bold tracking-wider text-sky-400">Sites Ativos (SaaS)</span>
-            <div className="text-2xl font-black text-slate-900 dark:text-white mt-1 tracking-tight">
+            <span className="text-[10px] sm:text-[11px] uppercase font-bold tracking-wider text-sky-500 dark:text-sky-400">Sites Ativos</span>
+            <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-0.5 sm:mt-1 tracking-tight">
               {stats?.activeSubscriptionsCount || (data?.subscriptions || []).length || 0}
             </div>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Clientes pagantes no ar</span>
+            <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">Clientes pagantes no ar</span>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/10 text-sky-400 flex items-center justify-center shrink-0">
-            <img src="/icones/op-sites.svg" alt="" className="w-6 h-6 object-contain" />
+          <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/10 text-sky-400 flex items-center justify-center shrink-0 self-end sm:self-center">
+            <img src="/icones/op-sites.svg" alt="" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
           </div>
         </div>
 
         {/* Card 2: Comissão Recorrente MRR */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-slate-200 dark:border-white/10 shadow-xs flex items-center justify-between">
+        <div className="p-3 sm:p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/10 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <div>
-            <span className="text-[11px] uppercase font-bold tracking-wider text-emerald-400">Comissão Recorrente (MRR)</span>
-            <div className="text-2xl font-black text-emerald-400 mt-1 tracking-tight">
+            <span className="text-[10px] sm:text-[11px] uppercase font-bold tracking-wider text-emerald-500 dark:text-emerald-400">Comissão (MRR)</span>
+            <div className="text-xl sm:text-2xl font-black text-emerald-500 dark:text-emerald-400 mt-0.5 sm:mt-1 tracking-tight">
               R$ {(stats?.monthlyCommissionMRR ?? ((stats?.activeSubscriptionsCount ?? 0) * 10)).toLocaleString('pt-BR')},00
             </div>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Previsão líquida mensal (R$ 10/site)</span>
+            <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">Previsão líquida mensal</span>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/10 text-emerald-400 flex items-center justify-center shrink-0">
-            <TrendingUp className="w-6 h-6" />
+          <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/10 text-emerald-400 flex items-center justify-center shrink-0 self-end sm:self-center">
+            <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
         </div>
 
-        {/* Card 3: Total Liquidado */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-slate-200 dark:border-white/10 shadow-xs flex items-center justify-between">
+        {/* Card 3: Total Liquidado (Oculto no celular) */}
+        <div className="hidden sm:flex p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/10 shadow-xs items-center justify-between">
           <div>
             <span className="text-[11px] uppercase font-bold tracking-wider text-teal-400">Total Liquidado</span>
             <div className="text-2xl font-black text-teal-400 mt-1 tracking-tight">
@@ -100,8 +111,8 @@ export default function OperatorDashboardPage() {
           </div>
         </div>
 
-        {/* Card 4: Chave Pix */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-slate-200 dark:border-white/10 shadow-xs flex items-center justify-between">
+        {/* Card 4: Chave Pix (Oculto no celular) */}
+        <div className="hidden sm:flex p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/10 shadow-xs items-center justify-between">
           <div className="min-w-0 pr-2">
             <span className="text-[11px] uppercase font-bold tracking-wider text-amber-400">Chave Pix Cadastrada</span>
             <div className="text-sm font-black text-slate-900 dark:text-white mt-1 truncate">

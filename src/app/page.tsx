@@ -60,6 +60,7 @@ export default function WebbillyHomePage() {
   const [submitted, setSubmitted] = useState(false);
   const [previewSlug, setPreviewSlug] = useState('');
   const [activeNicheTab, setActiveNicheTab] = useState('todos');
+  const [activePlanTab, setActivePlanTab] = useState<'mensal' | 'dominio'>('mensal');
 
   // Estados para Formulário de Candidatura de Operador (Lark SMTP)
   const [operatorFormData, setOperatorFormData] = useState({
@@ -381,19 +382,20 @@ export default function WebbillyHomePage() {
         <div className="max-w-5xl mx-auto text-center relative z-10">
           
           {/* Badge Técnico */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#7abf18]/15 border border-[#7abf18]/30 text-[#7abf18] text-xs font-bold uppercase tracking-wider mb-6">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#7abf18]/15 border border-[#7abf18]/30 text-[#7abf18] text-xs font-bold uppercase tracking-wider mb-4 md:mb-6">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Tecnologia para Comércio Local • Sem Taxa de Adesão</span>
+            <span className="md:hidden">R$ 29,90 / mês • Sem Adesão</span>
+            <span className="hidden md:inline">Tecnologia para Comércio Local • Sem Taxa de Adesão</span>
           </div>
 
           {/* Título Principal em Roboto Slab */}
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tight text-white font-heading leading-tight md:leading-[1.15]">
-            Seu comércio com site profissional no ar por apenas{' '}
-            <span className="text-[#7abf18]">R$ 29,90 por mês</span>.
+            <span className="md:hidden">Seu comércio com site profissional por <span className="text-[#7abf18]">R$ 29,90/mês</span>.</span>
+            <span className="hidden md:inline">Seu comércio com site profissional no ar por apenas <span className="text-[#7abf18]">R$ 29,90 por mês</span>.</span>
           </h1>
 
           {/* Divisor Ornamental Oficial do Template (border.png) */}
-          <div className="my-4 flex justify-center">
+          <div className="my-3 md:my-4 flex justify-center">
             <img
               src="/images/border.png"
               alt="Webbilly Separator"
@@ -402,66 +404,82 @@ export default function WebbillyHomePage() {
           </div>
 
           {/* Subtítulo em Open Sans */}
-          <p className="mt-4 text-base sm:text-lg text-zinc-300 max-w-2xl mx-auto leading-relaxed">
-            Chega de perder clientes no Google e no Instagram porque seu negócio não tem uma página na web. Criamos sua landing page completa, adaptada para celular e hospedada com segurança no nosso subdomínio oficial.
+          <p className="mt-3 md:mt-4 text-sm sm:text-lg text-zinc-300 max-w-2xl mx-auto leading-relaxed">
+            <span className="md:hidden">Criamos a landing page completa do seu negócio, adaptada para celular e pronta para atrair clientes no WhatsApp.</span>
+            <span className="hidden md:inline">Chega de perder clientes no Google e no Instagram porque seu negócio não tem uma página na web. Criamos sua landing page completa, adaptada para celular e hospedada com segurança no nosso subdomínio oficial.</span>
           </p>
 
           {/* Botões de Ação */}
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div className="mt-6 md:mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             <a
               href="#demonstracao"
-              className="eco-btn-primary text-sm py-4 px-8 w-full sm:w-auto shadow-xl"
+              className="eco-btn-primary min-h-[48px] text-sm py-3.5 px-8 w-full sm:w-auto shadow-xl flex items-center justify-center gap-2"
             >
-              <span>Solicitar Demonstração do Meu Negócio</span>
+              <span>Solicitar Demonstração</span>
               <ArrowRight className="w-4 h-4" />
             </a>
             <a
               href="#modelos"
-              className="eco-btn-outline text-sm py-3.5 px-7 w-full sm:w-auto"
+              className="eco-btn-outline text-sm py-3.5 px-7 w-full sm:w-auto hidden sm:inline-flex"
             >
               <span>Ver Modelos Prontos</span>
             </a>
           </div>
 
           {/* Dock de Garantias do SaaS */}
-          <div className="mt-12 pt-8 border-t border-white/[0.08] grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto text-left">
-            <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-[#7abf18]/15 text-[#7abf18] flex items-center justify-center shrink-0">
-                <Check className="w-4 h-4 font-bold" />
+          <div className="mt-8 md:mt-12 pt-6 md:pt-8 border-t border-white/[0.08]">
+            {/* Mobile: 2 Badges Compactos Lado a Lado */}
+            <div className="grid grid-cols-2 gap-2.5 md:hidden text-center text-xs">
+              <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] text-zinc-300">
+                <span className="text-[#7abf18] font-bold block text-sm">R$ 29,90/mês</span>
+                <span className="text-[10px] text-zinc-400">Preço Fixo Mensal</span>
               </div>
-              <div>
-                <span className="text-xs font-bold text-white block">R$ 29,90 / mês</span>
-                <span className="text-[11px] text-zinc-400">Preço fixo e transparente</span>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-[#7abf18]/15 text-[#7abf18] flex items-center justify-center shrink-0">
-                <Globe className="w-4 h-4" />
-              </div>
-              <div>
-                <span className="text-xs font-bold text-white block">Subdomínio Oficial</span>
-                <span className="text-[11px] text-zinc-400">slug.webbilly.com.br</span>
+              <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.08] text-zinc-300">
+                <span className="text-white font-bold block text-sm">Sem Fidelidade</span>
+                <span className="text-[10px] text-zinc-400">Cancele quando quiser</span>
               </div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-[#7abf18]/15 text-[#7abf18] flex items-center justify-center shrink-0">
-                <Zap className="w-4 h-4" />
+            {/* Desktop: 4 Cards */}
+            <div className="hidden md:grid md:grid-cols-4 gap-4 max-w-4xl mx-auto text-left">
+              <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-[#7abf18]/15 text-[#7abf18] flex items-center justify-center shrink-0">
+                  <Check className="w-4 h-4 font-bold" />
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-white block">R$ 29,90 / mês</span>
+                  <span className="text-[11px] text-zinc-400">Preço fixo e transparente</span>
+                </div>
               </div>
-              <div>
-                <span className="text-xs font-bold text-white block">Pronto em Minutos</span>
-                <span className="text-[11px] text-zinc-400">Sem burocracias de DNS</span>
-              </div>
-            </div>
 
-            <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-[#7abf18]/15 text-[#7abf18] flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-4 h-4" />
+              <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-[#7abf18]/15 text-[#7abf18] flex items-center justify-center shrink-0">
+                  <Globe className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-white block">Subdomínio Oficial</span>
+                  <span className="text-[11px] text-zinc-400">slug.webbilly.com.br</span>
+                </div>
               </div>
-              <div>
-                <span className="text-xs font-bold text-white block">Sem Fidelidade</span>
-                <span className="text-[11px] text-zinc-400">Cancele quando quiser</span>
+
+              <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-[#7abf18]/15 text-[#7abf18] flex items-center justify-center shrink-0">
+                  <Zap className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-white block">Pronto em Minutos</span>
+                  <span className="text-[11px] text-zinc-400">Sem burocracias de DNS</span>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/[0.06] flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-[#7abf18]/15 text-[#7abf18] flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-white block">Sem Fidelidade</span>
+                  <span className="text-[11px] text-zinc-400">Cancele quando quiser</span>
+                </div>
               </div>
             </div>
           </div>
@@ -524,7 +542,7 @@ export default function WebbillyHomePage() {
                       placeholder="Ex: Barbearia Silva, Hamburgueria Gourmet"
                       value={formData.businessName}
                       onChange={handleInputChange}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0b0e14] border border-zinc-700 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-[#7abf18]"
+                      className="w-full min-h-[48px] px-3.5 py-3 sm:py-2.5 rounded-xl bg-[#0b0e14] border border-zinc-700 text-white text-base sm:text-xs placeholder-zinc-500 focus:outline-none focus:border-[#7abf18]"
                     />
                   </div>
 
@@ -539,7 +557,7 @@ export default function WebbillyHomePage() {
                       placeholder="(11) 99999-9999"
                       value={formData.whatsapp}
                       onChange={handleInputChange}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0b0e14] border border-zinc-700 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-[#7abf18]"
+                      className="w-full min-h-[48px] px-3.5 py-3 sm:py-2.5 rounded-xl bg-[#0b0e14] border border-zinc-700 text-white text-base sm:text-xs placeholder-zinc-500 focus:outline-none focus:border-[#7abf18]"
                     />
                   </div>
                 </div>
@@ -555,21 +573,7 @@ export default function WebbillyHomePage() {
                       placeholder="Ex: Carlos Oliveira"
                       value={formData.responsibleName}
                       onChange={handleInputChange}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0b0e14] border border-zinc-700 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-[#7abf18]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
-                      Cidade e Estado (UF)
-                    </label>
-                    <input
-                      type="text"
-                      name="cityState"
-                      placeholder="Ex: Campinas - SP"
-                      value={formData.cityState}
-                      onChange={handleInputChange}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0b0e14] border border-zinc-700 text-white text-xs placeholder-zinc-500 focus:outline-none focus:border-[#7abf18]"
+                      className="w-full min-h-[48px] px-3.5 py-3 sm:py-2.5 rounded-xl bg-[#0b0e14] border border-zinc-700 text-white text-base sm:text-xs placeholder-zinc-500 focus:outline-none focus:border-[#7abf18]"
                     />
                   </div>
 
@@ -581,7 +585,7 @@ export default function WebbillyHomePage() {
                       name="niche"
                       value={formData.niche}
                       onChange={handleInputChange}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0b0e14] border border-zinc-700 text-white text-xs focus:outline-none focus:border-[#7abf18]"
+                      className="w-full min-h-[48px] px-3.5 py-3 sm:py-2.5 rounded-xl bg-[#0b0e14] border border-zinc-700 text-white text-base sm:text-xs focus:outline-none focus:border-[#7abf18]"
                     >
                       <option value="Geral">Comércio em Geral</option>
                       <option value="Barbearia">Barbearia / Salão</option>
@@ -591,6 +595,20 @@ export default function WebbillyHomePage() {
                       <option value="Oficina">Oficina / Autoescola</option>
                       <option value="Outros">Prestador de Serviços</option>
                     </select>
+                  </div>
+
+                  <div className="sm:block hidden">
+                    <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
+                      Cidade e Estado (UF)
+                    </label>
+                    <input
+                      type="text"
+                      name="cityState"
+                      placeholder="Ex: Campinas - SP"
+                      value={formData.cityState}
+                      onChange={handleInputChange}
+                      className="w-full min-h-[48px] px-3.5 py-3 sm:py-2.5 rounded-xl bg-[#0b0e14] border border-zinc-700 text-white text-base sm:text-xs placeholder-zinc-500 focus:outline-none focus:border-[#7abf18]"
+                    />
                   </div>
                 </div>
 
@@ -608,7 +626,7 @@ export default function WebbillyHomePage() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full eco-btn-primary py-3.5 text-sm cursor-pointer disabled:opacity-50"
+                    className="w-full min-h-[48px] eco-btn-primary py-3.5 text-sm cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
                   >
                     {loading ? (
                       <span>Gerando Demonstração...</span>
@@ -885,6 +903,156 @@ export default function WebbillyHomePage() {
             </div>
 
           </div>
+
+          {/* =====================================================================
+              PLANOS & VANTAGENS (COM ABAS DE ALTERNÂNCIA RÁPIDA NO MOBILE)
+             ===================================================================== */}
+          <div className="mt-16 pt-12 border-t border-white/[0.08] max-w-5xl mx-auto">
+            <div className="text-center mb-8">
+              <span className="text-xs uppercase font-bold tracking-wider text-[#7abf18] block">Planos Claros & Preços Fixos</span>
+              <h3 className="text-2xl sm:text-3xl font-black text-white font-heading mt-1">
+                Escolha a Opção Ideal Para o Seu Negócio
+              </h3>
+              <p className="text-xs sm:text-sm text-zinc-400 mt-2 max-w-lg mx-auto">
+                Sem taxas de adesão. Você só começa a pagar quando seu site estiver aprovado e pronto para o ar.
+              </p>
+            </div>
+
+            {/* Abas Mobile de Alternância Rápida (< 768px) */}
+            <div className="md:hidden flex p-1 bg-zinc-900/90 border border-white/[0.1] rounded-2xl mb-6 shadow-md">
+              <button
+                type="button"
+                onClick={() => setActivePlanTab('mensal')}
+                className={`flex-1 py-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                  activePlanTab === 'mensal'
+                    ? 'bg-[#7abf18] text-zinc-950 shadow-md font-black'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                <span>Plano Mensal R$ 29,90</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActivePlanTab('dominio')}
+                className={`flex-1 py-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+                  activePlanTab === 'dominio'
+                    ? 'bg-blue-600 text-white shadow-md font-black'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                <span>Domínio Próprio R$ 490</span>
+              </button>
+            </div>
+
+            {/* Grid dos Planos: 1 por vez no Mobile, 2 Lado a Lado no Desktop */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+              {/* Card 1: Plano Mensal Subdomínio Oficial */}
+              <div
+                className={`p-6 sm:p-8 rounded-2xl bg-[#121722] border-2 border-[#7abf18]/60 shadow-xl relative flex flex-col justify-between ${
+                  activePlanTab === 'mensal' ? 'flex' : 'hidden md:flex'
+                }`}
+              >
+                <div className="space-y-4">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#7abf18]/20 text-[#7abf18] border border-[#7abf18]/30">
+                    <Sparkles className="w-3 h-3" />
+                    <span>Mais Escolhido • Subdomínio Oficial</span>
+                  </div>
+                  <h4 className="text-xl sm:text-2xl font-black text-white font-heading">Plano Mensal Recorrente</h4>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-3xl sm:text-4xl font-black text-white font-heading">R$ 29,90</span>
+                    <span className="text-xs text-zinc-400">/ mês</span>
+                  </div>
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    Ideal para pequenos comércios e prestadores de serviços que querem presença profissional sem custo inicial alto.
+                  </p>
+                  <ul className="space-y-2.5 text-xs text-zinc-300 pt-3 border-t border-white/[0.08]">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-[#7abf18] shrink-0" />
+                      <span>Subdomínio oficial <strong>seunome.webbilly.com.br</strong></span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-[#7abf18] shrink-0" />
+                      <span>Hospedagem rápida em nuvem com SSL grátis</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-[#7abf18] shrink-0" />
+                      <span>Até <strong>2 alterações simples por mês</strong> inclusas</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-[#7abf18] shrink-0" />
+                      <span>Botão WhatsApp nativo de alta conversão</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-[#7abf18] shrink-0" />
+                      <span>Sem fidelidade: cancele quando quiser sem multa</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="pt-6">
+                  <a
+                    href="#demonstracao"
+                    className="w-full min-h-[48px] py-3.5 rounded-xl eco-btn-primary flex items-center justify-center gap-2 text-xs font-bold shadow-lg"
+                  >
+                    <span>Quero o Plano Mensal (R$ 29,90)</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+
+              {/* Card 2: Plano Domínio Próprio Exclusivo (.com.br) */}
+              <div
+                className={`p-6 sm:p-8 rounded-2xl bg-[#121722] border-2 border-blue-500/40 shadow-xl relative flex flex-col justify-between ${
+                  activePlanTab === 'dominio' ? 'flex' : 'hidden md:flex'
+                }`}
+              >
+                <div className="space-y-4">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                    <Globe className="w-3 h-3" />
+                    <span>Marca Própria • Registro .com.br</span>
+                  </div>
+                  <h4 className="text-xl sm:text-2xl font-black text-white font-heading">Site Completo + Domínio Próprio</h4>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-3xl sm:text-4xl font-black text-white font-heading">R$ 490,00</span>
+                    <span className="text-xs text-zinc-400">/ pagamento único anual</span>
+                  </div>
+                  <p className="text-xs text-zinc-300 leading-relaxed">
+                    Para quem quer exclusividade total com domínio .com.br próprio e sem obrigatoriedade de mensalidade.
+                  </p>
+                  <ul className="space-y-2.5 text-xs text-zinc-300 pt-3 border-t border-white/[0.08]">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0" />
+                      <span>Domínio exclusivo <strong>seunome.com.br</strong> registrado por 1 ano</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0" />
+                      <span>Site completo publicado sem mensalidade obrigatória</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0" />
+                      <span>Renovação anual de apenas R$ 70,00/ano do domínio</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0" />
+                      <span>Alterações avulsas sob demanda por R$ 39,90 cada</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0" />
+                      <span>Acesso ao Portal do Cliente com Analytics nativo</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="pt-6">
+                  <a
+                    href="#demonstracao"
+                    className="w-full min-h-[48px] py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center gap-2 text-xs font-bold shadow-lg transition"
+                  >
+                    <span>Quero Domínio Próprio (R$ 490)</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1029,12 +1197,12 @@ export default function WebbillyHomePage() {
             </button>
           </div>
 
-          {/* Grid de Modelos com Preview Real */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
+          {/* Grid / Carrossel Horizontal Mobile com Swipe */}
+          <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 overflow-x-auto md:overflow-x-visible snap-x md:snap-none pb-4 md:pb-0 gap-4 md:gap-6 mt-8 md:mt-10 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none">
             {filteredTemplates.map((t) => (
               <div
                 key={t.slug}
-                className="rounded-2xl bg-[#121722] border border-white/[0.08] overflow-hidden hover:border-[#7abf18] transition-all hover:-translate-y-1 group flex flex-col justify-between"
+                className="min-w-[80vw] sm:min-w-[60vw] md:min-w-0 snap-center rounded-2xl bg-[#121722] border border-white/[0.08] overflow-hidden hover:border-[#7abf18] transition-all hover:-translate-y-1 group flex flex-col justify-between shrink-0 md:shrink"
               >
                 <div>
                   {/* Capa HD Temática Real com Fallback */}
@@ -1102,6 +1270,12 @@ export default function WebbillyHomePage() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Dica de Swipe Mobile */}
+          <div className="md:hidden flex items-center justify-center gap-1.5 text-xs text-zinc-400 mt-3">
+            <ArrowRight className="w-3.5 h-3.5 text-[#7abf18]" />
+            <span>Deslize para o lado para ver mais modelos</span>
           </div>
 
         </div>
@@ -1267,79 +1441,104 @@ export default function WebbillyHomePage() {
             </p>
           </div>
 
-          <div className="space-y-4 mt-10 text-left">
-            {/* Pergunta 1: O que é a Webbilly? (Google AI Overview & Entity Anchor) */}
-            <div className="p-5 rounded-xl bg-[#121722] border border-[#7abf18]/30 shadow-sm shadow-[#7abf18]/10">
-              <h3 className="text-sm font-bold text-white font-heading flex items-center gap-2">
-                <HelpCircle className="w-4 h-4 text-[#7abf18]" />
-                O que é a Webbilly?
-              </h3>
-              <p className="text-xs text-zinc-300 mt-2 leading-relaxed">
+          <div className="space-y-3 mt-10 text-left">
+            {/* Pergunta 1: O que é a Webbilly? */}
+            <details className="group rounded-xl bg-[#121722] border border-[#7abf18]/30 shadow-xs p-4 sm:p-5 transition-all open:border-[#7abf18]/60 cursor-pointer">
+              <summary className="text-xs sm:text-sm font-bold text-white font-heading flex items-center justify-between list-none select-none gap-2">
+                <span className="flex items-center gap-2">
+                  <HelpCircle className="w-4 h-4 text-[#7abf18] shrink-0" />
+                  <span>O que é a Webbilly?</span>
+                </span>
+                <ChevronRight className="w-4 h-4 text-zinc-400 group-open:rotate-90 transition-transform shrink-0" />
+              </summary>
+              <p className="text-xs text-zinc-300 mt-3 leading-relaxed pl-6 border-t border-white/[0.05] pt-2.5">
                 A <strong>Webbilly</strong> (<a href="https://webbilly.com.br" className="text-[#7abf18] hover:underline">webbilly.com.br</a>) é uma plataforma brasileira especializada na criação, hospedagem e gestão de sites profissionais e landing pages para comércios e negócios locais por uma assinatura mensal de R$ 29,90.
               </p>
-            </div>
+            </details>
 
             {/* Pergunta 2: Como funciona a criação do site? */}
-            <div className="p-5 rounded-xl bg-[#121722] border border-white/[0.08]">
-              <h3 className="text-sm font-bold text-white font-heading flex items-center gap-2">
-                <HelpCircle className="w-4 h-4 text-[#7abf18]" />
-                Como funciona a criação do site na Webbilly?
-              </h3>
-              <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+            <details className="group rounded-xl bg-[#121722] border border-white/[0.08] p-4 sm:p-5 transition-all open:border-[#7abf18]/40 cursor-pointer">
+              <summary className="text-xs sm:text-sm font-bold text-white font-heading flex items-center justify-between list-none select-none gap-2">
+                <span className="flex items-center gap-2">
+                  <HelpCircle className="w-4 h-4 text-[#7abf18] shrink-0" />
+                  <span>Como funciona a criação do site na Webbilly?</span>
+                </span>
+                <ChevronRight className="w-4 h-4 text-zinc-400 group-open:rotate-90 transition-transform shrink-0" />
+              </summary>
+              <p className="text-xs text-zinc-400 mt-3 leading-relaxed pl-6 border-t border-white/[0.05] pt-2.5">
                 O comerciante recebe um site profissional completo, responsivo para celular, otimizado para o Google e conectado ao WhatsApp para receber pedidos e agendamentos, com hospedagem de alta performance e alterações inclusas sem nenhuma taxa de adesão.
               </p>
-            </div>
+            </details>
 
             {/* Pergunta 3: Quanto custa ter um site na Webbilly? */}
-            <div className="p-5 rounded-xl bg-[#121722] border border-white/[0.08]">
-              <h3 className="text-sm font-bold text-white font-heading flex items-center gap-2">
-                <HelpCircle className="w-4 h-4 text-[#7abf18]" />
-                Quanto custa ter um site na Webbilly e como funciona a cobrança?
-              </h3>
-              <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
+            <details className="group rounded-xl bg-[#121722] border border-white/[0.08] p-4 sm:p-5 transition-all open:border-[#7abf18]/40 cursor-pointer">
+              <summary className="text-xs sm:text-sm font-bold text-white font-heading flex items-center justify-between list-none select-none gap-2">
+                <span className="flex items-center gap-2">
+                  <HelpCircle className="w-4 h-4 text-[#7abf18] shrink-0" />
+                  <span>Quanto custa ter um site na Webbilly e como funciona a cobrança?</span>
+                </span>
+                <ChevronRight className="w-4 h-4 text-zinc-400 group-open:rotate-90 transition-transform shrink-0" />
+              </summary>
+              <p className="text-xs text-zinc-400 mt-3 leading-relaxed pl-6 border-t border-white/[0.05] pt-2.5">
                 O plano padrão da Webbilly custa apenas <strong>R$ 29,90 por mês</strong> no subdomínio oficial (ex: <code className="text-[#7abf18]">seunegocio.webbilly.com.br</code>), sem contrato de fidelidade e sem taxa de cancelamento. Você só começa a pagar quando o seu site estiver pronto para ir ao ar.
               </p>
-            </div>
+            </details>
 
-            <div className="p-5 rounded-xl bg-[#121722] border border-white/[0.08]">
-              <h3 className="text-sm font-bold text-white font-heading flex items-center gap-2">
-                <HelpCircle className="w-4 h-4 text-[#7abf18]" />
-                Preciso pagar para registrar um domínio .com.br?
-              </h3>
-              <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-                Você pode escolher entre duas opções simples: na <strong>Opção 1 (R$ 29,90/mês)</strong>, seu site funciona no subdomínio oficial (ex: <code className="text-[#7abf18]">seunegocio.webbilly.com.br</code>) com zero taxa de criação e até 2 alterações simples por mês inclusas. Na <strong>Opção 2 (R$ 490,00 pagamento único)</strong>, você tem o site completo no seu domínio próprio exclusivo por 1 ano inteiro, com renovação anual de apenas R$ 70,00/ano e atualizações avulsas sob demanda por R$ 29,90 (sem mensalidade obrigatória).
+            {/* Pergunta 4: Preciso pagar para registrar um domínio .com.br? */}
+            <details className="group rounded-xl bg-[#121722] border border-white/[0.08] p-4 sm:p-5 transition-all open:border-[#7abf18]/40 cursor-pointer">
+              <summary className="text-xs sm:text-sm font-bold text-white font-heading flex items-center justify-between list-none select-none gap-2">
+                <span className="flex items-center gap-2">
+                  <HelpCircle className="w-4 h-4 text-[#7abf18] shrink-0" />
+                  <span>Preciso pagar para registrar um domínio .com.br?</span>
+                </span>
+                <ChevronRight className="w-4 h-4 text-zinc-400 group-open:rotate-90 transition-transform shrink-0" />
+              </summary>
+              <p className="text-xs text-zinc-400 mt-3 leading-relaxed pl-6 border-t border-white/[0.05] pt-2.5">
+                Você pode escolher entre duas opções simples: na <strong>Opção 1 (R$ 29,90/mês)</strong>, seu site funciona no subdomínio oficial com zero taxa de criação e até 2 alterações simples por mês inclusas. Na <strong>Opção 2 (R$ 490,00 pagamento único)</strong>, você tem o site completo no seu domínio próprio exclusivo por 1 ano inteiro, com renovação anual de apenas R$ 70,00/ano e atualizações avulsas sob demanda por R$ 39,90.
               </p>
-            </div>
+            </details>
 
-            <div className="p-5 rounded-xl bg-[#121722] border border-white/[0.08]">
-              <h3 className="text-sm font-bold text-white font-heading flex items-center gap-2">
-                <HelpCircle className="w-4 h-4 text-[#7abf18]" />
-                Como funciona a cobrança dos R$ 29,90/mês?
-              </h3>
-              <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-                A cobrança é realizada através de assinatura mensal no Mercado Pago (via Cartão de Crédito ou Pix Recorrente). Você só paga a primeira mensalidade quando seu site estiver pronto para ir ao ar.
+            {/* Pergunta 5: Como funciona a cobrança dos R$ 29,90/mês? */}
+            <details className="group rounded-xl bg-[#121722] border border-white/[0.08] p-4 sm:p-5 transition-all open:border-[#7abf18]/40 cursor-pointer">
+              <summary className="text-xs sm:text-sm font-bold text-white font-heading flex items-center justify-between list-none select-none gap-2">
+                <span className="flex items-center gap-2">
+                  <HelpCircle className="w-4 h-4 text-[#7abf18] shrink-0" />
+                  <span>Como funciona a cobrança dos R$ 29,90/mês?</span>
+                </span>
+                <ChevronRight className="w-4 h-4 text-zinc-400 group-open:rotate-90 transition-transform shrink-0" />
+              </summary>
+              <p className="text-xs text-zinc-400 mt-3 leading-relaxed pl-6 border-t border-white/[0.05] pt-2.5">
+                A cobrança é realizada através de assinatura mensal no Asaas / Mercado Pago (via Cartão de Crédito ou Pix Recorrente). Você só paga a primeira mensalidade quando seu site estiver pronto para ir ao ar.
               </p>
-            </div>
+            </details>
 
-            <div className="p-5 rounded-xl bg-[#121722] border border-white/[0.08]">
-              <h3 className="text-sm font-bold text-white font-heading flex items-center gap-2">
-                <HelpCircle className="w-4 h-4 text-[#7abf18]" />
-                Existe contrato de fidelidade ou taxa de cancelamento?
-              </h3>
-              <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-                Nenhuma fidelidade. Você pode cancelar sua assinatura mensal a qualquer momento sem nenhuma multa ou complicação.
+            {/* Pergunta 6: Existe contrato de fidelidade ou taxa de cancelamento? */}
+            <details className="group rounded-xl bg-[#121722] border border-white/[0.08] p-4 sm:p-5 transition-all open:border-[#7abf18]/40 cursor-pointer">
+              <summary className="text-xs sm:text-sm font-bold text-white font-heading flex items-center justify-between list-none select-none gap-2">
+                <span className="flex items-center gap-2">
+                  <HelpCircle className="w-4 h-4 text-[#7abf18] shrink-0" />
+                  <span>Existe contrato de fidelidade ou taxa de cancelamento?</span>
+                </span>
+                <ChevronRight className="w-4 h-4 text-zinc-400 group-open:rotate-90 transition-transform shrink-0" />
+              </summary>
+              <p className="text-xs text-zinc-400 mt-3 leading-relaxed pl-6 border-t border-white/[0.05] pt-2.5">
+                Nenhuma fidelidade. Você pode cancelar sua assinatura mensal a qualquer momento sem nenhuma multa ou complicação direto pelo Portal do Cliente.
               </p>
-            </div>
+            </details>
 
-            <div className="p-5 rounded-xl bg-[#121722] border border-white/[0.08]">
-              <h3 className="text-sm font-bold text-white font-heading flex items-center gap-2">
-                <HelpCircle className="w-4 h-4 text-[#7abf18]" />
-                Como faço para atualizar preços, fotos ou telefone no futuro?
-              </h3>
-              <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-                No plano mensal de R$ 29,90/mês você tem direito a até 2 alterações simples por mês já inclusas. No plano de domínio próprio (Opção 2 de R$ 490,00), as atualizações são avulsas sob demanda por R$ 29,90 por atualização, sem nenhuma mensalidade obrigatória. Basta enviar as alterações pelo nosso WhatsApp de atendimento.
+            {/* Pergunta 7: Como faço para atualizar preços, fotos ou telefone no futuro? */}
+            <details className="group rounded-xl bg-[#121722] border border-white/[0.08] p-4 sm:p-5 transition-all open:border-[#7abf18]/40 cursor-pointer">
+              <summary className="text-xs sm:text-sm font-bold text-white font-heading flex items-center justify-between list-none select-none gap-2">
+                <span className="flex items-center gap-2">
+                  <HelpCircle className="w-4 h-4 text-[#7abf18] shrink-0" />
+                  <span>Como faço para atualizar preços, fotos ou telefone no futuro?</span>
+                </span>
+                <ChevronRight className="w-4 h-4 text-zinc-400 group-open:rotate-90 transition-transform shrink-0" />
+              </summary>
+              <p className="text-xs text-zinc-400 mt-3 leading-relaxed pl-6 border-t border-white/[0.05] pt-2.5">
+                No plano mensal de R$ 29,90/mês você tem direito a até 2 alterações simples por mês já inclusas. No plano de domínio próprio (Opção 2 de R$ 490,00), as atualizações são avulsas sob demanda por R$ 39,90 por alteração. Basta solicitar direto no Portal do Cliente ou pelo WhatsApp de atendimento.
               </p>
-            </div>
+            </details>
           </div>
 
         </div>

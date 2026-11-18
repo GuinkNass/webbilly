@@ -26,6 +26,7 @@ import {
   MessageCircle,
   Flame,
   ArrowRight,
+  ChevronRight,
   Wand2,
   ImageIcon,
   Upload,
@@ -242,6 +243,7 @@ export default function BillyWebStudio({
   // =========================================================================
   const MAX_PHOTOS = 25;
   const [selectedTemplateId, setSelectedTemplateId] = useState('barbearia-crop-vintage');
+  const [showAllTemplatesMobile, setShowAllTemplatesMobile] = useState(false);
   const [templateCategoryFilter, setTemplateCategoryFilter] = useState<string>('todos');
   const [isRecommendingTemplate, setIsRecommendingTemplate] = useState(false);
   const [templateRecommendationReason, setTemplateRecommendationReason] = useState('');
@@ -1273,58 +1275,61 @@ export default function BillyWebStudio({
             </p>
           </div>
 
-          {/* Seletor de Abas */}
-          <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] shrink-0 self-start lg:self-auto overflow-x-auto max-w-full">
+          {/* Seletor de Abas com fluxo de 3 passos no celular (< 768px) */}
+          <div className="flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-2xl bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] shrink-0 self-stretch lg:self-auto overflow-x-auto max-w-full scrollbar-none">
             <button
               type="button"
               onClick={() => setActiveTab('prospectar')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+              className={`flex-1 sm:flex-none px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap min-h-[44px] ${
                 activeTab === 'prospectar'
                   ? 'bg-[#1478f0] text-black shadow-lg shadow-[#1478f0]/30'
                   : 'text-slate-500 dark:text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04]'
               }`}
             >
               <Search className="w-3.5 h-3.5" />
-              <span>1. Prospectar Leads</span>
+              <span>1. Buscar</span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveTab('estudio')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+              className={`flex-1 sm:flex-none px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap min-h-[44px] ${
                 activeTab === 'estudio'
                   ? 'bg-[#1478f0] text-black shadow-lg shadow-[#1478f0]/30'
                   : 'text-slate-500 dark:text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04]'
               }`}
             >
               <Sliders className="w-3.5 h-3.5" />
-              <span>2. Gerador & IA (Desktop Suite)</span>
+              <span className="sm:hidden">2. Template & Fotos</span>
+              <span className="hidden sm:inline">2. Template & Fotos</span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveTab('preview')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+              className={`flex-1 sm:flex-none px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap min-h-[44px] ${
                 activeTab === 'preview'
                   ? 'bg-[#1478f0] text-black shadow-lg shadow-[#1478f0]/30'
                   : 'text-slate-500 dark:text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04]'
               }`}
             >
               <Eye className="w-3.5 h-3.5" />
-              <span>3. Preview & Deploy</span>
+              <span className="sm:hidden">3. Preview & Enviar</span>
+              <span className="hidden sm:inline">3. Preview & Enviar</span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveTab('projetos')}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+              className={`px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap min-h-[44px] ${
                 activeTab === 'projetos'
                   ? 'bg-[#1478f0] text-black shadow-lg shadow-[#1478f0]/30'
                   : 'text-slate-500 dark:text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04]'
               }`}
+              title="Histórico de Sites"
             >
               <Globe className="w-3.5 h-3.5" />
-              <span>4. Histórico ({projects.length})</span>
+              <span className="hidden sm:inline">Histórico ({projects.length})</span>
             </button>
           </div>
         </div>
@@ -1937,41 +1942,87 @@ export default function BillyWebStudio({
               </button>
             </div>
 
-            {/* Filtros de Categorias de Templates */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              {[
-                { id: 'todos', label: `Todos (${BILLY_DESKTOP_TEMPLATES.length})` },
-                { id: 'modular-architect', label: '⚡ Arquiteto IA' },
-                { id: 'tatuagem', label: 'Tatuagem & Piercing' },
-                { id: 'gastronomia', label: 'Gastronomia & Cafés' },
-                { id: 'estetica', label: 'Estética & Beleza' },
-                { id: 'fitness', label: 'Fitness, Lutas & Yoga' },
-                { id: 'arquitetura', label: 'Arquitetura & Interiores' },
-                { id: 'automotivo', label: 'Mecânica & Auto' },
-                { id: 'saude', label: 'Odontologia & Saúde' },
-                { id: 'pet', label: 'Pet Shop' },
-                { id: 'servicos', label: 'Serviços & Reformas' },
-                { id: 'portfolio', label: 'Portfólio & Foto' },
-                { id: 'barbearia', label: 'Barbearias' },
-                { id: 'advocacia', label: 'Advocacia & B2B' },
-              ].map((cat) => {
-                const isCatActive = templateCategoryFilter === cat.id;
-                return (
+            {/* Visualização Compacta do Template Selecionado no Mobile (< 768px) */}
+            <div className="md:hidden">
+              {!showAllTemplatesMobile ? (
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-black/30 border border-[#1478f0]/40 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-zinc-900 shrink-0 border border-white/10">
+                      <img
+                        src={findTemplateById(selectedTemplateId)?.previewImg || '/templates-thumbs/barbearia.jpg'}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-mono uppercase text-[#38bdf8] font-bold block truncate">
+                        Template Selecionado
+                      </span>
+                      <h4 className="text-xs font-bold text-white truncate">
+                        {findTemplateById(selectedTemplateId)?.name || 'Template'}
+                      </h4>
+                      <span className="text-[10px] text-slate-400 block truncate">
+                        {findTemplateById(selectedTemplateId)?.category || 'Oficial Billy'}
+                      </span>
+                    </div>
+                  </div>
                   <button
-                    key={cat.id}
                     type="button"
-                    onClick={() => setTemplateCategoryFilter(cat.id)}
-                    className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition cursor-pointer ${
-                      isCatActive
-                        ? 'bg-[#1478f0] text-black shadow-md shadow-[#1478f0]/20'
-                        : 'bg-slate-50 dark:bg-slate-50 dark:bg-black/20 text-slate-500 dark:text-slate-400 hover:text-white border border-slate-200 dark:border-white/[0.06]'
-                    }`}
+                    onClick={() => setShowAllTemplatesMobile(true)}
+                    className="px-3 py-2 rounded-xl text-xs font-bold bg-[#1478f0]/15 hover:bg-[#1478f0] text-[#1478f0] hover:text-black border border-[#1478f0]/40 transition shrink-0 cursor-pointer"
                   >
-                    {cat.label}
+                    Trocar Template
                   </button>
-                );
-              })}
+                </div>
+              ) : (
+                <div className="flex justify-end pb-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAllTemplatesMobile(false)}
+                    className="text-xs text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer font-bold"
+                  >
+                    <span>▲ Recolher Lista de Templates</span>
+                  </button>
+                </div>
+              )}
             </div>
+
+            <div className={`${!showAllTemplatesMobile ? 'hidden md:block' : 'block'} space-y-4`}>
+              {/* Filtros de Categorias de Templates */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {[
+                  { id: 'todos', label: `Todos (${BILLY_DESKTOP_TEMPLATES.length})` },
+                  { id: 'modular-architect', label: '⚡ Arquiteto IA' },
+                  { id: 'tatuagem', label: 'Tatuagem & Piercing' },
+                  { id: 'gastronomia', label: 'Gastronomia & Cafés' },
+                  { id: 'estetica', label: 'Estética & Beleza' },
+                  { id: 'fitness', label: 'Fitness, Lutas & Yoga' },
+                  { id: 'arquitetura', label: 'Arquitetura & Interiores' },
+                  { id: 'automotivo', label: 'Mecânica & Auto' },
+                  { id: 'saude', label: 'Odontologia & Saúde' },
+                  { id: 'pet', label: 'Pet Shop' },
+                  { id: 'servicos', label: 'Serviços & Reformas' },
+                  { id: 'portfolio', label: 'Portfólio & Foto' },
+                  { id: 'barbearia', label: 'Barbearias' },
+                  { id: 'advocacia', label: 'Advocacia & B2B' },
+                ].map((cat) => {
+                  const isCatActive = templateCategoryFilter === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setTemplateCategoryFilter(cat.id)}
+                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition cursor-pointer ${
+                        isCatActive
+                          ? 'bg-[#1478f0] text-black shadow-md shadow-[#1478f0]/20'
+                          : 'bg-slate-50 dark:bg-slate-50 dark:bg-black/20 text-slate-500 dark:text-slate-400 hover:text-white border border-slate-200 dark:border-white/[0.06]'
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  );
+                })}
+              </div>
 
             {/* Grid dos Templates Oficiais (Layout Compacto de Alta Densidade) */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 max-h-[500px] overflow-y-auto pr-1.5 scrollbar-thin">
@@ -2072,6 +2123,189 @@ export default function BillyWebStudio({
               })}
             </div>
           </div>
+        </div>
+
+          {/* SEÇÃO 2: DADOS DO COMÉRCIO, CATEGORIAS (50+) E TOM DE VOZ */}
+          <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06] shadow-xl space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-[#1478f0]" />
+                  <span>2. Identidade do Estabelecimento & Copywriting</span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Configure o nome, nicho específico, cidade, canais de contato e gere textos persuasivos com IA.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleGenerateCopy}
+                disabled={copyGenerating}
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-[#1478f0]/15 hover:bg-[#1478f0] text-[#1478f0] hover:text-black border border-[#1478f0]/40 transition flex items-center gap-2 cursor-pointer shrink-0 disabled:opacity-50"
+              >
+                {copyGenerating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Redigindo com IA...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    <span>Gerar Copywriting com IA</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {copySuccessNotice && (
+              <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>Copywriting persuasivo, serviços e diferenciais preenchidos automaticamente com IA!</span>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
+                  Nome do Negócio:
+                </label>
+                <input
+                  type="text"
+                  value={siteForm.businessName}
+                  onChange={(e) => handleBusinessNameChange(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
+                  Nicho / Especialidade (50+ Categorias):
+                </label>
+                <select
+                  value={siteForm.niche}
+                  onChange={(e) => {
+                    const chosen = e.target.value;
+                    setSiteForm((prev) => ({ ...prev, niche: chosen }));
+                    const rec = recommendTemplateForNiche(chosen);
+                    setSelectedTemplateId(rec.template.id);
+                  }}
+                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
+                >
+                  {CATEGORY_GROUPS.map((grp, gIdx) => (
+                    <optgroup key={gIdx} label={grp.group} className="bg-zinc-900 text-slate-500 dark:text-slate-400 font-bold">
+                      {grp.categories.map((cat, cIdx) => (
+                        <option key={cIdx} value={cat} className="bg-zinc-950 text-white font-normal">
+                          {cat}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
+                  Cidade e Estado:
+                </label>
+                <input
+                  type="text"
+                  value={siteForm.city}
+                  onChange={(e) => setSiteForm((prev) => ({ ...prev, city: e.target.value }))}
+                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
+                  Subdomínio Oficial:
+                </label>
+                <div className="flex items-center">
+                  <input
+                    type="text"
+                    value={siteForm.subdomain}
+                    onChange={(e) => setSiteForm((prev) => ({ ...prev, subdomain: e.target.value }))}
+                    className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-l-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
+                  />
+                  <span className="bg-slate-100 dark:bg-white/[0.05] border border-l-0 border-white/[0.1] px-3 py-2.5 rounded-r-xl text-xs text-slate-400 dark:text-slate-500 font-mono">
+                    .webbilly.com.br
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
+                  WhatsApp Oficial (com DDD):
+                </label>
+                <input
+                  type="text"
+                  value={siteForm.whatsapp}
+                  onChange={(e) => setSiteForm((prev) => ({ ...prev, whatsapp: e.target.value }))}
+                  placeholder="5511999998888"
+                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
+                  Tom de Voz da Copy:
+                </label>
+                <select
+                  value={siteForm.toneOfVoice}
+                  onChange={(e) => setSiteForm((prev) => ({ ...prev, toneOfVoice: e.target.value }))}
+                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
+                >
+                  {TONES_OF_VOICE.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.icon} {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
+                  Headline / Slogan de Impacto:
+                </label>
+                <input
+                  type="text"
+                  value={siteForm.tagline}
+                  onChange={(e) => setSiteForm((prev) => ({ ...prev, tagline: e.target.value }))}
+                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
+                  Endereço / Localização:
+                </label>
+                <input
+                  type="text"
+                  value={siteForm.address}
+                  onChange={(e) => setSiteForm((prev) => ({ ...prev, address: e.target.value }))}
+                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* =========================================================================
+              ACORDEÃO REVERSO: PERSONALIZAÇÃO AVANÇADA (OPCIONAL) NO CELULAR E DESKTOP
+             ========================================================================= */}
+          <details className="rounded-3xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06] shadow-xl overflow-hidden group">
+            <summary className="p-5 sm:p-6 cursor-pointer font-bold text-sm sm:text-base text-slate-900 dark:text-white flex items-center justify-between hover:bg-slate-50 dark:hover:bg-white/[0.02] transition list-none">
+              <div className="flex items-center gap-2.5">
+                <span className="text-lg">⚙️</span>
+                <div className="text-left">
+                  <span className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white block">Personalização Avançada (Opcional)</span>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-normal mt-0.5">Paletas Hex, Tipografia Google Fonts, 12 Seções Modulares e Cardápio OCR</p>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-400 group-open:rotate-90 transition-transform shrink-0" />
+            </summary>
+            <div className="p-4 sm:p-8 pt-0 sm:pt-0 space-y-6 border-t border-slate-100 dark:border-white/[0.06]">
 
           {/* =========================================================================
               SEÇÃO 1.5: IDENTIDADE VISUAL, PALETAS CURADAS & TIPOGRAFIA
@@ -2317,171 +2551,7 @@ export default function BillyWebStudio({
             </div>
           </div>
 
-          {/* SEÇÃO 2: DADOS DO COMÉRCIO, CATEGORIAS (50+) E TOM DE VOZ */}
-          <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06] shadow-xl space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Building2 className="w-5 h-5 text-[#1478f0]" />
-                  <span>2. Identidade do Estabelecimento & Copywriting</span>
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Configure o nome, nicho específico, cidade, canais de contato e gere textos persuasivos com IA.
-                </p>
-              </div>
 
-              <button
-                type="button"
-                onClick={handleGenerateCopy}
-                disabled={copyGenerating}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-[#1478f0]/15 hover:bg-[#1478f0] text-[#1478f0] hover:text-black border border-[#1478f0]/40 transition flex items-center gap-2 cursor-pointer shrink-0 disabled:opacity-50"
-              >
-                {copyGenerating ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Redigindo com IA...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4" />
-                    <span>Gerar Copywriting com IA</span>
-                  </>
-                )}
-              </button>
-            </div>
-
-            {copySuccessNotice && (
-              <div className="p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Copywriting persuasivo, serviços e diferenciais preenchidos automaticamente com IA!</span>
-              </div>
-            )}
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
-                  Nome do Negócio:
-                </label>
-                <input
-                  type="text"
-                  value={siteForm.businessName}
-                  onChange={(e) => handleBusinessNameChange(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
-                  Nicho / Especialidade (50+ Categorias):
-                </label>
-                <select
-                  value={siteForm.niche}
-                  onChange={(e) => {
-                    const chosen = e.target.value;
-                    setSiteForm((prev) => ({ ...prev, niche: chosen }));
-                    const rec = recommendTemplateForNiche(chosen);
-                    setSelectedTemplateId(rec.template.id);
-                  }}
-                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
-                >
-                  {CATEGORY_GROUPS.map((grp, gIdx) => (
-                    <optgroup key={gIdx} label={grp.group} className="bg-zinc-900 text-slate-500 dark:text-slate-400 font-bold">
-                      {grp.categories.map((cat, cIdx) => (
-                        <option key={cIdx} value={cat} className="bg-zinc-950 text-white font-normal">
-                          {cat}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
-                  Cidade e Estado:
-                </label>
-                <input
-                  type="text"
-                  value={siteForm.city}
-                  onChange={(e) => setSiteForm((prev) => ({ ...prev, city: e.target.value }))}
-                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
-                  Subdomínio Oficial:
-                </label>
-                <div className="flex items-center">
-                  <input
-                    type="text"
-                    value={siteForm.subdomain}
-                    onChange={(e) => setSiteForm((prev) => ({ ...prev, subdomain: e.target.value }))}
-                    className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-l-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
-                  />
-                  <span className="bg-slate-100 dark:bg-white/[0.05] border border-l-0 border-white/[0.1] px-3 py-2.5 rounded-r-xl text-xs text-slate-400 dark:text-slate-500 font-mono">
-                    .webbilly.com.br
-                  </span>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
-                  WhatsApp Oficial (com DDD):
-                </label>
-                <input
-                  type="text"
-                  value={siteForm.whatsapp}
-                  onChange={(e) => setSiteForm((prev) => ({ ...prev, whatsapp: e.target.value }))}
-                  placeholder="5511999998888"
-                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
-                  Tom de Voz da Copy:
-                </label>
-                <select
-                  value={siteForm.toneOfVoice}
-                  onChange={(e) => setSiteForm((prev) => ({ ...prev, toneOfVoice: e.target.value }))}
-                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
-                >
-                  {TONES_OF_VOICE.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.icon} {t.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
-                  Headline / Slogan de Impacto:
-                </label>
-                <input
-                  type="text"
-                  value={siteForm.tagline}
-                  onChange={(e) => setSiteForm((prev) => ({ ...prev, tagline: e.target.value }))}
-                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
-                  Endereço / Localização:
-                </label>
-                <input
-                  type="text"
-                  value={siteForm.address}
-                  onChange={(e) => setSiteForm((prev) => ({ ...prev, address: e.target.value }))}
-                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
-                />
-              </div>
-            </div>
-          </div>
 
           {/* SEÇÃO 3: TOGGLES MODULARES DE SEÇÕES (IGUAL AO DESKTOP SUITE) */}
           <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06] shadow-xl space-y-5">
@@ -2693,6 +2763,8 @@ export default function BillyWebStudio({
               </div>
             </div>
           </div>
+        </div>
+      </details>
 
           {/* SEÇÃO 5: CENTRAL INTELIGENTE DE FOTOS DO ESTABELECIMENTO */}
           <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06] shadow-xl space-y-6">
@@ -2873,7 +2945,7 @@ export default function BillyWebStudio({
                     </button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5 max-h-80 overflow-y-auto pr-1 scrollbar-thin">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 sm:gap-2.5 max-h-80 overflow-y-auto pr-1 scrollbar-thin">
                     {realPhotos.map((item, i) => {
                       const target = item.url;
                       const isHero = siteForm.heroPhoto === target;
@@ -3320,14 +3392,14 @@ export default function BillyWebStudio({
                 </div>
 
                 {/* Container Iframe com PREVIEW INSTANTÂNEO (srcDoc) */}
-                <div className="flex justify-center bg-slate-50 dark:bg-[#131317] border border-slate-200 dark:border-white/[0.08] rounded-3xl p-4 overflow-hidden min-h-[600px]">
+                <div className="flex justify-center bg-slate-50 dark:bg-[#131317] border border-slate-200 dark:border-white/[0.08] rounded-2xl sm:rounded-3xl p-2 sm:p-4 overflow-hidden min-h-[62vh] sm:min-h-[600px]">
                   <div
                     className={`transition-all duration-300 bg-white rounded-2xl overflow-hidden shadow-2xl ${
                       previewDevice === 'mobile'
-                        ? 'w-[390px] h-[667px] ring-8 ring-zinc-800'
+                        ? 'w-full sm:w-[390px] h-[62vh] sm:h-[667px] ring-0 sm:ring-8 ring-zinc-800'
                         : previewDevice === 'tablet'
-                        ? 'w-[768px] h-[720px] ring-8 ring-zinc-800'
-                        : 'w-full h-[720px]'
+                        ? 'w-full sm:w-[768px] h-[62vh] sm:h-[720px] ring-0 sm:ring-8 ring-zinc-800'
+                        : 'w-full h-[62vh] sm:h-[720px]'
                     }`}
                   >
                     {generatedHtml ? (
@@ -3570,6 +3642,29 @@ export default function BillyWebStudio({
                 className="px-5 py-2.5 rounded-xl text-xs font-bold bg-[#1478f0] text-black cursor-pointer"
               >
                 Abrir Estúdio de Criação →
+              </button>
+            </div>
+          )}
+
+          {/* Barra de Ação Fixa Inferior Mobile (< 768px) com 2 Botões Grandes */}
+          {previewSlug && (
+            <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 p-3 bg-white/95 dark:bg-[#1c1d27]/95 backdrop-blur-md border-t border-slate-200 dark:border-white/[0.08] flex items-center gap-2 shadow-2xl">
+              <button
+                type="button"
+                onClick={handleExecuteDeploy}
+                disabled={isDeploying}
+                className="flex-1 min-h-[48px] py-2.5 px-3 rounded-xl font-bold text-xs bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-center gap-1.5 shadow-md active:scale-98 transition disabled:opacity-50 cursor-pointer"
+              >
+                {isDeploying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                <span>{isDeployed ? '✓ Publicado' : '1. Publicar'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleOpenWhatsApp}
+                className="flex-1 min-h-[48px] py-2.5 px-3 rounded-xl font-bold text-xs bg-[#25D366] text-black flex items-center justify-center gap-1.5 shadow-md active:scale-98 transition cursor-pointer"
+              >
+                <MessageCircle className="w-4 h-4 text-black" />
+                <span>2. WhatsApp</span>
               </button>
             </div>
           )}

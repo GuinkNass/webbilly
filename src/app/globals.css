@@ -212,3 +212,19 @@ h1, h2, h3, h4, h5, h6, .font-heading {
     0% 100%, 0% 6px
   );
 }
+
+/* =====================================================================
+   REGRAS DE ERGONOMIA MOBILE (< 768px)
+   ===================================================================== */
+@media (max-width: 767px) {
+  /* Evita zoom automático no iOS Safari e Chrome Mobile ao focar campos */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* Garante touch target confortável em botões e controles interativos */
+  .touch-target-min {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

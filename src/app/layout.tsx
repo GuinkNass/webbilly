@@ -188,7 +188,7 @@ export default function RootLayout({
     <html
       lang="pt-BR"
       suppressHydrationWarning
-      className={`${robotoSlab.variable} ${openSans.variable} h-full antialiased scroll-smooth`}
+      className={`${robotoSlab.variable} ${openSans.variable} h-full antialiased scroll-smooth overflow-x-hidden max-w-full`}
     >
       <head>
         <meta name="impact-site-verification" {...({ value: "81056bb1-11d9-45a4-93a9-68cbf2c8598f" } as any)} />
@@ -216,7 +216,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-slate-50 dark:bg-[#131317] text-slate-800 dark:text-slate-100 font-sans selection:bg-blue-600 selection:text-white transition-colors duration-150">
+      <body className="min-h-full flex flex-col bg-slate-50 dark:bg-[#131317] text-slate-800 dark:text-slate-100 font-sans selection:bg-blue-600 selection:text-white transition-colors duration-150 overflow-x-hidden w-full max-w-full">
         {children}
       </body>
     </html>

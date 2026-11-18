@@ -81,41 +81,52 @@ export default function AdminDashboardPage() {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* =========================================================================
-          4 CARDS DE KPIS EXECUTIVOS PRINCIPAIS (EXCLUSIVOS DO DASHBOARD)
+          BOTÃO DE AÇÃO RÁPIDA MOBILE: CRIAR NOVO SITE COM IA
          ========================================================================= */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <Link
+        href="/admin/estudio"
+        className="sm:hidden w-full min-h-[48px] py-3.5 px-4 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-blue-600/25 active:scale-98 transition cursor-pointer"
+      >
+        <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+        <span>+ Criar Novo Site com IA</span>
+      </Link>
+
+      {/* =========================================================================
+          CARDS DE KPIS EXECUTIVOS (2 PRINCIPAIS NO CELULAR, 4 NO DESKTOP)
+         ========================================================================= */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Card 1: Receita Recorrente Global (MRR Asaas) */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] shadow-xs flex items-center justify-between">
+        <div className="p-3 sm:p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <div>
-            <span className="text-[11px] uppercase font-bold tracking-wider text-emerald-400">MRR Total Asaas</span>
-            <div className="text-2xl font-black text-slate-900 dark:text-white mt-1 tracking-tight">
-              R$ {totalMRR.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <span className="text-[10px] sm:text-[11px] uppercase font-bold tracking-wider text-emerald-500 dark:text-emerald-400">MRR Total Asaas</span>
+            <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white mt-0.5 sm:mt-1 tracking-tight">
+              R$ {totalMRR.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </div>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{activeSubsCount} assinaturas ativas</span>
+            <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">{activeSubsCount} assinaturas ativas</span>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-            <DollarSign className="w-6 h-6" />
+          <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 self-end sm:self-center">
+            <DollarSign className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
         </div>
 
-        {/* Card 2: Divisão de Caixa 70/30 (Líquido Billy Suite) */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] shadow-xs flex items-center justify-between">
+        {/* Card 2: Sites Ativos / Assinaturas */}
+        <div className="p-3 sm:p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <div>
-            <span className="text-[11px] uppercase font-bold tracking-wider text-blue-600 dark:text-blue-400">Líquido Plataforma (70%)</span>
-            <div className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1 tracking-tight">
-              R$ {billyLiquidoMRR.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <span className="text-[10px] sm:text-[11px] uppercase font-bold tracking-wider text-blue-600 dark:text-blue-400">Assinaturas Ativas</span>
+            <div className="text-xl sm:text-2xl font-black text-blue-600 dark:text-blue-400 mt-0.5 sm:mt-1 tracking-tight">
+              {activeSubsCount}
             </div>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">R$ 19,90/site após repasses</span>
+            <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">R$ {billyLiquidoMRR.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} líquido Billy</span>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-            <TrendingUp className="w-6 h-6" />
+          <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 self-end sm:self-center">
+            <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
         </div>
 
-        {/* Card 3: Repasse Mensal aos Operadores (30%) */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] shadow-xs flex items-center justify-between">
+        {/* Card 3: Repasse Mensal aos Operadores (30%) - Oculto no celular */}
+        <div className="hidden sm:flex p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] shadow-xs items-center justify-between">
           <div>
             <span className="text-[11px] uppercase font-bold tracking-wider text-teal-400">Repasses Pix (30%)</span>
             <div className="text-2xl font-black text-teal-300 mt-1 tracking-tight">
@@ -128,8 +139,8 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Card 4: Licenças Desktop em Operação */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] shadow-xs flex items-center justify-between">
+        {/* Card 4: Licenças Desktop em Operação - Oculto no celular */}
+        <div className="hidden sm:flex p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] shadow-xs items-center justify-between">
           <div>
             <span className="text-[11px] uppercase font-bold tracking-wider text-amber-400">Licenças Desktop</span>
             <div className="text-2xl font-black text-slate-900 dark:text-white mt-1 tracking-tight">

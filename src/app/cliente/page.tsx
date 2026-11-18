@@ -480,14 +480,14 @@ export default function ClienteDashboardPage() {
       </header>
 
       {/* Navigation Tabs Bar */}
-      <nav className="w-full px-4 sm:px-8 border-b overflow-x-auto scrollbar-none" style={{ borderColor: 'var(--border-subtle)', backgroundColor: 'var(--bg-surface)' }}>
+      <nav className="w-full px-2 sm:px-8 border-b overflow-x-auto scrollbar-none" style={{ borderColor: 'var(--border-subtle)', backgroundColor: 'var(--bg-surface)' }}>
         <div className="flex items-center gap-1 sm:gap-2 min-w-max py-2">
           {[
-            { id: 'status', label: 'Meu Site Oficial', icon: Globe },
-            { id: 'alteracoes', label: 'Fila de Alterações', icon: Layers, badge: totalEditsAvailable },
-            { id: 'financeiro', label: 'Faturas & Pix', icon: CreditCard },
-            { id: 'ferramentas', label: 'Ferramentas Parceiras', icon: Sparkles },
-            { id: 'configuracoes', label: 'Configurações', icon: Wrench }
+            { id: 'status', label: 'Meu Site Oficial', mobileLabel: 'Meu Site', icon: Globe },
+            { id: 'alteracoes', label: 'Fila de Alterações', mobileLabel: 'Pedir Alteração', icon: Layers, badge: totalEditsAvailable },
+            { id: 'financeiro', label: 'Faturas & Pix', mobileLabel: 'Faturas', icon: CreditCard },
+            { id: 'ferramentas', label: 'Ferramentas Parceiras', mobileLabel: 'Benefícios', icon: Sparkles },
+            { id: 'configuracoes', label: 'Configurações', mobileLabel: 'Ajustes', icon: Wrench }
           ].map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -495,7 +495,7 @@ export default function ClienteDashboardPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all min-h-[44px] cursor-pointer ${
                   isActive
                     ? 'text-white shadow-xs'
                     : 'hover:opacity-80'
@@ -506,8 +506,9 @@ export default function ClienteDashboardPage() {
                     : { color: 'var(--text-secondary)', backgroundColor: 'transparent' }
                 }
               >
-                <Icon className="w-4 h-4" />
-                <span>{tab.label}</span>
+                <Icon className="w-4 h-4 shrink-0" />
+                <span className="sm:hidden">{tab.mobileLabel}</span>
+                <span className="hidden sm:inline">{tab.label}</span>
                 {tab.badge !== undefined && (
                   <span
                     className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
@@ -546,12 +547,12 @@ export default function ClienteDashboardPage() {
                   <p className="text-xs sm:text-sm" style={{ color: 'var(--text-muted)' }}>
                     Seu site está hospedado na nuvem global de ultravelocidade Billy Suite e sincronizado em tempo real.
                   </p>
-                  <div className="pt-2 flex flex-wrap items-center gap-3">
+                  <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                     <a
                       href={siteUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white shadow-sm transition-all hover:opacity-95"
+                      className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-xs sm:text-sm text-white shadow-sm transition-all hover:opacity-95 min-h-[48px]"
                       style={{ backgroundColor: 'var(--color-primary)' }}
                     >
                       <span>Acessar Meu Site Oficial</span>
@@ -561,7 +562,7 @@ export default function ClienteDashboardPage() {
                     <button
                       onClick={() => copyToClipboard(siteUrl, 'site-link')}
                       type="button"
-                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs sm:text-sm font-semibold transition-all hover:opacity-80"
+                      className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border text-xs sm:text-sm font-semibold transition-all hover:opacity-80 min-h-[48px] cursor-pointer"
                       style={{ borderColor: 'var(--border-strong)', color: 'var(--text-main)', backgroundColor: 'var(--bg-app)' }}
                     >
                       {copiedText === 'site-link' ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
@@ -913,7 +914,7 @@ export default function ClienteDashboardPage() {
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <button
                   onClick={() => setShowNewEditModal(true)}
-                  className="px-4 py-3 rounded-xl font-bold text-xs sm:text-sm text-white flex items-center justify-center gap-2 shadow-sm transition-all hover:opacity-95"
+                  className="px-4 py-3 rounded-xl font-bold text-xs sm:text-sm text-white flex items-center justify-center gap-2 shadow-sm transition-all hover:opacity-95 min-h-[48px] cursor-pointer"
                   style={{ backgroundColor: 'var(--color-primary)' }}
                 >
                   <Plus className="w-4 h-4" />
@@ -925,7 +926,7 @@ export default function ClienteDashboardPage() {
                     setShowBuyExtraModal(true);
                     setBuyExtraPixData(null);
                   }}
-                  className="px-4 py-3 rounded-xl border font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all hover:opacity-80"
+                  className="px-4 py-3 rounded-xl border font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all hover:opacity-80 min-h-[48px] cursor-pointer"
                   style={{ borderColor: 'var(--border-strong)', color: 'var(--text-main)', backgroundColor: 'var(--bg-app)' }}
                 >
                   <ShoppingCart className="w-4 h-4 text-emerald-500" />
