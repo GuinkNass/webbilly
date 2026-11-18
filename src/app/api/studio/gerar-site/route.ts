@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
         tagline,
         description,
         theme,
-        templateId,
+        templateId: (body.mode === 'architect' || body.architectMode === true) ? 'modular-architect' : templateId,
         accentColor,
         primaryColor,
         backgroundColor,

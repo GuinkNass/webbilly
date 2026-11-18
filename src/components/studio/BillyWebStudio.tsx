@@ -1900,10 +1900,48 @@ export default function BillyWebStudio({
               </div>
             )}
 
+            {/* Banner Destaque Modo Arquiteto IA */}
+            <div
+              onClick={() => setSelectedTemplateId('modular-architect')}
+              className={`p-4 rounded-2xl border transition-all cursor-pointer flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${
+                selectedTemplateId === 'modular-architect'
+                  ? 'bg-gradient-to-r from-emerald-950/80 via-slate-900 to-emerald-950/60 border-emerald-500 shadow-lg shadow-emerald-500/10'
+                  : 'bg-slate-900/50 hover:bg-slate-900 border-slate-800 hover:border-slate-700'
+              }`}
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black text-lg shrink-0">
+                  ⚡
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-extrabold text-white">Modo Arquiteto IA — Layout Sob Medida</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                      Tailwind Blocks Engine
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    Gera uma composição personalizada (Hero, Sobre, Serviços, Galeria, Depoimentos e Contato) adaptada exatamente ao nicho e à quantidade de fotos reais do comércio.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition shrink-0 ${
+                  selectedTemplateId === 'modular-architect'
+                    ? 'bg-emerald-500 text-slate-950'
+                    : 'bg-slate-800 text-slate-200 hover:bg-slate-700'
+                }`}
+              >
+                {selectedTemplateId === 'modular-architect' ? '✓ Ativado' : 'Ativar Modo Arquiteto'}
+              </button>
+            </div>
+
             {/* Filtros de Categorias de Templates */}
             <div className="flex flex-wrap items-center gap-1.5">
               {[
                 { id: 'todos', label: `Todos (${BILLY_DESKTOP_TEMPLATES.length})` },
+                { id: 'modular-architect', label: '⚡ Arquiteto IA' },
                 { id: 'tatuagem', label: 'Tatuagem & Piercing' },
                 { id: 'gastronomia', label: 'Gastronomia & Cafés' },
                 { id: 'estetica', label: 'Estética & Beleza' },
@@ -1939,6 +1977,9 @@ export default function BillyWebStudio({
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 max-h-[500px] overflow-y-auto pr-1.5 scrollbar-thin">
               {BILLY_DESKTOP_TEMPLATES.filter((tpl) => {
                 if (templateCategoryFilter === 'todos') return true;
+                if (templateCategoryFilter === 'modular-architect') {
+                  return tpl.id === 'modular-architect';
+                }
                 const matchCat = (tpl.category || '').toLowerCase();
                 const matchName = (tpl.name || '').toLowerCase();
                 const matchNiche = (tpl.niche || '').toLowerCase();

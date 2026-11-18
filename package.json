@@ -6,7 +6,8 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "templates:import-github": "node scripts/import-github-templates.ts"
   },
   "dependencies": {
     "@dicebear/collection": "^9.4.2",

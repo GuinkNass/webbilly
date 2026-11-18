@@ -15,6 +15,23 @@ export interface DesktopTemplate {
 
 const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
   {
+    id: 'modular-architect',
+    name: 'Modo Arquiteto IA — Layout Sob Medida (Tailwind Blocks)',
+    niche: 'Multinicho / Inteligente',
+    category: 'Inteligência Artificial',
+    badge: 'Arquiteto IA • Sob Medida',
+    description: 'Motor inteligente que analisa o nicho, fotos reais e perfil do comércio, combinando blocos modulares Tailwind CSS sob medida com zero CSS quebrado e zero Lorem Ipsum.',
+    accentColor: '#10b981',
+    features: [
+      'Composição modular sob medida de 6 seções',
+      'Adaptação inteligente de 1 a 24 fotos sem lacunas',
+      'Tipografia moderna e contraste blindado',
+      'Estilização limpa Tailwind CSS CDN'
+    ],
+    previewImg: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1000&auto=format&fit=crop&q=80',
+    recommendedKeywords: ['arquiteto', 'ia', 'modular', 'sob medida', 'tailwind', 'inteligente', 'automático', 'todos']
+  },
+  {
     id: 'barbearia-crop-vintage',
     name: 'BarberCrop — Barbearia Clássica & Navalha',
     niche: 'Barbearia',

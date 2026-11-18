@@ -1,0 +1,23 @@
+[
+  {
+    "id": "gh-tailblocks-hero-modern",
+    "name": "Tailblocks Modern Hero Split",
+    "repo": "mertJF/tailblocks",
+    "category": "heroes",
+    "status": "Importado com sucesso (zero Lorem Ipsum, 100% data-wb-slot)"
+  },
+  {
+    "id": "gh-hyperui-services-grid",
+    "name": "HyperUI Services Feature Grid",
+    "repo": "markmead/hyperui",
+    "category": "services",
+    "status": "Importado com sucesso (zero Lorem Ipsum, 100% data-wb-slot)"
+  },
+  {
+    "id": "gh-cruip-testimonials-clean",
+    "name": "Cruip Verified Testimonials",
+    "repo": "cruip/tailwind-landing-page-template",
+    "category": "testimonials",
+    "status": "Importado com sucesso (zero Lorem Ipsum, 100% data-wb-slot)"
+  }
+]

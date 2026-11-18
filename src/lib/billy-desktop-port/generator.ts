@@ -648,6 +648,39 @@ export async function buildSiteHtml(
   let usedAi = false;
   let modelUsed: string | undefined;
 
+  // 0. Modo Arquiteto IA — Layout Sob Medida via Blocos Modulares Tailwind
+  if (input.templateId === 'modular-architect' || input.templateId === 'arquiteto-ia') {
+    const { buildArchitectModularSite } = await import('@/lib/modular-blocks/architect');
+    const modularResult = buildArchitectModularSite({
+      businessName: input.businessName,
+      shortName: input.shortName,
+      niche: input.niche,
+      city: input.city,
+      subdomain: input.subdomain,
+      phone: cleanPhone,
+      whatsapp: cleanPhone,
+      whatsappLink,
+      instagram: input.instagram,
+      address: input.address,
+      hours: input.hours,
+      tagline: input.tagline || defaultNicheCopy.headline,
+      description: input.description || defaultNicheCopy.subheadline,
+      heroPhoto: heroImg,
+      galleryPhotos: gallery,
+      services: (input.services && input.services.length > 0)
+        ? input.services
+        : (defaultNicheCopy.servicos?.map(s => ({ name: s.name, price: s.price, description: s.description })) || []),
+      reviews: (input.reviews && input.reviews.length > 0)
+        ? input.reviews
+        : (defaultNicheCopy.depoimentos || []),
+      accentColor: input.accentColor,
+      primaryColor: input.primaryColor,
+      backgroundColor: input.backgroundColor,
+      surfaceColor: input.surfaceColor
+    });
+    return { html: modularResult.html, usedAi: true, modelUsed: 'architect-engine' };
+  }
+
   // 1. Tenta geração ultra-rápida de Copy em JSON com Gemini (~2 a 4s)
   if (apiKey) {
     try {
