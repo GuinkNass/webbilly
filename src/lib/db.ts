@@ -62,6 +62,8 @@ export interface Candidate {
   avatarConfig?: any;
   avatar_svg?: string;
   avatarSvg?: string;
+  auth_provider?: string;
+  authProvider?: string;
 }
 
 export interface Operator {
@@ -113,6 +115,8 @@ export interface Operator {
   avatarConfig?: any;
   avatar_svg?: string;
   avatarSvg?: string;
+  auth_provider?: string;
+  authProvider?: string;
 }
 
 export interface LicenseRecord {
@@ -182,6 +186,8 @@ export interface AdminUser {
   avatarConfig?: any;
   avatar_svg?: string;
   avatarSvg?: string;
+  auth_provider?: string;
+  authProvider?: string;
 }
 
 export interface BriefingRecord {
@@ -206,6 +212,8 @@ export interface BriefingRecord {
   avatarConfig?: any;
   avatar_svg?: string;
   avatarSvg?: string;
+  auth_provider?: string;
+  authProvider?: string;
 }
 
 export interface DemoRecord {

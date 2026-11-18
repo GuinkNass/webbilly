@@ -159,8 +159,8 @@ export function mapRowToOperator(row: any): Operator {
     email: row.email || '',
     passwordHash: row.password_hash || row.passwordHash || '',
     tempPasswordPlain: row.temp_password_plain || row.tempPasswordPlain,
-    mustChangePassword: row.must_change_password ?? row.mustChangePassword ?? true,
-    must_change_password: row.must_change_password ?? row.mustChangePassword ?? true,
+    mustChangePassword: Boolean(row.must_change_password === true || row.mustChangePassword === true),
+    must_change_password: Boolean(row.must_change_password === true || row.mustChangePassword === true),
     corporate_email: row.corporate_email || row.corporateEmail || undefined,
     corporateEmail: row.corporate_email || row.corporateEmail || undefined,
     lark_provisioned: Boolean(row.lark_provisioned ?? row.larkProvisioned ?? false),
@@ -492,6 +492,10 @@ export async function upsertOperatorInSupabase(op: Partial<Operator>): Promise<b
   }
   if (op.avatar_svg || (op as any).avatarSvg) {
     payload.avatar_svg = op.avatar_svg || (op as any).avatarSvg;
+  }
+
+  if (op.mustChangePassword !== undefined || op.must_change_password !== undefined) {
+    payload.must_change_password = Boolean(op.must_change_password ?? op.mustChangePassword ?? false);
   }
 
   try {

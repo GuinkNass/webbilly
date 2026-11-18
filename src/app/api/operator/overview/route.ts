@@ -251,7 +251,12 @@ export async function GET(req: NextRequest) {
         lastSync: operator.lastSync,
         dailyLimit: operator.dailyLimit,
         todayGenerations: operator.todayGenerations,
-        mustChangePassword: operator.mustChangePassword ?? false,
+        mustChangePassword: (
+          operator.auth_provider === 'lark' ||
+          (operator as any).authProvider === 'lark' ||
+          req.cookies.get('webbilly_lark_auth')?.value === 'true'
+        ) ? false : Boolean(operator.mustChangePassword === true || (operator as any).must_change_password === true),
+        auth_provider: operator.auth_provider || (req.cookies.get('webbilly_lark_auth')?.value === 'true' ? 'lark' : 'credentials'),
         corporate_email: operator.corporate_email || operator.corporateEmail || null,
         corporateEmail: operator.corporate_email || operator.corporateEmail || null,
         lark_provisioned: operator.lark_provisioned ?? operator.larkProvisioned ?? false,

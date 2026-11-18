@@ -42,7 +42,12 @@ export async function GET(req: NextRequest) {
           status: operator.status,
           pixKey: operator.pixKey,
           pixType: operator.pixType,
-          mustChangePassword: operator.mustChangePassword ?? false
+          mustChangePassword: (
+            operator.auth_provider === 'lark' ||
+            (operator as any).authProvider === 'lark' ||
+            req.cookies.get('webbilly_lark_auth')?.value === 'true'
+          ) ? false : Boolean(operator.mustChangePassword === true || (operator as any).must_change_password === true),
+          auth_provider: operator.auth_provider || (req.cookies.get('webbilly_lark_auth')?.value === 'true' ? 'lark' : 'credentials')
         }
       });
     }

@@ -7,5 +7,10 @@ export async function POST() {
     expires: new Date(0),
     path: '/'
   });
+  res.cookies.set('webbilly_lark_auth', '', {
+    httpOnly: false,
+    expires: new Date(0),
+    path: '/'
+  });
   return res;
 }

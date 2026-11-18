@@ -96,12 +96,26 @@ export function OperatorProvider({ children }: { children: React.ReactNode }) {
 
       setData(json);
 
-      // Troca obrigatória de senha no 1º login
-      if (json.operator?.mustChangePassword) {
+      // Troca obrigatória de senha no 1º login (DESATIVADA para Lark OAuth e após troca concluída)
+      const isLarkUser = Boolean(
+        json.operator?.auth_provider === 'lark' ||
+        json.operator?.authProvider === 'lark' ||
+        json.user?.auth_provider === 'lark' ||
+        (typeof window !== 'undefined' && localStorage.getItem('webbilly_lark_auth') === 'true') ||
+        (typeof document !== 'undefined' && document.cookie.includes('webbilly_lark_auth=true'))
+      );
+      const hasChangedPasswordLocal = typeof window !== 'undefined' && localStorage.getItem('webbilly_password_changed') === 'true';
+
+      const mustChange = !isLarkUser && !hasChangedPasswordLocal && Boolean(json.operator?.mustChangePassword);
+
+      if (mustChange) {
         setShowPasswordModal(true);
-      } else if (!hasAvatar) {
-        setShowAvatarModal(true);
-        setAvatarModalCanClose(false);
+      } else {
+        setShowPasswordModal(false);
+        if (!hasAvatar) {
+          setShowAvatarModal(true);
+          setAvatarModalCanClose(false);
+        }
       }
 
       // Carrega ranking
@@ -136,6 +150,10 @@ export function OperatorProvider({ children }: { children: React.ReactNode }) {
   };
 
   const handleLogout = async () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('webbilly_lark_auth');
+      localStorage.removeItem('webbilly_password_changed');
+    }
     await fetch('/api/auth/logout', { method: 'POST' });
     router.push('/operador/login');
   };

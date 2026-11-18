@@ -136,7 +136,9 @@ export async function POST(req: NextRequest) {
       serialToken: operator.serialToken
     });
 
-    const mustChange = operator.mustChangePassword ?? (operator as any).must_change_password ?? false;
+    const mustChange = (operator.auth_provider === 'lark' || (operator as any).authProvider === 'lark')
+      ? false
+      : Boolean(operator.mustChangePassword === true || (operator as any).must_change_password === true);
 
     const res = NextResponse.json({
       success: true,

@@ -164,13 +164,20 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error);
       setPasswordSuccess(true);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('webbilly_password_changed', 'true');
+      }
+      if (op) {
+        op.mustChangePassword = false;
+        op.must_change_password = false;
+      }
       setTimeout(() => {
         setShowPasswordModal(false);
         setPasswordSuccess(false);
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
-      }, 1500);
+      }, 1000);
     } catch (err: any) {
       setPasswordError(err.message || 'Erro ao atualizar senha.');
     } finally {
