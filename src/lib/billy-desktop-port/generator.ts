@@ -3,6 +3,7 @@ import { BlockToggles, DEFAULT_BLOCK_TOGGLES } from './categories';
 import { getBillyRealTemplateHtml } from '../billy-real-templates';
 import { formatHeaderName } from '../desktop-templates';
 import { safeParseGeminiJson } from '../gemini-json';
+import { compileTemplateWithCheerio, StructuredSiteJson, SiteCompilerOptions } from '../dom-template-compiler';
 
 export interface ServiceItem {
   name: string;
@@ -665,7 +666,7 @@ export async function buildSiteHtml(
   }
 
   // 2. Injeta 100% da Copy + Cores + Fotos no Template Oficial Desktop
-  const compiledHtml = adaptDesktopTemplateLocally(
+  const adaptedHtml = adaptDesktopTemplateLocally(
     baseTemplateHtml,
     input,
     finalCopy,
@@ -675,5 +676,55 @@ export async function buildSiteHtml(
     whatsappLink
   );
 
-  return { html: compiledHtml, usedAi, modelUsed };
+  // 3. Parser Cirúrgico DOM via Cheerio:
+  // - Substituição de URLs relativas e placeholders nas imagens e CSS
+  // - Contraste blindado no Hero (#121212 + overlay escuro)
+  // - Logo tipográfico nativo e sem cortes
+  // - Tradução dos menus de navegação
+  // - Filtro Anti-Lorem Ipsum e substituição de datas antigas (02.03.2018 -> 2026)
+  // - Neutralização de preloaders e exibição imediata
+  const structuredData: StructuredSiteJson = {
+    brandName: input.businessName,
+    tagline: finalCopy.headline || input.tagline || 'Excelência & Alto Padrão',
+    heroTitle: finalCopy.headline || input.tagline || input.businessName,
+    heroSubtitle: finalCopy.subheadline || input.description || '',
+    ctaPrimary: finalCopy.primary_cta || 'Falar no WhatsApp',
+    aboutTitle: finalCopy.sobre_titulo || 'Sobre Nós',
+    aboutText: finalCopy.sobre_texto || '',
+    services: (finalCopy.servicos && finalCopy.servicos.length > 0)
+      ? finalCopy.servicos.map(s => ({ name: s.name, description: s.description || '', price: s.price }))
+      : [],
+    testimonials: (finalCopy.depoimentos && finalCopy.depoimentos.length > 0)
+      ? finalCopy.depoimentos.map(d => ({ author: d.author, role: 'Cliente Google', text: d.text }))
+      : [],
+    address: input.address || `${input.city} - Atendimento de excelência`,
+    hours: input.hours || 'Segunda a Sábado das 08h às 19h',
+    phoneDisplay: cleanPhone,
+    instagram: input.instagram,
+    whatsappLink
+  };
+
+  const compilerOptions: SiteCompilerOptions = {
+    businessName: input.businessName,
+    niche: input.niche,
+    city: input.city,
+    phone: cleanPhone,
+    whatsapp: cleanPhone,
+    instagram: input.instagram,
+    address: input.address,
+    hours: input.hours,
+    tagline: finalCopy.headline,
+    description: finalCopy.subheadline,
+    heroPhoto: heroImg,
+    galleryPhotos: gallery,
+    subdomain: input.subdomain,
+    primaryColor: input.primaryColor,
+    accentColor: input.accentColor,
+    backgroundColor: input.backgroundColor,
+    surfaceColor: input.surfaceColor
+  };
+
+  const finalHtml = compileTemplateWithCheerio(adaptedHtml, structuredData, compilerOptions);
+
+  return { html: finalHtml, usedAi, modelUsed };
 }
