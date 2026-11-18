@@ -135,8 +135,8 @@ export default function OperatorAlertsBell({ operatorId }: OperatorAlertsBellPro
         );
       case 'promo':
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#84cc16]/20 text-[#a3e635] border border-[#84cc16]/40">
-            <Sparkles className="w-3 h-3 text-[#84cc16]" />
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/40">
+            <Sparkles className="w-3 h-3 text-blue-600 dark:text-blue-400" />
             Campanha
           </span>
         );
@@ -164,7 +164,7 @@ export default function OperatorAlertsBell({ operatorId }: OperatorAlertsBellPro
           className={`relative p-2 rounded-xl transition duration-200 cursor-pointer flex items-center justify-center ${
             isOpen
               ? 'bg-white/[0.12] text-white ring-2 ring-emerald-500/50'
-              : 'text-zinc-300 hover:text-white hover:bg-white/[0.06] border border-white/[0.08]'
+              : 'text-zinc-300 hover:text-white hover:bg-white/[0.06] border border-slate-200 dark:border-white/[0.08]'
           }`}
         >
           <img
@@ -183,9 +183,9 @@ export default function OperatorAlertsBell({ operatorId }: OperatorAlertsBellPro
 
       {/* Dropdown Popover */}
       {isOpen && (
-        <div className="absolute right-0 mt-2.5 w-80 sm:w-96 max-w-[92vw] bg-[#0d111b]/98 backdrop-blur-xl border border-white/[0.12] rounded-2xl shadow-2xl shadow-black/80 z-50 overflow-hidden text-left animate-in fade-in zoom-in-95 duration-150">
+        <div className="absolute right-0 mt-2.5 w-80 sm:w-96 max-w-[92vw] bg-[#0d111b]/98 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl shadow-black/80 z-50 overflow-hidden text-left animate-in fade-in zoom-in-95 duration-150">
           {/* Header do Dropdown */}
-          <div className="px-4 py-3 bg-[#111624] border-b border-white/[0.08] flex items-center justify-between">
+          <div className="px-4 py-3 bg-[#111624] border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
                 <img src="/icones/029-megaphone.svg" alt="" className="w-4 h-4 object-contain" />
@@ -278,7 +278,7 @@ export default function OperatorAlertsBell({ operatorId }: OperatorAlertsBellPro
                           e.stopPropagation();
                           if (!alert.read) handleMarkAsRead(alert.id);
                         }}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[#84cc16] hover:bg-[#a3e635] text-black shadow-md shadow-[#84cc16]/20 transition cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-[#84cc16]/20 transition cursor-pointer"
                       >
                         <span>{alert.action_label || 'Acessar Link'}</span>
                         <ExternalLink className="w-3 h-3" />

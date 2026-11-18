@@ -169,7 +169,7 @@ export default function AdminFinancialPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-          <span className="text-zinc-400 text-xs font-mono">Carregando controle financeiro e APIs...</span>
+          <span className="text-slate-500 dark:text-slate-400 text-xs font-mono">Carregando controle financeiro e APIs...</span>
         </div>
       </div>
     );
@@ -179,7 +179,7 @@ export default function AdminFinancialPage() {
     return (
       <div className="p-8 text-center bg-rose-950/20 border border-rose-900/40 rounded-2xl max-w-lg mx-auto my-12">
         <h2 className="text-lg font-bold text-rose-400 mb-2">Erro ao carregar dados</h2>
-        <p className="text-xs text-zinc-300">{error}</p>
+        <p className="text-xs text-slate-700 dark:text-slate-300">{error}</p>
       </div>
     );
   }
@@ -226,7 +226,7 @@ export default function AdminFinancialPage() {
       </div>
 
       {/* Header com Navegação */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#11141c] p-6 rounded-2xl border border-white/[0.06]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#1c1d27] p-6 rounded-2xl border border-slate-200 dark:border-white/[0.06]">
         <div>
           <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold mb-2 font-mono">
             <DollarSign className="w-3.5 h-3.5" />
@@ -235,18 +235,18 @@ export default function AdminFinancialPage() {
           <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
             Financeiro, Asaas & Repasses Pix
           </h1>
-          <p className="text-xs text-zinc-400 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Monitoramento em tempo real do Asaas, cobranças emitidas, cancelamento de testes com 1 clique e liquidação de repasses Pix.
           </p>
         </div>
 
-        <div className="flex flex-wrap p-1 bg-[#0a0d14] rounded-xl border border-white/[0.06] text-xs gap-1">
+        <div className="flex flex-wrap p-1 bg-slate-50 dark:bg-[#14161f] rounded-xl border border-slate-200 dark:border-white/[0.06] text-xs gap-1">
           <button
             onClick={() => setActiveTabSub('financial')}
             className={`px-3.5 py-2 rounded-lg font-semibold transition cursor-pointer ${
               activeTabSub === 'financial'
                 ? 'bg-emerald-600 text-white shadow-md'
-                : 'text-zinc-400 hover:text-white'
+                : 'text-slate-500 dark:text-slate-400 hover:text-white'
             }`}
           >
             Repasses Pix ({payoutRequests.length})
@@ -259,7 +259,7 @@ export default function AdminFinancialPage() {
             className={`px-3.5 py-2 rounded-lg font-semibold transition cursor-pointer flex items-center gap-1.5 ${
               activeTabSub === 'asaas'
                 ? 'bg-cyan-600 text-white shadow-md'
-                : 'text-zinc-400 hover:text-white'
+                : 'text-slate-500 dark:text-slate-400 hover:text-white'
             }`}
           >
             <CreditCard className="w-3.5 h-3.5" />
@@ -274,8 +274,8 @@ export default function AdminFinancialPage() {
             onClick={() => setActiveTabSub('affiliates')}
             className={`px-3.5 py-2 rounded-lg font-semibold transition cursor-pointer ${
               activeTabSub === 'affiliates'
-                ? 'bg-[#84cc16] text-black shadow-md font-bold'
-                : 'text-zinc-400 hover:text-white'
+                ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md font-bold'
+                : 'text-slate-500 dark:text-slate-400 hover:text-white'
             }`}
           >
             Billy Afiliados
@@ -285,7 +285,7 @@ export default function AdminFinancialPage() {
             className={`px-3.5 py-2 rounded-lg font-semibold transition cursor-pointer ${
               activeTabSub === 'apis'
                 ? 'bg-indigo-600 text-white shadow-md'
-                : 'text-zinc-400 hover:text-white'
+                : 'text-slate-500 dark:text-slate-400 hover:text-white'
             }`}
           >
             Configurações & APIs
@@ -297,35 +297,35 @@ export default function AdminFinancialPage() {
       {activeTabSub === 'financial' && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06]">
-              <span className="text-[10px] uppercase font-bold text-zinc-400">Total Solicitado no Mês</span>
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06]">
+              <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Total Solicitado no Mês</span>
               <div className="text-2xl font-black text-white font-mono mt-1">
                 R$ {(data?.stats?.totalRequestedPayouts || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
-              <span className="text-[11px] text-zinc-500">Repasses dos operadores</span>
+              <span className="text-[11px] text-slate-400 dark:text-slate-500">Repasses dos operadores</span>
             </div>
 
-            <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06]">
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06]">
               <span className="text-[10px] uppercase font-bold text-emerald-400">Total Já Liquidado</span>
               <div className="text-2xl font-black text-emerald-400 font-mono mt-1">
                 R$ {(data?.stats?.totalPaidPayouts || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
-              <span className="text-[11px] text-zinc-500">Pix com comprovante</span>
+              <span className="text-[11px] text-slate-400 dark:text-slate-500">Pix com comprovante</span>
             </div>
 
-            <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06]">
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06]">
               <span className="text-[10px] uppercase font-bold text-amber-400">Aguardando Pagamento</span>
               <div className="text-2xl font-black text-amber-300 font-mono mt-1">
                 R$ {(data?.stats?.pendingPayouts || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
-              <span className="text-[11px] text-zinc-500">Pendentes no caixa</span>
+              <span className="text-[11px] text-slate-400 dark:text-slate-500">Pendentes no caixa</span>
             </div>
           </div>
 
-          <div className="bg-[#0f121a] rounded-2xl border border-white/[0.08] shadow-xl overflow-hidden">
+          <div className="bg-white dark:bg-[#1c1d27] rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#141824] text-zinc-400 uppercase font-mono text-[11px] border-b border-white/[0.08]">
+                <thead className="bg-slate-50 dark:bg-[#14161f] text-slate-500 dark:text-slate-400 uppercase font-mono text-[11px] border-b border-slate-200 dark:border-white/[0.08]">
                   <tr>
                     <th className="py-3.5 px-4">Operador</th>
                     <th className="py-3.5 px-4">Mês de Referência</th>
@@ -335,21 +335,21 @@ export default function AdminFinancialPage() {
                     <th className="py-3.5 px-4 text-right">Data Solicitação</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/[0.05]">
+                <tbody className="divide-y divide-slate-100 dark:divide-white/[0.05]">
                   {payoutRequests.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-zinc-500 text-xs">
+                      <td colSpan={6} className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
                         Nenhuma solicitação de repasse registrada até o momento.
                       </td>
                     </tr>
                   ) : (
                     payoutRequests.map((req: any) => (
-                      <tr key={req.id} className="hover:bg-white/[0.02] transition">
+                      <tr key={req.id} className="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition">
                         <td className="py-3.5 px-4">
-                          <span className="font-semibold text-white block">{req.operatorName}</span>
-                          <span className="text-[10px] text-zinc-500 font-mono">{req.operatorEmail}</span>
+                          <span className="font-semibold text-slate-900 dark:text-white block">{req.operatorName}</span>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{req.operatorEmail}</span>
                         </td>
-                        <td className="py-3.5 px-4 text-zinc-300">
+                        <td className="py-3.5 px-4 text-slate-700 dark:text-slate-300">
                           {req.monthRef || 'Mês Ativo'}
                         </td>
                         <td className="py-3.5 px-4 font-mono text-emerald-400">
@@ -375,7 +375,7 @@ export default function AdminFinancialPage() {
                             </span>
                           </ActionTooltip>
                         </td>
-                        <td className="py-3.5 px-4 text-right font-mono text-zinc-400 text-[11px]">
+                        <td className="py-3.5 px-4 text-right font-mono text-slate-500 dark:text-slate-400 text-[11px]">
                           {req.requestedAt ? new Date(req.requestedAt).toLocaleDateString('pt-BR') : '—'}
                         </td>
                       </tr>
@@ -400,7 +400,7 @@ export default function AdminFinancialPage() {
               </div>
               <button
                 onClick={loadAsaasData}
-                className="px-3 py-1 bg-rose-900/60 hover:bg-rose-800 rounded-lg text-white font-semibold text-[11px] transition cursor-pointer"
+                className="px-3 py-1 bg-rose-900/60 hover:bg-rose-800 rounded-lg text-slate-900 dark:text-white font-semibold text-[11px] transition cursor-pointer"
               >
                 Tentar Novamente
               </button>
@@ -409,20 +409,20 @@ export default function AdminFinancialPage() {
 
           {/* Cards de Métricas Asaas */}
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-            <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06]">
-              <div className="flex items-center justify-between text-zinc-400">
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06]">
+              <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                 <span className="text-[10px] uppercase font-bold">Total no Asaas</span>
                 <Receipt className="w-4 h-4 text-cyan-400" />
               </div>
               <div className="text-2xl font-black text-white font-mono mt-1">
                 {asaasData?.summary?.total || 0}
               </div>
-              <span className="text-[11px] text-zinc-400 font-mono">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
                 R$ {(asaasData?.summary?.totalValue || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} emitidos
               </span>
             </div>
 
-            <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06]">
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06]">
               <div className="flex items-center justify-between text-amber-400">
                 <span className="text-[10px] uppercase font-bold">Aguardando Pagamento</span>
                 <Clock className="w-4 h-4" />
@@ -435,7 +435,7 @@ export default function AdminFinancialPage() {
               </span>
             </div>
 
-            <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06]">
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06]">
               <div className="flex items-center justify-between text-emerald-400">
                 <span className="text-[10px] uppercase font-bold">Pagas / Confirmadas</span>
                 <CheckCircle2 className="w-4 h-4" />
@@ -448,7 +448,7 @@ export default function AdminFinancialPage() {
               </span>
             </div>
 
-            <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.06]">
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06]">
               <div className="flex items-center justify-between text-indigo-400">
                 <span className="text-[10px] uppercase font-bold">Assinaturas Recorrentes</span>
                 <CreditCard className="w-4 h-4" />
@@ -456,22 +456,22 @@ export default function AdminFinancialPage() {
               <div className="text-2xl font-black text-indigo-300 font-mono mt-1">
                 {asaasData?.summary?.subscriptionsCount || 0}
               </div>
-              <span className="text-[11px] text-zinc-500">
+              <span className="text-[11px] text-slate-400 dark:text-slate-500">
                 Contratos ativos no Asaas
               </span>
             </div>
           </div>
 
           {/* Barra de Filtros, Busca e Ações */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-[#0f121a] p-4 rounded-2xl border border-white/[0.06]">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-white dark:bg-[#1c1d27] p-4 rounded-2xl border border-slate-200 dark:border-white/[0.06]">
             {/* Filtros por Status */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs">
               <button
                 onClick={() => setAsaasFilter('ALL')}
                 className={`px-3 py-1.5 rounded-lg font-medium transition cursor-pointer shrink-0 ${
                   asaasFilter === 'ALL'
-                    ? 'bg-white/10 text-white font-bold'
-                    : 'text-zinc-400 hover:text-white'
+                    ? 'bg-white/10 text-slate-900 dark:text-white font-bold'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-white'
                 }`}
               >
                 Todas ({asaasData?.summary?.total || 0})
@@ -481,7 +481,7 @@ export default function AdminFinancialPage() {
                 className={`px-3 py-1.5 rounded-lg font-medium transition cursor-pointer shrink-0 ${
                   asaasFilter === 'PENDING'
                     ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30'
-                    : 'text-zinc-400 hover:text-amber-300'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-amber-300'
                 }`}
               >
                 Aguardando ({asaasData?.summary?.pending || 0})
@@ -491,7 +491,7 @@ export default function AdminFinancialPage() {
                 className={`px-3 py-1.5 rounded-lg font-medium transition cursor-pointer shrink-0 ${
                   asaasFilter === 'CONFIRMED'
                     ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30'
-                    : 'text-zinc-400 hover:text-emerald-300'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-emerald-300'
                 }`}
               >
                 Pagas ({asaasData?.summary?.received || 0})
@@ -501,7 +501,7 @@ export default function AdminFinancialPage() {
                 className={`px-3 py-1.5 rounded-lg font-medium transition cursor-pointer shrink-0 ${
                   asaasFilter === 'OVERDUE'
                     ? 'bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30'
-                    : 'text-zinc-400 hover:text-rose-300'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-rose-300'
                 }`}
               >
                 Vencidas ({asaasData?.summary?.overdue || 0})
@@ -511,13 +511,13 @@ export default function AdminFinancialPage() {
             {/* Busca e Botão de Atualizar */}
             <div className="flex items-center gap-2">
               <div className="relative flex-1 sm:w-64">
-                <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="Filtrar cliente, slug, pay_..."
                   value={asaasSearch}
                   onChange={(e) => setAsaasSearch(e.target.value)}
-                  className="w-full bg-[#161a26] border border-white/[0.08] rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500 font-mono"
+                  className="w-full bg-[#161a26] border border-slate-200 dark:border-white/[0.08] rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-cyan-500 font-mono"
                 />
               </div>
 
@@ -525,7 +525,7 @@ export default function AdminFinancialPage() {
                 <button
                   onClick={loadAsaasData}
                   disabled={loadingAsaas}
-                  className="p-2 bg-[#161a26] hover:bg-white/[0.08] border border-white/[0.08] rounded-xl text-zinc-300 hover:text-white transition cursor-pointer disabled:opacity-50"
+                  className="p-2 bg-[#161a26] hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.08] rounded-xl text-slate-700 dark:text-slate-300 hover:text-white transition cursor-pointer disabled:opacity-50"
                 >
                   <RefreshCw className={`w-4 h-4 ${loadingAsaas ? 'animate-spin text-cyan-400' : ''}`} />
                 </button>
@@ -534,10 +534,10 @@ export default function AdminFinancialPage() {
           </div>
 
           {/* Tabela de Cobranças */}
-          <div className="bg-[#0f121a] rounded-2xl border border-white/[0.08] shadow-xl overflow-hidden">
+          <div className="bg-white dark:bg-[#1c1d27] rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#141824] text-zinc-400 uppercase font-mono text-[11px] border-b border-white/[0.08]">
+                <thead className="bg-slate-50 dark:bg-[#14161f] text-slate-500 dark:text-slate-400 uppercase font-mono text-[11px] border-b border-slate-200 dark:border-white/[0.08]">
                   <tr>
                     <th className="py-3.5 px-4">Cliente / Subdomínio</th>
                     <th className="py-3.5 px-4">Identificador Asaas</th>
@@ -547,10 +547,10 @@ export default function AdminFinancialPage() {
                     <th className="py-3.5 px-4 text-right">Ações Rápidas</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/[0.05]">
+                <tbody className="divide-y divide-slate-100 dark:divide-white/[0.05]">
                   {loadingAsaas && !asaasData ? (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-zinc-400">
+                      <td colSpan={6} className="py-12 text-center text-slate-500 dark:text-slate-400">
                         <div className="flex flex-col items-center justify-center gap-2">
                           <div className="w-7 h-7 border-3 border-cyan-500 border-t-transparent rounded-full animate-spin" />
                           <span className="text-xs font-mono">Consultando API oficial do Asaas...</span>
@@ -559,7 +559,7 @@ export default function AdminFinancialPage() {
                     </tr>
                   ) : filteredAsaasPayments.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-zinc-500 text-xs">
+                      <td colSpan={6} className="py-12 text-center text-slate-400 dark:text-slate-500 text-xs">
                         Nenhuma cobrança encontrada para os filtros aplicados.
                       </td>
                     </tr>
@@ -570,11 +570,11 @@ export default function AdminFinancialPage() {
                       const isPending = p.status === 'PENDING';
 
                       return (
-                        <tr key={p.id} className="hover:bg-white/[0.02] transition">
+                        <tr key={p.id} className="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition">
                           {/* Cliente / Subdomínio */}
                           <td className="py-3.5 px-4 max-w-[240px]">
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-white block truncate">{p.clientName}</span>
+                              <span className="font-bold text-slate-900 dark:text-white block truncate">{p.clientName}</span>
                               {p.isFirstInstallment && (
                                 <span className="px-1.5 py-0.5 rounded text-[9px] font-mono bg-cyan-950/60 text-cyan-300 border border-cyan-800/40 shrink-0">
                                   1ª Parcela
@@ -592,19 +592,19 @@ export default function AdminFinancialPage() {
                                 <ExternalLink className="w-2.5 h-2.5 opacity-70" />
                               </a>
                             ) : (
-                              <span className="text-[10px] text-zinc-500 font-mono block mt-0.5">Sem subdomínio vinculado</span>
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono block mt-0.5">Sem subdomínio vinculado</span>
                             )}
                           </td>
 
                           {/* Identificador Asaas */}
                           <td className="py-3.5 px-4">
                             <div className="flex items-center gap-1.5 font-mono text-[11px]">
-                              <span className="text-zinc-300 bg-[#161a26] px-2 py-0.5 rounded border border-white/[0.06]">
+                              <span className="text-slate-700 dark:text-slate-300 bg-[#161a26] px-2 py-0.5 rounded border border-slate-200 dark:border-white/[0.06]">
                                 {p.id}
                               </span>
                               <button
                                 onClick={() => copyToClipboard(p.id, p.id)}
-                                className="text-zinc-500 hover:text-white transition cursor-pointer"
+                                className="text-slate-400 dark:text-slate-500 hover:text-white transition cursor-pointer"
                                 title="Copiar ID"
                               >
                                 {copiedId === p.id ? (
@@ -615,12 +615,12 @@ export default function AdminFinancialPage() {
                               </button>
                             </div>
                             {p.subscriptionId ? (
-                              <div className="text-[10px] text-zinc-400 font-mono mt-1 flex items-center gap-1">
-                                <span className="text-zinc-500">Assinatura:</span>
+                              <div className="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-1 flex items-center gap-1">
+                                <span className="text-slate-400 dark:text-slate-500">Assinatura:</span>
                                 <span className="text-indigo-300">{p.subscriptionId}</span>
                               </div>
                             ) : (
-                              <span className="text-[10px] text-zinc-500 font-mono mt-1 block">Cobrança Avulsa</span>
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-1 block">Cobrança Avulsa</span>
                             )}
                           </td>
 
@@ -629,7 +629,7 @@ export default function AdminFinancialPage() {
                             <div className="font-mono font-bold text-white text-sm">
                               R$ {Number(p.value || 0).toFixed(2)}
                             </div>
-                            <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] font-mono border bg-white/[0.03] text-zinc-300 border-white/[0.08]">
+                            <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[10px] font-mono border bg-white/[0.03] text-slate-700 dark:text-slate-300 border-slate-200 dark:border-white/[0.08]">
                               {p.billingType === 'PIX'
                                 ? '⚡ Pix'
                                 : p.billingType === 'CREDIT_CARD'
@@ -642,10 +642,10 @@ export default function AdminFinancialPage() {
 
                           {/* Vencimento */}
                           <td className="py-3.5 px-4">
-                            <span className={`font-mono text-xs block ${isOverdue ? 'text-rose-400 font-bold' : 'text-zinc-300'}`}>
+                            <span className={`font-mono text-xs block ${isOverdue ? 'text-rose-400 font-bold' : 'text-slate-700 dark:text-slate-300'}`}>
                               {p.dueDate ? new Date(p.dueDate + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}
                             </span>
-                            <span className="text-[10px] text-zinc-500 font-mono block">
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono block">
                               Criada em {p.dateCreated ? new Date(p.dateCreated + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}
                             </span>
                           </td>
@@ -662,7 +662,7 @@ export default function AdminFinancialPage() {
                                     : 'bg-amber-950/40 text-amber-400 border-amber-800/40'
                                   : p.status === 'OVERDUE'
                                   ? 'bg-rose-950/40 text-rose-400 border-rose-800/40'
-                                  : 'bg-zinc-900 text-zinc-400 border-zinc-700/40'
+                                  : 'bg-zinc-900 text-slate-500 dark:text-slate-400 border-zinc-700/40'
                               }`}
                             >
                               {isPaid
@@ -685,7 +685,7 @@ export default function AdminFinancialPage() {
                                     href={p.invoiceUrl}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="p-1.5 px-2.5 rounded-lg bg-[#161a26] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-200 hover:text-white text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer"
+                                    className="p-1.5 px-2.5 rounded-lg bg-[#161a26] hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.08] text-zinc-200 hover:text-white text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer"
                                   >
                                     <ExternalLink className="w-3 h-3 text-cyan-400" />
                                     <span>Fatura</span>
@@ -722,39 +722,39 @@ export default function AdminFinancialPage() {
           {/* Modal de Confirmação de Cancelamento */}
           {confirmCancelModal && (
             <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-              <div className="bg-[#11141c] border border-rose-800/60 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+              <div className="bg-white dark:bg-[#1c1d27] border border-rose-800/60 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-rose-950/60 border border-rose-800/80 text-rose-400 flex items-center justify-center shrink-0">
                     <AlertTriangle className="w-5 h-5" />
                   </div>
                   <div>
                     <h3 className="font-bold text-white text-base">Cancelar Cobrança no Asaas?</h3>
-                    <p className="text-xs text-zinc-400">Esta ação cancelará permanentemente a cobrança no gateway.</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Esta ação cancelará permanentemente a cobrança no gateway.</p>
                   </div>
                 </div>
 
-                <div className="p-3.5 rounded-xl bg-black/40 border border-white/[0.06] text-xs space-y-2 font-mono">
+                <div className="p-3.5 rounded-xl bg-black/40 border border-slate-200 dark:border-white/[0.06] text-xs space-y-2 font-mono">
                   <div className="flex justify-between">
-                    <span className="text-zinc-400">ID da Cobrança:</span>
-                    <span className="text-white font-bold">{confirmCancelModal.id}</span>
+                    <span className="text-slate-500 dark:text-slate-400">ID da Cobrança:</span>
+                    <span className="text-slate-900 dark:text-white font-bold">{confirmCancelModal.id}</span>
                   </div>
                   {confirmCancelModal.subscriptionId && (
                     <div className="flex justify-between">
-                      <span className="text-zinc-400">Assinatura Vinculada:</span>
+                      <span className="text-slate-500 dark:text-slate-400">Assinatura Vinculada:</span>
                       <span className="text-indigo-400 font-bold">{confirmCancelModal.subscriptionId}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-zinc-400">Cliente / Site:</span>
+                    <span className="text-slate-500 dark:text-slate-400">Cliente / Site:</span>
                     <span className="text-cyan-400">{confirmCancelModal.clientName}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-zinc-400">Valor da Cobrança:</span>
-                    <span className="text-white font-bold">R$ {Number(confirmCancelModal.value || 0).toFixed(2)}</span>
+                    <span className="text-slate-500 dark:text-slate-400">Valor da Cobrança:</span>
+                    <span className="text-slate-900 dark:text-white font-bold">R$ {Number(confirmCancelModal.value || 0).toFixed(2)}</span>
                   </div>
                 </div>
 
-                <p className="text-[11px] text-zinc-400">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   Ideal para limpar cobranças de testes ou propostas abandonadas. Se houver assinatura vinculada, ela também será cancelada sem novas cobranças.
                 </p>
 
@@ -762,7 +762,7 @@ export default function AdminFinancialPage() {
                   <button
                     type="button"
                     onClick={() => setConfirmCancelModal(null)}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white transition cursor-pointer"
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-white transition cursor-pointer"
                   >
                     Voltar
                   </button>
@@ -795,20 +795,20 @@ export default function AdminFinancialPage() {
       {activeTabSub === 'affiliates' && (
         <div className="space-y-6">
           {/* Header & 4 KPIs Globais */}
-          <div className="p-6 rounded-2xl bg-gradient-to-br from-[#121c10] to-[#0f141d] border border-[#84cc16]/30 shadow-xl space-y-4">
+          <div className="p-6 rounded-2xl bg-gradient-to-br from-[#121c10] to-[#0f141d] border border-blue-200 dark:border-blue-800/40 shadow-xl space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#84cc16]/20 border border-[#84cc16]/40 text-[#a3e635] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="font-bold text-white text-base">Supervisão da Rede Billy Afiliados</h3>
-                  <p className="text-xs text-zinc-400">Regra oficial: 5% (R$ 24,50) para o padrinho em cada pacote de Domínio Próprio (R$ 490,00) vendido.</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Regra oficial: 5% (R$ 24,50) para o padrinho em cada pacote de Domínio Próprio (R$ 490,00) vendido.</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-[11px] font-mono px-3 py-1 rounded-lg bg-zinc-900 border border-white/[0.08] text-[#a3e635] font-bold">
+                <span className="text-[11px] font-mono px-3 py-1 rounded-lg bg-zinc-900 border border-slate-200 dark:border-white/[0.08] text-blue-600 dark:text-blue-400 font-bold">
                   Comissão Base: 5% (R$ 24,50/venda)
                 </span>
               </div>
@@ -816,28 +816,28 @@ export default function AdminFinancialPage() {
 
             {/* 4 Cards de KPIs Globais */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
-              <div className="p-4 rounded-xl bg-black/40 border border-white/[0.06] space-y-1">
-                <span className="text-[10px] uppercase font-bold text-zinc-400 block">Padrinhos Ativos</span>
+              <div className="p-4 rounded-xl bg-black/40 border border-slate-200 dark:border-white/[0.06] space-y-1">
+                <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Padrinhos Ativos</span>
                 <span className="text-2xl font-black text-white font-mono">
                   {affiliateMetrics.totalAffiliatesCount || (data?.operators || []).filter((o: any) => o.affiliate_enabled).length || 0}
                 </span>
-                <span className="text-[10px] text-zinc-500 block">Com link liberado</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 block">Com link liberado</span>
               </div>
 
-              <div className="p-4 rounded-xl bg-black/40 border border-white/[0.06] space-y-1">
-                <span className="text-[10px] uppercase font-bold text-zinc-400 block">Total Indicados</span>
+              <div className="p-4 rounded-xl bg-black/40 border border-slate-200 dark:border-white/[0.06] space-y-1">
+                <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Total Indicados</span>
                 <span className="text-2xl font-black text-sky-400 font-mono">
                   {affiliateMetrics.totalRecruitsCount || (data?.operators || []).filter((o: any) => o.referred_by_operator_id).length || 0}
                 </span>
-                <span className="text-[10px] text-zinc-500 block">Na rede de operadores</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 block">Na rede de operadores</span>
               </div>
 
-              <div className="p-4 rounded-xl bg-black/40 border border-white/[0.06] space-y-1">
-                <span className="text-[10px] uppercase font-bold text-zinc-400 block">Vendas de Domínio</span>
-                <span className="text-2xl font-black text-[#a3e635] font-mono">
+              <div className="p-4 rounded-xl bg-black/40 border border-slate-200 dark:border-white/[0.06] space-y-1">
+                <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Vendas de Domínio</span>
+                <span className="text-2xl font-black text-blue-600 dark:text-blue-400 font-mono">
                   {affiliateMetrics.totalNetworkSalesCount || (affiliateMetrics.commissions || []).length || 0}
                 </span>
-                <span className="text-[10px] text-zinc-500 block">Pacotes R$ 490 na rede</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 block">Pacotes R$ 490 na rede</span>
               </div>
 
               <div className="p-4 rounded-xl bg-black/40 border border-emerald-500/30 space-y-1">
@@ -845,7 +845,7 @@ export default function AdminFinancialPage() {
                 <div className="text-xl font-black text-emerald-400 font-mono">
                   R$ {(affiliateMetrics.totalAffiliateCommissionsGenerated || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </div>
-                <span className="text-[10px] text-zinc-500 block">
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 block">
                   Pagos: R$ {(affiliateMetrics.totalAffiliateCommissionsPaid || 0).toFixed(2).replace('.', ',')}
                 </span>
               </div>
@@ -861,19 +861,19 @@ export default function AdminFinancialPage() {
           )}
 
           {/* TABELA 1: GESTÃO DE OPERADORES & LIBERAÇÃO MANUAL */}
-          <div className="p-6 rounded-2xl bg-[#0f121a] border border-white/[0.08] shadow-xl space-y-4">
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] shadow-xl space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-[#84cc16]" />
+                  <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   <span>Gestão de Afiliados & Liberação Manual</span>
                 </h4>
-                <p className="text-[11px] text-zinc-400">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   Controle individual de acesso ao programa de afiliação e geração de códigos exclusivos.
                 </p>
               </div>
 
-              <span className="text-xs font-mono text-zinc-400">
+              <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
                 {(data?.operators || []).length} operadores cadastrados
               </span>
             </div>
@@ -881,7 +881,7 @@ export default function AdminFinancialPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left">
                 <thead>
-                  <tr className="border-b border-white/[0.08] text-zinc-400 uppercase text-[10px]">
+                  <tr className="border-b border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-slate-400 uppercase text-[10px]">
                     <th className="py-3 px-4 font-bold">Operador</th>
                     <th className="py-3 px-4 font-bold">Código Afiliado</th>
                     <th className="py-3 px-4 font-bold text-center">Status Afiliado</th>
@@ -897,7 +897,7 @@ export default function AdminFinancialPage() {
                     if (ops.length === 0) {
                       return (
                         <tr>
-                          <td colSpan={6} className="py-8 text-center text-zinc-500">
+                          <td colSpan={6} className="py-8 text-center text-slate-400 dark:text-slate-500">
                             Nenhum operador localizado no sistema.
                           </td>
                         </tr>
@@ -912,20 +912,20 @@ export default function AdminFinancialPage() {
                       const codeDisplay = op.affiliate_code || `BILLY-${op.id}`;
 
                       return (
-                        <tr key={op.id} className="hover:bg-white/[0.02] transition">
+                        <tr key={op.id} className="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition">
                           <td className="py-3 px-4">
                             <div className="font-semibold text-white">{op.name}</div>
-                            <div className="text-[10px] text-zinc-500 font-mono">{op.email}</div>
+                            <div className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">{op.email}</div>
                           </td>
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-1.5">
-                              <span className="font-mono text-zinc-200 bg-black/40 px-2 py-0.5 rounded border border-white/[0.06] text-[11px] font-bold">
+                              <span className="font-mono text-zinc-200 bg-black/40 px-2 py-0.5 rounded border border-slate-200 dark:border-white/[0.06] text-[11px] font-bold">
                                 {codeDisplay}
                               </span>
                               <ActionTooltip title="Copiar Link" description={`Copiar link de convite: https://webbilly.com.br/?ref=${codeDisplay}#candidatura`} side="top">
                                 <button
                                   onClick={() => copyToClipboard(`https://webbilly.com.br/?ref=${codeDisplay}#candidatura`, op.id)}
-                                  className="p-1 rounded hover:bg-white/[0.06] text-zinc-400 hover:text-white transition cursor-pointer"
+                                  className="p-1 rounded hover:bg-white/[0.06] text-slate-500 dark:text-slate-400 hover:text-white transition cursor-pointer"
                                 >
                                   {copiedId === op.id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                                 </button>
@@ -934,12 +934,12 @@ export default function AdminFinancialPage() {
                           </td>
                           <td className="py-3 px-4 text-center">
                             {isEnabled ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#84cc16]/15 text-[#a3e635] border border-[#84cc16]/30">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/40">
                                 <Sparkles className="w-3 h-3" />
                                 Liberado VIP
                               </span>
                             ) : (
-                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-zinc-800 text-zinc-400 border border-white/[0.06]">
+                              <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-zinc-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/[0.06]">
                                 Bloqueado
                               </span>
                             )}
@@ -957,7 +957,7 @@ export default function AdminFinancialPage() {
                               className={`px-3 py-1 rounded-xl text-[11px] font-bold transition cursor-pointer disabled:opacity-50 ${
                                 isEnabled
                                   ? 'bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/60'
-                                  : 'bg-[#84cc16]/20 hover:bg-[#84cc16]/30 text-[#a3e635] border border-[#84cc16]/40'
+                                  : 'bg-blue-50 dark:bg-blue-900/30 hover:bg-[#84cc16]/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/40'
                               }`}
                             >
                               {togglingOpId === op.id ? (
@@ -979,19 +979,19 @@ export default function AdminFinancialPage() {
           </div>
 
           {/* TABELA 2: ÁRVORE & HISTÓRICO DE INDICAÇÕES E BÔNUS */}
-          <div className="p-6 rounded-2xl bg-[#0f121a] border border-white/[0.08] shadow-xl space-y-4">
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] shadow-xl space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h4 className="text-sm font-bold text-white flex items-center gap-2">
                   <TrendingUp className="w-4 h-4 text-emerald-400" />
                   <span>Árvore & Histórico de Indicações e Comissões (R$ 24,50)</span>
                 </h4>
-                <p className="text-[11px] text-zinc-400">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
                   Rastreabilidade perpétua de quem indicou quem e bonificações creditadas via webhook Asaas.
                 </p>
               </div>
 
-              <span className="text-xs font-mono text-zinc-400">
+              <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
                 {(affiliateMetrics.commissions || []).length} comissões registradas
               </span>
             </div>
@@ -999,7 +999,7 @@ export default function AdminFinancialPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left">
                 <thead>
-                  <tr className="border-b border-white/[0.08] text-zinc-400 uppercase text-[10px]">
+                  <tr className="border-b border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-slate-400 uppercase text-[10px]">
                     <th className="py-3 px-4 font-bold">Padrinho (Quem Indicou)</th>
                     <th className="py-3 px-4 font-bold">Operador Indicado (Quem Entrou)</th>
                     <th className="py-3 px-4 font-bold">Data & Referência</th>
@@ -1013,7 +1013,7 @@ export default function AdminFinancialPage() {
                     if (comms.length === 0) {
                       return (
                         <tr>
-                          <td colSpan={5} className="py-8 text-center text-zinc-500">
+                          <td colSpan={5} className="py-8 text-center text-slate-400 dark:text-slate-500">
                             Nenhuma comissão de afiliado registrada ainda. Quando um operador indicado vender um pacote de R$ 490,00, a comissão de R$ 24,50 aparecerá aqui automaticamente.
                           </td>
                         </tr>
@@ -1023,20 +1023,20 @@ export default function AdminFinancialPage() {
                     return comms.map((c: any, idx: number) => {
                       const d = c.created_at ? new Date(c.created_at).toLocaleDateString('pt-BR') : '-';
                       return (
-                        <tr key={c.id || idx} className="hover:bg-white/[0.02] transition">
+                        <tr key={c.id || idx} className="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition">
                           <td className="py-3 px-4">
                             <div className="font-semibold text-white">{c.sponsor_name || c.affiliate_operator_id}</div>
                             {c.sponsor_code && (
-                              <div className="text-[10px] text-[#a3e635] font-mono">Código: {c.sponsor_code}</div>
+                              <div className="text-[10px] text-blue-600 dark:text-blue-400 font-mono">Código: {c.sponsor_code}</div>
                             )}
                           </td>
                           <td className="py-3 px-4">
                             <div className="font-semibold text-zinc-200">{c.invited_name || c.invited_operator_id}</div>
-                            <div className="text-[10px] text-zinc-500 font-mono">Venda: {c.lead_or_sale_id || '-'}</div>
+                            <div className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">Venda: {c.lead_or_sale_id || '-'}</div>
                           </td>
-                          <td className="py-3 px-4 font-mono text-zinc-400 text-[11px]">
+                          <td className="py-3 px-4 font-mono text-slate-500 dark:text-slate-400 text-[11px]">
                             <div>{d}</div>
-                            <div className="text-[10px] text-zinc-500">{c.month_ref || ''}</div>
+                            <div className="text-[10px] text-slate-400 dark:text-slate-500">{c.month_ref || ''}</div>
                           </td>
                           <td className="py-3 px-4 text-center">
                             <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
@@ -1063,10 +1063,10 @@ export default function AdminFinancialPage() {
 
       {/* ABA 4: CONFIGURAÇÕES & APIS */}
       {activeTabSub === 'apis' && (
-        <div className="p-6 rounded-2xl bg-[#0f121a] border border-white/[0.08] shadow-xl space-y-6">
+        <div className="p-6 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] shadow-xl space-y-6">
           <div className="space-y-1">
             <h3 className="text-base font-bold text-white">Parâmetros Operacionais da Plataforma</h3>
-            <p className="text-xs text-zinc-400">Ajuste os valores de assinatura, comissões e credenciais das APIs integradas.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Ajuste os valores de assinatura, comissões e credenciais das APIs integradas.</p>
           </div>
 
           {settingsSuccess && (
@@ -1087,7 +1087,7 @@ export default function AdminFinancialPage() {
             {/* Bloco de Preços e Comissões */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="text-xs font-semibold text-zinc-300 block mb-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                   Mensalidade Base SaaS (R$)
                 </label>
                 <input
@@ -1095,12 +1095,12 @@ export default function AdminFinancialPage() {
                   step="0.01"
                   value={apiSettings.monthlySubscriptionPrice}
                   onChange={(e) => setApiSettings({ ...apiSettings, monthlySubscriptionPrice: parseFloat(e.target.value) || 0 })}
-                  className="w-full bg-[#161a26] border border-white/[0.08] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+                  className="w-full bg-[#161a26] border border-slate-200 dark:border-white/[0.08] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-zinc-300 block mb-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                   Repasse Recorrente Operador (R$)
                 </label>
                 <input
@@ -1108,27 +1108,27 @@ export default function AdminFinancialPage() {
                   step="0.01"
                   value={apiSettings.operatorCommissionMonthly}
                   onChange={(e) => setApiSettings({ ...apiSettings, operatorCommissionMonthly: parseFloat(e.target.value) || 0 })}
-                  className="w-full bg-[#161a26] border border-white/[0.08] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+                  className="w-full bg-[#161a26] border border-slate-200 dark:border-white/[0.08] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-zinc-300 block mb-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                   Limite Diário Padrão de Sites
                 </label>
                 <input
                   type="number"
                   value={apiSettings.defaultDailyLimit}
                   onChange={(e) => setApiSettings({ ...apiSettings, defaultDailyLimit: parseInt(e.target.value, 10) || 50 })}
-                  className="w-full bg-[#161a26] border border-white/[0.08] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+                  className="w-full bg-[#161a26] border border-slate-200 dark:border-white/[0.08] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
                 />
               </div>
             </div>
 
             {/* Bloco de Chaves de API */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-white/[0.06]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200 dark:border-white/[0.06]">
               <div>
-                <label className="text-xs font-semibold text-zinc-300 block mb-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                   Google Gemini API Key
                 </label>
                 <input
@@ -1136,24 +1136,24 @@ export default function AdminFinancialPage() {
                   value={apiSettings.geminiApiKey || ''}
                   onChange={(e) => setApiSettings({ ...apiSettings, geminiApiKey: e.target.value })}
                   placeholder="AIzaSy..."
-                  className="w-full bg-[#161a26] border border-white/[0.08] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono"
+                  className="w-full bg-[#161a26] border border-slate-200 dark:border-white/[0.08] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-zinc-300 block mb-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                   Modelo Gemini Primário
                 </label>
                 <input
                   type="text"
                   value={apiSettings.geminiModel || 'gemini-3.8-flash'}
                   onChange={(e) => setApiSettings({ ...apiSettings, geminiModel: e.target.value })}
-                  className="w-full bg-[#161a26] border border-white/[0.08] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono"
+                  className="w-full bg-[#161a26] border border-slate-200 dark:border-white/[0.08] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-zinc-300 block mb-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                   Cloudflare API Token
                 </label>
                 <input
@@ -1161,12 +1161,12 @@ export default function AdminFinancialPage() {
                   value={apiSettings.cloudflareApiToken || ''}
                   onChange={(e) => setApiSettings({ ...apiSettings, cloudflareApiToken: e.target.value })}
                   placeholder="Token com permissões DNS / Zone"
-                  className="w-full bg-[#161a26] border border-white/[0.08] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
+                  className="w-full bg-[#161a26] border border-slate-200 dark:border-white/[0.08] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-500 font-mono"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-zinc-300 block mb-1">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                   Vercel Token (Edge Config & Projects)
                 </label>
                 <input
@@ -1174,7 +1174,7 @@ export default function AdminFinancialPage() {
                   value={apiSettings.vercelToken || ''}
                   onChange={(e) => setApiSettings({ ...apiSettings, vercelToken: e.target.value })}
                   placeholder="vercel_..."
-                  className="w-full bg-[#161a26] border border-white/[0.08] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-sky-500 font-mono"
+                  className="w-full bg-[#161a26] border border-slate-200 dark:border-white/[0.08] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-sky-500 font-mono"
                 />
               </div>
             </div>

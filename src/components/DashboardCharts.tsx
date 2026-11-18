@@ -118,7 +118,7 @@ export default function DashboardCharts({
         {[1, 2, 3].map(i => (
           <div
             key={i}
-            className="h-[290px] rounded-2xl bg-[#11141c] border border-white/[0.06] animate-pulse p-5"
+            className="h-[290px] rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-slate-200 dark:border-white/10 shadow-md shadow-xs animate-pulse p-5"
           />
         ))}
       </div>
@@ -131,18 +131,18 @@ export default function DashboardCharts({
       {/* =====================================================================
           GRÁFICO 1: DISTRIBUIÇÃO REGIONAL DE CLIENTES ATIVOS
          ===================================================================== */}
-      <div className="bg-[#11141c] p-5 rounded-2xl border border-white/[0.06] flex flex-col justify-between">
+      <div className="bg-white dark:bg-[#1c1d27] p-5 rounded-2xl border border-slate-200 dark:border-slate-200 dark:border-white/10 shadow-md shadow-xs flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] uppercase font-bold tracking-wider text-zinc-400 flex items-center gap-1.5">
+            <span className="text-[11px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
               <MapPin className="w-3.5 h-3.5 text-teal-400" />
               Distribuição Regional
             </span>
-            <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-white/[0.04] text-zinc-400 border border-white/[0.06]">
+            <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.05] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-200 dark:border-white/10 shadow-md shadow-xs">
               {activeSubsCount} Ativos
             </span>
           </div>
-          <p className="text-[11px] text-zinc-500 font-medium mb-3">
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium mb-3">
             Concentração de comércios por praça instalada
           </p>
 
@@ -168,8 +168,8 @@ export default function DashboardCharts({
                     if (active && payload && payload.length) {
                       const d = payload[0].payload;
                       return (
-                        <div className="bg-[#0f121a] border border-white/[0.08] px-3 py-2 rounded-xl text-xs text-zinc-200">
-                          <p className="font-semibold text-white">{d.region}</p>
+                        <div className="bg-white dark:bg-[#14161f] border border-slate-200 dark:border-white/10 shadow-md px-3 py-2 rounded-xl text-xs text-slate-800 dark:text-slate-200">
+                          <p className="font-semibold text-slate-900 dark:text-white">{d.region}</p>
                           <p className="text-teal-400 text-[11px] mt-0.5">
                             {d.count} cliente(s) ativo(s) ({d.share})
                           </p>
@@ -191,8 +191,8 @@ export default function DashboardCharts({
           </div>
         </div>
 
-        <div className="pt-2 border-t border-white/[0.04] flex items-center justify-between text-[11px] text-zinc-400 font-medium">
-          <span>Praça líder: <strong className="text-zinc-200 font-semibold">São Paulo / Capital</strong></span>
+        <div className="pt-2 border-t border-slate-100 dark:border-white/[0.04] flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+          <span>Praça líder: <strong className="text-slate-800 dark:text-slate-200 font-semibold">São Paulo / Capital</strong></span>
           <span className="font-mono text-teal-400 font-bold">60% carteira</span>
         </div>
       </div>
@@ -200,18 +200,18 @@ export default function DashboardCharts({
       {/* =====================================================================
           GRÁFICO 2: EVOLUÇÃO DE ASSINATURAS & MRR RECORRENTE
          ===================================================================== */}
-      <div className="bg-[#11141c] p-5 rounded-2xl border border-white/[0.06] flex flex-col justify-between">
+      <div className="bg-white dark:bg-[#1c1d27] p-5 rounded-2xl border border-slate-200 dark:border-slate-200 dark:border-white/10 shadow-md shadow-xs flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] uppercase font-bold tracking-wider text-zinc-400 flex items-center gap-1.5">
+            <span className="text-[11px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
               <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
               Evolução SaaS & MRR
             </span>
-            <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-white/[0.04] text-zinc-400 border border-white/[0.06]">
+            <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.05] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-200 dark:border-white/10 shadow-md shadow-xs">
               6 Meses
             </span>
           </div>
-          <p className="text-[11px] text-zinc-500 font-medium mb-3">
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium mb-3">
             {mode === 'admin'
               ? 'Receita mensal recorrente a R$ 29,90/mês'
               : 'Repasse mensal recorrente a R$ 10,00/mês'}
@@ -255,10 +255,10 @@ export default function DashboardCharts({
                     if (active && payload && payload.length) {
                       const d = payload[0].payload;
                       return (
-                        <div className="bg-[#0f121a] border border-white/[0.08] px-3 py-2 rounded-xl text-xs text-zinc-200">
-                          <p className="font-semibold text-white">{label}/2026</p>
-                          <p className="text-zinc-400 text-[11px] mt-0.5">
-                            Clientes Ativos: <span className="text-white font-mono">{d.clientes}</span>
+                        <div className="bg-white dark:bg-[#14161f] border border-slate-200 dark:border-white/10 shadow-md px-3 py-2 rounded-xl text-xs text-slate-800 dark:text-slate-200">
+                          <p className="font-semibold text-slate-900 dark:text-white">{label}/2026</p>
+                          <p className="text-slate-500 dark:text-slate-400 text-[11px] mt-0.5">
+                            Clientes Ativos: <span className="text-slate-900 dark:text-white font-mono">{d.clientes}</span>
                           </p>
                           <p className={mode === 'admin' ? 'text-indigo-400 font-mono font-bold mt-0.5' : 'text-emerald-400 font-mono font-bold mt-0.5'}>
                             MRR: R$ {d.mrr.toFixed(2)}
@@ -282,8 +282,8 @@ export default function DashboardCharts({
           </div>
         </div>
 
-        <div className="pt-2 border-t border-white/[0.04] flex items-center justify-between text-[11px] text-zinc-400 font-medium">
-          <span>MRR Atual: <strong className="text-zinc-200 font-semibold">R$ {(activeSubsCount * unitPrice).toFixed(2)}</strong></span>
+        <div className="pt-2 border-t border-slate-100 dark:border-white/[0.04] flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+          <span>MRR Atual: <strong className="text-slate-800 dark:text-slate-200 font-semibold">R$ {(activeSubsCount * unitPrice).toFixed(2)}</strong></span>
           <span className="flex items-center gap-1 text-emerald-400 font-mono text-[10px] font-bold">
             <Activity className="w-3 h-3" />
             +100% adimplente
@@ -294,18 +294,18 @@ export default function DashboardCharts({
       {/* =====================================================================
           GRÁFICO 3: SAÚDE DA CARTEIRA & TAXA DE RETENÇÃO
          ===================================================================== */}
-      <div className="bg-[#11141c] p-5 rounded-2xl border border-white/[0.06] flex flex-col justify-between">
+      <div className="bg-white dark:bg-[#1c1d27] p-5 rounded-2xl border border-slate-200 dark:border-slate-200 dark:border-white/10 shadow-md shadow-xs flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] uppercase font-bold tracking-wider text-zinc-400 flex items-center gap-1.5">
+            <span className="text-[11px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
               Saúde da Carteira
             </span>
-            <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-white/[0.04] text-zinc-400 border border-white/[0.06]">
+            <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.05] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-200 dark:border-white/10 shadow-md shadow-xs">
               Retenção
             </span>
           </div>
-          <p className="text-[11px] text-zinc-500 font-medium mb-2">
+          <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium mb-2">
             Status de pagamento e subdomínios ativos
           </p>
 
@@ -317,9 +317,9 @@ export default function DashboardCharts({
                     if (active && payload && payload.length) {
                       const d = payload[0];
                       return (
-                        <div className="bg-[#0f121a] border border-white/[0.08] px-3 py-1.5 rounded-xl text-xs text-zinc-200">
-                          <p className="font-semibold text-white">{d.name}</p>
-                          <p className="text-[11px] text-zinc-400">{d.value} cliente(s)</p>
+                        <div className="bg-white dark:bg-[#14161f] border border-slate-200 dark:border-white/10 shadow-md px-3 py-1.5 rounded-xl text-xs text-slate-800 dark:text-slate-200">
+                          <p className="font-semibold text-slate-900 dark:text-white">{d.name}</p>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">{d.value} cliente(s)</p>
                         </div>
                       );
                     }
@@ -345,10 +345,10 @@ export default function DashboardCharts({
 
             {/* Centro Vazado com Total no Subdomínio */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-xl font-black text-white font-mono leading-none">
+              <span className="text-xl font-black text-slate-900 dark:text-white font-mono leading-none">
                 {activeSubsCount}
               </span>
-              <span className="text-[9px] uppercase tracking-wider text-zinc-400 font-bold mt-0.5">
+              <span className="text-[9px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold mt-0.5">
                 No Ar
               </span>
             </div>
@@ -356,18 +356,18 @@ export default function DashboardCharts({
         </div>
 
         {/* Legenda de Saúde da Base (Sóbria e Fosca) */}
-        <div className="pt-2 border-t border-white/[0.04] grid grid-cols-3 gap-1 text-center">
+        <div className="pt-2 border-t border-slate-100 dark:border-white/[0.04] grid grid-cols-3 gap-1 text-center">
           <div className="px-1 py-1 rounded-lg bg-emerald-950/30 border border-emerald-800/30">
             <div className="text-[10px] text-emerald-400 font-bold leading-tight">{activePct}%</div>
-            <div className="text-[9px] text-zinc-400">Em dia ({activeSubsCount})</div>
+            <div className="text-[9px] text-slate-500 dark:text-slate-400">Em dia ({activeSubsCount})</div>
           </div>
           <div className="px-1 py-1 rounded-lg bg-amber-950/30 border border-amber-800/30">
             <div className="text-[10px] text-amber-400 font-bold leading-tight">{pendingPct}%</div>
-            <div className="text-[9px] text-zinc-400">Pendente ({pendingSubsCount})</div>
+            <div className="text-[9px] text-slate-500 dark:text-slate-400">Pendente ({pendingSubsCount})</div>
           </div>
           <div className="px-1 py-1 rounded-lg bg-rose-950/30 border border-rose-800/30">
             <div className="text-[10px] text-rose-400 font-bold leading-tight">{suspendedPct}%</div>
-            <div className="text-[9px] text-zinc-400">Suspenso ({suspendedSubsCount})</div>
+            <div className="text-[9px] text-slate-500 dark:text-slate-400">Suspenso ({suspendedSubsCount})</div>
           </div>
         </div>
       </div>

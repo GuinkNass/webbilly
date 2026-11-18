@@ -294,7 +294,7 @@ export default function AdminOperatorsPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-          <span className="text-zinc-400 text-xs font-mono">Carregando operadores e licenças...</span>
+          <span className="text-slate-500 dark:text-slate-400 text-xs font-mono">Carregando operadores e licenças...</span>
         </div>
       </div>
     );
@@ -304,7 +304,7 @@ export default function AdminOperatorsPage() {
     return (
       <div className="p-8 text-center bg-rose-950/20 border border-rose-900/40 rounded-2xl max-w-lg mx-auto my-12">
         <h2 className="text-lg font-bold text-rose-400 mb-2">Erro ao carregar dados</h2>
-        <p className="text-xs text-zinc-300">{error}</p>
+        <p className="text-xs text-slate-700 dark:text-slate-300">{error}</p>
       </div>
     );
   }
@@ -337,7 +337,7 @@ export default function AdminOperatorsPage() {
   return (
     <div className="space-y-6">
       {/* Header com Navegação Interna */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#11141c] p-6 rounded-2xl border border-white/[0.06]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#1c1d27] p-6 rounded-2xl border border-slate-200 dark:border-white/[0.06]">
         <div>
           <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-bold mb-2 font-mono">
             <Users className="w-3.5 h-3.5" />
@@ -346,19 +346,19 @@ export default function AdminOperatorsPage() {
           <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
             Gestão de Licenças & Candidaturas
           </h1>
-          <p className="text-xs text-zinc-400 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Controle de ativação no Windows Desktop, triagem de candidatos e provisionamento de e-mails corporativos Lark.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex p-1 bg-[#0a0d14] rounded-xl border border-white/[0.06] text-xs">
+          <div className="flex p-1 bg-slate-50 dark:bg-[#14161f] rounded-xl border border-slate-200 dark:border-white/[0.06] text-xs">
             <button
               onClick={() => setActiveTabSub('licenses')}
               className={`px-4 py-2 rounded-lg font-semibold transition cursor-pointer ${
                 activeTabSub === 'licenses'
                   ? 'bg-indigo-600 text-white shadow-md'
-                  : 'text-zinc-400 hover:text-white'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-white'
               }`}
             >
               Licenças Desktop ({licenses.length})
@@ -368,7 +368,7 @@ export default function AdminOperatorsPage() {
               className={`px-4 py-2 rounded-lg font-semibold transition cursor-pointer ${
                 activeTabSub === 'candidates'
                   ? 'bg-indigo-600 text-white shadow-md'
-                  : 'text-zinc-400 hover:text-white'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-white'
               }`}
             >
               Candidaturas ({candidates.length})
@@ -395,10 +395,10 @@ export default function AdminOperatorsPage() {
 
       {/* ABA 1: LICENÇAS DESKTOP */}
       {activeTabSub === 'licenses' && (
-        <div className="bg-[#0f121a] rounded-2xl border border-white/[0.08] shadow-xl overflow-hidden">
+        <div className="bg-white dark:bg-[#1c1d27] rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#141824] text-zinc-400 uppercase font-mono text-[11px] border-b border-white/[0.08]">
+              <thead className="bg-slate-50 dark:bg-[#14161f] text-slate-500 dark:text-slate-400 uppercase font-mono text-[11px] border-b border-slate-200 dark:border-white/[0.08]">
                 <tr>
                   <th className="py-3.5 px-4">Serial Token</th>
                   <th className="py-3.5 px-4">Operador Vinculado</th>
@@ -408,46 +408,46 @@ export default function AdminOperatorsPage() {
                   <th className="py-3.5 px-4 text-right">Ações Rápidas</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.05]">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/[0.05]">
                 {licenses.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-zinc-500 text-xs">
+                    <td colSpan={6} className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
                       Nenhuma licença encontrada.
                     </td>
                   </tr>
                 ) : (
                   licenses.map((lic: any) => (
-                    <tr key={lic.id || lic.serialToken} className="hover:bg-white/[0.02] transition">
+                    <tr key={lic.id || lic.serialToken} className="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition">
                       <td className="py-3.5 px-4 font-mono">
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-[#84cc16]">{lic.serialToken}</span>
+                          <span className="font-bold text-blue-600 dark:text-blue-400">{lic.serialToken}</span>
                           <ActionTooltip title="Copiar Serial" description="Copia a chave serial de ativação desktop." side="top">
                             <button
                               onClick={() => {
                                 copyToClipboard(lic.serialToken);
                                 alert('Serial copiado!');
                               }}
-                              className="p-1 rounded text-zinc-400 hover:text-white hover:bg-white/[0.06] cursor-pointer"
+                              className="p-1 rounded text-slate-500 dark:text-slate-400 hover:text-white hover:bg-white/[0.06] cursor-pointer"
                             >
                               <Copy className="w-3 h-3" />
                             </button>
                           </ActionTooltip>
                         </div>
-                        <span className="text-[10px] text-zinc-500 block">Tipo: {lic.licenseType || 'PRO'}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 block">Tipo: {lic.licenseType || 'PRO'}</span>
                       </td>
 
                       <td className="py-3.5 px-4">
-                        <span className="font-semibold text-white block">{lic.operatorName || 'Não vinculado (Chave Virgem)'}</span>
-                        <span className="text-[10px] text-zinc-400 font-mono">{lic.operatorEmail || '—'}</span>
+                        <span className="font-semibold text-slate-900 dark:text-white block">{lic.operatorName || 'Não vinculado (Chave Virgem)'}</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">{lic.operatorEmail || '—'}</span>
                       </td>
 
-                      <td className="py-3.5 px-4 font-mono text-zinc-300">
+                      <td className="py-3.5 px-4 font-mono text-slate-700 dark:text-slate-300">
                         {lic.machineId ? (
                           <span className="truncate max-w-[140px] block" title={lic.machineId}>
                             {lic.machineId}
                           </span>
                         ) : (
-                          <span className="text-zinc-500 italic">Livre para ativação</span>
+                          <span className="text-slate-400 dark:text-slate-500 italic">Livre para ativação</span>
                         )}
                       </td>
 
@@ -465,7 +465,7 @@ export default function AdminOperatorsPage() {
                         </span>
                       </td>
 
-                      <td className="py-3.5 px-4 font-mono text-zinc-300">
+                      <td className="py-3.5 px-4 font-mono text-slate-700 dark:text-slate-300">
                         {lic.corporateEmail || lic.corporate_email ? (
                           <span className="text-cyan-300 text-xs font-semibold block">
                             {lic.corporateEmail || lic.corporate_email}
@@ -537,26 +537,26 @@ export default function AdminOperatorsPage() {
 
       {/* ABA 2: CANDIDATURAS */}
       {activeTabSub === 'candidates' && (
-        <div className="bg-[#0f121a] rounded-2xl border border-white/[0.08] shadow-xl overflow-hidden space-y-4 p-4">
-          <div className="flex items-center justify-between pb-3 border-b border-white/[0.06]">
+        <div className="bg-white dark:bg-[#1c1d27] rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-xl overflow-hidden space-y-4 p-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/[0.06]">
             <span className="text-xs font-bold text-white uppercase tracking-wider">
               Candidatos Registrados na Landing Page
             </span>
             <div className="relative w-72">
-              <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={candidateSearch}
                 onChange={(e) => setCandidateSearch(e.target.value)}
                 placeholder="Filtrar candidatos por nome ou email..."
-                className="w-full bg-[#141824] border border-white/[0.08] rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none"
+                className="w-full bg-slate-50 dark:bg-[#14161f] border border-slate-200 dark:border-white/[0.08] rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none"
               />
             </div>
           </div>
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-[#141824] text-zinc-400 uppercase font-mono text-[11px] border-b border-white/[0.08]">
+              <thead className="bg-slate-50 dark:bg-[#14161f] text-slate-500 dark:text-slate-400 uppercase font-mono text-[11px] border-b border-slate-200 dark:border-white/[0.08]">
                 <tr>
                   <th className="py-3.5 px-4">Nome do Candidato</th>
                   <th className="py-3.5 px-4">E-mail Pessoal</th>
@@ -566,44 +566,44 @@ export default function AdminOperatorsPage() {
                   <th className="py-3.5 px-4 text-right">Ações de Triagem</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.05]">
+              <tbody className="divide-y divide-slate-100 dark:divide-white/[0.05]">
                 {candidates.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-zinc-500 text-xs">
+                    <td colSpan={6} className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
                       Nenhum candidato encontrado.
                     </td>
                   </tr>
                 ) : (
                   candidates.map((cand: any) => (
-                    <tr key={cand.id} className="hover:bg-white/[0.02] transition">
+                    <tr key={cand.id} className="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition">
                       <td className="py-3.5 px-4 font-bold text-white">
                         <button
                           onClick={() => setSelectedCandidate(cand)}
-                          className="text-left font-bold text-white hover:text-[#84cc16] transition flex items-center gap-1.5 group cursor-pointer"
+                          className="text-left font-bold text-white hover:text-blue-600 dark:text-blue-400 transition flex items-center gap-1.5 group cursor-pointer"
                           title="Clique para visualizar a ficha completa"
                         >
                           <span>{cand.name}</span>
-                          <Eye className="w-3 h-3 text-zinc-500 group-hover:text-[#84cc16] opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <Eye className="w-3 h-3 text-slate-400 dark:text-slate-500 group-hover:text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </button>
                         {(cand.sponsor_name || cand.sponsor_code || cand.affiliate_code_used || cand.referred_by_operator_id) && (
                           <div className="mt-1">
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#84cc16]/15 border border-[#84cc16]/30 text-[#a3e635] text-[10px] font-semibold">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800/40 text-blue-600 dark:text-blue-400 text-[10px] font-semibold">
                               <Sparkles className="w-2.5 h-2.5" />
                               Indicado por: {cand.sponsor_name || 'Operador'} (Código: {cand.sponsor_code || cand.affiliate_code_used})
                             </span>
                           </div>
                         )}
                       </td>
-                      <td className="py-3.5 px-4 font-mono text-zinc-300">
+                      <td className="py-3.5 px-4 font-mono text-slate-700 dark:text-slate-300">
                         {cand.email}
                       </td>
-                      <td className="py-3.5 px-4 font-mono text-zinc-300">
+                      <td className="py-3.5 px-4 font-mono text-slate-700 dark:text-slate-300">
                         {cand.whatsapp || cand.phone || '—'}
                       </td>
                       <td className="py-3.5 px-4 font-mono text-emerald-400">
                         {cand.pixKey || cand.pix_key || '—'}
                       </td>
-                      <td className="py-3.5 px-4 font-mono text-zinc-400 text-[11px]">
+                      <td className="py-3.5 px-4 font-mono text-slate-500 dark:text-slate-400 text-[11px]">
                         {cand.createdAt ? new Date(cand.createdAt).toLocaleDateString('pt-BR') : '—'}
                       </td>
                       <td className="py-3.5 px-4 text-right">
@@ -626,7 +626,7 @@ export default function AdminOperatorsPage() {
                             <ActionTooltip title="Aprovar & Emitir Serial" description="Aprova a inscrição, gera a licença desktop e ativa o acesso do operador." side="left">
                               <button
                                 onClick={() => handleApproveOperator(cand.serialToken || 'NOVO', cand.id, cand.email)}
-                                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-md shadow-emerald-950/40 cursor-pointer flex items-center gap-1"
+                                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-900 dark:text-white font-bold text-xs transition shadow-md shadow-emerald-950/40 cursor-pointer flex items-center gap-1"
                               >
                                 <CheckCircle2 className="w-3.5 h-3.5" />
                                 <span>Aprovar & Emitir Serial</span>
@@ -658,10 +658,10 @@ export default function AdminOperatorsPage() {
       {/* MODAL DE PROVISIONAMENTO DE E-MAIL CORPORATIVO */}
       {provisionModal && provisionModal.isOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#11141c] border border-cyan-500/40 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
+          <div className="bg-white dark:bg-[#1c1d27] border border-cyan-500/40 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
             <button
               onClick={() => setProvisionModal(null)}
-              className="absolute top-4 right-4 text-zinc-400 hover:text-white"
+              className="absolute top-4 right-4 text-slate-500 dark:text-slate-400 hover:text-white"
             >
               <X className="w-5 h-5" />
             </button>
@@ -672,7 +672,7 @@ export default function AdminOperatorsPage() {
               </div>
               <div>
                 <h3 className="font-bold text-white text-base">Provisionar E-mail Corporativo Lark</h3>
-                <span className="text-xs text-zinc-400">Domínio oficial @webbilly.com.br</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">Domínio oficial @webbilly.com.br</span>
               </div>
             </div>
 
@@ -690,18 +690,18 @@ export default function AdminOperatorsPage() {
                     Senha Provisória: <strong className="font-mono text-amber-300">{provisionModal.result.tempPassword}</strong>
                   </p>
                 )}
-                <p className="text-[11px] text-zinc-400 pt-1">
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 pt-1">
                   O operador já pode acessar via <code>mail.larksuite.com</code> com estas credenciais.
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="p-3 rounded-xl bg-[#141824] border border-white/[0.06] text-xs text-zinc-300">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#14161f] border border-slate-200 dark:border-white/[0.06] text-xs text-slate-700 dark:text-slate-300">
                   Operador: <strong className="text-white">{provisionModal.operatorName}</strong>
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-zinc-300 block mb-1">
+                  <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
                     Prefixo do E-mail (@webbilly.com.br) *
                   </label>
                   <div className="flex items-center">
@@ -709,9 +709,9 @@ export default function AdminOperatorsPage() {
                       type="text"
                       value={provisionModal.customPrefix}
                       onChange={(e) => setProvisionModal({ ...provisionModal, customPrefix: e.target.value })}
-                      className="flex-1 bg-[#161a26] border border-white/[0.08] rounded-l-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 font-mono"
+                      className="flex-1 bg-[#161a26] border border-slate-200 dark:border-white/[0.08] rounded-l-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 font-mono"
                     />
-                    <span className="px-3 py-2 bg-zinc-800 border border-l-0 border-white/[0.08] rounded-r-xl text-xs font-mono text-zinc-400">
+                    <span className="px-3 py-2 bg-zinc-800 border border-l-0 border-slate-200 dark:border-white/[0.08] rounded-r-xl text-xs font-mono text-slate-500 dark:text-slate-400">
                       @webbilly.com.br
                     </span>
                   </div>
@@ -728,7 +728,7 @@ export default function AdminOperatorsPage() {
                     type="button"
                     disabled={provisionModal.loading}
                     onClick={() => setProvisionModal(null)}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition"
+                    className="px-4 py-2 rounded-xl text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-slate-700 dark:text-slate-300 transition"
                   >
                     Cancelar
                   </button>
@@ -752,10 +752,10 @@ export default function AdminOperatorsPage() {
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
           <div className="bg-[#0b0e14] border border-white/[0.12] rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 my-auto">
             {/* Header */}
-            <div className="px-6 py-5 bg-gradient-to-r from-[#121622] via-[#0f131d] to-[#121622] border-b border-white/[0.08] flex items-center justify-between">
+            <div className="px-6 py-5 bg-gradient-to-r from-[#121622] via-[#0f131d] to-[#121622] border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#84cc16]/10 border border-[#84cc16]/30 flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-[#84cc16]" />
+                <div className="w-10 h-10 rounded-2xl bg-[#84cc16]/10 border border-blue-200 dark:border-blue-800/40 flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-white flex items-center gap-2">
@@ -764,14 +764,14 @@ export default function AdminOperatorsPage() {
                       {selectedCandidate.status || 'PENDENTE'}
                     </span>
                   </h3>
-                  <p className="text-xs text-zinc-400 mt-0.5">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Dados oficiais preenchidos no formulário da Landing Page
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setSelectedCandidate(null)}
-                className="text-zinc-400 hover:text-white p-2 rounded-xl hover:bg-white/[0.06] transition"
+                className="text-slate-500 dark:text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/[0.06] transition"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -781,21 +781,21 @@ export default function AdminOperatorsPage() {
             <div className="p-6 space-y-6 max-h-[72vh] overflow-y-auto text-xs">
               {/* Seção 1: Identificação & Contato */}
               <div>
-                <span className="text-[11px] font-bold text-[#84cc16] uppercase tracking-wider block mb-3">
+                <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block mb-3">
                   1. Dados Pessoais & Contato
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-[#121622]/80 border border-white/[0.06] rounded-2xl p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-[#121622]/80 border border-slate-200 dark:border-white/[0.06] rounded-2xl p-4">
                   <div>
-                    <span className="text-zinc-500 block text-[10px] uppercase font-mono">Nome Completo</span>
-                    <span className="text-white font-semibold text-sm">{selectedCandidate.name}</span>
+                    <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-mono">Nome Completo</span>
+                    <span className="text-slate-900 dark:text-white font-semibold text-sm">{selectedCandidate.name}</span>
                   </div>
                   <div>
-                    <span className="text-zinc-500 block text-[10px] uppercase font-mono">E-mail Pessoal</span>
+                    <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-mono">E-mail Pessoal</span>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-zinc-200 font-mono select-all">{selectedCandidate.email}</span>
                       <button
                         onClick={() => copyToClipboard(selectedCandidate.email, 'E-mail copiado!')}
-                        className="text-zinc-500 hover:text-white cursor-pointer"
+                        className="text-slate-400 dark:text-slate-500 hover:text-white cursor-pointer"
                         title="Copiar e-mail"
                       >
                         <Copy className="w-3.5 h-3.5" />
@@ -803,7 +803,7 @@ export default function AdminOperatorsPage() {
                     </div>
                   </div>
                   <div>
-                    <span className="text-zinc-500 block text-[10px] uppercase font-mono">WhatsApp</span>
+                    <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-mono">WhatsApp</span>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-emerald-400 font-mono font-semibold">
                         {selectedCandidate.whatsapp || selectedCandidate.phone || 'Não informado'}
@@ -822,20 +822,20 @@ export default function AdminOperatorsPage() {
                     </div>
                   </div>
                   <div>
-                    <span className="text-zinc-500 block text-[10px] uppercase font-mono">CPF</span>
+                    <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-mono">CPF</span>
                     <span className="text-zinc-200 font-mono">
                       {selectedCandidate.cpf || 'Não informado'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-zinc-500 block text-[10px] uppercase font-mono">Cidade / Estado</span>
+                    <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-mono">Cidade / Estado</span>
                     <span className="text-zinc-200">
                       {selectedCandidate.city_state || (selectedCandidate.city ? `${selectedCandidate.city} - ${selectedCandidate.state || 'BR'}` : 'Não informado')}
                     </span>
                   </div>
                   {selectedCandidate.address && (
                     <div>
-                      <span className="text-zinc-500 block text-[10px] uppercase font-mono">Endereço Residencial</span>
+                      <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-mono">Endereço Residencial</span>
                       <span className="text-zinc-200">
                         {selectedCandidate.address}
                         {selectedCandidate.number ? `, ${selectedCandidate.number}` : ''}
@@ -846,7 +846,7 @@ export default function AdminOperatorsPage() {
                   )}
                   {selectedCandidate.instagram && (
                     <div>
-                      <span className="text-zinc-500 block text-[10px] uppercase font-mono">Instagram</span>
+                      <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-mono">Instagram</span>
                       <a
                         href={`https://instagram.com/${selectedCandidate.instagram.replace('@', '')}`}
                         target="_blank"
@@ -863,18 +863,18 @@ export default function AdminOperatorsPage() {
 
               {/* Seção 2: Dados Financeiros / Repasse Pix */}
               <div>
-                <span className="text-[11px] font-bold text-[#84cc16] uppercase tracking-wider block mb-3">
+                <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block mb-3">
                   2. Dados Financeiros para Repasse das Comissões
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-[#121622]/80 border border-white/[0.06] rounded-2xl p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 bg-[#121622]/80 border border-slate-200 dark:border-white/[0.06] rounded-2xl p-4">
                   <div>
-                    <span className="text-zinc-500 block text-[10px] uppercase font-mono">Tipo da Chave Pix</span>
-                    <span className="text-zinc-300 uppercase font-mono font-bold">
+                    <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-mono">Tipo da Chave Pix</span>
+                    <span className="text-slate-700 dark:text-slate-300 uppercase font-mono font-bold">
                       {selectedCandidate.pixType || selectedCandidate.pix_type || 'CPF'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-zinc-500 block text-[10px] uppercase font-mono">Chave Pix Cadastrada</span>
+                    <span className="text-slate-400 dark:text-slate-500 block text-[10px] uppercase font-mono">Chave Pix Cadastrada</span>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-emerald-400 font-mono font-bold select-all">
                         {selectedCandidate.pixKey || selectedCandidate.pix_key || 'Não informada'}
@@ -882,7 +882,7 @@ export default function AdminOperatorsPage() {
                       {(selectedCandidate.pixKey || selectedCandidate.pix_key) && (
                         <button
                           onClick={() => copyToClipboard(selectedCandidate.pixKey || selectedCandidate.pix_key, 'Chave Pix copiada!')}
-                          className="text-zinc-500 hover:text-white cursor-pointer"
+                          className="text-slate-400 dark:text-slate-500 hover:text-white cursor-pointer"
                           title="Copiar Pix"
                         >
                           <Copy className="w-3.5 h-3.5" />
@@ -895,15 +895,15 @@ export default function AdminOperatorsPage() {
 
               {/* Seção 3: Experiência Comercial */}
               <div>
-                <span className="text-[11px] font-bold text-[#84cc16] uppercase tracking-wider block mb-3">
+                <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block mb-3">
                   3. Perfil & Experiência Comercial Informada
                 </span>
-                <div className="bg-[#121622]/80 border border-white/[0.06] rounded-2xl p-4 space-y-2">
+                <div className="bg-[#121622]/80 border border-slate-200 dark:border-white/[0.06] rounded-2xl p-4 space-y-2">
                   <p className="text-zinc-200 leading-relaxed whitespace-pre-wrap">
                     {selectedCandidate.experience || 'Nenhuma experiência detalhada informada pelo candidato.'}
                   </p>
                   {selectedCandidate.resumeUrl && (
-                    <div className="pt-2 border-t border-white/[0.06]">
+                    <div className="pt-2 border-t border-slate-200 dark:border-white/[0.06]">
                       <a
                         href={selectedCandidate.resumeUrl}
                         target="_blank"
@@ -920,25 +920,25 @@ export default function AdminOperatorsPage() {
 
               {/* Seção 4: Auditoria de Aceite e Origem */}
               <div>
-                <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-3">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-3">
                   4. Auditoria Jurídica & Origem da Inscrição
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-[#121622]/50 border border-white/[0.04] rounded-2xl p-3.5 text-[11px]">
                   <div>
-                    <span className="text-zinc-500 block text-[10px]">Data do Cadastro</span>
-                    <span className="text-zinc-300 font-mono">
+                    <span className="text-slate-400 dark:text-slate-500 block text-[10px]">Data do Cadastro</span>
+                    <span className="text-slate-700 dark:text-slate-300 font-mono">
                       {selectedCandidate.createdAt ? new Date(selectedCandidate.createdAt).toLocaleString('pt-BR') : '—'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-zinc-500 block text-[10px]">IP de Aceite dos Termos</span>
-                    <span className="text-zinc-300 font-mono">
+                    <span className="text-slate-400 dark:text-slate-500 block text-[10px]">IP de Aceite dos Termos</span>
+                    <span className="text-slate-700 dark:text-slate-300 font-mono">
                       {selectedCandidate.accepted_terms_ip || '127.0.0.1'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-zinc-500 block text-[10px]">Indicação / Patrocinador</span>
-                    <span className="text-zinc-300 font-mono">
+                    <span className="text-slate-400 dark:text-slate-500 block text-[10px]">Indicação / Patrocinador</span>
+                    <span className="text-slate-700 dark:text-slate-300 font-mono">
                       {selectedCandidate.referred_by_name || selectedCandidate.affiliate_code_used || selectedCandidate.referred_by_operator_id || 'Inscrição Direta'}
                     </span>
                   </div>
@@ -947,10 +947,10 @@ export default function AdminOperatorsPage() {
             </div>
 
             {/* Footer com Botões de Decisão */}
-            <div className="px-6 py-4 bg-[#0d1017] border-t border-white/[0.08] flex items-center justify-between gap-3">
+            <div className="px-6 py-4 bg-[#0d1017] border-t border-slate-200 dark:border-white/[0.08] flex items-center justify-between gap-3">
               <button
                 onClick={() => setSelectedCandidate(null)}
-                className="px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 hover:text-white font-medium text-xs transition cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 hover:text-white font-medium text-xs transition cursor-pointer"
               >
                 Fechar
               </button>
@@ -974,7 +974,7 @@ export default function AdminOperatorsPage() {
                     await handleApproveOperator(cand.serialToken || 'NOVO', cand.id, cand.email);
                     setSelectedCandidate(null);
                   }}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition shadow-lg shadow-emerald-950/40 flex items-center gap-1.5 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-900 dark:text-white font-bold text-xs transition shadow-lg shadow-emerald-950/40 flex items-center gap-1.5 cursor-pointer"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Aprovar & Emitir Serial</span>
@@ -988,7 +988,7 @@ export default function AdminOperatorsPage() {
       {/* MODAL DE CONFIRMAÇÃO: CANDIDATURA RECUSADA (COM PRAZO DE 60 DIAS) */}
       {rejectResultModal && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-[#0f121a] border border-rose-500/30 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative space-y-4 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white dark:bg-[#1c1d27] border border-rose-500/30 rounded-3xl max-w-lg w-full p-6 shadow-2xl relative space-y-4 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-start gap-3.5">
               <div className="w-10 h-10 rounded-2xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center shrink-0">
                 <X className="w-5 h-5 text-rose-400" />
@@ -997,13 +997,13 @@ export default function AdminOperatorsPage() {
                 <h3 className="text-base font-bold text-white">
                   Candidatura Recusada
                 </h3>
-                <p className="text-xs text-zinc-400 mt-0.5">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   O cadastro de <strong className="text-white">{rejectResultModal.candidateName}</strong> foi marcado como recusado. Nova tentativa liberada em {rejectResultModal.reapplyDateBr}.
                 </p>
               </div>
               <button
                 onClick={() => setRejectResultModal(null)}
-                className="text-zinc-500 hover:text-white cursor-pointer"
+                className="text-slate-400 dark:text-slate-500 hover:text-white cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1023,10 +1023,10 @@ export default function AdminOperatorsPage() {
 
             {/* Caixa da mensagem pré-formatada */}
             <div>
-              <label className="block text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5">
+              <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
                 Mensagem Padrão (Tentativa após 60 dias):
               </label>
-              <div className="bg-[#141824] border border-white/[0.08] rounded-xl p-3.5 text-xs text-zinc-200 leading-relaxed font-sans select-all">
+              <div className="bg-slate-50 dark:bg-[#14161f] border border-slate-200 dark:border-white/[0.08] rounded-xl p-3.5 text-xs text-zinc-200 leading-relaxed font-sans select-all">
                 {rejectResultModal.messageText}
               </div>
             </div>
@@ -1038,7 +1038,7 @@ export default function AdminOperatorsPage() {
                   href={rejectResultModal.whatsappLink}
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-md shadow-emerald-950/40 cursor-pointer"
+                  className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-slate-900 dark:text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-md shadow-emerald-950/40 cursor-pointer"
                 >
                   <ExternalLink className="w-4 h-4" />
                   <span>Enviar via WhatsApp</span>
@@ -1047,7 +1047,7 @@ export default function AdminOperatorsPage() {
 
               <button
                 onClick={() => copyToClipboard(rejectResultModal.messageText, 'Mensagem copiada para a área de transferência!')}
-                className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-zinc-200 hover:text-white font-semibold text-xs transition border border-white/[0.1] flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-white/[0.08] hover:bg-white/[0.15] text-zinc-200 hover:text-slate-900 dark:text-white font-semibold text-xs transition border border-white/[0.1] flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Copy className="w-4 h-4" />
                 <span>Copiar Mensagem</span>
@@ -1055,7 +1055,7 @@ export default function AdminOperatorsPage() {
 
               <button
                 onClick={() => setRejectResultModal(null)}
-                className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white font-medium text-xs transition cursor-pointer"
+                className="w-full sm:w-auto py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-slate-700 dark:text-slate-300 hover:text-white font-medium text-xs transition cursor-pointer"
               >
                 Concluir
               </button>

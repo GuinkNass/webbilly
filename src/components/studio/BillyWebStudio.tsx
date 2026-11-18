@@ -47,6 +47,17 @@ import {
   FolderHeart,
   Database
 } from 'lucide-react';
+
+function RocketIcon({ className = 'w-4 h-4' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+      <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+      <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
+      <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+    </svg>
+  );
+}
 import { ActionTooltip } from '@/components/ui/ActionTooltip';
 import {
   BILLY_DESKTOP_TEMPLATES,
@@ -249,8 +260,8 @@ export default function BillyWebStudio({
     description: 'Espaço dedicado ao cavalheiro moderno com cerveja artesanal e os melhores barbeiros da região.',
     toneOfVoice: 'comercial',
     theme: 'dark-neon',
-    accentColor: '#84cc16',
-    primaryColor: '#84cc16',
+    accentColor: '#1478f0',
+    primaryColor: '#1478f0',
     backgroundColor: '#090d16',
     surfaceColor: '#111827',
     textColor: '#f8fafc',
@@ -327,6 +338,13 @@ export default function BillyWebStudio({
   const [generatedHtml, setGeneratedHtml] = useState<string>('');
   const [previewSlug, setPreviewSlug] = useState('');
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+
+  // Auto mobile preview detection
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setPreviewDevice('mobile');
+    }
+  }, []);
   const [fullScreenPreview, setFullScreenPreview] = useState(false);
   const [generatedResult, setGeneratedResult] = useState<any>(null);
   const [customWaMessage, setCustomWaMessage] = useState('');
@@ -1221,7 +1239,7 @@ export default function BillyWebStudio({
   return (
     <div className="space-y-6 select-none font-sans">
       {/* Banner de Vídeo em Loop do Webbilly Studio */}
-      <div className="w-full h-36 md:h-44 rounded-2xl overflow-hidden relative border border-white/10 mb-5 shadow-2xl bg-[#090d0b]">
+      <div className="w-full h-36 md:h-44 rounded-2xl overflow-hidden relative border border-slate-200 dark:border-white/10 mb-5 shadow-2xl bg-slate-900">
         <video
           src="/videos/webbilly-app-header.mp4"
           autoPlay
@@ -1237,33 +1255,33 @@ export default function BillyWebStudio({
       {/* =========================================================================
           CABEÇALHO NEON DO BILLY STUDIO WEB
          ========================================================================= */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#0c1017] via-[#101522] to-[#07090e] border border-white/[0.08] shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#84cc16]/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#0c1017] via-[#101522] to-[#07090e] border border-slate-200 dark:border-white/[0.08] shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#1478f0]/10 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#84cc16]/15 text-[#a3e635] border border-[#84cc16]/40 shadow-[0_0_15px_rgba(132,204,22,0.2)]">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#1478f0]/15 text-[#38bdf8] border border-[#1478f0]/40 shadow-sm">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Billy Studio Web • 100% no Navegador</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
               <span>Estúdio de Prospecção & Criação de Sites IA</span>
             </h1>
-            <p className="text-xs sm:text-sm text-zinc-400 max-w-2xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
               Encontre comércios sem site no Google, configure templates oficiais com o Wizard modular do Desktop,
-              gere a landing page com IA e publique no subdomínio oficial <code className="text-[#84cc16] font-mono">*.webbilly.com.br</code>.
+              gere a landing page com IA e publique no subdomínio oficial <code className="text-[#1478f0] font-mono">*.webbilly.com.br</code>.
             </p>
           </div>
 
           {/* Seletor de Abas */}
-          <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-black/60 border border-white/[0.08] shrink-0 self-start lg:self-auto overflow-x-auto max-w-full">
+          <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] shrink-0 self-start lg:self-auto overflow-x-auto max-w-full">
             <button
               type="button"
               onClick={() => setActiveTab('prospectar')}
               className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
                 activeTab === 'prospectar'
-                  ? 'bg-[#84cc16] text-black shadow-lg shadow-[#84cc16]/30'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                  ? 'bg-[#1478f0] text-black shadow-lg shadow-[#1478f0]/30'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04]'
               }`}
             >
               <Search className="w-3.5 h-3.5" />
@@ -1275,8 +1293,8 @@ export default function BillyWebStudio({
               onClick={() => setActiveTab('estudio')}
               className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
                 activeTab === 'estudio'
-                  ? 'bg-[#84cc16] text-black shadow-lg shadow-[#84cc16]/30'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                  ? 'bg-[#1478f0] text-black shadow-lg shadow-[#1478f0]/30'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04]'
               }`}
             >
               <Sliders className="w-3.5 h-3.5" />
@@ -1288,8 +1306,8 @@ export default function BillyWebStudio({
               onClick={() => setActiveTab('preview')}
               className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
                 activeTab === 'preview'
-                  ? 'bg-[#84cc16] text-black shadow-lg shadow-[#84cc16]/30'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                  ? 'bg-[#1478f0] text-black shadow-lg shadow-[#1478f0]/30'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04]'
               }`}
             >
               <Eye className="w-3.5 h-3.5" />
@@ -1301,8 +1319,8 @@ export default function BillyWebStudio({
               onClick={() => setActiveTab('projetos')}
               className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
                 activeTab === 'projetos'
-                  ? 'bg-[#84cc16] text-black shadow-lg shadow-[#84cc16]/30'
-                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                  ? 'bg-[#1478f0] text-black shadow-lg shadow-[#1478f0]/30'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04]'
               }`}
             >
               <Globe className="w-3.5 h-3.5" />
@@ -1318,15 +1336,15 @@ export default function BillyWebStudio({
       {activeTab === 'prospectar' && (
         <div className="space-y-6">
           {/* SELETOR TOPO: NOVA BUSCA GOOGLE MAPS VS BANCO DE LEADS SALVOS */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-2 bg-[#0a0d14] border border-white/[0.08] rounded-2xl">
-            <div className="flex items-center gap-1.5 p-1 bg-[#05070a] border border-white/[0.06] rounded-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-2 bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] rounded-2xl">
+            <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-[#14161f] border border-slate-200 dark:border-white/[0.06] rounded-xl">
               <button
                 type="button"
                 onClick={() => setLeadSourceMode('google')}
                 className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
                   leadSourceMode === 'google'
-                    ? 'bg-[#84cc16] text-black shadow-md shadow-[#84cc16]/20'
-                    : 'text-zinc-400 hover:text-white'
+                    ? 'bg-[#1478f0] text-black shadow-md shadow-[#1478f0]/20'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-white'
                 }`}
               >
                 <Search className="w-3.5 h-3.5" />
@@ -1340,8 +1358,8 @@ export default function BillyWebStudio({
                 }}
                 className={`px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 cursor-pointer ${
                   leadSourceMode === 'saved'
-                    ? 'bg-[#84cc16] text-black shadow-md shadow-[#84cc16]/20'
-                    : 'text-zinc-400 hover:text-white'
+                    ? 'bg-[#1478f0] text-black shadow-md shadow-[#1478f0]/20'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-white'
                 }`}
               >
                 <Database className="w-3.5 h-3.5" />
@@ -1360,7 +1378,7 @@ export default function BillyWebStudio({
                       loadSavedLeads(e.target.value);
                     }}
                     placeholder="Filtrar nome, nicho ou cidade..."
-                    className="w-full bg-[#05070a] border border-white/[0.1] rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#84cc16]"
+                    className="w-full bg-slate-100 dark:bg-[#14161f] border border-white/[0.1] rounded-xl px-3 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#1478f0]"
                   />
                   {savedLeadsFilter && (
                     <button
@@ -1369,7 +1387,7 @@ export default function BillyWebStudio({
                         setSavedLeadsFilter('');
                         loadSavedLeads('');
                       }}
-                      className="absolute right-2.5 top-2.5 text-zinc-500 hover:text-white"
+                      className="absolute right-2.5 top-2.5 text-slate-400 dark:text-slate-500 hover:text-white"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -1380,10 +1398,10 @@ export default function BillyWebStudio({
                   type="button"
                   onClick={() => loadSavedLeads()}
                   disabled={savedLeadsLoading}
-                  className="p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 border border-white/[0.08] transition cursor-pointer shrink-0"
+                  className="p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/[0.08] transition cursor-pointer shrink-0"
                   title="Atualizar lista de leads salvos"
                 >
-                  <RefreshCw className={`w-4 h-4 ${savedLeadsLoading ? 'animate-spin text-[#84cc16]' : ''}`} />
+                  <RefreshCw className={`w-4 h-4 ${savedLeadsLoading ? 'animate-spin text-[#1478f0]' : ''}`} />
                 </button>
               </div>
             )}
@@ -1391,14 +1409,14 @@ export default function BillyWebStudio({
 
           {/* MODO GOOGLE: FORMULÁRIO DE BUSCA & STATUS */}
           {leadSourceMode === 'google' && (
-            <div className="p-6 rounded-3xl bg-[#0e121b] border border-white/[0.06] shadow-xl space-y-4">
+            <div className="p-6 rounded-3xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06] shadow-xl space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <Search className="w-4 h-4 text-[#84cc16]" />
+                    <Search className="w-4 h-4 text-[#1478f0]" />
                     <span>Buscar Comércios Locais Sem Site Oficial</span>
                   </h3>
-                  <p className="text-xs text-zinc-400 mt-0.5">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                     Filtre por nicho e cidade para prospectar empresas com alta probabilidade de fechamento.
                   </p>
                 </div>
@@ -1406,7 +1424,7 @@ export default function BillyWebStudio({
                 <button
                   type="button"
                   onClick={() => setShowManualForm(!showManualForm)}
-                  className="text-xs text-[#84cc16] hover:underline flex items-center gap-1 font-semibold cursor-pointer shrink-0"
+                  className="text-xs text-[#1478f0] hover:underline flex items-center gap-1 font-semibold cursor-pointer shrink-0"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>{showManualForm ? 'Ocultar Cadastro Manual' : '+ Adicionar Cliente Manualmente'}</span>
@@ -1415,7 +1433,7 @@ export default function BillyWebStudio({
 
               <form onSubmit={handleSearchLeads} className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                 <div className="sm:col-span-5">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
                     Ramo / Nicho:
                   </label>
                   <input
@@ -1423,12 +1441,12 @@ export default function BillyWebStudio({
                     value={nicheQuery}
                     onChange={(e) => setNicheQuery(e.target.value)}
                     placeholder="Ex: Barbearia, Hamburgueria, Odontologia..."
-                    className="w-full bg-[#07090e] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#84cc16]"
+                    className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#1478f0]"
                   />
                 </div>
 
                 <div className="sm:col-span-4">
-                  <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
                     Cidade e Estado:
                   </label>
                   <input
@@ -1436,7 +1454,7 @@ export default function BillyWebStudio({
                     value={cityQuery}
                     onChange={(e) => setCityQuery(e.target.value)}
                     placeholder="Ex: São Paulo, SP ou Campinas, SP"
-                    className="w-full bg-[#07090e] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#84cc16]"
+                    className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-4 py-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#1478f0]"
                   />
                 </div>
 
@@ -1444,7 +1462,7 @@ export default function BillyWebStudio({
                   <button
                     type="submit"
                     disabled={leadsLoading}
-                    className="w-full py-3 px-5 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#9ae639] disabled:opacity-50 text-black shadow-lg shadow-[#84cc16]/20 transition flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full py-3 px-5 rounded-xl text-xs font-bold bg-[#1478f0] hover:bg-[#9ae639] disabled:opacity-50 text-black shadow-lg shadow-[#1478f0]/20 transition flex items-center justify-center gap-2 cursor-pointer"
                   >
                     {leadsLoading ? (
                       <>
@@ -1479,13 +1497,13 @@ export default function BillyWebStudio({
               )}
 
               {searchNotice && !leadsError && (
-                <div className="p-3 rounded-xl bg-[#84cc16]/10 border border-[#84cc16]/30 text-[#a3e635] text-xs flex items-center justify-between gap-2">
+                <div className="p-3 rounded-xl bg-[#1478f0]/10 border border-[#1478f0]/30 text-[#38bdf8] text-xs flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-[#84cc16]" />
+                    <CheckCircle2 className="w-4 h-4 text-[#1478f0]" />
                     <span>{searchNotice}</span>
                   </div>
                   {providerLabel && (
-                    <span className="text-[10px] font-mono uppercase bg-black/40 px-2 py-0.5 rounded border border-[#84cc16]/30 text-zinc-300">
+                    <span className="text-[10px] font-mono uppercase bg-slate-50 dark:bg-slate-50 dark:bg-black/20 px-2 py-0.5 rounded border border-[#1478f0]/30 text-slate-700 dark:text-slate-300">
                       Fonte: {providerLabel}
                     </span>
                   )}
@@ -1496,9 +1514,9 @@ export default function BillyWebStudio({
 
           {/* Cadastro Manual de Lead */}
           {showManualForm && (
-            <div className="p-6 rounded-3xl bg-[#0e121b] border border-[#84cc16]/30 shadow-xl space-y-4">
+            <div className="p-6 rounded-3xl bg-white dark:bg-[#1c1d27] border border-[#1478f0]/30 shadow-xl space-y-4">
               <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-[#84cc16]" />
+                <Building2 className="w-4 h-4 text-[#1478f0]" />
                 <span>Inserir Dados do Cliente Manualmente</span>
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
@@ -1507,35 +1525,35 @@ export default function BillyWebStudio({
                   value={manualName}
                   onChange={(e) => setManualName(e.target.value)}
                   placeholder="Nome da Empresa (ex: Studio Bella)"
-                  className="bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#84cc16]"
+                  className="bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#1478f0]"
                 />
                 <input
                   type="text"
                   value={manualNiche}
                   onChange={(e) => setManualNiche(e.target.value)}
                   placeholder="Nicho (ex: Salão de Beleza)"
-                  className="bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#84cc16]"
+                  className="bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#1478f0]"
                 />
                 <input
                   type="text"
                   value={manualCity}
                   onChange={(e) => setManualCity(e.target.value)}
                   placeholder="Cidade e Estado (ex: Campinas - SP)"
-                  className="bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#84cc16]"
+                  className="bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#1478f0]"
                 />
                 <input
                   type="text"
                   value={manualPhone}
                   onChange={(e) => setManualPhone(e.target.value)}
                   placeholder="WhatsApp com DDD (ex: 11988887777)"
-                  className="bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#84cc16]"
+                  className="bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#1478f0]"
                 />
               </div>
               <button
                 type="button"
                 onClick={handleUseManualLead}
                 disabled={!manualName.trim()}
-                className="py-2.5 px-6 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#9ae639] text-black transition cursor-pointer disabled:opacity-40"
+                className="py-2.5 px-6 rounded-xl text-xs font-bold bg-[#1478f0] hover:bg-[#9ae639] text-black transition cursor-pointer disabled:opacity-40"
               >
                 Gerar Site com Este Cliente →
               </button>
@@ -1545,7 +1563,7 @@ export default function BillyWebStudio({
           {/* MODO 1: CARDS DE LEADS ENCONTRADOS (NOVA BUSCA) */}
           {leadSourceMode === 'google' && leadsList.length > 0 && (
             <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs text-zinc-400 px-1">
+              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
                 <span>Comércios Encontrados no Google ({leadsList.length}):</span>
                 <span>Clique em "Gerar Site com IA" para preencher o Wizard</span>
               </div>
@@ -1559,7 +1577,7 @@ export default function BillyWebStudio({
                   return (
                     <div
                       key={lead.id || idx}
-                      className="p-5 rounded-2xl bg-[#0e121b] border border-white/[0.08] hover:border-[#84cc16]/50 transition-all duration-200 flex flex-col justify-between group shadow-lg"
+                      className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] hover:border-[#1478f0]/50 transition-all duration-200 flex flex-col justify-between group shadow-lg"
                     >
                       <div className="space-y-3">
                         {/* Topo do Card: Mini Foto Cover (56x56) + Dados Principais */}
@@ -1577,14 +1595,14 @@ export default function BillyWebStudio({
                                 }}
                               />
                             ) : null}
-                            <div className="absolute inset-0 flex items-center justify-center font-black text-xs text-[#84cc16] bg-gradient-to-br from-[#84cc16]/15 via-black/40 to-transparent pointer-events-none">
+                            <div className="absolute inset-0 flex items-center justify-center font-black text-xs text-[#1478f0] bg-gradient-to-br from-[#1478f0]/15 via-black/40 to-transparent pointer-events-none">
                               {getInitials(lead.name)}
                             </div>
                           </div>
 
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-1.5">
-                              <h4 className="font-extrabold text-white text-sm group-hover:text-[#a3e635] transition leading-snug truncate" title={lead.name}>
+                              <h4 className="font-extrabold text-white text-sm group-hover:text-[#38bdf8] transition leading-snug truncate" title={lead.name}>
                                 {lead.name}
                               </h4>
                               {isHot && (
@@ -1595,12 +1613,12 @@ export default function BillyWebStudio({
                               )}
                             </div>
 
-                            <p className="text-xs text-zinc-400 flex items-center gap-1.5 truncate mt-1">
-                              <MapPin className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                            <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate mt-1">
+                              <MapPin className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                               <span className="truncate">{lead.address || `${lead.city || cityQuery}`}</span>
                             </p>
 
-                            <div className="flex items-center gap-3 text-[11px] text-zinc-400 pt-1">
+                            <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 pt-1">
                               {lead.phone && (
                                 <span className="flex items-center gap-1 text-emerald-400 font-mono">
                                   <Phone className="w-3 h-3" />
@@ -1631,25 +1649,25 @@ export default function BillyWebStudio({
                           )}
                           {(lead.hours || lead.openingHours) && (
                             <span
-                              className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-800/80 text-zinc-300 border border-white/[0.08] flex items-center gap-1 max-w-[200px] truncate"
+                              className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-zinc-800/80 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/[0.08] flex items-center gap-1 max-w-[200px] truncate"
                               title={lead.hours || lead.openingHours}
                             >
-                              <Clock className="w-3 h-3 text-zinc-400 shrink-0" />
+                              <Clock className="w-3 h-3 text-slate-500 dark:text-slate-400 shrink-0" />
                               <span className="truncate">{lead.hours || lead.openingHours}</span>
                             </span>
                           )}
                         </div>
                       </div>
 
-                      <div className="pt-4 mt-4 border-t border-white/[0.06] flex items-center justify-between gap-2">
-                        <span className="text-[10px] font-mono text-zinc-500 uppercase truncate">
+                      <div className="pt-4 mt-4 border-t border-slate-200 dark:border-white/[0.06] flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase truncate">
                           {lead.niche || lead.category || nicheQuery}
                         </span>
 
                         <button
                           type="button"
                           onClick={() => handleSelectLead(lead)}
-                          className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#9ae639] text-black shadow-md shadow-[#84cc16]/20 transition flex items-center gap-1.5 cursor-pointer shrink-0"
+                          className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#1478f0] hover:bg-[#9ae639] text-black shadow-md shadow-[#1478f0]/20 transition flex items-center gap-1.5 cursor-pointer shrink-0"
                         >
                           <Sparkles className="w-3.5 h-3.5" />
                           <span>Gerar Site com IA →</span>
@@ -1665,32 +1683,32 @@ export default function BillyWebStudio({
           {/* MODO 2: BANCO PERSISTENTE DE LEADS SALVOS (SUPABASE) */}
           {leadSourceMode === 'saved' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between text-xs text-zinc-400 px-1">
+              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
                 <span className="font-bold text-white flex items-center gap-1.5">
-                  <Database className="w-4 h-4 text-[#84cc16]" />
+                  <Database className="w-4 h-4 text-[#1478f0]" />
                   <span>Leads Salvos no Banco de Dados ({savedLeadsList.length}):</span>
                 </span>
                 <span>Pesquisas salvas para reaproveitar sem gastar cotas da API</span>
               </div>
 
               {savedLeadsLoading ? (
-                <div className="py-16 text-center text-zinc-500 space-y-2">
-                  <Loader2 className="w-8 h-8 border-2 border-[#84cc16] rounded-full animate-spin mx-auto text-[#84cc16]" />
+                <div className="py-16 text-center text-slate-400 dark:text-slate-500 space-y-2">
+                  <Loader2 className="w-8 h-8 border-2 border-[#1478f0] rounded-full animate-spin mx-auto text-[#1478f0]" />
                   <p className="text-xs">Consultando banco de leads persistente...</p>
                 </div>
               ) : savedLeadsList.length === 0 ? (
-                <div className="p-12 rounded-3xl bg-[#0e121b] border border-dashed border-white/[0.08] text-center space-y-3">
+                <div className="p-12 rounded-3xl bg-white dark:bg-[#1c1d27] border border-dashed border-slate-200 dark:border-white/[0.08] text-center space-y-3">
                   <Database className="w-10 h-10 text-zinc-600 mx-auto" />
                   <div>
                     <h4 className="text-sm font-bold text-white">Nenhum lead encontrado no banco</h4>
-                    <p className="text-xs text-zinc-400 mt-1 max-w-md mx-auto">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">
                       Realize uma busca no Google Maps na aba anterior. Todas as empresas encontradas serão salvas automaticamente no banco de dados com fotos e avaliações!
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setLeadSourceMode('google')}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#9ae639] text-black transition inline-flex items-center gap-2 cursor-pointer"
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-[#1478f0] hover:bg-[#9ae639] text-black transition inline-flex items-center gap-2 cursor-pointer"
                   >
                     <Search className="w-3.5 h-3.5" />
                     <span>Fazer Busca no Google Maps</span>
@@ -1706,7 +1724,7 @@ export default function BillyWebStudio({
                     return (
                       <div
                         key={lead.id || idx}
-                        className="p-5 rounded-2xl bg-[#0e121b] border border-white/[0.08] hover:border-[#84cc16]/50 transition-all duration-200 flex flex-col justify-between group shadow-lg"
+                        className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] hover:border-[#1478f0]/50 transition-all duration-200 flex flex-col justify-between group shadow-lg"
                       >
                         <div className="space-y-3">
                           {/* Mini Foto + Dados */}
@@ -1724,14 +1742,14 @@ export default function BillyWebStudio({
                                   }}
                                 />
                               ) : null}
-                              <div className="absolute inset-0 flex items-center justify-center font-black text-xs text-[#84cc16] bg-gradient-to-br from-[#84cc16]/15 via-black/40 to-transparent pointer-events-none">
+                              <div className="absolute inset-0 flex items-center justify-center font-black text-xs text-[#1478f0] bg-gradient-to-br from-[#1478f0]/15 via-black/40 to-transparent pointer-events-none">
                                 {getInitials(lead.name)}
                               </div>
                             </div>
 
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-1.5">
-                                <h4 className="font-extrabold text-white text-sm group-hover:text-[#a3e635] transition leading-snug truncate" title={lead.name}>
+                                <h4 className="font-extrabold text-white text-sm group-hover:text-[#38bdf8] transition leading-snug truncate" title={lead.name}>
                                   {lead.name}
                                 </h4>
                                 {isHot && (
@@ -1742,12 +1760,12 @@ export default function BillyWebStudio({
                                 )}
                               </div>
 
-                              <p className="text-xs text-zinc-400 flex items-center gap-1.5 truncate mt-1">
-                                <MapPin className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                              <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 truncate mt-1">
+                                <MapPin className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                                 <span className="truncate">{lead.address || `${lead.city || ''}`}</span>
                               </p>
 
-                              <div className="flex items-center gap-3 text-[11px] text-zinc-400 pt-1">
+                              <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 pt-1">
                                 {lead.phone && (
                                   <span className="flex items-center gap-1 text-emerald-400 font-mono">
                                     <Phone className="w-3 h-3" />
@@ -1776,22 +1794,22 @@ export default function BillyWebStudio({
                                 <span>{lead.realReviews.length} avaliações</span>
                               </span>
                             )}
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#84cc16]/10 text-[#84cc16] border border-[#84cc16]/20 flex items-center gap-1">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#1478f0]/10 text-[#1478f0] border border-[#1478f0]/20 flex items-center gap-1">
                               <Database className="w-3 h-3" />
                               <span>Salvo no Banco</span>
                             </span>
                           </div>
                         </div>
 
-                        <div className="pt-4 mt-4 border-t border-white/[0.06] flex items-center justify-between gap-2">
-                          <span className="text-[10px] font-mono text-zinc-500 uppercase truncate">
+                        <div className="pt-4 mt-4 border-t border-slate-200 dark:border-white/[0.06] flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase truncate">
                             {lead.niche || lead.category || 'Comércio Local'}
                           </span>
 
                           <button
                             type="button"
                             onClick={() => handleSelectLead(lead)}
-                            className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#9ae639] text-black shadow-md shadow-[#84cc16]/20 transition flex items-center gap-1.5 cursor-pointer shrink-0"
+                            className="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-[#1478f0] hover:bg-[#9ae639] text-black shadow-md shadow-[#1478f0]/20 transition flex items-center gap-1.5 cursor-pointer shrink-0"
                           >
                             <Sparkles className="w-3.5 h-3.5" />
                             <span>Gerar Site com IA →</span>
@@ -1813,14 +1831,14 @@ export default function BillyWebStudio({
       {activeTab === 'estudio' && (
         <div className="space-y-8">
           {/* SEÇÃO 1: SELETOR VISUAL DOS 20 TEMPLATES REAIS DO BILLY DESKTOP */}
-          <div className="p-6 sm:p-8 rounded-3xl bg-[#0e121b] border border-white/[0.06] shadow-xl space-y-6">
+          <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06] shadow-xl space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Palette className="w-5 h-5 text-[#84cc16]" />
+                  <Palette className="w-5 h-5 text-[#1478f0]" />
                   <span>1. Escolher Template Visual Oficial do Billy Desktop</span>
                 </h3>
-                <p className="text-xs text-zinc-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Selecione entre os 20 layouts de alta conversão do Billy Suite ou deixe a IA escolher o modelo perfeito.
                 </p>
               </div>
@@ -1830,7 +1848,7 @@ export default function BillyWebStudio({
                   type="button"
                   onClick={handleRecommendTemplateWithAI}
                   disabled={isRecommendingTemplate}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-[#84cc16] text-white hover:brightness-110 shadow-lg shadow-purple-600/20 transition flex items-center gap-2 cursor-pointer shrink-0"
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 via-indigo-600 to-[#1478f0] text-white hover:brightness-110 shadow-lg shadow-purple-600/20 transition flex items-center gap-2 cursor-pointer shrink-0"
                 >
                   {isRecommendingTemplate ? (
                     <>
@@ -1849,18 +1867,18 @@ export default function BillyWebStudio({
                   <div className="relative group">
                     <button
                       type="button"
-                      className="px-3 py-2 rounded-xl text-xs font-bold bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 flex items-center gap-1.5"
+                      className="px-3 py-2 rounded-xl text-xs font-bold bg-white/[0.06] hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 flex items-center gap-1.5"
                     >
-                      <Bookmark className="w-3.5 h-3.5 text-[#84cc16]" />
+                      <Bookmark className="w-3.5 h-3.5 text-[#1478f0]" />
                       <span>Meus Presets ({savedPresets.length})</span>
                     </button>
-                    <div className="absolute right-0 top-full mt-1 w-64 bg-[#0a0d14] border border-white/[0.1] rounded-2xl p-2 shadow-2xl hidden group-hover:block z-50">
+                    <div className="absolute right-0 top-full mt-1 w-64 bg-white dark:bg-[#1c1d27] border border-white/[0.1] rounded-2xl p-2 shadow-2xl hidden group-hover:block z-50">
                       {savedPresets.map((p, pIdx) => (
                         <button
                           key={pIdx}
                           type="button"
                           onClick={() => handleApplyPreset(p)}
-                          className="w-full text-left p-2 rounded-xl text-xs text-zinc-300 hover:text-white hover:bg-white/[0.06] flex items-center justify-between"
+                          className="w-full text-left p-2 rounded-xl text-xs text-slate-700 dark:text-slate-300 hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] flex items-center justify-between"
                         >
                           <span className="font-bold truncate">{p.name}</span>
                           <span className="w-3 h-3 rounded-full" style={{ backgroundColor: p.accentColor }} />
@@ -1907,8 +1925,8 @@ export default function BillyWebStudio({
                     onClick={() => setTemplateCategoryFilter(cat.id)}
                     className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition cursor-pointer ${
                       isCatActive
-                        ? 'bg-[#84cc16] text-black shadow-md shadow-[#84cc16]/20'
-                        : 'bg-black/40 text-zinc-400 hover:text-white border border-white/[0.06]'
+                        ? 'bg-[#1478f0] text-black shadow-md shadow-[#1478f0]/20'
+                        : 'bg-slate-50 dark:bg-slate-50 dark:bg-black/20 text-slate-500 dark:text-slate-400 hover:text-white border border-slate-200 dark:border-white/[0.06]'
                     }`}
                   >
                     {cat.label}
@@ -1974,38 +1992,38 @@ export default function BillyWebStudio({
                     }}
                     className={`relative rounded-xl border p-2.5 cursor-pointer transition-all duration-200 flex flex-col justify-between group overflow-hidden ${
                       isSelected
-                        ? 'bg-[#0f1420] border-[#84cc16] ring-2 ring-[#84cc16]/40 shadow-xl'
-                        : 'bg-black/40 border-white/[0.06] hover:border-white/[0.2] hover:bg-black/60'
+                        ? 'bg-white dark:bg-[#1c1d27] border-[#1478f0] ring-2 ring-[#1478f0]/40 shadow-xl'
+                        : 'bg-slate-50 dark:bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-white/[0.06] hover:border-white/[0.2] hover:bg-slate-100 dark:bg-white/[0.05]'
                     }`}
                   >
                     {/* Imagem de Capa do Template Compacta (h-24) */}
-                    <div className="relative h-24 rounded-lg overflow-hidden mb-2 bg-zinc-900 border border-white/[0.06]">
+                    <div className="relative h-24 rounded-lg overflow-hidden mb-2 bg-zinc-900 border border-slate-200 dark:border-white/[0.06]">
                       <img src={tpl.previewImg} alt={tpl.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
                       <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider bg-black/75 backdrop-blur-md text-white border border-white/[0.1] max-w-[85%] truncate">
                         {tpl.badge}
                       </div>
                       {isSelected && (
-                        <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[#84cc16] text-black flex items-center justify-center font-bold shadow-lg">
+                        <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[#1478f0] text-black flex items-center justify-center font-bold shadow-lg">
                           <Check className="w-3 h-3" />
                         </div>
                       )}
                     </div>
 
                     <div className="space-y-0.5">
-                      <span className="text-[9px] font-mono text-zinc-500 uppercase block truncate">{tpl.category}</span>
-                      <h4 className="font-bold text-xs text-white group-hover:text-[#a3e635] transition leading-tight truncate" title={tpl.name}>
+                      <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500 uppercase block truncate">{tpl.category}</span>
+                      <h4 className="font-bold text-xs text-white group-hover:text-[#38bdf8] transition leading-tight truncate" title={tpl.name}>
                         {tpl.name}
                       </h4>
-                      <p className="text-[10px] text-zinc-400 line-clamp-1 leading-snug">
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-1 leading-snug">
                         {tpl.description}
                       </p>
                     </div>
 
-                    <div className="pt-2 mt-2 border-t border-white/[0.06] flex items-center justify-between text-[9px]">
-                      <span className="font-mono text-zinc-500">Accent:</span>
+                    <div className="pt-2 mt-2 border-t border-slate-200 dark:border-white/[0.06] flex items-center justify-between text-[9px]">
+                      <span className="font-mono text-slate-400 dark:text-slate-500">Accent:</span>
                       <div className="flex items-center gap-1">
                         <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: tpl.accentColor }} />
-                        <span className="font-mono text-zinc-400 text-[9px]">{tpl.accentColor}</span>
+                        <span className="font-mono text-slate-500 dark:text-slate-400 text-[9px]">{tpl.accentColor}</span>
                       </div>
                     </div>
                   </div>
@@ -2017,22 +2035,22 @@ export default function BillyWebStudio({
           {/* =========================================================================
               SEÇÃO 1.5: IDENTIDADE VISUAL, PALETAS CURADAS & TIPOGRAFIA
              ========================================================================= */}
-          <div className="p-6 sm:p-8 rounded-3xl bg-[#0e121b] border border-white/[0.06] shadow-xl space-y-6">
+          <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06] shadow-xl space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Palette className="w-5 h-5 text-[#84cc16]" />
+                  <Palette className="w-5 h-5 text-[#1478f0]" />
                   <span>Identidade Visual, Paletas & Tipografia</span>
                 </h3>
-                <p className="text-xs text-zinc-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Selecione paletas harmoniosas, personalize cores hexadecimais, tipografia Google Fonts e o nome reduzido para a navbar.
                 </p>
               </div>
 
               {/* Nome Curto no Header */}
-              <div className="flex items-center gap-2 bg-black/50 border border-white/[0.1] rounded-2xl p-2.5 shrink-0">
+              <div className="flex items-center gap-2 bg-slate-100 dark:bg-white/[0.05] border border-white/[0.1] rounded-2xl p-2.5 shrink-0">
                 <div className="text-left">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                     Nome no Header (Menu):
                   </label>
                   <input
@@ -2049,7 +2067,7 @@ export default function BillyWebStudio({
                     const formatted = formatHeaderName(siteForm.businessName);
                     setSiteForm((prev) => ({ ...prev, shortName: formatted }));
                   }}
-                  className="px-2.5 py-1.5 rounded-xl text-[10px] font-bold bg-[#84cc16]/20 hover:bg-[#84cc16] text-[#84cc16] hover:text-black border border-[#84cc16]/30 transition cursor-pointer shrink-0"
+                  className="px-2.5 py-1.5 rounded-xl text-[10px] font-bold bg-[#1478f0]/20 hover:bg-[#1478f0] text-[#1478f0] hover:text-black border border-[#1478f0]/30 transition cursor-pointer shrink-0"
                   title="Gerar nome encurtado inteligente para o navbar"
                 >
                   🪄 Encurtar
@@ -2061,10 +2079,10 @@ export default function BillyWebStudio({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-[#84cc16]" />
+                  <Sparkles className="w-3.5 h-3.5 text-[#1478f0]" />
                   <span>Paletas Curadas Profissionais ({CURATED_PALETTES.length}):</span>
                 </span>
-                <span className="text-[11px] text-zinc-400 hidden sm:inline">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:inline">
                   Destaque, Fundo Principal, Superfície de Cards e Texto
                 </span>
               </div>
@@ -2089,13 +2107,13 @@ export default function BillyWebStudio({
                       }}
                       className={`p-3 rounded-2xl border cursor-pointer transition-all duration-200 flex flex-col justify-between ${
                         isSelected
-                          ? 'bg-[#0f1420] border-[#84cc16] ring-2 ring-[#84cc16]/40 shadow-lg'
-                          : 'bg-black/40 border-white/[0.06] hover:border-white/[0.2] hover:bg-black/60'
+                          ? 'bg-white dark:bg-[#1c1d27] border-[#1478f0] ring-2 ring-[#1478f0]/40 shadow-lg'
+                          : 'bg-slate-50 dark:bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-white/[0.06] hover:border-white/[0.2] hover:bg-slate-100 dark:bg-white/[0.05]'
                       }`}
                     >
                       <div className="flex items-center justify-between gap-1 mb-2">
                         <span className="font-extrabold text-xs text-white truncate">{pal.name}</span>
-                        <span className="text-[9px] font-mono text-zinc-400 bg-white/[0.06] px-1.5 py-0.5 rounded truncate">
+                        <span className="text-[9px] font-mono text-slate-500 dark:text-slate-400 bg-white/[0.06] px-1.5 py-0.5 rounded truncate">
                           {pal.nicheTag || pal.category}
                         </span>
                       </div>
@@ -2108,9 +2126,9 @@ export default function BillyWebStudio({
                         <div className="flex-1" style={{ backgroundColor: pal.text }} title={`Texto: ${pal.text}`} />
                       </div>
 
-                      <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500 mt-2">
+                      <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 dark:text-slate-500 mt-2">
                         <span>{pal.primary}</span>
-                        {isSelected && <span className="text-[#84cc16] font-bold">● Ativa</span>}
+                        {isSelected && <span className="text-[#1478f0] font-bold">● Ativa</span>}
                       </div>
                     </div>
                   );
@@ -2119,21 +2137,21 @@ export default function BillyWebStudio({
             </div>
 
             {/* Subseção B: Color Pickers Individuais (Hex + Nativo) */}
-            <div className="pt-4 border-t border-white/[0.06] space-y-3">
+            <div className="pt-4 border-t border-slate-200 dark:border-white/[0.06] space-y-3">
               <span className="text-xs font-bold text-white block">
                 Ajuste Fino de Cores (Seletor Hexadecimal + Nativo):
               </span>
 
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {/* 1. Primária / Destaque */}
-                <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06] space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/[0.06] space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                     Cor Primária / Accent:
                   </label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
-                      value={siteForm.primaryColor || '#84cc16'}
+                      value={siteForm.primaryColor || '#1478f0'}
                       onChange={(e) => {
                         const val = e.target.value;
                         setSiteForm((prev) => ({ ...prev, primaryColor: val, accentColor: val }));
@@ -2142,19 +2160,19 @@ export default function BillyWebStudio({
                     />
                     <input
                       type="text"
-                      value={siteForm.primaryColor || '#84cc16'}
+                      value={siteForm.primaryColor || '#1478f0'}
                       onChange={(e) => {
                         const val = e.target.value;
                         setSiteForm((prev) => ({ ...prev, primaryColor: val, accentColor: val }));
                       }}
-                      className="w-full bg-[#07090e] border border-white/[0.1] rounded-lg px-2 py-1 text-xs text-white font-mono uppercase focus:outline-none focus:border-[#84cc16]"
+                      className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-lg px-2 py-1 text-xs text-white font-mono uppercase focus:outline-none focus:border-[#1478f0]"
                     />
                   </div>
                 </div>
 
                 {/* 2. Fundo Principal */}
-                <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06] space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/[0.06] space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                     Fundo Principal:
                   </label>
                   <div className="flex items-center gap-2">
@@ -2168,14 +2186,14 @@ export default function BillyWebStudio({
                       type="text"
                       value={siteForm.backgroundColor || '#090d16'}
                       onChange={(e) => setSiteForm((prev) => ({ ...prev, backgroundColor: e.target.value }))}
-                      className="w-full bg-[#07090e] border border-white/[0.1] rounded-lg px-2 py-1 text-xs text-white font-mono uppercase focus:outline-none focus:border-[#84cc16]"
+                      className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-lg px-2 py-1 text-xs text-white font-mono uppercase focus:outline-none focus:border-[#1478f0]"
                     />
                   </div>
                 </div>
 
                 {/* 3. Superfície / Cards */}
-                <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06] space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/[0.06] space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                     Superfície / Cards:
                   </label>
                   <div className="flex items-center gap-2">
@@ -2189,14 +2207,14 @@ export default function BillyWebStudio({
                       type="text"
                       value={siteForm.surfaceColor || '#111827'}
                       onChange={(e) => setSiteForm((prev) => ({ ...prev, surfaceColor: e.target.value }))}
-                      className="w-full bg-[#07090e] border border-white/[0.1] rounded-lg px-2 py-1 text-xs text-white font-mono uppercase focus:outline-none focus:border-[#84cc16]"
+                      className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-lg px-2 py-1 text-xs text-white font-mono uppercase focus:outline-none focus:border-[#1478f0]"
                     />
                   </div>
                 </div>
 
                 {/* 4. Texto Principal */}
-                <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06] space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 block">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/[0.06] space-y-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                     Texto Principal:
                   </label>
                   <div className="flex items-center gap-2">
@@ -2210,7 +2228,7 @@ export default function BillyWebStudio({
                       type="text"
                       value={siteForm.textColor || '#f8fafc'}
                       onChange={(e) => setSiteForm((prev) => ({ ...prev, textColor: e.target.value }))}
-                      className="w-full bg-[#07090e] border border-white/[0.1] rounded-lg px-2 py-1 text-xs text-white font-mono uppercase focus:outline-none focus:border-[#84cc16]"
+                      className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-lg px-2 py-1 text-xs text-white font-mono uppercase focus:outline-none focus:border-[#1478f0]"
                     />
                   </div>
                 </div>
@@ -2218,9 +2236,9 @@ export default function BillyWebStudio({
             </div>
 
             {/* Subseção C: 4 Pares Tipográficos Google Fonts */}
-            <div className="pt-4 border-t border-white/[0.06] space-y-3">
+            <div className="pt-4 border-t border-slate-200 dark:border-white/[0.06] space-y-3">
               <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                <Type className="w-3.5 h-3.5 text-[#84cc16]" />
+                <Type className="w-3.5 h-3.5 text-[#1478f0]" />
                 <span>Pares Tipográficos Oficiais Google Fonts:</span>
               </span>
 
@@ -2234,21 +2252,21 @@ export default function BillyWebStudio({
                       onClick={() => setSiteForm((prev) => ({ ...prev, fontPair: font.id }))}
                       className={`p-3.5 rounded-2xl border cursor-pointer transition-all duration-200 flex flex-col justify-between ${
                         isSelected
-                          ? 'bg-[#0f1420] border-[#84cc16] ring-2 ring-[#84cc16]/40 shadow-lg'
-                          : 'bg-black/40 border-white/[0.06] hover:border-white/[0.2] hover:bg-black/60'
+                          ? 'bg-white dark:bg-[#1c1d27] border-[#1478f0] ring-2 ring-[#1478f0]/40 shadow-lg'
+                          : 'bg-slate-50 dark:bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-white/[0.06] hover:border-white/[0.2] hover:bg-slate-100 dark:bg-white/[0.05]'
                       }`}
                     >
                       <div>
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-extrabold text-xs text-white">{font.name}</span>
-                          {isSelected && <Check className="w-3.5 h-3.5 text-[#84cc16]" />}
+                          {isSelected && <Check className="w-3.5 h-3.5 text-[#1478f0]" />}
                         </div>
-                        <span className="text-[10px] font-mono text-zinc-400 block mb-2">{font.heading} + {font.body}</span>
-                        <p className="text-[11px] text-zinc-300 italic border-l-2 border-[#84cc16]/50 pl-2 py-0.5">
+                        <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 block mb-2">{font.heading} + {font.body}</span>
+                        <p className="text-[11px] text-slate-700 dark:text-slate-300 italic border-l-2 border-[#1478f0]/50 pl-2 py-0.5">
                           "{font.sample}"
                         </p>
                       </div>
-                      <span className="text-[9px] font-mono text-zinc-500 mt-2 block">
+                      <span className="text-[9px] font-mono text-slate-400 dark:text-slate-500 mt-2 block">
                         Ideal para: {font.bestFor}
                       </span>
                     </div>
@@ -2259,14 +2277,14 @@ export default function BillyWebStudio({
           </div>
 
           {/* SEÇÃO 2: DADOS DO COMÉRCIO, CATEGORIAS (50+) E TOM DE VOZ */}
-          <div className="p-6 sm:p-8 rounded-3xl bg-[#0e121b] border border-white/[0.06] shadow-xl space-y-6">
+          <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06] shadow-xl space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Building2 className="w-5 h-5 text-[#84cc16]" />
+                  <Building2 className="w-5 h-5 text-[#1478f0]" />
                   <span>2. Identidade do Estabelecimento & Copywriting</span>
                 </h3>
-                <p className="text-xs text-zinc-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Configure o nome, nicho específico, cidade, canais de contato e gere textos persuasivos com IA.
                 </p>
               </div>
@@ -2275,7 +2293,7 @@ export default function BillyWebStudio({
                 type="button"
                 onClick={handleGenerateCopy}
                 disabled={copyGenerating}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-[#84cc16]/15 hover:bg-[#84cc16] text-[#84cc16] hover:text-black border border-[#84cc16]/40 transition flex items-center gap-2 cursor-pointer shrink-0 disabled:opacity-50"
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-[#1478f0]/15 hover:bg-[#1478f0] text-[#1478f0] hover:text-black border border-[#1478f0]/40 transition flex items-center gap-2 cursor-pointer shrink-0 disabled:opacity-50"
               >
                 {copyGenerating ? (
                   <>
@@ -2300,19 +2318,19 @@ export default function BillyWebStudio({
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
                   Nome do Negócio:
                 </label>
                 <input
                   type="text"
                   value={siteForm.businessName}
                   onChange={(e) => handleBusinessNameChange(e.target.value)}
-                  className="w-full bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
                   Nicho / Especialidade (50+ Categorias):
                 </label>
                 <select
@@ -2323,10 +2341,10 @@ export default function BillyWebStudio({
                     const rec = recommendTemplateForNiche(chosen);
                     setSelectedTemplateId(rec.template.id);
                   }}
-                  className="w-full bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
                 >
                   {CATEGORY_GROUPS.map((grp, gIdx) => (
-                    <optgroup key={gIdx} label={grp.group} className="bg-zinc-900 text-zinc-400 font-bold">
+                    <optgroup key={gIdx} label={grp.group} className="bg-zinc-900 text-slate-500 dark:text-slate-400 font-bold">
                       {grp.categories.map((cat, cIdx) => (
                         <option key={cIdx} value={cat} className="bg-zinc-950 text-white font-normal">
                           {cat}
@@ -2338,19 +2356,19 @@ export default function BillyWebStudio({
               </div>
 
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
                   Cidade e Estado:
                 </label>
                 <input
                   type="text"
                   value={siteForm.city}
                   onChange={(e) => setSiteForm((prev) => ({ ...prev, city: e.target.value }))}
-                  className="w-full bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
                   Subdomínio Oficial:
                 </label>
                 <div className="flex items-center">
@@ -2358,16 +2376,16 @@ export default function BillyWebStudio({
                     type="text"
                     value={siteForm.subdomain}
                     onChange={(e) => setSiteForm((prev) => ({ ...prev, subdomain: e.target.value }))}
-                    className="w-full bg-[#07090e] border border-white/[0.1] rounded-l-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                    className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-l-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
                   />
-                  <span className="bg-black/60 border border-l-0 border-white/[0.1] px-3 py-2.5 rounded-r-xl text-xs text-zinc-500 font-mono">
+                  <span className="bg-slate-100 dark:bg-white/[0.05] border border-l-0 border-white/[0.1] px-3 py-2.5 rounded-r-xl text-xs text-slate-400 dark:text-slate-500 font-mono">
                     .webbilly.com.br
                   </span>
                 </div>
               </div>
 
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
                   WhatsApp Oficial (com DDD):
                 </label>
                 <input
@@ -2375,18 +2393,18 @@ export default function BillyWebStudio({
                   value={siteForm.whatsapp}
                   onChange={(e) => setSiteForm((prev) => ({ ...prev, whatsapp: e.target.value }))}
                   placeholder="5511999998888"
-                  className="w-full bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
                   Tom de Voz da Copy:
                 </label>
                 <select
                   value={siteForm.toneOfVoice}
                   onChange={(e) => setSiteForm((prev) => ({ ...prev, toneOfVoice: e.target.value }))}
-                  className="w-full bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
                 >
                   {TONES_OF_VOICE.map((t) => (
                     <option key={t.id} value={t.id}>
@@ -2399,40 +2417,40 @@ export default function BillyWebStudio({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
                   Headline / Slogan de Impacto:
                 </label>
                 <input
                   type="text"
                   value={siteForm.tagline}
                   onChange={(e) => setSiteForm((prev) => ({ ...prev, tagline: e.target.value }))}
-                  className="w-full bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 block mb-1">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">
                   Endereço / Localização:
                 </label>
                 <input
                   type="text"
                   value={siteForm.address}
                   onChange={(e) => setSiteForm((prev) => ({ ...prev, address: e.target.value }))}
-                  className="w-full bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                  className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-[#1478f0]"
                 />
               </div>
             </div>
           </div>
 
           {/* SEÇÃO 3: TOGGLES MODULARES DE SEÇÕES (IGUAL AO DESKTOP SUITE) */}
-          <div className="p-6 sm:p-8 rounded-3xl bg-[#0e121b] border border-white/[0.06] shadow-xl space-y-5">
+          <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06] shadow-xl space-y-5">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <SlidersHorizontal className="w-5 h-5 text-[#84cc16]" />
+                  <SlidersHorizontal className="w-5 h-5 text-[#1478f0]" />
                   <span>3. Seções Modulares do Site (Toggles Liga/Desliga)</span>
                 </h3>
-                <p className="text-xs text-zinc-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Ative ou desative seções de acordo com a necessidade do cliente (idêntico ao app desktop).
                 </p>
               </div>
@@ -2441,28 +2459,28 @@ export default function BillyWebStudio({
                 <button
                   type="button"
                   onClick={() => setShowSavePresetInput(!showSavePresetInput)}
-                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/[0.06] hover:bg-white/[0.1] text-zinc-300 flex items-center gap-1.5 cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white/[0.06] hover:bg-white/[0.1] text-slate-700 dark:text-slate-300 flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Bookmark className="w-3.5 h-3.5 text-[#84cc16]" />
+                  <Bookmark className="w-3.5 h-3.5 text-[#1478f0]" />
                   <span>Salvar como Preset</span>
                 </button>
               </div>
             </div>
 
             {showSavePresetInput && (
-              <div className="p-4 rounded-2xl bg-black/60 border border-[#84cc16]/40 flex items-center gap-3">
+              <div className="p-4 rounded-2xl bg-slate-100 dark:bg-white/[0.05] border border-[#1478f0]/40 flex items-center gap-3">
                 <input
                   type="text"
                   value={newPresetName}
                   onChange={(e) => setNewPresetName(e.target.value)}
                   placeholder="Nome do seu preset (ex: Modelo Clínica VIP)"
-                  className="flex-1 bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                  className="flex-1 bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#1478f0]"
                 />
                 <button
                   type="button"
                   onClick={handleSaveCustomPreset}
                   disabled={!newPresetName.trim()}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#9ae639] text-black transition cursor-pointer disabled:opacity-40"
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[#1478f0] hover:bg-[#9ae639] text-black transition cursor-pointer disabled:opacity-40"
                 >
                   Salvar
                 </button>
@@ -2493,12 +2511,12 @@ export default function BillyWebStudio({
                     onClick={() => setBlocks((prev) => ({ ...prev, [item.id]: !isActive }))}
                     className={`p-3 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between h-20 ${
                       isActive
-                        ? 'bg-[#84cc16]/10 border-[#84cc16]/50 text-white'
-                        : 'bg-black/30 border-white/[0.06] text-zinc-500 hover:border-white/[0.15]'
+                        ? 'bg-[#1478f0]/10 border-[#1478f0]/50 text-white'
+                        : 'bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-white/[0.06] text-slate-400 dark:text-slate-500 hover:border-white/[0.15]'
                     }`}
                   >
                     <span className="text-[11px] font-bold leading-tight">{item.label}</span>
-                    <span className={`text-[10px] font-mono font-extrabold uppercase ${isActive ? 'text-[#84cc16]' : 'text-zinc-600'}`}>
+                    <span className={`text-[10px] font-mono font-extrabold uppercase ${isActive ? 'text-[#1478f0]' : 'text-zinc-600'}`}>
                       {isActive ? '● Ativo' : '○ Desligado'}
                     </span>
                   </button>
@@ -2508,14 +2526,14 @@ export default function BillyWebStudio({
           </div>
 
           {/* SEÇÃO 4: EXTRAÇÃO INTELIGENTE DE CARDÁPIO / TABELA DE PREÇOS (OCR / IA) */}
-          <div className="p-6 sm:p-8 rounded-3xl bg-[#0e121b] border border-white/[0.06] shadow-xl space-y-6">
+          <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06] shadow-xl space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-[#84cc16]" />
+                  <FileText className="w-5 h-5 text-[#1478f0]" />
                   <span>4. Extração Inteligente de Cardápio ou Tabela de Preços</span>
                 </h3>
-                <p className="text-xs text-zinc-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Cole o texto bruto de um cardápio ou faça upload de um print/foto para a IA transcrever os itens e preços.
                 </p>
               </div>
@@ -2534,7 +2552,7 @@ export default function BillyWebStudio({
                   disabled={isExtractingOcr}
                   className="px-3.5 py-2 rounded-xl text-xs font-bold bg-white/[0.06] hover:bg-white/[0.12] text-zinc-200 border border-white/[0.1] transition flex items-center gap-2 cursor-pointer shrink-0"
                 >
-                  <Upload className="w-3.5 h-3.5 text-[#84cc16]" />
+                  <Upload className="w-3.5 h-3.5 text-[#1478f0]" />
                   <span>Upload de Foto do Cardápio</span>
                 </button>
               </div>
@@ -2553,18 +2571,18 @@ export default function BillyWebStudio({
                 onChange={(e) => setOcrText(e.target.value)}
                 placeholder="Cole aqui o texto do cardápio, tabela de preços, serviços com valores (ex: Corte Masculino R$ 45, Barba R$ 35, Selagem R$ 120)..."
                 rows={3}
-                className="w-full bg-[#07090e] border border-white/[0.1] rounded-2xl p-3.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#84cc16]"
+                className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-2xl p-3.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#1478f0]"
               />
 
               <div className="flex items-center justify-between">
-                <span className="text-[11px] text-zinc-500 font-mono">
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">
                   Suporta texto bruto, linhas de WhatsApp ou imagens com OCR do Gemini
                 </span>
                 <button
                   type="button"
                   onClick={() => handleExtractTextOrMenu()}
                   disabled={isExtractingOcr || !ocrText.trim()}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#9ae639] text-black transition cursor-pointer disabled:opacity-40 flex items-center gap-1.5 shrink-0"
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[#1478f0] hover:bg-[#9ae639] text-black transition cursor-pointer disabled:opacity-40 flex items-center gap-1.5 shrink-0"
                 >
                   {isExtractingOcr ? (
                     <>
@@ -2582,7 +2600,7 @@ export default function BillyWebStudio({
             </div>
 
             {/* Lista Atual de Serviços / Itens */}
-            <div className="pt-4 border-t border-white/[0.06] space-y-3">
+            <div className="pt-4 border-t border-slate-200 dark:border-white/[0.06] space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-white">Itens Cadastrados no Site ({siteForm.services.length}):</span>
               </div>
@@ -2591,16 +2609,16 @@ export default function BillyWebStudio({
                 {siteForm.services.map((srv, idx) => (
                   <div
                     key={idx}
-                    className="p-3 rounded-xl bg-black/40 border border-white/[0.06] flex items-center justify-between gap-3 text-xs"
+                    className="p-3 rounded-xl bg-slate-50 dark:bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/[0.06] flex items-center justify-between gap-3 text-xs"
                   >
                     <div className="min-w-0">
                       <span className="font-bold text-white truncate block">{srv.name}</span>
-                      <span className="text-[11px] font-mono text-[#84cc16]">{srv.price}</span>
+                      <span className="text-[11px] font-mono text-[#1478f0]">{srv.price}</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleRemoveService(idx)}
-                      className="p-1 rounded text-zinc-500 hover:text-rose-400 transition cursor-pointer shrink-0"
+                      className="p-1 rounded text-slate-400 dark:text-slate-500 hover:text-rose-400 transition cursor-pointer shrink-0"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -2615,19 +2633,19 @@ export default function BillyWebStudio({
                   value={newServiceName}
                   onChange={(e) => setNewServiceName(e.target.value)}
                   placeholder="Novo item / serviço..."
-                  className="flex-1 bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                  className="flex-1 bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#1478f0]"
                 />
                 <input
                   type="text"
                   value={newServicePrice}
                   onChange={(e) => setNewServicePrice(e.target.value)}
                   placeholder="R$ 50,00"
-                  className="w-28 bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                  className="w-28 bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#1478f0]"
                 />
                 <button
                   type="button"
                   onClick={handleAddService}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[#84cc16]/20 hover:bg-[#84cc16] text-[#84cc16] hover:text-black border border-[#84cc16]/40 transition cursor-pointer shrink-0"
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[#1478f0]/20 hover:bg-[#1478f0] text-[#1478f0] hover:text-black border border-[#1478f0]/40 transition cursor-pointer shrink-0"
                 >
                   + Adicionar
                 </button>
@@ -2636,27 +2654,27 @@ export default function BillyWebStudio({
           </div>
 
           {/* SEÇÃO 5: CENTRAL INTELIGENTE DE FOTOS DO ESTABELECIMENTO */}
-          <div className="p-6 sm:p-8 rounded-3xl bg-[#0e121b] border border-white/[0.06] shadow-xl space-y-6">
+          <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06] shadow-xl space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Camera className="w-5 h-5 text-[#84cc16]" />
+                  <Camera className="w-5 h-5 text-[#1478f0]" />
                   <span>5. Fotos do Estabelecimento (Google, Instagram & Pixabay)</span>
                 </h3>
-                <p className="text-xs text-zinc-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Importe fotografias reais do Google Maps e Instagram do cliente ou use fotos conceituais HD.
                 </p>
               </div>
 
               {/* Seletor de Abas de Fotos */}
-              <div className="flex items-center gap-1 p-1 bg-[#07090e] border border-white/[0.08] rounded-2xl shrink-0">
+              <div className="flex items-center gap-1 p-1 bg-slate-50 dark:bg-[#131317] border border-slate-200 dark:border-white/[0.08] rounded-2xl shrink-0">
                 <button
                   type="button"
                   onClick={() => setPhotoSearchMode('real')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                     photoSearchMode === 'real'
-                      ? 'bg-[#84cc16] text-black shadow-md shadow-[#84cc16]/20'
-                      : 'text-zinc-400 hover:text-white'
+                      ? 'bg-[#1478f0] text-black shadow-md shadow-[#1478f0]/20'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-white'
                   }`}
                 >
                   <Camera className="w-3.5 h-3.5" />
@@ -2674,8 +2692,8 @@ export default function BillyWebStudio({
                   }}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                     photoSearchMode === 'pixabay'
-                      ? 'bg-[#84cc16] text-black shadow-md shadow-[#84cc16]/20'
-                      : 'text-zinc-400 hover:text-white'
+                      ? 'bg-[#1478f0] text-black shadow-md shadow-[#1478f0]/20'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-white'
                   }`}
                 >
                   <ImageIcon className="w-3.5 h-3.5" />
@@ -2686,8 +2704,8 @@ export default function BillyWebStudio({
                   onClick={() => setPhotoSearchMode('custom')}
                   className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                     photoSearchMode === 'custom'
-                      ? 'bg-[#84cc16] text-black shadow-md shadow-[#84cc16]/20'
-                      : 'text-zinc-400 hover:text-white'
+                      ? 'bg-[#1478f0] text-black shadow-md shadow-[#1478f0]/20'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-white'
                   }`}
                 >
                   <Upload className="w-3.5 h-3.5" />
@@ -2716,9 +2734,9 @@ export default function BillyWebStudio({
 
             {/* Aviso de Sucesso */}
             {realPhotosSuccessNotice && (
-              <div className="p-3 rounded-xl bg-[#84cc16]/10 border border-[#84cc16]/30 text-[#a3e635] text-xs flex items-center justify-between gap-2">
+              <div className="p-3 rounded-xl bg-[#1478f0]/10 border border-[#1478f0]/30 text-[#38bdf8] text-xs flex items-center justify-between gap-2">
                 <span>{realPhotosSuccessNotice}</span>
-                <button type="button" onClick={() => setRealPhotosSuccessNotice(null)} className="text-zinc-400 hover:text-white">
+                <button type="button" onClick={() => setRealPhotosSuccessNotice(null)} className="text-slate-500 dark:text-slate-400 hover:text-white">
                   <X className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -2735,14 +2753,14 @@ export default function BillyWebStudio({
                       onChange={(e) => setRealPhotosQuery(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleSearchRealPhotos()}
                       placeholder="Nome da empresa, cidade ou @Instagram (ex: @13pointtattoo)..."
-                      className="w-full bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#84cc16]"
+                      className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#1478f0]"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={() => handleSearchRealPhotos()}
                     disabled={realPhotosLoading}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#9ae639] text-black transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shrink-0"
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-[#1478f0] hover:bg-[#9ae639] text-black transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 shrink-0"
                   >
                     {realPhotosLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
                     <span>{realPhotosLoading ? 'Buscando...' : 'Buscar Fotos Reais'}</span>
@@ -2768,7 +2786,7 @@ export default function BillyWebStudio({
                       <button
                         type="button"
                         onClick={handleApplyRealPhotosToSite}
-                        className="px-4 py-2 rounded-xl text-xs font-bold bg-[#84cc16]/15 hover:bg-[#84cc16] text-[#84cc16] hover:text-black border border-[#84cc16]/30 transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                        className="px-4 py-2 rounded-xl text-xs font-bold bg-[#1478f0]/15 hover:bg-[#1478f0] text-[#1478f0] hover:text-black border border-[#1478f0]/30 transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
                       >
                         <Sparkles className="w-3.5 h-3.5" />
                         <span>Aplicar Todas ({Math.min(realPhotos.length, MAX_PHOTOS)}) no Site</span>
@@ -2790,16 +2808,16 @@ export default function BillyWebStudio({
 
                 {/* Grade de Fotos Reais */}
                 {realPhotosLoading ? (
-                  <div className="py-12 text-center text-zinc-500 space-y-2">
-                    <Loader2 className="w-8 h-8 border-2 border-[#84cc16] rounded-full animate-spin mx-auto text-[#84cc16]" />
+                  <div className="py-12 text-center text-slate-400 dark:text-slate-500 space-y-2">
+                    <Loader2 className="w-8 h-8 border-2 border-[#1478f0] rounded-full animate-spin mx-auto text-[#1478f0]" />
                     <p className="text-xs">Localizando fotografias públicas no Google Imagens e redes sociais...</p>
                   </div>
                 ) : realPhotos.length === 0 ? (
-                  <div className="p-8 rounded-2xl bg-[#07090e]/60 border border-dashed border-white/[0.08] text-center space-y-3">
+                  <div className="p-8 rounded-2xl bg-slate-50 dark:bg-[#131317]/60 border border-dashed border-slate-200 dark:border-white/[0.08] text-center space-y-3">
                     <Camera className="w-8 h-8 text-zinc-600 mx-auto" />
                     <div>
-                      <p className="text-xs font-bold text-zinc-300">Nenhuma foto real carregada ainda.</p>
-                      <p className="text-[11px] text-zinc-500 mt-0.5">
+                      <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Nenhuma foto real carregada ainda.</p>
+                      <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
                         Clique em "Buscar Fotos Reais" para rastrear o portfólio no Google Maps e redes sociais de{' '}
                         <strong>{siteForm.businessName || 'deste comércio'}</strong>.
                       </p>
@@ -2807,7 +2825,7 @@ export default function BillyWebStudio({
                     <button
                       type="button"
                       onClick={() => handleSearchRealPhotos(`${siteForm.businessName} ${siteForm.city}`)}
-                      className="px-4 py-2 rounded-xl text-xs font-bold bg-[#84cc16]/15 hover:bg-[#84cc16] text-[#84cc16] hover:text-black border border-[#84cc16]/30 transition inline-flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-2 rounded-xl text-xs font-bold bg-[#1478f0]/15 hover:bg-[#1478f0] text-[#1478f0] hover:text-black border border-[#1478f0]/30 transition inline-flex items-center gap-1.5 cursor-pointer"
                     >
                       <Search className="w-3.5 h-3.5" />
                       <span>Buscar Fotos de {siteForm.businessName || 'Empresa'}</span>
@@ -2827,10 +2845,10 @@ export default function BillyWebStudio({
                           onClick={() => handleTogglePhoto(target)}
                           className={`real-photo-card relative rounded-xl overflow-hidden aspect-square border cursor-pointer transition-all duration-200 select-none group ${
                             isHero
-                              ? 'border-[#84cc16] ring-2 ring-[#84cc16] shadow-[0_0_15px_rgba(132,204,22,0.4)]'
+                              ? 'border-[#1478f0] ring-2 ring-[#1478f0] shadow-sm'
                               : isGallery
-                              ? 'border-[#84cc16] ring-2 ring-[#84cc16]/70 shadow-md'
-                              : 'border-white/[0.08] hover:border-white/40'
+                              ? 'border-[#1478f0] ring-2 ring-[#1478f0]/70 shadow-md'
+                              : 'border-slate-200 dark:border-white/[0.08] hover:border-white/40'
                           }`}
                         >
                           <img
@@ -2857,8 +2875,8 @@ export default function BillyWebStudio({
                             <span
                               className={`absolute top-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider shadow-md z-10 flex items-center gap-1 pointer-events-none ${
                                 isHero
-                                  ? 'bg-[#84cc16] text-black font-extrabold ring-1 ring-black/40'
-                                  : 'bg-[#84cc16] text-black font-extrabold'
+                                  ? 'bg-[#1478f0] text-black font-extrabold ring-1 ring-black/40'
+                                  : 'bg-[#1478f0] text-black font-extrabold'
                               }`}
                             >
                               <Check className="w-2.5 h-2.5 stroke-[3]" />
@@ -2878,7 +2896,7 @@ export default function BillyWebStudio({
                                   galleryPhotos: prev.galleryPhotos.includes(target) ? prev.galleryPhotos : [...prev.galleryPhotos, target]
                                 }));
                               }}
-                              className="px-2 py-0.5 rounded text-[8px] font-bold bg-[#84cc16] hover:bg-[#a3e635] text-black cursor-pointer shadow"
+                              className="px-2 py-0.5 rounded text-[8px] font-bold bg-[#1478f0] hover:bg-[#38bdf8] text-black cursor-pointer shadow"
                             >
                               {isHero ? 'Hero ★' : 'Definir Hero'}
                             </button>
@@ -2913,7 +2931,7 @@ export default function BillyWebStudio({
                     onChange={(e) => setPixabayQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearchPixabay()}
                     placeholder="Buscar no Pixabay (ex: barbearia, tattoo, odontologia)..."
-                    className="flex-1 bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                    className="flex-1 bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#1478f0]"
                   />
                   <button
                     type="button"
@@ -2938,10 +2956,10 @@ export default function BillyWebStudio({
                         onClick={() => handleTogglePhoto(target)}
                         className={`relative rounded-xl overflow-hidden aspect-video border cursor-pointer group transition-all ${
                           isHero
-                            ? 'border-[#84cc16] ring-2 ring-[#84cc16]'
+                            ? 'border-[#1478f0] ring-2 ring-[#1478f0]'
                             : isGallery
-                            ? 'border-[#84cc16] ring-1 ring-[#84cc16]'
-                            : 'border-white/[0.08] hover:border-white/30'
+                            ? 'border-[#1478f0] ring-1 ring-[#1478f0]'
+                            : 'border-slate-200 dark:border-white/[0.08] hover:border-white/30'
                         }`}
                       >
                         <img src={img.previewUrl} alt="" className="w-full h-full object-cover pointer-events-none" />
@@ -2950,7 +2968,7 @@ export default function BillyWebStudio({
                           PIXABAY
                         </span>
                         {(isGallery || isHero) && (
-                          <span className="absolute top-1 right-1 px-1 py-0.5 rounded text-[7px] font-black uppercase bg-[#84cc16] text-black shadow">
+                          <span className="absolute top-1 right-1 px-1 py-0.5 rounded text-[7px] font-black uppercase bg-[#1478f0] text-black shadow">
                             {isHero ? 'Hero ★' : '✓'}
                           </span>
                         )}
@@ -2965,7 +2983,7 @@ export default function BillyWebStudio({
                                 galleryPhotos: prev.galleryPhotos.includes(target) ? prev.galleryPhotos : [...prev.galleryPhotos, target]
                               }));
                             }}
-                            className="px-2 py-0.5 rounded text-[8px] font-bold bg-[#84cc16] text-black cursor-pointer"
+                            className="px-2 py-0.5 rounded text-[8px] font-bold bg-[#1478f0] text-black cursor-pointer"
                           >
                             Hero ★
                           </button>
@@ -2996,12 +3014,12 @@ export default function BillyWebStudio({
                     value={customPhotoUrl}
                     onChange={(e) => setCustomPhotoUrl(e.target.value)}
                     placeholder="Colar URL de foto do Instagram, Google Fotos, Imgur ou site..."
-                    className="flex-1 bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                    className="flex-1 bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#1478f0]"
                   />
                   <button
                     type="button"
                     onClick={handleAddCustomPhoto}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#9ae639] text-black transition cursor-pointer shrink-0"
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-[#1478f0] hover:bg-[#9ae639] text-black transition cursor-pointer shrink-0"
                   >
                     + Adicionar URL
                   </button>
@@ -3019,14 +3037,14 @@ export default function BillyWebStudio({
             )}
 
             {/* Fotos Atualmente Selecionadas para o Site (Até 25 Fotos) */}
-            <div className="pt-4 border-t border-white/[0.06] space-y-3">
+            <div className="pt-4 border-t border-slate-200 dark:border-white/[0.06] space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-bold text-zinc-300 block">
+                  <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block">
                     Fotos Selecionadas para o Site ({siteForm.galleryPhotos.length} / {MAX_PHOTOS}):
                   </span>
                   {siteForm.galleryPhotos.length > 0 && (
-                    <span className="text-[9px] uppercase font-mono px-2 py-0.5 rounded-full bg-[#84cc16]/15 text-[#a3e635] border border-[#84cc16]/30 font-bold">
+                    <span className="text-[9px] uppercase font-mono px-2 py-0.5 rounded-full bg-[#1478f0]/15 text-[#38bdf8] border border-[#1478f0]/30 font-bold">
                       Prontas para o Site
                     </span>
                   )}
@@ -3041,14 +3059,14 @@ export default function BillyWebStudio({
                       Limpar Todas
                     </button>
                   )}
-                  <span className="text-[10px] text-zinc-500 font-mono hidden sm:inline">
+                  <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono hidden sm:inline">
                     Clique no X para remover
                   </span>
                 </div>
               </div>
 
               {siteForm.galleryPhotos.length === 0 ? (
-                <div className="p-4 rounded-xl bg-[#07090e]/40 border border-dashed border-white/[0.08] text-center text-xs text-zinc-500">
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-[#131317]/40 border border-dashed border-slate-200 dark:border-white/[0.08] text-center text-xs text-slate-400 dark:text-slate-500">
                   Nenhuma foto selecionada ainda. Clique nas fotos acima para selecionar ou em "Aplicar Todas no Site".
                 </div>
               ) : (
@@ -3065,7 +3083,7 @@ export default function BillyWebStudio({
                       <div
                         key={i}
                         className={`relative w-20 h-20 rounded-xl overflow-hidden border group transition ${
-                          isHero ? 'border-[#84cc16] ring-2 ring-[#84cc16]' : 'border-white/[0.12] hover:border-white/30'
+                          isHero ? 'border-[#1478f0] ring-2 ring-[#1478f0]' : 'border-white/[0.12] hover:border-white/30'
                         }`}
                       >
                         <img
@@ -3076,7 +3094,7 @@ export default function BillyWebStudio({
                           onError={() => handlePhotoError(photo)}
                         />
                         {isHero && (
-                          <span className="absolute top-1 left-1 px-1 py-0.5 rounded text-[7px] font-black bg-[#84cc16] text-black uppercase shadow">
+                          <span className="absolute top-1 left-1 px-1 py-0.5 rounded text-[7px] font-black bg-[#1478f0] text-black uppercase shadow">
                             Hero ★
                           </span>
                         )}
@@ -3097,18 +3115,18 @@ export default function BillyWebStudio({
           </div>
 
           {/* BOTÃO FINAL DE GERAÇÃO & PUBLICAÇÃO */}
-          <div className="p-6 rounded-3xl bg-gradient-to-r from-[#0c1322] via-[#101b2e] to-[#0c1a16] border border-[#84cc16]/40 shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="p-6 rounded-3xl bg-gradient-to-r from-[#0c1322] via-[#101b2e] to-[#0c1a16] border border-[#1478f0]/40 shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <span className="text-xs uppercase font-bold text-[#84cc16] tracking-wider block">Motor Gemini Oficial</span>
+              <span className="text-xs uppercase font-bold text-[#1478f0] tracking-wider block">Motor Gemini Oficial</span>
               <h4 className="text-base font-black text-white">Gere a Landing Page Completa sem Placeholders</h4>
-              <p className="text-xs text-zinc-400">O site será compilado instantaneamente com fotos, copy e WhatsApp configurado.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">O site será compilado instantaneamente com fotos, copy e WhatsApp configurado.</p>
             </div>
 
             <button
               type="button"
               onClick={handleGenerateSite}
               disabled={generating}
-              className="py-3.5 px-8 rounded-2xl font-black text-sm bg-gradient-to-r from-[#84cc16] to-[#65a30d] hover:brightness-110 text-black shadow-[0_0_30px_rgba(132,204,22,0.4)] flex items-center justify-center gap-2 cursor-pointer transition shrink-0 disabled:opacity-50"
+              className="py-3.5 px-8 rounded-2xl font-black text-sm bg-gradient-to-r from-[#1478f0] to-[#65a30d] hover:brightness-110 text-black shadow-[0_0_30px_rgba(132,204,22,0.4)] flex items-center justify-center gap-2 cursor-pointer transition shrink-0 disabled:opacity-50"
             >
               {generating ? (
                 <>
@@ -3125,32 +3143,32 @@ export default function BillyWebStudio({
           </div>
 
           {generating && (
-            <div className="p-5 rounded-2xl bg-[#0c1410] border border-[#84cc16]/40 space-y-3 shadow-xl">
+            <div className="p-5 rounded-2xl bg-[#0c1410] border border-[#1478f0]/40 space-y-3 shadow-xl">
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-[#84cc16]/20 border border-[#84cc16]/40 flex items-center justify-center text-[#84cc16] shrink-0">
+                  <div className="w-7 h-7 rounded-lg bg-[#1478f0]/20 border border-[#1478f0]/40 flex items-center justify-center text-[#1478f0] shrink-0">
                     <Sparkles className="w-4 h-4 animate-spin" />
                   </div>
                   <div>
                     <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Gerando Presença Digital:</h4>
-                    <p className="text-xs font-semibold text-[#a3e635] mt-0.5">{generationStep}</p>
+                    <p className="text-xs font-semibold text-[#38bdf8] mt-0.5">{generationStep}</p>
                   </div>
                 </div>
-                <span className="font-mono font-bold text-xs text-[#84cc16]">{generationProgress}%</span>
+                <span className="font-mono font-bold text-xs text-[#1478f0]">{generationProgress}%</span>
               </div>
 
               {/* Barra de Progresso Animada */}
-              <div className="w-full h-2 bg-black/60 rounded-full overflow-hidden border border-white/[0.08]">
+              <div className="w-full h-2 bg-slate-100 dark:bg-white/[0.05] rounded-full overflow-hidden border border-slate-200 dark:border-white/[0.08]">
                 <div
-                  className="h-full bg-gradient-to-r from-[#84cc16] via-[#a3e635] to-[#65a30d] transition-all duration-500 ease-out rounded-full"
+                  className="h-full bg-gradient-to-r from-[#1478f0] via-[#38bdf8] to-[#65a30d] transition-all duration-500 ease-out rounded-full"
                   style={{ width: `${generationProgress}%` }}
                 />
               </div>
 
-              <div className="flex items-center justify-between text-[10px] text-zinc-500 font-mono pt-1">
-                <span className={generationProgress >= 25 ? 'text-[#84cc16] font-bold' : ''}>1. Fotos & Assets</span>
-                <span className={generationProgress >= 65 ? 'text-[#84cc16] font-bold' : ''}>2. Copy & IA Gemini</span>
-                <span className={generationProgress >= 90 ? 'text-[#84cc16] font-bold' : ''}>3. Template Billy</span>
+              <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 font-mono pt-1">
+                <span className={generationProgress >= 25 ? 'text-[#1478f0] font-bold' : ''}>1. Fotos & Assets</span>
+                <span className={generationProgress >= 65 ? 'text-[#1478f0] font-bold' : ''}>2. Copy & IA Gemini</span>
+                <span className={generationProgress >= 90 ? 'text-[#1478f0] font-bold' : ''}>3. Template Billy</span>
               </div>
             </div>
           )}
@@ -3174,23 +3192,23 @@ export default function BillyWebStudio({
               {/* Coluna da Esquerda: Iframe Multi-Device Preview + Barra de Ajuste IA */}
               <div className="lg:col-span-8 space-y-4">
                 {/* Controles de Dispositivo & Tela Cheia */}
-                <div className="p-3.5 rounded-2xl bg-[#0e121b] border border-white/[0.08] flex items-center justify-between gap-4">
+                <div className="p-3.5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full bg-rose-500/80" />
                     <span className="w-3 h-3 rounded-full bg-amber-500/80" />
                     <span className="w-3 h-3 rounded-full bg-emerald-500/80" />
-                    <span className="text-xs font-mono text-zinc-400 font-semibold pl-2 hidden sm:inline">
+                    <span className="text-xs font-mono text-slate-500 dark:text-slate-400 font-semibold pl-2 hidden sm:inline">
                       https://{previewSlug}.webbilly.com.br
                     </span>
                   </div>
 
                   {/* Switcher Desktop / Tablet / Smartphone */}
-                  <div className="flex items-center gap-1.5 bg-black/50 p-1 rounded-xl border border-white/[0.06]">
+                  <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-white/[0.05] p-1 rounded-xl border border-slate-200 dark:border-white/[0.06]">
                     <ActionTooltip title="Desktop (100%)" description="Visualização completa para monitores." side="bottom">
                       <button
                         onClick={() => setPreviewDevice('desktop')}
                         className={`p-1.5 rounded-lg text-xs transition cursor-pointer ${
-                          previewDevice === 'desktop' ? 'bg-[#84cc16] text-black font-bold' : 'text-zinc-400 hover:text-white'
+                          previewDevice === 'desktop' ? 'bg-[#1478f0] text-black font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-white'
                         }`}
                       >
                         <Monitor className="w-4 h-4" />
@@ -3201,7 +3219,7 @@ export default function BillyWebStudio({
                       <button
                         onClick={() => setPreviewDevice('tablet')}
                         className={`p-1.5 rounded-lg text-xs transition cursor-pointer ${
-                          previewDevice === 'tablet' ? 'bg-[#84cc16] text-black font-bold' : 'text-zinc-400 hover:text-white'
+                          previewDevice === 'tablet' ? 'bg-[#1478f0] text-black font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-white'
                         }`}
                       >
                         <Tablet className="w-4 h-4" />
@@ -3212,7 +3230,7 @@ export default function BillyWebStudio({
                       <button
                         onClick={() => setPreviewDevice('mobile')}
                         className={`p-1.5 rounded-lg text-xs transition cursor-pointer ${
-                          previewDevice === 'mobile' ? 'bg-[#84cc16] text-black font-bold' : 'text-zinc-400 hover:text-white'
+                          previewDevice === 'mobile' ? 'bg-[#1478f0] text-black font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-white'
                         }`}
                       >
                         <Smartphone className="w-4 h-4" />
@@ -3225,9 +3243,9 @@ export default function BillyWebStudio({
                     <button
                       type="button"
                       onClick={() => setFullScreenPreview(true)}
-                      className="px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-bold text-zinc-300 hover:text-white border border-white/[0.08] flex items-center gap-1.5 transition"
+                      className="px-3 py-1.5 rounded-xl bg-white/[0.04] hover:bg-slate-200 dark:hover:bg-white/[0.08] text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-white border border-slate-200 dark:border-white/[0.08] flex items-center gap-1.5 transition"
                     >
-                      <Maximize2 className="w-3.5 h-3.5 text-[#84cc16]" />
+                      <Maximize2 className="w-3.5 h-3.5 text-[#1478f0]" />
                       <span className="hidden sm:inline">Tela Cheia</span>
                     </button>
 
@@ -3236,7 +3254,7 @@ export default function BillyWebStudio({
                         href={`https://${previewSlug}.webbilly.com.br`}
                         target="_blank"
                         rel="noreferrer"
-                        className="px-3.5 py-1.5 rounded-xl bg-[#84cc16] hover:bg-[#9ae639] text-xs font-bold text-black border border-[#84cc16] flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+                        className="px-3.5 py-1.5 rounded-xl bg-[#1478f0] hover:bg-[#9ae639] text-xs font-bold text-black border border-[#1478f0] flex items-center gap-1.5 transition shadow-sm cursor-pointer"
                       >
                         <ExternalLink className="w-3.5 h-3.5 text-black" />
                         <span className="hidden sm:inline">Abrir Subdomínio ↗</span>
@@ -3250,9 +3268,9 @@ export default function BillyWebStudio({
                         <button
                           type="button"
                           disabled
-                          className="px-3 py-1.5 rounded-xl bg-white/[0.03] text-xs font-semibold text-zinc-500 border border-white/[0.06] flex items-center gap-1.5 cursor-not-allowed opacity-60"
+                          className="px-3 py-1.5 rounded-xl bg-white/[0.03] text-xs font-semibold text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-white/[0.06] flex items-center gap-1.5 cursor-not-allowed opacity-60"
                         >
-                          <ExternalLink className="w-3.5 h-3.5 text-zinc-500" />
+                          <ExternalLink className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                           <span className="hidden sm:inline">Abrir Subdomínio (Faça Deploy Primeiro)</span>
                         </button>
                       </ActionTooltip>
@@ -3261,7 +3279,7 @@ export default function BillyWebStudio({
                 </div>
 
                 {/* Container Iframe com PREVIEW INSTANTÂNEO (srcDoc) */}
-                <div className="flex justify-center bg-[#07090e] border border-white/[0.08] rounded-3xl p-4 overflow-hidden min-h-[600px]">
+                <div className="flex justify-center bg-slate-50 dark:bg-[#131317] border border-slate-200 dark:border-white/[0.08] rounded-3xl p-4 overflow-hidden min-h-[600px]">
                   <div
                     className={`transition-all duration-300 bg-white rounded-2xl overflow-hidden shadow-2xl ${
                       previewDevice === 'mobile'
@@ -3290,13 +3308,13 @@ export default function BillyWebStudio({
                 </div>
 
                 {/* BARRA DE AJUSTE RÁPIDO COM IA */}
-                <div className="p-4 rounded-2xl bg-[#0e121b] border border-white/[0.08] space-y-3">
+                <div className="p-4 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <Sparkles className="w-4 h-4 text-[#84cc16]" />
+                      <Sparkles className="w-4 h-4 text-[#1478f0]" />
                       <span>Pedir Alteração Rápida no Site com IA</span>
                     </span>
-                    <span className="text-[10px] text-zinc-500 font-mono">Gemini Studio Engine</span>
+                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">Gemini Studio Engine</span>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -3306,13 +3324,13 @@ export default function BillyWebStudio({
                       onChange={(e) => setQuickInstruction(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleQuickAdjust()}
                       placeholder="Ex: Mude a cor de destaque para dourado e adicione promoção no cardápio..."
-                      className="flex-1 bg-[#07090e] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#84cc16]"
+                      className="flex-1 bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-[#1478f0]"
                     />
                     <button
                       type="button"
                       onClick={() => handleQuickAdjust()}
                       disabled={adjustingSite || !quickInstruction.trim()}
-                      className="px-4 py-2 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#9ae639] text-black transition cursor-pointer shrink-0 disabled:opacity-50 flex items-center gap-1.5"
+                      className="px-4 py-2 rounded-xl text-xs font-bold bg-[#1478f0] hover:bg-[#9ae639] text-black transition cursor-pointer shrink-0 disabled:opacity-50 flex items-center gap-1.5"
                     >
                       {adjustingSite ? (
                         <>
@@ -3341,7 +3359,7 @@ export default function BillyWebStudio({
                         type="button"
                         onClick={() => handleQuickAdjust(p)}
                         disabled={adjustingSite}
-                        className="px-2.5 py-1 rounded-lg text-[10px] bg-white/[0.03] hover:bg-white/[0.08] text-zinc-400 hover:text-white border border-white/[0.06] transition cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg text-[10px] bg-white/[0.03] hover:bg-slate-200 dark:hover:bg-white/[0.08] text-slate-500 dark:text-slate-400 hover:text-white border border-slate-200 dark:border-white/[0.06] transition cursor-pointer"
                       >
                         ⚡ {p}
                       </button>
@@ -3360,13 +3378,13 @@ export default function BillyWebStudio({
               {/* Coluna da Direita: BOTÃO EXPLÍCITO DE DEPLOY & PROPOSTA WHATSAPP */}
               <div className="lg:col-span-4 space-y-4">
                 {/* CARD DE DEPLOY DEFINITIVO NO SUBDOMÍNIO */}
-                <div className="p-6 rounded-3xl bg-[#0e121b] border border-[#84cc16]/40 shadow-xl space-y-4">
+                <div className="p-6 rounded-3xl bg-white dark:bg-[#1c1d27] border border-[#1478f0]/40 shadow-xl space-y-4">
                   <div className="space-y-1">
-                    <span className="text-[10px] font-mono uppercase font-bold px-2 py-0.5 rounded-full bg-[#84cc16]/20 text-[#a3e635] border border-[#84cc16]/30">
+                    <span className="text-[10px] font-mono uppercase font-bold px-2 py-0.5 rounded-full bg-[#1478f0]/20 text-[#38bdf8] border border-[#1478f0]/30">
                       Publicação Oficial
                     </span>
                     <h3 className="text-base font-extrabold text-white mt-2">Deploy no Subdomínio</h3>
-                    <p className="text-xs text-zinc-400">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       Salva o HTML definitivamente no Supabase, cadastra o domínio na Vercel e remove suspensão do Edge Config.
                     </p>
                   </div>
@@ -3375,7 +3393,7 @@ export default function BillyWebStudio({
                     type="button"
                     onClick={handleExecuteDeploy}
                     disabled={isDeploying}
-                    className="w-full py-3.5 px-4 rounded-2xl font-black text-sm bg-gradient-to-r from-[#84cc16] to-[#65a30d] hover:brightness-110 text-black shadow-lg shadow-[#84cc16]/30 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                    className="w-full py-3.5 px-4 rounded-2xl font-black text-sm bg-gradient-to-r from-[#1478f0] to-[#65a30d] hover:brightness-110 text-black shadow-lg shadow-[#1478f0]/30 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
                     {isDeploying ? (
                       <>
@@ -3400,7 +3418,7 @@ export default function BillyWebStudio({
                         href={`https://${previewSlug}.webbilly.com.br`}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-[11px] text-[#84cc16] underline block font-mono"
+                        className="text-[11px] text-[#1478f0] underline block font-mono"
                       >
                         https://{previewSlug}.webbilly.com.br
                       </a>
@@ -3416,50 +3434,50 @@ export default function BillyWebStudio({
                 </div>
 
                 {/* CARD DE FECHAMENTO DE VENDA & WHATSAPP */}
-                <div className="p-6 rounded-3xl bg-[#0e121b] border border-white/[0.08] shadow-xl space-y-5">
+                <div className="p-6 rounded-3xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] shadow-xl space-y-5">
                   <div>
                     <span className="text-[10px] font-mono uppercase font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
                       Fechamento da Venda
                     </span>
                     <h3 className="text-base font-extrabold text-white mt-2">Disparar Proposta Comercial</h3>
-                    <p className="text-xs text-zinc-400">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       Mensagem formatada com isolamento de link para gerar prévia no WhatsApp.
                     </p>
                   </div>
 
                   {/* Links de Acesso Rápido */}
                   <div className="space-y-2.5">
-                    <div className="p-3 rounded-2xl bg-black/40 border border-white/[0.06] space-y-1">
+                    <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/[0.06] space-y-1">
                       <div className="flex items-center justify-between text-[11px]">
-                        <span className="font-bold text-zinc-400">Subdomínio Oficial:</span>
+                        <span className="font-bold text-slate-500 dark:text-slate-400">Subdomínio Oficial:</span>
                         <button
                           type="button"
                           onClick={() => handleCopy(`https://${previewSlug}.webbilly.com.br`, 'link')}
-                          className="text-[#84cc16] hover:underline flex items-center gap-1 cursor-pointer"
+                          className="text-[#1478f0] hover:underline flex items-center gap-1 cursor-pointer"
                         >
                           {copiedLink ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                           <span>{copiedLink ? 'Copiado!' : 'Copiar'}</span>
                         </button>
                       </div>
-                      <span className="text-xs font-mono text-[#a3e635] truncate block">
+                      <span className="text-xs font-mono text-[#38bdf8] truncate block">
                         https://{previewSlug}.webbilly.com.br
                       </span>
                     </div>
 
                     {generatedResult?.proposalUrl && (
-                      <div className="p-3 rounded-2xl bg-black/40 border border-white/[0.06] space-y-1">
+                      <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/[0.06] space-y-1">
                         <div className="flex items-center justify-between text-[11px]">
-                          <span className="font-bold text-zinc-400">Proposta & Checkout Pix:</span>
+                          <span className="font-bold text-slate-500 dark:text-slate-400">Proposta & Checkout Pix:</span>
                           <button
                             type="button"
                             onClick={() => handleCopy(generatedResult.proposalUrl, 'link')}
-                            className="text-[#84cc16] hover:underline flex items-center gap-1 cursor-pointer"
+                            className="text-[#1478f0] hover:underline flex items-center gap-1 cursor-pointer"
                           >
                             <Copy className="w-3 h-3" />
                             <span>Copiar</span>
                           </button>
                         </div>
-                        <span className="text-xs font-mono text-zinc-300 truncate block">
+                        <span className="text-xs font-mono text-slate-700 dark:text-slate-300 truncate block">
                           {generatedResult.proposalUrl}
                         </span>
                       </div>
@@ -3469,11 +3487,11 @@ export default function BillyWebStudio({
                   {/* Texto da Mensagem WhatsApp */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-[11px]">
-                      <span className="font-bold text-zinc-400">Mensagem do WhatsApp:</span>
+                      <span className="font-bold text-slate-500 dark:text-slate-400">Mensagem do WhatsApp:</span>
                       <button
                         type="button"
                         onClick={() => handleCopy(customWaMessage || generatedResult?.whatsappMessage, 'msg')}
-                        className="text-[#84cc16] hover:underline flex items-center gap-1 cursor-pointer"
+                        className="text-[#1478f0] hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         {copiedMsg ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                         <span>{copiedMsg ? 'Mensagem Copiada!' : 'Copiar Texto'}</span>
@@ -3483,7 +3501,7 @@ export default function BillyWebStudio({
                       value={customWaMessage || generatedResult?.whatsappMessage || ''}
                       onChange={(e) => setCustomWaMessage(e.target.value)}
                       rows={6}
-                      className="w-full bg-[#07090e] border border-white/[0.1] rounded-2xl p-3 text-xs text-zinc-300 focus:outline-none focus:border-[#84cc16] leading-relaxed font-sans"
+                      className="w-full bg-slate-50 dark:bg-[#131317] border border-white/[0.1] rounded-2xl p-3 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:border-[#1478f0] leading-relaxed font-sans"
                     />
                   </div>
 
@@ -3499,16 +3517,16 @@ export default function BillyWebStudio({
               </div>
             </div>
           ) : (
-            <div className="p-12 rounded-3xl bg-[#0e121b] border border-white/[0.06] text-center space-y-4">
+            <div className="p-12 rounded-3xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06] text-center space-y-4">
               <Eye className="w-12 h-12 text-zinc-600 mx-auto" />
               <h3 className="text-base font-bold text-white">Nenhum site em pré-visualização ativa</h3>
-              <p className="text-xs text-zinc-400 max-w-md mx-auto">
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
                 Retorne à aba <strong>1. Prospectar Leads</strong> ou configure um comércio em <strong>2. Gerador & IA</strong> para gerar seu site com preview instantâneo.
               </p>
               <button
                 type="button"
                 onClick={() => setActiveTab('estudio')}
-                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-[#84cc16] text-black cursor-pointer"
+                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-[#1478f0] text-black cursor-pointer"
               >
                 Abrir Estúdio de Criação →
               </button>
@@ -3527,7 +3545,7 @@ export default function BillyWebStudio({
             <button
               type="button"
               onClick={loadProjects}
-              className="text-xs text-[#84cc16] hover:underline flex items-center gap-1 cursor-pointer"
+              className="text-xs text-[#1478f0] hover:underline flex items-center gap-1 cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Atualizar</span>
@@ -3535,12 +3553,12 @@ export default function BillyWebStudio({
           </div>
 
           {projectsLoading ? (
-            <div className="p-12 text-center text-xs text-zinc-500 flex items-center justify-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-[#84cc16]" />
+            <div className="p-12 text-center text-xs text-slate-400 dark:text-slate-500 flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-[#1478f0]" />
               <span>Carregando histórico...</span>
             </div>
           ) : projects.length === 0 ? (
-            <div className="p-12 rounded-3xl bg-[#0e121b] border border-white/[0.06] text-center text-xs text-zinc-500">
+            <div className="p-12 rounded-3xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06] text-center text-xs text-slate-400 dark:text-slate-500">
               Nenhum site gerado até o momento. Comece pela aba <strong>1. Prospectar Leads</strong>.
             </div>
           ) : (
@@ -3548,12 +3566,12 @@ export default function BillyWebStudio({
               {projects.map((proj) => (
                 <div
                   key={proj.id || proj.slug}
-                  className="p-5 rounded-2xl bg-[#0e121b] border border-white/[0.06] hover:border-white/[0.15] transition space-y-3"
+                  className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06] hover:border-white/[0.15] transition space-y-3"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h4 className="font-bold text-white text-sm truncate">{proj.name}</h4>
-                      <span className="text-[10px] font-mono text-zinc-500 uppercase">{proj.niche}</span>
+                      <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase">{proj.niche}</span>
                     </div>
                     <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                       Online
@@ -3571,7 +3589,7 @@ export default function BillyWebStudio({
                     </a>
                   </div>
 
-                  <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between gap-2">
+                  <div className="pt-3 border-t border-slate-200 dark:border-white/[0.06] flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5">
                       <button
                         type="button"
@@ -3590,7 +3608,7 @@ export default function BillyWebStudio({
                         href={proj.proposalUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#84cc16]/15 hover:bg-[#84cc16] text-[#84cc16] hover:text-black border border-[#84cc16]/40 transition flex items-center gap-1.5"
+                        className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#1478f0]/15 hover:bg-[#1478f0] text-[#1478f0] hover:text-black border border-[#1478f0]/40 transition flex items-center gap-1.5"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
                         <span>Proposta</span>
@@ -3600,7 +3618,7 @@ export default function BillyWebStudio({
                     <button
                       type="button"
                       onClick={() => handleDeleteProject(proj.slug)}
-                      className="p-2 rounded-xl text-xs font-medium text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition cursor-pointer"
+                      className="p-2 rounded-xl text-xs font-medium text-slate-400 dark:text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition cursor-pointer"
                       title="Excluir site do Histórico"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -3618,11 +3636,11 @@ export default function BillyWebStudio({
          ========================================================================= */}
       {fullScreenPreview && (
         <div className="fixed inset-0 z-50 bg-black/95 flex flex-col animate-fade-in">
-          <div className="h-14 bg-[#0e121b] border-b border-white/[0.08] px-6 flex items-center justify-between shrink-0">
+          <div className="h-14 bg-white dark:bg-[#1c1d27] border-b border-slate-200 dark:border-white/[0.08] px-6 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-3">
               <span className="font-extrabold text-white text-sm">Preview em Tela Cheia</span>
-              <span className="text-zinc-500 text-xs">•</span>
-              <span className="text-zinc-400 text-xs font-mono">https://{previewSlug}.webbilly.com.br</span>
+              <span className="text-slate-400 dark:text-slate-500 text-xs">•</span>
+              <span className="text-slate-500 dark:text-slate-400 text-xs font-mono">https://{previewSlug}.webbilly.com.br</span>
             </div>
 
             <div className="flex items-center gap-3">
@@ -3631,14 +3649,14 @@ export default function BillyWebStudio({
                   href={`https://${previewSlug}.webbilly.com.br`}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-3 py-1.5 rounded-xl bg-[#84cc16] hover:bg-[#9ae639] text-black font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-[#1478f0] hover:bg-[#9ae639] text-black font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                   <span>Abrir Subdomínio Real ↗</span>
                 </a>
               ) : (
-                <span className="px-3 py-1.5 rounded-xl bg-white/[0.04] text-zinc-500 font-semibold text-xs border border-white/[0.08] flex items-center gap-1.5 cursor-not-allowed">
-                  <ExternalLink className="w-3.5 h-3.5 text-zinc-500" />
+                <span className="px-3 py-1.5 rounded-xl bg-white/[0.04] text-slate-400 dark:text-slate-500 font-semibold text-xs border border-slate-200 dark:border-white/[0.08] flex items-center gap-1.5 cursor-not-allowed">
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                   <span>Subdomínio Bloqueado (Faça Deploy Primeiro)</span>
                 </span>
               )}
@@ -3646,7 +3664,7 @@ export default function BillyWebStudio({
               <button
                 type="button"
                 onClick={() => setFullScreenPreview(false)}
-                className="p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-zinc-300 hover:text-white transition cursor-pointer"
+                className="p-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] text-slate-700 dark:text-slate-300 hover:text-white transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>

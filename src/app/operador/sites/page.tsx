@@ -82,7 +82,7 @@ export default function OperatorSitesPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-sky-400 border-t-transparent rounded-full animate-spin" />
-          <span className="text-zinc-400 text-xs font-mono">Carregando sites ativos...</span>
+          <span className="text-slate-500 dark:text-slate-400 text-xs font-mono">Carregando sites ativos...</span>
         </div>
       </div>
     );
@@ -92,7 +92,7 @@ export default function OperatorSitesPage() {
     return (
       <div className="p-8 text-center bg-rose-950/20 border border-rose-900/40 rounded-2xl max-w-lg mx-auto my-12">
         <h2 className="text-lg font-bold text-rose-400 mb-2">Erro ao carregar dados</h2>
-        <p className="text-xs text-zinc-300">{error}</p>
+        <p className="text-xs text-slate-700 dark:text-slate-300">{error}</p>
       </div>
     );
   }
@@ -100,25 +100,115 @@ export default function OperatorSitesPage() {
   return (
     <div className="space-y-6">
       {/* Header com Resumo e MRR */}
-      <div className="p-5 rounded-2xl bg-[#0f121a] border border-white/[0.08] shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <span className="text-xs font-bold text-sky-400 uppercase tracking-wider block">
             Seus Clientes no Modelo SaaS Recorrente
           </span>
-          <p className="text-xs text-zinc-300 mt-1">
+          <p className="text-xs text-slate-700 dark:text-slate-300 mt-1">
             Cada cliente ativo gera <strong>R$ 10,00/mês</strong> de comissão recorrente repassada para sua chave Pix cadastrada.
           </p>
         </div>
-        <div className="text-xs text-zinc-400 font-mono">
+        <div className="text-xs text-slate-500 dark:text-slate-400 font-mono">
           MRR Atual: <strong className="text-emerald-400 font-bold">R$ {(stats?.monthlyCommissionMRR ?? ((stats?.activeSubscriptionsCount ?? 0) * 10)).toLocaleString('pt-BR')},00 / mês</strong>
         </div>
       </div>
 
       {/* Tabela de Sites Ativos */}
-      <div className="bg-[#0f121a] rounded-2xl border border-white/[0.08] shadow-xl overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white dark:bg-[#1c1d27] rounded-2xl border border-slate-200 dark:border-white/[0.08] shadow-xl overflow-hidden">
+        
+        {/* Visualização em Cards no Mobile (< 768px) */}
+        <div className="block md:hidden divide-y divide-slate-100 dark:divide-white/[0.05]">
+          {filteredSubscriptions.length === 0 ? (
+            <div className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
+              {searchQuery ? 'Nenhum site encontrado com este termo.' : 'Nenhum cliente ativo no momento.'}
+            </div>
+          ) : (
+            filteredSubscriptions.map((sub: any) => {
+              const subDomain = getSubdomain(sub);
+              const isPublished = Boolean(subDomain || sub.deployedUrl || sub.custom_domain || sub.customDomain);
+              const isOnline = sub.status === 'active' && isPublished;
+              const isSuspended = sub.status === 'suspended';
+              const isCancelled = sub.status === 'cancelled';
+
+              return (
+                <div key={sub.id} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <span className="font-bold text-sm text-slate-900 dark:text-white block">
+                        {sub.clientName || 'Cliente'}
+                      </span>
+                      {subDomain ? (
+                        <a
+                          href={`https://${subDomain}.webbilly.com.br`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-mono text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline inline-flex items-center gap-1"
+                        >
+                          <span>{subDomain}.webbilly.com.br</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      ) : (
+                        <span className="text-xs text-slate-400 italic">Sem subdomínio</span>
+                      )}
+                    </div>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 border ${
+                        isOnline
+                          ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
+                          : isSuspended
+                          ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border-rose-200 dark:border-rose-800'
+                          : isCancelled
+                          ? 'bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-400 border-slate-200 dark:border-zinc-700'
+                          : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border-amber-200 dark:border-amber-800'
+                      }`}
+                    >
+                      {isOnline ? 'No Ar' : isSuspended ? 'Suspenso' : isCancelled ? 'Cancelado' : 'Offline'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs py-2 border-y border-slate-100 dark:border-white/[0.05]">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block font-mono">Telefone / Whats</span>
+                      <span className="font-mono text-slate-700 dark:text-slate-300">{sub.clientPhone || '—'}</span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-slate-400 block font-mono">Mensalidade</span>
+                      <span className="font-bold text-slate-900 dark:text-white">R$ {sub.monthlyPrice?.toFixed(2) || '29.90'}/mês</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-1">
+                    <a
+                      href={subDomain ? `https://webbilly.com.br/api/subscription/create-checkout?slug=${subDomain}` : (sub.checkoutUrl || '#')}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex-1 text-center py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.06] dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-white/10 min-h-[44px] flex items-center justify-center"
+                    >
+                      Checkout Asaas
+                    </a>
+                    {subDomain && (
+                      <a
+                        href={`https://${subDomain}.webbilly.com.br`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white min-h-[44px] min-w-[44px] flex items-center justify-center"
+                        title="Ver Site"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Tabela Desktop (>= 768px) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#141824] text-zinc-400 uppercase font-mono text-[11px] border-b border-white/[0.08]">
+            <thead className="bg-slate-50 dark:bg-[#14161f] text-slate-500 dark:text-slate-400 uppercase font-mono text-[11px] border-b border-slate-200 dark:border-white/[0.08]">
               <tr>
                 <th className="py-3.5 px-4">Subdomínio Oficial</th>
                 <th className="py-3.5 px-4">Cliente / Estabelecimento</th>
@@ -128,10 +218,10 @@ export default function OperatorSitesPage() {
                 <th className="py-3.5 px-4 text-right">Ações Rápidas</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.05]">
+            <tbody className="divide-y divide-slate-100 dark:divide-white/[0.05]">
               {filteredSubscriptions.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-zinc-500 text-xs">
+                  <td colSpan={6} className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
                     {searchQuery ? 'Nenhum site encontrado com este termo de busca.' : 'Nenhum cliente ativo no momento. Dispare demonstrações no Billy Desktop com o link de checkout!'}
                   </td>
                 </tr>
@@ -144,7 +234,7 @@ export default function OperatorSitesPage() {
                   const isCancelled = sub.status === 'cancelled';
 
                   return (
-                    <tr key={sub.id} className="hover:bg-white/[0.02] transition duration-150">
+                    <tr key={sub.id} className="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition duration-150">
                       <td className="py-3.5 px-4 font-mono">
                         {subDomain ? (
                           <ActionTooltip title="Abrir Subdomínio" description="Acessa o site público do cliente hospedado no subdomínio oficial." side="top">
@@ -159,19 +249,19 @@ export default function OperatorSitesPage() {
                             </a>
                           </ActionTooltip>
                         ) : (
-                          <span className="text-zinc-500 text-[11px] italic">Subdomínio não configurado</span>
+                          <span className="text-slate-400 dark:text-slate-500 text-[11px] italic">Subdomínio não configurado</span>
                         )}
-                        <span className="text-[10px] text-zinc-500 block">ID: {sub.id}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 block">ID: {sub.id}</span>
                       </td>
                       <td className="py-3.5 px-4">
-                        <span className="font-semibold text-white block">{sub.clientName}</span>
-                        <span className="text-[11px] text-zinc-400">{sub.planName || 'Assinatura Mensal'}</span>
+                        <span className="font-semibold text-slate-900 dark:text-white block">{sub.clientName}</span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400">{sub.planName || 'Assinatura Mensal'}</span>
                       </td>
-                      <td className="py-3.5 px-4 font-mono text-zinc-300">
+                      <td className="py-3.5 px-4 font-mono text-slate-700 dark:text-slate-300">
                         {sub.clientPhone || '—'}
                       </td>
                       <td className="py-3.5 px-4 font-mono">
-                        <span className="text-white font-bold">R$ {sub.monthlyPrice?.toFixed(2) || '29.90'}/mês</span>
+                        <span className="text-slate-900 dark:text-white font-bold">R$ {sub.monthlyPrice?.toFixed(2) || '29.90'}/mês</span>
                         <span className="text-[10px] text-emerald-400 block font-semibold">+R$ {(sub.operatorCommissionMonthly ?? 10.00).toFixed(2)} repasse</span>
                       </td>
                       <td className="py-3.5 px-4 space-y-1">
@@ -184,7 +274,7 @@ export default function OperatorSitesPage() {
                                   : isSuspended
                                   ? 'bg-rose-950/40 text-rose-400 border-rose-800/40'
                                   : isCancelled
-                                  ? 'bg-zinc-800 text-zinc-400 border-zinc-700'
+                                  ? 'bg-zinc-800 text-slate-500 dark:text-slate-400 border-zinc-700'
                                   : 'bg-amber-950/40 text-amber-400 border-amber-800/40'
                               }`}
                             >
@@ -237,7 +327,7 @@ export default function OperatorSitesPage() {
                               href={subDomain ? `https://webbilly.com.br/api/subscription/create-checkout?slug=${subDomain}` : (sub.checkoutUrl || '#')}
                               target="_blank"
                               rel="noreferrer"
-                              className="px-2.5 py-1.5 rounded-lg bg-[#141824] hover:bg-zinc-800 text-white font-medium text-[11px] transition border border-white/[0.08] inline-block"
+                              className="px-2.5 py-1.5 rounded-lg bg-slate-50 dark:bg-[#14161f] hover:bg-zinc-800 text-white font-medium text-[11px] transition border border-slate-200 dark:border-white/[0.08] inline-block"
                             >
                               Link Checkout
                             </a>
@@ -256,7 +346,7 @@ export default function OperatorSitesPage() {
                           ) : (
                             <button
                               disabled
-                              className="p-1.5 rounded-lg bg-zinc-800/40 text-zinc-600 border border-white/[0.05] inline-flex items-center justify-center cursor-not-allowed opacity-40"
+                              className="p-1.5 rounded-lg bg-zinc-800/40 text-zinc-600 border border-slate-100 dark:border-white/[0.05] inline-flex items-center justify-center cursor-not-allowed opacity-40"
                               title="Subdomínio não configurado"
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
@@ -274,14 +364,14 @@ export default function OperatorSitesPage() {
       </div>
 
       {/* Ferramentas de Trabalho e Image Downloader */}
-      <div className="p-6 rounded-2xl bg-[#0f121a] border border-white/[0.08] flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="p-6 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center p-2 shrink-0">
             <img src="/icone-marca/image-downloader.png" alt="Extensão Image Downloader" className="w-10 h-10 object-contain rounded-lg" />
           </div>
           <div>
             <h4 className="text-sm font-bold text-white">Extensão Image Downloader para Chrome</h4>
-            <p className="text-xs text-zinc-400">Baixe fotos e cardápios de clientes com um clique para carregar no gerador desktop Billy.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Baixe fotos e cardápios de clientes com um clique para carregar no gerador desktop Billy.</p>
           </div>
         </div>
         <ActionTooltip title="Instalar Image Downloader" description="Abre a Chrome Web Store para instalar a extensão de download rápido de imagens." side="left">
@@ -305,7 +395,7 @@ export default function OperatorSitesPage() {
               onClick={() => {
                 if (!cancelSubmitting) setCancelModalSub(null);
               }}
-              className="absolute top-4 right-4 text-zinc-400 hover:text-white"
+              className="absolute top-4 right-4 text-slate-500 dark:text-slate-400 hover:text-white"
             >
               <X className="w-5 h-5" />
             </button>
@@ -316,7 +406,7 @@ export default function OperatorSitesPage() {
               </div>
               <div>
                 <h3 className="font-bold text-white text-base">Solicitar Encerramento de Assinatura</h3>
-                <span className="text-xs text-zinc-400 font-mono">{cancelModalSub.slug}.webbilly.com.br</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">{cancelModalSub.slug}.webbilly.com.br</span>
               </div>
             </div>
 
@@ -324,14 +414,14 @@ export default function OperatorSitesPage() {
               <p>
                 <strong>Atenção:</strong> Esta solicitação será enviada imediatamente para o <strong>Admin Master</strong>.
               </p>
-              <p className="text-[11px] text-zinc-400">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
                 O Admin realizará o cancelamento definitivo da cobrança no Asaas e a suspensão do domínio na Vercel.
               </p>
             </div>
 
             <form onSubmit={handleConfirmCancellation} className="space-y-4">
               <div>
-                <label className="text-xs font-bold text-zinc-300 block mb-1">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
                   Motivo do Cancelamento / Observações:
                 </label>
                 <textarea
@@ -340,7 +430,7 @@ export default function OperatorSitesPage() {
                   value={cancelReason}
                   onChange={(e) => setCancelReason(e.target.value)}
                   placeholder="Ex: Cliente fechou o restaurante, solicitou pausa temporária, insatisfação com custos, etc."
-                  className="w-full bg-[#161a26] border border-white/[0.08] rounded-xl p-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500"
+                  className="w-full bg-[#161a26] border border-slate-200 dark:border-white/[0.08] rounded-xl p-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-rose-500"
                 />
               </div>
 
@@ -361,7 +451,7 @@ export default function OperatorSitesPage() {
                   type="button"
                   disabled={cancelSubmitting}
                   onClick={() => setCancelModalSub(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-slate-700 dark:text-slate-300 transition"
                 >
                   Voltar
                 </button>

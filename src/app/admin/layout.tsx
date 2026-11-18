@@ -1,30 +1,32 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { AdminProvider, useAdmin } from '@/contexts/AdminContext';
 import GamerAvatar from '@/components/GamerAvatar';
+import ThemeToggle from '@/components/ThemeToggle';
 import { startAdminTour } from '@/lib/tours';
 import { ActionTooltip, TooltipsToggle, TooltipProvider } from '@/components/ui/ActionTooltip';
 import {
   Search,
   HelpCircle,
   KeyRound,
-  RefreshCw,
   LogOut,
-  ChevronRight,
   Pin,
   PinOff,
   Menu,
   X,
-  Lock,
   Check,
-  AlertTriangle,
   Bell,
-  ExternalLink,
   Eye,
-  EyeOff
+  EyeOff,
+  LayoutDashboard,
+  Sparkles,
+  Globe,
+  Users,
+  Trophy,
+  DollarSign
 } from 'lucide-react';
 
 function AdminShell({ children }: { children: React.ReactNode }) {
@@ -33,7 +35,6 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     data,
     loading,
     adminUser,
-    loadData,
     searchQuery,
     setSearchQuery,
     activeAlertsCount,
@@ -75,63 +76,71 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     {
       href: '/admin',
       label: 'Dashboard Executivo',
+      icon: LayoutDashboard,
       iconSrc: '/icons/nav/dashboard.png',
-      isTrophy: false,
       badge: 'Geral',
-      badgeColor: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
+      badgeColor: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800/40',
       tooltipTitle: 'Dashboard Executivo',
       tooltipDesc: 'Visão geral com gráficos, faturamento, metas e indicadores em tempo real.'
     },
     {
       href: '/admin/estudio',
       label: 'Billy Studio Web',
+      icon: Sparkles,
       iconSrc: '/icons/nav/studio.png',
-      isTrophy: false,
       badge: 'IA & MAPS ✨',
-      badgeColor: 'bg-[#84cc16]/25 text-[#a3e635] border border-[#84cc16]/50 font-bold',
+      badgeColor: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/40 font-bold',
       tooltipTitle: 'Billy Studio Web (Master)',
       tooltipDesc: 'Busque comércios com IA, gere sites para subdomínios oficiais e acompanhe propostas de todos os operadores.'
     },
     {
       href: '/admin/sites',
       label: 'Gestão de Sites (SaaS)',
+      icon: Globe,
       iconSrc: '/icons/nav/dominios.png',
-      isTrophy: false,
       badge: (data?.subscriptions || []).length ? `${(data?.subscriptions || []).length}` : null,
-      badgeColor: 'bg-zinc-800 text-zinc-300',
+      badgeColor: 'bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-300',
       tooltipTitle: 'Sites Ativos',
       tooltipDesc: 'Gerencie os sites gerados, edite dados do cliente, copie links de demonstração e acompanhe o status.'
     },
     {
       href: '/admin/operadores',
       label: 'Operadores & Licenças',
+      icon: Users,
       iconSrc: '/icons/nav/operadores.png',
-      isTrophy: false,
       badge: (data?.operators || []).length ? `${(data?.operators || []).length}` : null,
-      badgeColor: 'bg-indigo-950/40 text-indigo-300 border border-indigo-800/40',
+      badgeColor: 'bg-sky-50 text-sky-600 dark:bg-sky-900/30 dark:text-sky-300 border border-sky-200 dark:border-sky-800/40',
       tooltipTitle: 'Operadores & Licenças',
       tooltipDesc: 'Aprove ou recuse candidaturas, gere seriais do app desktop e gerencie a equipe.'
     },
     {
       href: '/admin/ranking',
       label: 'Ranking & Medalhas',
+      icon: Trophy,
       iconSrc: '/icons/nav/ranking.png',
-      isTrophy: false,
       badge: 'Top 3',
-      badgeColor: 'bg-amber-500/20 text-amber-300 border border-amber-500/40',
+      badgeColor: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40',
       tooltipTitle: 'Ranking & Medalhas',
       tooltipDesc: 'Veja sua posição no ranking mensal, patentes e metas para desbloquear os troféus oficiais.'
     },
     {
       href: '/admin/financeiro',
       label: 'Financeiro & APIs',
+      icon: DollarSign,
       iconSrc: '/icons/nav/financeiro.png',
-      isTrophy: false,
       badge: 'Caixa 70/30',
-      badgeColor: 'bg-emerald-950/40 text-emerald-400',
+      badgeColor: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40',
       tooltipTitle: 'Financeiro & APIs',
       tooltipDesc: 'Controle receitas totais, repasses de comissão, assinaturas Asaas e saldo líquido.'
     }
+  ];
+
+  // Ações rápidas da barra inferior no Mobile
+  const mobileNavItems = [
+    { href: '/admin', label: 'Início', icon: LayoutDashboard },
+    { href: '/admin/estudio', label: 'Studio IA', icon: Sparkles },
+    { href: '/admin/sites', label: 'Sites', icon: Globe },
+    { href: '/admin/financeiro', label: 'Financeiro', icon: DollarSign }
   ];
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -177,30 +186,30 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#07090e] text-zinc-100 flex flex-col font-sans selection:bg-[#84cc16] selection:text-black">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#131317] text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
       {/* =========================================================================
-          CABEÇALHO SUPERIOR GLOBAL PERSISTENTE
+          CABEÇALHO SUPERIOR GLOBAL PERSISTENTE (ESTILO ARCLON)
          ========================================================================= */}
-      <header className="sticky top-0 z-40 h-16 bg-[#0a0d14]/90 backdrop-blur-md border-b border-white/[0.06] flex items-center justify-between px-4 sm:px-6">
+      <header className="sticky top-0 z-40 h-16 bg-white/95 dark:bg-[#1c1d27]/95 backdrop-blur-md border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between px-4 sm:px-6 shadow-xs transition-colors duration-200">
         {/* Esquerda: Menu Mobile + Logotipo + Badge Master */}
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-xl bg-white/[0.04] text-zinc-300 hover:text-white hover:bg-white/[0.08] transition"
-            aria-label="Abrir menu"
+            className="md:hidden p-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/[0.05] text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition cursor-pointer"
+            aria-label="Abrir menu lateral"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
           <Link href="/admin" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-[#84cc16]/10 border border-[#84cc16]/30 flex items-center justify-center text-[#84cc16] font-black font-mono text-base group-hover:scale-105 transition shadow-lg shadow-lime-950/40">
+            <div className="w-9 h-9 rounded-xl bg-blue-600 dark:bg-blue-500 flex items-center justify-center text-white font-black font-mono text-base group-hover:scale-105 transition shadow-sm shadow-blue-500/20">
               W
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-black text-white tracking-wider font-mono">
+              <span className="text-sm font-black text-slate-900 dark:text-white tracking-wider font-mono">
                 WEBBILLY
               </span>
-              <span className="text-[9px] uppercase font-bold text-amber-400 tracking-widest font-mono">
+              <span className="text-[9px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-widest font-mono">
                 ADMIN MASTER
               </span>
             </div>
@@ -210,19 +219,22 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         {/* Centro: Barra de Busca Global */}
         <div className="hidden lg:flex items-center flex-1 max-w-md mx-6">
           <div className="relative w-full">
-            <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar estabelecimentos, subdomínios, licenças ou operadores..."
-              className="w-full bg-[#11141c] border border-white/[0.08] focus:border-[#84cc16]/60 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none transition shadow-inner font-sans"
+              className="w-full bg-slate-100/80 dark:bg-[#14161f] border border-slate-200 dark:border-white/[0.08] focus:border-blue-500 focus:bg-white dark:focus:bg-[#181a25] rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-hidden transition font-sans"
             />
           </div>
         </div>
 
         {/* Direita: Ações Globais */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Alternador Nativo de Tema Light / Dark */}
+          <ThemeToggle />
+
           {/* Botão Modo Dicas / Tooltips */}
           <TooltipsToggle />
 
@@ -232,8 +244,8 @@ function AdminShell({ children }: { children: React.ReactNode }) {
             description="Indica se a integração de pagamentos Pix e cobranças está online e operando normalmente."
             side="bottom"
           >
-            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-900/80 border border-white/[0.06] text-[11px] font-mono text-zinc-300 cursor-default">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] text-[11px] font-mono text-slate-600 dark:text-slate-300 cursor-default">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>Asaas Gateway</span>
             </div>
           </ActionTooltip>
@@ -246,9 +258,9 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           >
             <button
               onClick={() => startAdminTour()}
-              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-semibold text-zinc-300 hover:text-white transition flex items-center gap-1.5 cursor-pointer"
+              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.05] dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.08] text-xs font-semibold text-slate-700 dark:text-slate-300 transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
-              <HelpCircle className="w-4 h-4 text-amber-400" />
+              <HelpCircle className="w-4 h-4 text-amber-500" />
               <span className="hidden sm:inline">Tour</span>
             </button>
           </ActionTooltip>
@@ -265,16 +277,16 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                 setChangePasswordSuccess(null);
                 setShowChangePasswordModal(true);
               }}
-              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-semibold text-zinc-300 hover:text-white transition flex items-center gap-1.5 cursor-pointer"
+              className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.05] dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.08] text-xs font-semibold text-slate-700 dark:text-slate-300 transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
             >
-              <KeyRound className="w-4 h-4 text-[#84cc16]" />
-              <span className="hidden md:inline">Senha Master</span>
+              <KeyRound className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span className="hidden md:inline">Senha</span>
             </button>
           </ActionTooltip>
 
           {/* Sininho de Alertas Globais & Cancelamentos */}
           <ActionTooltip
-            title={hasCancellationAlerts ? "Atenção: Cancelamentos Pendentes" : "Enviar Alerta Global (Sininho)"}
+            title={hasCancellationAlerts ? "Atenção: Cancelamentos Pendentes" : "Enviar Alerta Global"}
             description={hasCancellationAlerts ? `Há ${pendingCancellations.length} solicitação(ões) de cancelamento aguardando contato do Admin.` : "Dispara uma notificação instantânea para todos os operadores conectados."}
             side="bottom"
           >
@@ -282,17 +294,17 @@ function AdminShell({ children }: { children: React.ReactNode }) {
               onClick={() => setShowAlertsModal(true)}
               className={`relative p-2 rounded-xl border transition cursor-pointer ${
                 hasCancellationAlerts
-                  ? 'bg-rose-500/15 border-rose-500/40 text-rose-300 shadow-[0_0_15px_rgba(244,63,94,0.3)]'
-                  : 'bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 hover:text-white'
+                  ? 'bg-rose-50 border-rose-300 text-rose-700 dark:bg-rose-950/40 dark:border-rose-800 dark:text-rose-300'
+                  : 'bg-slate-100 hover:bg-slate-200/80 dark:bg-white/[0.05] dark:hover:bg-white/[0.08] border-slate-200 dark:border-white/[0.08] text-slate-700 dark:text-slate-300'
               }`}
             >
-              <Bell className={`w-4 h-4 ${hasCancellationAlerts ? 'text-rose-400 animate-pulse' : 'text-amber-400'}`} />
+              <Bell className={`w-4 h-4 ${hasCancellationAlerts ? 'text-rose-500 animate-pulse' : 'text-slate-600 dark:text-slate-300'}`} />
               {hasCancellationAlerts ? (
-                <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 rounded-full bg-rose-600 text-white font-mono font-black text-[10px] flex items-center justify-center animate-bounce shadow-[0_0_12px_rgba(244,63,94,0.9)] border border-rose-400">
+                <span className="absolute -top-1 -right-1 px-1.5 py-0.2 rounded-full bg-rose-600 text-white font-mono font-black text-[10px] flex items-center justify-center animate-bounce shadow-xs">
                   {pendingCancellations.length}
                 </span>
               ) : activeAlertsCount > 0 ? (
-                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-black font-mono font-black text-[10px] flex items-center justify-center animate-pulse shadow-md">
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-blue-600 text-white font-mono font-black text-[10px] flex items-center justify-center animate-pulse shadow-xs">
                   {activeAlertsCount}
                 </span>
               ) : null}
@@ -300,22 +312,22 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           </ActionTooltip>
 
           {/* Avatar Gamer do Admin Master */}
-          <div className="flex items-center gap-2 pl-1 sm:pl-2 border-l border-white/[0.08]">
+          <div className="flex items-center gap-2 pl-1 sm:pl-2 border-l border-slate-200 dark:border-white/[0.08]">
             <ActionTooltip
               title="Perfil Admin Master"
-              description="Personalize a aparência do seu avatar gamer oficial de administrador."
+              description="Personalize a aparência do seu avatar oficial."
               side="bottom"
             >
               <button
                 onClick={() => setShowAdminAvatarModal(true)}
-                className="relative rounded-full hover:ring-2 hover:ring-[#84cc16] transition cursor-pointer p-0.5"
+                className="relative rounded-full hover:ring-2 hover:ring-blue-500 transition cursor-pointer p-0.5"
               >
                 <GamerAvatar
                   svg={adminUser?.avatar_svg}
                   config={adminUser?.avatar_config}
                   seed={adminUser?.name || 'Administrador Master'}
                   size={34}
-                  className="ring-2 ring-amber-500/50 shadow-md shadow-amber-500/20"
+                  className="ring-2 ring-blue-500/30 shadow-xs"
                 />
               </button>
             </ActionTooltip>
@@ -328,7 +340,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
             >
               <button
                 onClick={handleLogout}
-                className="p-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/25 transition cursor-pointer"
+                className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/25 transition cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
               </button>
@@ -339,9 +351,9 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
       {/* Mensagem de Feedback de Ação */}
       {actionSuccess && (
-        <div className="bg-emerald-950/80 border-b border-emerald-800 text-emerald-300 px-4 py-2 text-xs flex items-center justify-between z-30">
+        <div className="bg-emerald-50 dark:bg-emerald-950/60 border-b border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 px-4 py-2 text-xs flex items-center justify-between z-30">
           <div className="flex items-center gap-2 max-w-5xl mx-auto">
-            <Check className="w-4 h-4 shrink-0 text-emerald-400" />
+            <Check className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
             <span>{actionSuccess}</span>
           </div>
         </div>
@@ -355,14 +367,14 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         <aside
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          className={`hidden md:flex flex-col bg-[#0a0d14] border-r border-white/[0.06] transition-all duration-300 ease-in-out shrink-0 z-30 ${
-            isExpanded ? 'w-64 shadow-2xl shadow-black/80' : 'w-20'
+          className={`hidden md:flex flex-col bg-white dark:bg-[#1c1d27] border-r border-slate-200 dark:border-white/[0.08] transition-all duration-300 ease-in-out shrink-0 z-30 ${
+            isExpanded ? 'w-64 shadow-xl shadow-slate-200/50 dark:shadow-black/50' : 'w-20'
           }`}
         >
           {/* Topo da Sidebar: Botão de Fixar / Desfixar */}
-          <div className="h-12 flex items-center justify-between px-4 border-b border-white/[0.04]">
+          <div className="h-12 flex items-center justify-between px-4 border-b border-slate-100 dark:border-white/[0.05]">
             {isExpanded && (
-              <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 font-mono">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500 font-mono">
                 Menu de Gestão
               </span>
             )}
@@ -373,19 +385,20 @@ function AdminShell({ children }: { children: React.ReactNode }) {
             >
               <button
                 onClick={() => setIsPinned(!isPinned)}
-                className={`p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/[0.06] transition ml-auto cursor-pointer ${
-                  isPinned ? 'text-[#84cc16]' : ''
+                className={`p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition ml-auto cursor-pointer ${
+                  isPinned ? 'text-blue-600 dark:text-blue-400' : ''
                 }`}
               >
-                {isPinned ? <PinOff className="w-4 h-4 text-[#84cc16]" /> : <Pin className="w-4 h-4" />}
+                {isPinned ? <PinOff className="w-4 h-4 text-blue-600 dark:text-blue-400" /> : <Pin className="w-4 h-4" />}
               </button>
             </ActionTooltip>
           </div>
 
-          {/* Links de Navegação com Ícones Maiores e Container Glow Neon */}
-          <nav className="flex-1 py-4 px-2 space-y-1.5 overflow-y-auto">
+          {/* Links de Navegação */}
+          <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
+              const Icon = item.icon;
               return (
                 <ActionTooltip
                   key={item.href}
@@ -396,40 +409,25 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                 >
                   <Link
                     href={item.href}
-                    className={`group relative flex items-center rounded-2xl transition duration-150 cursor-pointer ${
-                      isExpanded ? 'px-3 py-2 gap-3.5' : 'justify-center p-2'
+                    className={`group relative flex items-center rounded-xl transition-all duration-150 cursor-pointer ${
+                      isExpanded ? 'px-3 py-2.5 gap-3' : 'justify-center p-2.5'
                     } ${
                       isActive
-                        ? 'bg-[#84cc16]/10 text-white border border-[#84cc16]/30 shadow-lg shadow-lime-950/40'
-                        : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/[0.04] border border-transparent'
+                        ? 'bg-blue-50 dark:bg-blue-600/15 text-blue-700 dark:text-blue-300 font-bold border border-blue-200/80 dark:border-blue-500/30 shadow-2xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-white/[0.04] border border-transparent'
                     }`}
                   >
-                    {/* Container Estilizado com Glow / Sombra Neon Verde */}
-                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all ${
                       isActive
-                        ? 'bg-[#84cc16]/20 border border-[#84cc16]/60 shadow-[0_0_24px_rgba(132,204,22,0.55)]'
-                        : 'bg-[#84cc16]/10 border border-[#84cc16]/25 shadow-[0_0_16px_rgba(132,204,22,0.28)] group-hover:bg-[#84cc16]/20 group-hover:border-[#84cc16]/50 group-hover:shadow-[0_0_20px_rgba(132,204,22,0.45)]'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'bg-slate-100 dark:bg-white/[0.05] text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white'
                     }`}>
-                      <img
-                        src={item.iconSrc}
-                        alt=""
-                        className={`w-6 h-6 object-contain transition-all duration-200 group-hover:scale-110 ${
-                          item.isTrophy
-                            ? 'drop-shadow-[0_2px_8px_rgba(245,158,11,0.6)]'
-                            : isActive
-                            ? 'brightness-0 invert opacity-100 drop-shadow-[0_0_6px_rgba(132,204,22,0.5)]'
-                            : 'brightness-0 invert opacity-80 group-hover:opacity-100'
-                        }`}
-                      />
-                      {isActive && (
-                        <span className="absolute -left-2 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#84cc16] rounded-r-full" />
-                      )}
+                      <Icon className="w-5 h-5" />
                     </div>
 
-                    {/* Texto e Badge (Visíveis apenas quando expandido) */}
                     {isExpanded && (
                       <div className="flex-1 flex items-center justify-between min-w-0">
-                        <span className={`text-xs font-bold truncate ${isActive ? 'text-[#a3e635]' : 'text-zinc-300'}`}>
+                        <span className="text-xs truncate">
                           {item.label}
                         </span>
                         {item.badge && (
@@ -446,7 +444,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           </nav>
 
           {/* Rodapé da Sidebar */}
-          <div className="p-3 border-t border-white/[0.06] space-y-2">
+          <div className="p-3 border-t border-slate-100 dark:border-white/[0.06] space-y-2">
             <ActionTooltip
               title="Supervisão Central"
               description="Monitoramento ativo de conexões, licenças, subdomínios e infraestrutura em tempo real."
@@ -454,18 +452,18 @@ function AdminShell({ children }: { children: React.ReactNode }) {
               className="w-full block"
             >
               {isExpanded ? (
-                <div className="p-3 rounded-xl bg-black/40 border border-white/[0.04] space-y-1 cursor-default">
-                  <span className="text-[10px] uppercase font-bold text-zinc-400 block font-mono">
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#14161f] border border-slate-200/80 dark:border-white/[0.04] space-y-0.5 cursor-default">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 block font-mono">
                     Supervisão Central
                   </span>
-                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    Operação Total Ativa
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    Sistemas Operacionais
                   </span>
                 </div>
               ) : (
                 <div className="flex justify-center py-2 cursor-default">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                 </div>
               )}
             </ActionTooltip>
@@ -474,42 +472,37 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
         {/* DRAWER RESPONSIVO MOBILE */}
         {mobileMenuOpen && (
-          <div className="md:hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex">
-            <div className="w-72 bg-[#0a0d14] border-r border-white/[0.08] p-4 flex flex-col justify-between">
+          <div className="md:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex animate-in fade-in duration-150">
+            <div className="w-72 bg-white dark:bg-[#1c1d27] border-r border-slate-200 dark:border-white/[0.08] p-4 flex flex-col justify-between shadow-2xl">
               <div>
-                <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
-                  <span className="font-bold text-sm text-white font-mono">NAVEGAÇÃO ADMIN</span>
-                  <button onClick={() => setMobileMenuOpen(false)} className="p-1 rounded-lg text-zinc-400 hover:text-white">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/[0.08]">
+                  <span className="font-bold text-xs uppercase tracking-wider text-slate-400 dark:text-slate-400 font-mono">
+                    Menu Admin
+                  </span>
+                  <button onClick={() => setMobileMenuOpen(false)} className="p-1 rounded-lg text-slate-400 hover:text-slate-800 dark:hover:text-white">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
 
-                <nav className="py-4 space-y-1.5">
+                <nav className="py-3 space-y-1">
                   {navItems.map((item) => {
                     const isActive = pathname === item.href;
+                    const Icon = item.icon;
                     return (
                       <Link
                         key={item.href}
                         href={item.href}
                         onClick={() => setMobileMenuOpen(false)}
-                        className={`flex items-center gap-3 p-2.5 rounded-xl text-xs font-bold ${
+                        className={`flex items-center gap-3 p-2.5 rounded-xl text-xs font-semibold ${
                           isActive
-                            ? 'bg-[#84cc16]/15 text-[#a3e635] border border-[#84cc16]/30'
-                            : 'text-zinc-400 hover:bg-white/[0.04] hover:text-white'
+                            ? 'bg-blue-50 dark:bg-blue-600/15 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-500/30'
+                            : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]'
                         }`}
                       >
-                        <div className="w-9 h-9 rounded-lg bg-[#84cc16]/10 border border-[#84cc16]/25 flex items-center justify-center shrink-0">
-                          <img
-                            src={item.iconSrc}
-                            alt=""
-                            className={`w-5 h-5 object-contain transition-all ${
-                              item.isTrophy
-                                ? ''
-                                : isActive
-                                ? 'brightness-0 invert opacity-100 drop-shadow-[0_0_6px_rgba(132,204,22,0.5)]'
-                                : 'brightness-0 invert opacity-80'
-                            }`}
-                          />
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                          isActive ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-white/[0.05] text-slate-500 dark:text-slate-400'
+                        }`}>
+                          <Icon className="w-4 h-4" />
                         </div>
                         <span>{item.label}</span>
                       </Link>
@@ -518,10 +511,10 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                 </nav>
               </div>
 
-              <div className="pt-4 border-t border-white/[0.08]">
+              <div className="pt-3 border-t border-slate-100 dark:border-white/[0.08]">
                 <button
                   onClick={handleLogout}
-                  className="w-full py-2.5 px-4 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold text-xs flex items-center justify-center gap-2"
+                  className="w-full py-2.5 px-4 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Sair do Painel Master</span>
@@ -532,8 +525,8 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        {/* ÁREA DE CONTEÚDO PRINCIPAL */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        {/* ÁREA DE CONTEÚDO PRINCIPAL (COM PADDING EXTRA NO MOBILE PARA NÃO COBRIR O BOTTOM NAV) */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24 md:pb-8">
           <div className="w-full max-w-[1600px] mx-auto">
             {children}
           </div>
@@ -541,43 +534,72 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* =========================================================================
+          BARRA DE NAVEGAÇÃO INFERIOR FIXA MOBILE (BOTTOM NAVIGATION BAR)
+         ========================================================================= */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 h-16 bg-white/95 dark:bg-[#1c1d27]/95 backdrop-blur-md border-t border-slate-200 dark:border-white/[0.08] flex items-center justify-around px-2 shadow-lg">
+        {mobileNavItems.map((item) => {
+          const isActive = pathname === item.href;
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-center transition-colors min-h-[44px] ${
+                isActive ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              <Icon className={`w-5 h-5 mb-0.5 ${isActive ? 'scale-110' : ''}`} />
+              <span className="text-[10px] truncate max-w-[64px]">{item.label}</span>
+            </Link>
+          );
+        })}
+        <button
+          onClick={() => setMobileMenuOpen(true)}
+          className="flex flex-col items-center justify-center flex-1 h-full py-1 text-center text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer min-h-[44px]"
+        >
+          <Menu className="w-5 h-5 mb-0.5" />
+          <span className="text-[10px]">Mais</span>
+        </button>
+      </div>
+
+      {/* =========================================================================
           MODAL DE TROCA DE SENHA MASTER
          ========================================================================= */}
       {showChangePasswordModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#11141c] border border-white/[0.1] rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.1] rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
             <button
               onClick={() => setShowChangePasswordModal(false)}
-              className="absolute top-4 right-4 text-zinc-400 hover:text-white"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white"
             >
               <X className="w-5 h-5" />
             </button>
 
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#84cc16]/15 border border-[#84cc16]/30 text-[#84cc16] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-600/15 border border-blue-200 dark:border-blue-500/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                 <KeyRound className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-white text-base">Alterar Senha Master</h3>
-                <span className="text-xs text-zinc-400">{adminUser?.email || 'admin@billysuite.com.br'}</span>
+                <h3 className="font-bold text-slate-900 dark:text-white text-base">Alterar Senha Master</h3>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{adminUser?.email || 'admin@billysuite.com.br'}</span>
               </div>
             </div>
 
             {changePasswordError && (
-              <div className="p-3 rounded-lg bg-rose-950/40 border border-rose-800 text-xs text-rose-300">
+              <div className="p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300">
                 {changePasswordError}
               </div>
             )}
 
             {changePasswordSuccess && (
-              <div className="p-3 rounded-lg bg-emerald-950/40 border border-emerald-800 text-xs text-emerald-300">
+              <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-700 dark:text-emerald-300">
                 {changePasswordSuccess}
               </div>
             )}
 
             <form onSubmit={handleChangePassword} className="space-y-3">
               <div>
-                <label className="text-xs font-semibold text-zinc-300 block mb-1">Senha Atual *</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Senha Atual *</label>
                 <div className="relative flex items-center">
                   <input
                     type={showAdminPass ? 'text' : 'password'}
@@ -585,13 +607,13 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                     autoComplete="current-password"
                     value={adminCurrentPassword}
                     onChange={(e) => setAdminCurrentPassword(e.target.value)}
-                    className="w-full bg-[#161a26] border border-white/[0.08] rounded-xl pl-3.5 pr-11 py-2 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                    className="w-full bg-slate-50 dark:bg-[#14161f] border border-slate-200 dark:border-white/[0.08] rounded-xl pl-3.5 pr-11 py-2 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500"
                   />
                   <button
                     type="button"
                     onClick={() => setShowAdminPass(!showAdminPass)}
                     tabIndex={-1}
-                    className="absolute right-3 text-zinc-400 hover:text-white transition p-1 cursor-pointer"
+                    className="absolute right-3 text-slate-400 hover:text-slate-700 dark:hover:text-white transition p-1 cursor-pointer"
                   >
                     {showAdminPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -599,7 +621,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-zinc-300 block mb-1">Nova Senha Master (mínimo 8 caracteres) *</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Nova Senha Master (mínimo 8 caracteres) *</label>
                 <div className="relative flex items-center">
                   <input
                     type={showAdminPass ? 'text' : 'password'}
@@ -608,13 +630,13 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                     autoComplete="new-password"
                     value={adminNewPassword}
                     onChange={(e) => setAdminNewPassword(e.target.value)}
-                    className="w-full bg-[#161a26] border border-white/[0.08] rounded-xl pl-3.5 pr-11 py-2 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                    className="w-full bg-slate-50 dark:bg-[#14161f] border border-slate-200 dark:border-white/[0.08] rounded-xl pl-3.5 pr-11 py-2 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500"
                   />
                   <button
                     type="button"
                     onClick={() => setShowAdminPass(!showAdminPass)}
                     tabIndex={-1}
-                    className="absolute right-3 text-zinc-400 hover:text-white transition p-1 cursor-pointer"
+                    className="absolute right-3 text-slate-400 hover:text-slate-700 dark:hover:text-white transition p-1 cursor-pointer"
                   >
                     {showAdminPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -622,7 +644,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-zinc-300 block mb-1">Confirmar Nova Senha *</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">Confirmar Nova Senha *</label>
                 <div className="relative flex items-center">
                   <input
                     type={showAdminPass ? 'text' : 'password'}
@@ -631,13 +653,13 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                     autoComplete="new-password"
                     value={adminConfirmPassword}
                     onChange={(e) => setAdminConfirmPassword(e.target.value)}
-                    className="w-full bg-[#161a26] border border-white/[0.08] rounded-xl pl-3.5 pr-11 py-2 text-xs text-white focus:outline-none focus:border-[#84cc16]"
+                    className="w-full bg-slate-50 dark:bg-[#14161f] border border-slate-200 dark:border-white/[0.08] rounded-xl pl-3.5 pr-11 py-2 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500"
                   />
                   <button
                     type="button"
                     onClick={() => setShowAdminPass(!showAdminPass)}
                     tabIndex={-1}
-                    className="absolute right-3 text-zinc-400 hover:text-white transition p-1 cursor-pointer"
+                    className="absolute right-3 text-slate-400 hover:text-slate-700 dark:hover:text-white transition p-1 cursor-pointer"
                   >
                     {showAdminPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -648,14 +670,14 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                 <button
                   type="button"
                   onClick={() => setShowChangePasswordModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.08] dark:hover:bg-white/[0.12] text-slate-700 dark:text-slate-300 transition cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={changePasswordLoading}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-[#84cc16] hover:bg-[#a3e635] text-black transition flex items-center gap-1.5 shadow-lg shadow-lime-950/40 disabled:opacity-50 cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition flex items-center gap-1.5 shadow-sm shadow-blue-500/20 disabled:opacity-50 cursor-pointer"
                 >
                   {changePasswordLoading ? 'Salvando...' : 'Atualizar Senha'}
                 </button>

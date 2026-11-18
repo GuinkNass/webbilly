@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { OperatorProvider, useOperator } from '@/contexts/OperatorContext';
 import GamerAvatar from '@/components/GamerAvatar';
-import TrophyImage from '@/components/TrophyImage';
+import ThemeToggle from '@/components/ThemeToggle';
 import OperatorAlertsBell from '@/components/OperatorAlertsBell';
 import { ActionTooltip, TooltipsToggle, TooltipProvider } from '@/components/ui/ActionTooltip';
 import { startOperadorTour } from '@/lib/tours';
@@ -18,7 +18,6 @@ import {
   RefreshCw,
   Copy,
   LogOut,
-  ChevronRight,
   Pin,
   PinOff,
   Menu,
@@ -26,7 +25,14 @@ import {
   Lock,
   Check,
   Eye,
-  EyeOff
+  EyeOff,
+  LayoutDashboard,
+  Sparkles,
+  Globe,
+  GraduationCap,
+  BadgeDollarSign,
+  Trophy,
+  Users
 } from 'lucide-react';
 
 function OperatorShell({ children }: { children: React.ReactNode }) {
@@ -35,7 +41,6 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
     data,
     loading,
     op,
-    license,
     stats,
     loadData,
     searchQuery,
@@ -76,71 +81,72 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
       label: 'Dashboard',
       tooltipTitle: 'Dashboard',
       tooltipDesc: 'Visão geral com gráficos, faturamento, metas e indicadores em tempo real.',
-      iconSrc: '/icons/nav/dashboard.png',
-      isTrophy: false,
+      icon: LayoutDashboard,
       badge: stats?.activeSubscriptionsCount ? `${stats.activeSubscriptionsCount} sites` : null,
-      badgeColor: 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+      badgeColor: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800/40'
     },
     {
       href: '/operador/estudio',
       label: 'Billy Studio Web',
       tooltipTitle: 'Billy Studio Web (IA & Maps)',
       tooltipDesc: 'Busque comércios no Google Maps, gere sites com IA, publique no subdomínio e envie propostas no WhatsApp.',
-      iconSrc: '/icons/nav/studio.png',
-      isTrophy: false,
+      icon: Sparkles,
       badge: 'NOVO ✨',
-      badgeColor: 'bg-[#84cc16]/25 text-[#a3e635] border border-[#84cc16]/50 font-bold'
+      badgeColor: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/40 font-bold'
     },
     {
       href: '/operador/sites',
       label: 'Sites Ativos (SaaS)',
       tooltipTitle: 'Sites Ativos',
       tooltipDesc: 'Gerencie os sites gerados, edite dados do cliente, copie links de demonstração e acompanhe o status.',
-      iconSrc: '/icons/nav/dominios.png',
-      isTrophy: false,
+      icon: Globe,
       badge: stats?.activeSubscriptionsCount || (data?.subscriptions || []).length || 0,
-      badgeColor: 'bg-zinc-800 text-zinc-300'
+      badgeColor: 'bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-300'
     },
     {
       href: '/operador/treinamento',
       label: 'Área de Treinamento',
       tooltipTitle: 'Treinamento & Scripts',
       tooltipDesc: 'Acesse tutoriais em vídeo, scripts de abordagem e passo a passo de prospecção.',
-      iconSrc: '/icones/treinamento.svg',
-      isTrophy: false,
+      icon: GraduationCap,
       badge: '4 Aulas',
-      badgeColor: 'bg-indigo-950/40 text-indigo-300 border border-indigo-800/40'
+      badgeColor: 'bg-sky-50 text-sky-600 dark:bg-sky-900/30 dark:text-sky-300 border border-sky-200 dark:border-sky-800/40'
     },
     {
       href: '/operador/vendas',
       label: 'Minhas Vendas & Pix',
       tooltipTitle: 'Minhas Vendas & Pix',
       tooltipDesc: 'Acompanhe suas vendas fechadas, comissões (50%) e status de pagamentos Pix.',
-      iconSrc: '/icons/nav/financeiro.png',
-      isTrophy: false,
+      icon: BadgeDollarSign,
       badge: `R$ ${(stats?.monthlyCommissionMRR ?? ((stats?.activeSubscriptionsCount ?? 0) * 10)).toLocaleString('pt-BR')}`,
-      badgeColor: 'bg-emerald-950/40 text-emerald-400'
+      badgeColor: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40'
     },
     {
       href: '/operador/ranking',
       label: 'Ranking & Medalhas',
       tooltipTitle: 'Ranking & Medalhas',
       tooltipDesc: 'Veja sua posição no ranking mensal, patentes e metas para desbloquear os troféus oficiais.',
-      iconSrc: '/icons/nav/ranking.png',
-      isTrophy: false,
+      icon: Trophy,
       badge: data?.gamification?.currentMedal?.name || 'Iniciante',
-      badgeColor: `${data?.gamification?.currentMedal?.badgeBg || 'bg-amber-500/20'} ${data?.gamification?.currentMedal?.badgeText || 'text-amber-300'} border ${data?.gamification?.currentMedal?.badgeBorder || 'border-amber-500/30'}`
+      badgeColor: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40'
     },
     {
       href: '/operador/afiliados',
       label: 'Billy Afiliados',
       tooltipTitle: 'Billy Afiliados',
       tooltipDesc: 'Copie seu link exclusivo para indicar novos operadores e ganhar bônus recorrente.',
-      iconSrc: '/icons/nav/operadores.png',
-      isTrophy: false,
+      icon: Users,
       badge: data?.affiliates?.enabled ? '5% Ativo' : data?.affiliates?.eligibility?.eligible ? 'Liberado!' : 'Bronze',
-      badgeColor: data?.affiliates?.enabled ? 'bg-[#84cc16]/20 text-[#a3e635] border border-[#84cc16]/40' : 'bg-zinc-800 text-zinc-400'
+      badgeColor: data?.affiliates?.enabled ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800/40 font-bold' : 'bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400'
     }
+  ];
+
+  // Ações da Bottom Navigation Bar no celular (< 768px)
+  const mobileNavItems = [
+    { href: '/operador', label: 'Início', icon: LayoutDashboard },
+    { href: '/operador/estudio', label: 'Studio IA', icon: Sparkles },
+    { href: '/operador/sites', label: 'Meus Sites', icon: Globe },
+    { href: '/operador/afiliados', label: 'Afiliados', icon: Users }
   ];
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
@@ -186,33 +192,33 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#07090e] text-zinc-100 flex font-sans antialiased select-none">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#131317] text-slate-800 dark:text-slate-100 flex font-sans antialiased transition-colors duration-200">
       {/* =========================================================================
-          1. SIDEBAR RETRÁTIL (RECOLHIDA W-20 / EXPANDIDA W-64 COM HOVER E PIN)
+          1. SIDEBAR RETRÁTIL DESKTOP (ESTILO ARCLON)
          ========================================================================= */}
       <aside
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className={`fixed left-0 top-0 bottom-0 bg-[#0c0f17]/95 backdrop-blur-xl border-r border-white/[0.08] flex flex-col justify-between z-40 transition-all duration-300 ease-in-out ${
-          isExpanded ? 'w-64 shadow-2xl shadow-black/80' : 'w-20'
+        className={`fixed left-0 top-0 bottom-0 bg-white dark:bg-[#1c1d27] border-r border-slate-200 dark:border-white/[0.08] flex flex-col justify-between z-40 transition-all duration-300 ease-in-out ${
+          isExpanded ? 'w-64 shadow-xl shadow-slate-200/50 dark:shadow-black/50' : 'w-20'
         } hidden md:flex`}
       >
         <div>
           {/* Header da Sidebar: Logo + Botão Fixar */}
-          <div className="h-16 px-4 border-b border-white/[0.08] flex items-center justify-between">
+          <div className="h-16 px-4 border-b border-slate-100 dark:border-white/[0.06] flex items-center justify-between">
             <Link href="/operador" className="flex items-center gap-3 overflow-hidden">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500/20 via-[#84cc16]/20 to-teal-500/20 border border-[#84cc16]/40 p-1 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/10">
+              <div className="w-10 h-10 rounded-xl bg-blue-600 dark:bg-blue-500 p-1.5 flex items-center justify-center shrink-0 shadow-sm shadow-blue-500/20">
                 <img src="/billy-logo.png" alt="Billy" className="w-full h-full object-contain" />
               </div>
               {isExpanded && (
                 <div className="min-w-0 transition-opacity duration-200">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-extrabold text-sm text-white tracking-tight">Webbilly</span>
-                    <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 font-mono">
+                    <span className="font-extrabold text-sm text-slate-900 dark:text-white tracking-tight">Webbilly</span>
+                    <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800/40 font-mono">
                       OPERADOR
                     </span>
                   </div>
-                  <p className="text-[10px] text-zinc-400 font-medium truncate">Painel de Trabalho</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate">Painel de Trabalho</p>
                 </div>
               )}
             </Link>
@@ -229,8 +235,8 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
                   onClick={() => setIsPinned(!isPinned)}
                   className={`p-1.5 rounded-lg text-xs transition cursor-pointer ${
                     isPinned
-                      ? 'bg-[#84cc16]/20 text-[#a3e635] border border-[#84cc16]/40'
-                      : 'text-zinc-500 hover:text-white hover:bg-white/[0.06]'
+                      ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800/40'
+                      : 'text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06]'
                   }`}
                 >
                   {isPinned ? <PinOff className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
@@ -240,12 +246,13 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Itens de Navegação Vertical */}
-          <nav className="p-3 space-y-2 mt-2">
+          <nav className="p-3 space-y-1 mt-2">
             {navItems.map((item) => {
               const isActive =
                 item.href === '/operador'
                   ? pathname === '/operador'
                   : pathname.startsWith(item.href);
+              const Icon = item.icon;
 
               return (
                 <ActionTooltip
@@ -257,39 +264,24 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
                 >
                   <Link
                     href={item.href}
-                    className={`w-full flex items-center rounded-2xl transition-all duration-200 group relative ${
-                      isExpanded ? 'px-3 py-2 justify-between' : 'h-14 justify-center px-0'
+                    className={`w-full flex items-center rounded-xl transition-all duration-150 group relative cursor-pointer ${
+                      isExpanded ? 'px-3 py-2.5 justify-between' : 'h-12 justify-center px-0'
                     } ${
                       isActive
-                        ? 'bg-gradient-to-r from-emerald-600/30 via-emerald-500/20 to-transparent text-white font-bold border border-[#84cc16]/40 shadow-lg shadow-[#84cc16]/10'
-                        : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                        ? 'bg-blue-50 dark:bg-blue-600/15 text-blue-700 dark:text-blue-300 font-bold border border-blue-200/80 dark:border-blue-500/30 shadow-2xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-white/[0.04]'
                     }`}
                   >
-                    <div className={`flex items-center gap-3.5 ${!isExpanded ? 'justify-center w-full' : ''}`}>
-                      {/* Container Estilizado com Glow / Sombra Neon Verde */}
-                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-all duration-300 ${
+                    <div className={`flex items-center gap-3 ${!isExpanded ? 'justify-center w-full' : ''}`}>
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-all ${
                         isActive
-                          ? 'bg-[#84cc16]/20 border border-[#84cc16]/60 shadow-[0_0_24px_rgba(132,204,22,0.55)]'
-                          : 'bg-[#84cc16]/10 border border-[#84cc16]/25 shadow-[0_0_16px_rgba(132,204,22,0.28)] group-hover:bg-[#84cc16]/20 group-hover:border-[#84cc16]/50 group-hover:shadow-[0_0_20px_rgba(132,204,22,0.45)]'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-white/[0.05] text-slate-500 dark:text-slate-400 group-hover:text-slate-800 dark:group-hover:text-white'
                       }`}>
-                        <img
-                          src={item.iconSrc}
-                          alt=""
-                          className={`w-6 h-6 object-contain transition-all duration-200 group-hover:scale-110 ${
-                            item.isTrophy
-                              ? 'drop-shadow-[0_2px_8px_rgba(245,158,11,0.6)]'
-                              : isActive
-                              ? 'brightness-0 invert opacity-100 drop-shadow-[0_0_6px_rgba(132,204,22,0.5)]'
-                              : 'brightness-0 invert opacity-80 group-hover:opacity-100'
-                          }`}
-                        />
-                        {/* Ponto indicador ativo no modo recolhido */}
-                        {!isExpanded && isActive && (
-                          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#84cc16] shadow-md shadow-[#84cc16]/80 animate-pulse border-2 border-[#0c0f17]" />
-                        )}
+                        <Icon className="w-4 h-4" />
                       </div>
                       {isExpanded && (
-                        <span className={`text-xs font-semibold whitespace-nowrap overflow-hidden ${isActive ? 'text-[#a3e635]' : 'text-zinc-200'}`}>
+                        <span className="text-xs truncate">
                           {item.label}
                         </span>
                       )}
@@ -297,7 +289,7 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
 
                     {isExpanded && item.badge && (
                       <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full font-bold truncate max-w-[90px] ${
-                        isActive ? 'bg-[#84cc16]/25 text-[#a3e635] border border-[#84cc16]/40' : item.badgeColor
+                        isActive ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : item.badgeColor
                       }`}>
                         {item.badge}
                       </span>
@@ -310,24 +302,24 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Rodapé da Sidebar */}
-        <div className="p-3 border-t border-white/[0.08] space-y-2">
+        <div className="p-3 border-t border-slate-100 dark:border-white/[0.06] space-y-2">
           {/* Card Resumo do Serial */}
           {isExpanded ? (
-            <div className="p-2.5 rounded-xl bg-[#141824] border border-white/[0.06] text-xs animate-in fade-in duration-150">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] uppercase font-bold text-zinc-400">Chave Serial</span>
+            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#14161f] border border-slate-200/80 dark:border-white/[0.04] text-xs animate-in fade-in duration-150">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 font-mono">Chave Serial</span>
                 <ActionTooltip title="Copiar Serial" description="Copia sua chave exclusiva para ativar o software Billy no Windows." side="top">
                   <button
                     type="button"
                     onClick={copySerial}
-                    className="text-[10px] font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 cursor-pointer"
+                    className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
                   >
-                    {copiedSerial ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                    {copiedSerial ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                     {copiedSerial ? 'Copiado!' : 'Copiar'}
                   </button>
                 </ActionTooltip>
               </div>
-              <div className="font-mono text-[11px] font-bold text-white bg-zinc-950/60 p-1.5 rounded-lg border border-zinc-800 truncate select-all">
+              <div className="font-mono text-[11px] font-bold text-slate-800 dark:text-white bg-white dark:bg-black/40 p-1.5 rounded-lg border border-slate-200 dark:border-white/5 truncate select-all">
                 {op?.serialToken || 'CARREGANDO...'}
               </div>
             </div>
@@ -336,9 +328,9 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
               <button
                 type="button"
                 onClick={copySerial}
-                className="w-full h-10 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] flex items-center justify-center text-emerald-400 transition"
+                className="w-full h-10 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.03] dark:hover:bg-white/[0.08] flex items-center justify-center text-blue-600 dark:text-blue-400 transition cursor-pointer"
               >
-                <Key className="w-5 h-5" />
+                <Key className="w-4 h-4" />
               </button>
             </ActionTooltip>
           )}
@@ -348,7 +340,7 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={handleLogout}
-              className={`w-full flex items-center rounded-xl text-xs font-semibold text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition ${
+              className={`w-full flex items-center rounded-xl text-xs font-semibold text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition cursor-pointer ${
                 isExpanded ? 'px-3 py-2 gap-2 justify-start' : 'h-10 justify-center'
               }`}
             >
@@ -363,47 +355,40 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
           DRAWER RESPONSIVO MOBILE
          ========================================================================= */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex">
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
-          <div className="relative w-72 bg-[#0c0f17] border-r border-white/[0.08] flex flex-col justify-between p-4 z-10">
+        <div className="fixed inset-0 z-50 md:hidden flex animate-in fade-in duration-150">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs" onClick={() => setMobileMenuOpen(false)} />
+          <div className="relative w-72 bg-white dark:bg-[#1c1d27] border-r border-slate-200 dark:border-white/[0.08] flex flex-col justify-between p-4 z-10 shadow-2xl">
             <div>
-              <div className="flex items-center justify-between pb-4 border-b border-white/[0.08]">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/[0.08]">
                 <div className="flex items-center gap-2.5">
-                  <img src="/billy-logo.png" alt="" className="w-8 h-8 object-contain" />
-                  <span className="font-extrabold text-white text-sm">Webbilly Operador</span>
+                  <img src="/billy-logo.png" alt="" className="w-7 h-7 object-contain" />
+                  <span className="font-extrabold text-slate-900 dark:text-white text-sm">Webbilly Operador</span>
                 </div>
-                <button onClick={() => setMobileMenuOpen(false)} className="p-1.5 rounded-lg text-zinc-400">
+                <button onClick={() => setMobileMenuOpen(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white">
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <nav className="space-y-1.5 mt-4">
+              <nav className="space-y-1 mt-3">
                 {navItems.map((item) => {
                   const isActive = pathname === item.href;
+                  const Icon = item.icon;
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold ${
+                      className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold ${
                         isActive
-                          ? 'bg-emerald-600/40 text-white border border-[#84cc16]/40'
-                          : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
+                          ? 'bg-blue-50 dark:bg-blue-600/15 text-blue-700 dark:text-blue-300 font-bold border border-blue-200 dark:border-blue-500/30'
+                          : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/[0.04]'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-[#84cc16]/10 border border-[#84cc16]/25 flex items-center justify-center shrink-0">
-                          <img
-                            src={item.iconSrc}
-                            alt=""
-                            className={`w-5 h-5 object-contain transition-all ${
-                              item.isTrophy
-                                ? ''
-                                : isActive
-                                ? 'brightness-0 invert opacity-100 drop-shadow-[0_0_6px_rgba(132,204,22,0.5)]'
-                                : 'brightness-0 invert opacity-80'
-                            }`}
-                          />
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                          isActive ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-white/[0.05] text-slate-500 dark:text-slate-400'
+                        }`}>
+                          <Icon className="w-4 h-4" />
                         </div>
                         <span>{item.label}</span>
                       </div>
@@ -415,7 +400,7 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
 
             <button
               onClick={handleLogout}
-              className="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-rose-400 bg-rose-500/10 flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-3 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 flex items-center justify-center gap-2 cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
               <span>Sair da Conta</span>
@@ -427,36 +412,39 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
       {/* =========================================================================
           CONTAINER DIREITO (HEADER STICKY PERSISTENTE + CHILDREN)
          ========================================================================= */}
-      <div className={`flex-1 flex flex-col min-w-0 min-h-screen bg-[#07090e] transition-all duration-300 ${
+      <div className={`flex-1 flex flex-col min-w-0 min-h-screen bg-slate-50 dark:bg-[#131317] transition-all duration-300 ${
         isPinned ? 'md:ml-64' : 'md:ml-20'
       }`}>
         {/* TOPBAR SUPERIOR (GLOBAL E PERSISTENTE ENTRE AS PÁGINAS) */}
-        <header className="sticky top-0 z-30 h-16 bg-[#0c0f17]/95 backdrop-blur-md border-b border-white/[0.08] flex items-center justify-between px-4 sm:px-6 lg:px-8 shrink-0">
+        <header className="sticky top-0 z-30 h-16 bg-white/95 dark:bg-[#1c1d27]/95 backdrop-blur-md border-b border-slate-200 dark:border-white/[0.08] flex items-center justify-between px-4 sm:px-6 lg:px-8 shrink-0 shadow-xs transition-colors duration-200">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden p-2 text-zinc-400 hover:text-white rounded-xl bg-white/[0.04]"
+              className="md:hidden p-2 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-xl bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/[0.08] cursor-pointer"
             >
               <Menu className="w-5 h-5" />
             </button>
 
             {/* Barra de Pesquisa */}
             <div className="relative hidden sm:block">
-              <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="Buscar cliente, domínio slug ou dados..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64 lg:w-80 pl-9 pr-3 py-1.5 bg-[#141824] border border-white/[0.08] rounded-xl text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/60 transition"
+                className="w-64 lg:w-80 pl-9 pr-3 py-1.5 bg-slate-100/80 dark:bg-[#14161f] border border-slate-200 dark:border-white/[0.08] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-hidden focus:border-blue-500 focus:bg-white dark:focus:bg-[#181a25] transition"
               />
             </div>
           </div>
 
           {/* Ações da Topbar */}
-          <div className="flex items-center gap-2.5 sm:gap-3">
-            {/* Botão Modo Dicas / Tooltips */}
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            {/* Alternador Nativo de Tema Light / Dark */}
+            <ThemeToggle />
+
+            {/* Modo Dicas / Tooltips */}
             <TooltipsToggle />
 
             {/* Tour Guiado */}
@@ -464,10 +452,10 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
               <button
                 type="button"
                 onClick={() => startOperadorTour(() => {})}
-                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-[#84cc16]/15 hover:bg-[#84cc16]/25 text-[#a3e635] hover:text-white border border-[#84cc16]/40 transition shadow-sm cursor-pointer"
+                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.05] dark:hover:bg-white/[0.08] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/[0.08] transition shadow-2xs cursor-pointer"
               >
-                <HelpCircle className="w-3.5 h-3.5 text-[#84cc16]" />
-                <span>? Tour</span>
+                <HelpCircle className="w-3.5 h-3.5 text-amber-500" />
+                <span>Tour</span>
               </button>
             </ActionTooltip>
 
@@ -477,23 +465,23 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
                 href="https://mail.larksuite.com"
                 target="_blank"
                 rel="noreferrer"
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition shadow-sm cursor-pointer"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-blue-50 hover:bg-blue-100 dark:bg-blue-600/10 dark:hover:bg-blue-600/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 transition shadow-2xs cursor-pointer"
               >
-                <Mail className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="hidden xl:inline">Webmail (@webbilly)</span>
+                <Mail className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                <span className="hidden xl:inline">Webmail</span>
                 <ExternalLink className="w-3 h-3 opacity-60" />
               </a>
             </ActionTooltip>
 
             {/* Status Asaas */}
             <ActionTooltip title="Integração Asaas v3" description="Serviço de geração de Pix dinâmico e cobranças recorrentes online." side="bottom">
-              <div className="hidden xl:flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 text-xs font-semibold cursor-default">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <div className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] text-slate-600 dark:text-slate-300 text-xs font-semibold cursor-default">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <span>Asaas v3</span>
               </div>
             </ActionTooltip>
 
-            {/* Sininho de Alertas Globais em Tempo Real */}
+            {/* Sininho de Alertas */}
             <OperatorAlertsBell operatorId={op?.id || ''} />
 
             {/* Atualizar Dados */}
@@ -501,15 +489,15 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
               <button
                 type="button"
                 onClick={loadData}
-                className="p-2 text-zinc-400 hover:text-white rounded-xl hover:bg-white/[0.05] border border-white/[0.08] transition"
+                className="p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/[0.05] dark:hover:bg-white/[0.08] border border-slate-200 dark:border-white/[0.08] transition cursor-pointer"
               >
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
               </button>
             </ActionTooltip>
 
             {/* Perfil Operador com GamerAvatar Clicável */}
-            <div className="flex items-center gap-2.5 pl-2.5 border-l border-white/[0.08]">
-              <ActionTooltip title="Personalizar Avatar" description="Clique para personalizar suas roupas, acessórios e visual gamer 2D." side="bottom">
+            <div className="flex items-center gap-2.5 pl-2 border-l border-slate-200 dark:border-white/[0.08]">
+              <ActionTooltip title="Personalizar Avatar" description="Clique para personalizar seu avatar oficial." side="bottom">
                 <button
                   type="button"
                   onClick={() => {
@@ -522,49 +510,77 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
                     svg={op?.avatar_svg || op?.avatarSvg}
                     config={op?.avatar_config || op?.avatarConfig}
                     seed={op?.name || op?.id || 'Operador'}
-                    size={36}
-                    className="ring-2 ring-emerald-500/40 group-hover:ring-[#84cc16] group-hover:scale-105 transition"
+                    size={34}
+                    className="ring-2 ring-blue-500/30 group-hover:ring-blue-500 transition"
                   />
-                  <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-[#84cc16] border-2 border-[#090D16] flex items-center justify-center text-[7px] text-black font-bold">
-                    ✨
-                  </span>
                 </button>
               </ActionTooltip>
               <div className="hidden lg:block text-left">
-                <div className="text-xs font-bold text-white line-clamp-1">{op?.name || 'Operador'}</div>
-                <div className="text-[10px] text-zinc-400">{op?.email || 'operador@webbilly.com.br'}</div>
+                <div className="text-xs font-bold text-slate-800 dark:text-white line-clamp-1">{op?.name || 'Operador'}</div>
+                <div className="text-[10px] text-slate-500 dark:text-slate-400">{op?.email || 'operador@webbilly.com.br'}</div>
               </div>
             </div>
           </div>
         </header>
 
-        {/* ÁREA DE CONTEÚDO DA ROTA ATIVA */}
-        <main className="flex-1 p-6 lg:p-8 overflow-x-hidden">
-          {children}
+        {/* ÁREA DE CONTEÚDO DA ROTA ATIVA (COM PADDING EXTRA NO MOBILE PARA O BOTTOM NAV) */}
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-24 md:pb-8 overflow-x-hidden">
+          <div className="w-full max-w-[1600px] mx-auto">
+            {children}
+          </div>
         </main>
+      </div>
+
+      {/* =========================================================================
+          BARRA DE NAVEGAÇÃO INFERIOR FIXA MOBILE (BOTTOM NAVIGATION BAR)
+         ========================================================================= */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 h-16 bg-white/95 dark:bg-[#1c1d27]/95 backdrop-blur-md border-t border-slate-200 dark:border-white/[0.08] flex items-center justify-around px-2 shadow-lg">
+        {mobileNavItems.map((item) => {
+          const isActive = pathname === item.href;
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex flex-col items-center justify-center flex-1 h-full py-1 text-center transition-colors min-h-[44px] ${
+                isActive ? 'text-blue-600 dark:text-blue-400 font-bold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              <Icon className={`w-5 h-5 mb-0.5 ${isActive ? 'scale-110' : ''}`} />
+              <span className="text-[10px] truncate max-w-[64px]">{item.label}</span>
+            </Link>
+          );
+        })}
+        <button
+          onClick={() => setMobileMenuOpen(true)}
+          className="flex flex-col items-center justify-center flex-1 h-full py-1 text-center text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer min-h-[44px]"
+        >
+          <Menu className="w-5 h-5 mb-0.5" />
+          <span className="text-[10px]">Mais</span>
+        </button>
       </div>
 
       {/* MODAL DE TROCA DE SENHA GLOBAL */}
       {showPasswordModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-md p-6 rounded-2xl bg-[#11141c] border border-white/[0.08] space-y-4">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Lock className="w-4 h-4 text-emerald-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-md p-6 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] space-y-4 shadow-2xl">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Lock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               <span>Trocar Minha Senha</span>
             </h3>
             {passwordSuccess ? (
-              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold text-center">
+              <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-bold text-center">
                 Senha alterada com sucesso!
               </div>
             ) : (
               <form onSubmit={handlePasswordSubmit} className="space-y-3">
                 {passwordError && (
-                  <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs">
+                  <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs">
                     {passwordError}
                   </div>
                 )}
                 <div>
-                  <label className="text-xs text-zinc-400 block mb-1">Senha Atual (ou Provisória)</label>
+                  <label className="text-xs text-slate-700 dark:text-slate-300 block mb-1">Senha Atual (ou Provisória)</label>
                   <div className="relative flex items-center">
                     <input
                       type={showPass ? 'text' : 'password'}
@@ -572,20 +588,20 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
                       autoComplete="current-password"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="w-full pl-3 pr-11 py-2 rounded-xl bg-black/50 border border-white/[0.08] text-xs text-white"
+                      className="w-full pl-3 pr-11 py-2 rounded-xl bg-slate-50 dark:bg-[#14161f] border border-slate-200 dark:border-white/[0.08] text-xs text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPass(!showPass)}
                       tabIndex={-1}
-                      className="absolute right-3 text-zinc-400 hover:text-white transition p-1 cursor-pointer"
+                      className="absolute right-3 text-slate-400 hover:text-slate-700 dark:hover:text-white transition p-1 cursor-pointer"
                     >
                       {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-zinc-400 block mb-1">Nova Senha (Mínimo 8 caracteres)</label>
+                  <label className="text-xs text-slate-700 dark:text-slate-300 block mb-1">Nova Senha (Mínimo 8 caracteres)</label>
                   <div className="relative flex items-center">
                     <input
                       type={showPass ? 'text' : 'password'}
@@ -594,20 +610,20 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
                       autoComplete="new-password"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full pl-3 pr-11 py-2 rounded-xl bg-black/50 border border-white/[0.08] text-xs text-white"
+                      className="w-full pl-3 pr-11 py-2 rounded-xl bg-slate-50 dark:bg-[#14161f] border border-slate-200 dark:border-white/[0.08] text-xs text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPass(!showPass)}
                       tabIndex={-1}
-                      className="absolute right-3 text-zinc-400 hover:text-white transition p-1 cursor-pointer"
+                      className="absolute right-3 text-slate-400 hover:text-slate-700 dark:hover:text-white transition p-1 cursor-pointer"
                     >
                       {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs text-zinc-400 block mb-1">Confirmar Nova Senha</label>
+                  <label className="text-xs text-slate-700 dark:text-slate-300 block mb-1">Confirmar Nova Senha</label>
                   <div className="relative flex items-center">
                     <input
                       type={showPass ? 'text' : 'password'}
@@ -616,13 +632,13 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
                       autoComplete="new-password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full pl-3 pr-11 py-2 rounded-xl bg-black/50 border border-white/[0.08] text-xs text-white"
+                      className="w-full pl-3 pr-11 py-2 rounded-xl bg-slate-50 dark:bg-[#14161f] border border-slate-200 dark:border-white/[0.08] text-xs text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPass(!showPass)}
                       tabIndex={-1}
-                      className="absolute right-3 text-zinc-400 hover:text-white transition p-1 cursor-pointer"
+                      className="absolute right-3 text-slate-400 hover:text-slate-700 dark:hover:text-white transition p-1 cursor-pointer"
                     >
                       {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -633,7 +649,7 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
                     <button
                       type="button"
                       onClick={() => setShowPasswordModal(false)}
-                      className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white"
+                      className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white cursor-pointer"
                     >
                       Cancelar
                     </button>
@@ -641,7 +657,7 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
                   <button
                     type="submit"
                     disabled={passwordLoading}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50"
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 cursor-pointer shadow-sm shadow-blue-500/20"
                   >
                     {passwordLoading ? 'Salvando...' : 'Salvar Nova Senha'}
                   </button>

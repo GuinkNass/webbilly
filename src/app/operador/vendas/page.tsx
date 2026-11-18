@@ -51,7 +51,7 @@ export default function OperatorSalesPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-          <span className="text-zinc-400 text-xs font-mono">Carregando extrato de vendas e repasses...</span>
+          <span className="text-slate-500 dark:text-slate-400 text-xs font-mono">Carregando extrato de vendas e repasses...</span>
         </div>
       </div>
     );
@@ -61,7 +61,7 @@ export default function OperatorSalesPage() {
     return (
       <div className="p-8 text-center bg-rose-950/20 border border-rose-900/40 rounded-2xl max-w-lg mx-auto my-12">
         <h2 className="text-lg font-bold text-rose-400 mb-2">Erro ao carregar dados</h2>
-        <p className="text-xs text-zinc-300">{error}</p>
+        <p className="text-xs text-slate-700 dark:text-slate-300">{error}</p>
       </div>
     );
   }
@@ -129,19 +129,19 @@ export default function OperatorSalesPage() {
 
             {/* Grid de Resumo Calculado */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-              <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06]">
-                <span className="text-[10px] uppercase font-bold text-zinc-400 block">Planos Ativos</span>
+              <div className="p-3 rounded-xl bg-black/40 border border-slate-200 dark:border-white/[0.06]">
+                <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Planos Ativos</span>
                 <span className="text-lg font-black text-white font-mono">{activeSubsCount} clientes</span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">R$ 29,90/mês cada</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">R$ 29,90/mês cada</span>
               </div>
-              <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06]">
-                <span className="text-[10px] uppercase font-bold text-zinc-400 block">
+              <div className="p-3 rounded-xl bg-black/40 border border-slate-200 dark:border-white/[0.06]">
+                <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">
                   Total Faturado {monthsAccumulated > 1 && !hasRequestedThisMonth ? `(${monthsAccumulated}m)` : ''}
                 </span>
                 <span className="text-lg font-black text-zinc-200 font-mono">
                   R$ {totalFaturado.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Mensalidades clientes</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">Mensalidades clientes</span>
               </div>
               <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/40">
                 <span className="text-[10px] uppercase font-bold text-emerald-400 block">
@@ -152,46 +152,46 @@ export default function OperatorSalesPage() {
                 </span>
                 <span className="text-[10px] text-emerald-400/80 block mt-0.5">Total acumulado a receber</span>
               </div>
-              <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06]">
-                <span className="text-[10px] uppercase font-bold text-zinc-400 block">Chave Pix Destino</span>
+              <div className="p-3 rounded-xl bg-black/40 border border-slate-200 dark:border-white/[0.06]">
+                <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 block">Chave Pix Destino</span>
                 <span className="text-xs font-mono font-bold text-amber-300 truncate block select-all" title={op?.pixKey || 'Não cadastrada'}>
                   {op?.pixKey || 'Não cadastrada'}
                 </span>
-                <span className="text-[10px] text-zinc-400 block mt-0.5">Tipo: {op?.pixType?.toUpperCase() || 'CPF'}</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">Tipo: {op?.pixType?.toUpperCase() || 'CPF'}</span>
               </div>
             </div>
 
             {/* Composição Detalhada do Repasse */}
             {breakdown && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
-                <div className="p-2.5 rounded-lg bg-zinc-900/90 border border-white/[0.04]">
-                  <span className="text-[10px] text-zinc-400 block">Assinaturas Recorrentes</span>
+                <div className="p-2.5 rounded-lg bg-zinc-900/90 border border-slate-100 dark:border-white/[0.04]">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Assinaturas Recorrentes</span>
                   <span className="text-sm font-bold text-white font-mono">
                     R$ {(breakdown.recurring || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
-                <div className="p-2.5 rounded-lg bg-zinc-900/90 border border-white/[0.04]">
-                  <span className="text-[10px] text-zinc-400 block">Vendas Diretas (30%)</span>
+                <div className="p-2.5 rounded-lg bg-zinc-900/90 border border-slate-100 dark:border-white/[0.04]">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Vendas Diretas (30%)</span>
                   <span className="text-sm font-bold text-sky-400 font-mono">
                     R$ {(breakdown.direct || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
-                <div className="p-2.5 rounded-lg bg-zinc-900/90 border border-white/[0.04]">
-                  <span className="text-[10px] text-zinc-400 block">Bônus Medalha (+20%)</span>
+                <div className="p-2.5 rounded-lg bg-zinc-900/90 border border-slate-100 dark:border-white/[0.04]">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Bônus Medalha (+20%)</span>
                   <span className="text-sm font-bold text-amber-400 font-mono">
                     R$ {(breakdown.medalBonus || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
-                <div className="p-2.5 rounded-lg bg-zinc-900/90 border border-white/[0.04]">
-                  <span className="text-[10px] text-zinc-400 block">Billy Afiliados (5%)</span>
-                  <span className="text-sm font-bold text-[#84cc16] font-mono">
+                <div className="p-2.5 rounded-lg bg-zinc-900/90 border border-slate-100 dark:border-white/[0.04]">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block">Billy Afiliados (5%)</span>
+                  <span className="text-sm font-bold text-blue-600 dark:text-blue-400 font-mono">
                     R$ {(breakdown.affiliates || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
               </div>
             )}
 
-            <div className="text-xs text-zinc-400 flex flex-wrap items-center gap-4 pt-1">
+            <div className="text-xs text-slate-500 dark:text-slate-400 flex flex-wrap items-center gap-4 pt-1">
               <span>Comprovante enviado para: <strong className="text-sky-400 font-mono">{corporateEmail}</strong></span>
               <span>Chave Pix: <strong className="text-emerald-400 font-mono">{op?.pixKey || 'Não cadastrada'} ({op?.pixType?.toUpperCase() || 'CPF'})</strong></span>
             </div>
@@ -209,9 +209,9 @@ export default function OperatorSalesPage() {
                 disabled={payoutLoading || saldoLiquidoRepasse <= 0 || hasRequestedThisMonth}
                 className={`w-full sm:w-auto py-3 px-6 rounded-xl font-bold text-xs uppercase tracking-wider text-white transition shadow-lg flex items-center justify-center gap-2 ${
                   hasRequestedThisMonth
-                    ? 'bg-zinc-800 text-zinc-400 border border-white/[0.08] cursor-not-allowed shadow-none'
+                    ? 'bg-zinc-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/[0.08] cursor-not-allowed shadow-none'
                     : saldoLiquidoRepasse <= 0
-                    ? 'bg-zinc-800/80 text-zinc-500 border border-white/[0.06] cursor-not-allowed shadow-none'
+                    ? 'bg-zinc-800/80 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-white/[0.06] cursor-not-allowed shadow-none'
                     : 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-600/30 cursor-pointer'
                 }`}
               >
@@ -246,7 +246,7 @@ export default function OperatorSalesPage() {
                 🔒 <strong>1 solicitação por mês civil.</strong> Sua próxima solicitação estará liberada a partir de <strong>{nextUnlockFull}</strong> ({nextUnlockFormatted}).
               </div>
             ) : saldoLiquidoRepasse <= 0 ? (
-              <span className="text-[11px] text-zinc-500">
+              <span className="text-[11px] text-slate-400 dark:text-slate-500">
                 Nenhum saldo pendente a repassar no momento.
               </span>
             ) : monthsAccumulated > 1 ? (
@@ -254,7 +254,7 @@ export default function OperatorSalesPage() {
                 ✓ Montante acumulado de {monthsAccumulated} meses liberado para resgate!
               </span>
             ) : (
-              <span className="text-[11px] text-zinc-400">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">
                 ✓ 1 solicitação permitida neste mês civil ({currentMonthRef}).
               </span>
             )}
@@ -277,39 +277,39 @@ export default function OperatorSalesPage() {
       </div>
 
       {/* Regulamento & Regras Oficiais */}
-      <div className="p-5 rounded-2xl bg-[#0e131d] border border-white/[0.08] space-y-3">
-        <div className="flex items-center gap-2 text-white font-bold text-xs uppercase tracking-wider">
+      <div className="p-5 rounded-2xl bg-[#0e131d] border border-slate-200 dark:border-white/[0.08] space-y-3">
+        <div className="flex items-center gap-2 text-slate-900 dark:text-white font-bold text-xs uppercase tracking-wider">
           <ShieldCheck className="w-4 h-4 text-emerald-400" />
           <span>Regulamento & Regras Oficiais de Repasse de Comissões</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
-          <div className="p-3.5 rounded-xl bg-black/40 border border-white/[0.06] space-y-1.5">
+          <div className="p-3.5 rounded-xl bg-black/40 border border-slate-200 dark:border-white/[0.06] space-y-1.5">
             <div className="flex items-center gap-2 text-emerald-400 font-bold">
               <DollarSign className="w-4 h-4 shrink-0" />
               <span>R$ 10,00 por Plano de R$ 29,90</span>
             </div>
-            <p className="text-zinc-400 leading-relaxed">
+            <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
               Para cada comércio que você colocar no ar pelo plano oficial de <strong>R$ 29,90/mês</strong>, você recebe <strong>R$ 10,00 todos os meses</strong> de comissão líquida recorrente enquanto o cliente estiver ativo.
             </p>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-black/40 border border-white/[0.06] space-y-1.5">
+          <div className="p-3.5 rounded-xl bg-black/40 border border-slate-200 dark:border-white/[0.06] space-y-1.5">
             <div className="flex items-center gap-2 text-sky-400 font-bold">
               <Calendar className="w-4 h-4 shrink-0" />
               <span>Apenas 1 Solicitação por Mês</span>
             </div>
-            <p className="text-zinc-400 leading-relaxed">
+            <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
               O repasse pode ser solicitado <strong>apenas uma vez a cada mês civil</strong>. Uma vez enviada a solicitação, o próximo repasse só será liberado automaticamente após o <strong>1º dia do mês seguinte</strong>.
             </p>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-black/40 border border-white/[0.06] space-y-1.5">
+          <div className="p-3.5 rounded-xl bg-black/40 border border-slate-200 dark:border-white/[0.06] space-y-1.5">
             <div className="flex items-center gap-2 text-amber-400 font-bold">
               <TrendingUp className="w-4 h-4 shrink-0" />
               <span>Saldo 100% Acumulativo</span>
             </div>
-            <p className="text-zinc-400 leading-relaxed">
+            <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
               Caso você não solicite o repasse em determinado mês, o seu saldo <strong>não expira</strong>. Ele continua acumulando mês a mês (R$ 10/plano) para você resgatar o valor total quando desejar.
             </p>
           </div>
@@ -317,7 +317,7 @@ export default function OperatorSalesPage() {
       </div>
 
       {/* Chave Pix Cadastrada */}
-      <div className="p-5 rounded-2xl bg-[#11141c] border border-white/[0.06] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.06] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider block">
             Chave Pix Cadastrada para Recebimento
@@ -326,16 +326,16 @@ export default function OperatorSalesPage() {
             Tipo: <strong className="uppercase">{op?.pixType || 'CPF'}</strong> • Chave: <strong className="text-emerald-400">{op?.pixKey || 'Não cadastrada'}</strong>
           </div>
         </div>
-        <div className="text-xs text-zinc-400">
+        <div className="text-xs text-slate-500 dark:text-slate-400">
           Pagamentos repassados via Pix diretamente na liquidação oficial.
         </div>
       </div>
 
       {/* Tabela de Vendas & Extrato Pix */}
-      <div className="bg-[#11141c] rounded-2xl border border-white/[0.06] overflow-hidden">
+      <div className="bg-white dark:bg-[#1c1d27] rounded-2xl border border-slate-200 dark:border-white/[0.06] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#141824] text-zinc-400 uppercase font-mono text-[11px] border-b border-white/[0.08]">
+            <thead className="bg-slate-50 dark:bg-[#14161f] text-slate-500 dark:text-slate-400 uppercase font-mono text-[11px] border-b border-slate-200 dark:border-white/[0.08]">
               <tr>
                 <th className="py-3.5 px-4">Data / ID Venda</th>
                 <th className="py-3.5 px-4">Cliente / Estabelecimento</th>
@@ -345,19 +345,19 @@ export default function OperatorSalesPage() {
                 <th className="py-3.5 px-4 text-right">Status do Pix</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.05]">
+            <tbody className="divide-y divide-slate-100 dark:divide-white/[0.05]">
               {(data?.sales || []).length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-zinc-500 text-xs">
+                  <td colSpan={6} className="py-8 text-center text-slate-400 dark:text-slate-500 text-xs">
                     Você ainda não registrou vendas. Abra o app Billy Suite Desktop e gere suas primeiras propostas!
                   </td>
                 </tr>
               ) : (
                 (data?.sales || []).map((s: any) => (
-                  <tr key={s.id} className="hover:bg-white/[0.02] transition duration-150">
+                  <tr key={s.id} className="hover:bg-slate-50/80 dark:hover:bg-white/[0.02] transition duration-150">
                     <td className="py-3.5 px-4 font-mono">
                       <span className="font-bold text-white">{s.id}</span>
-                      <div className="text-[11px] text-zinc-500">
+                      <div className="text-[11px] text-slate-400 dark:text-slate-500">
                         {new Date(s.createdAt).toLocaleDateString('pt-BR')}
                       </div>
                     </td>
@@ -376,7 +376,7 @@ export default function OperatorSalesPage() {
                         </ActionTooltip>
                       )}
                     </td>
-                    <td className="py-3.5 px-4 text-zinc-400">{s.niche || 'Geral'}</td>
+                    <td className="py-3.5 px-4 text-slate-500 dark:text-slate-400">{s.niche || 'Geral'}</td>
                     <td className="py-3.5 px-4 font-bold text-white font-mono">
                       R$ {s.saleValue?.toLocaleString('pt-BR')},00
                     </td>
@@ -400,7 +400,7 @@ export default function OperatorSalesPage() {
                         </span>
                       </ActionTooltip>
                       {s.pixProof && (
-                        <div className="text-[10px] text-zinc-500 font-mono mt-0.5">
+                        <div className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5">
                           Compr: {s.pixProof}
                         </div>
                       )}
