@@ -454,6 +454,8 @@ export interface AdminAffiliateToolRecord {
   category: string;
   description: string;
   benefit?: string | null;
+  cta_text?: string | null;
+  ctaText?: string | null;
   logo_url?: string | null;
   logoUrl?: string | null;
   affiliate_link: string;
@@ -513,6 +515,93 @@ export interface SiteDailyStatRecord {
   created_at?: string;
   updated_at?: string;
 }
+
+export const DEFAULT_ADMIN_AFFILIATE_TOOLS: AdminAffiliateToolRecord[] = [
+  {
+    id: 'tool-ton-oficial',
+    name: 'Maquininha Ton com Taxa Reduzida',
+    category: 'Pagamentos & Maquininha',
+    description: 'Aceite cartão de crédito, débito e Pix no balcão ou delivery com as menores taxas do mercado e recebimento rápido.',
+    benefit: 'Desconto Exclusivo Parceiro',
+    cta_text: 'Ver Catálogo com Desconto',
+    ctaText: 'Ver Catálogo com Desconto',
+    logo_url: 'https://ton.stone.com.br/favicon.ico',
+    logoUrl: 'https://ton.stone.com.br/favicon.ico',
+    affiliate_link: 'https://ton.com.br/catalogo/?referrer=9AFABF91-00C4-4EE9-8AAE-86C99E4D084B&userAnticipation=0&utm_medium=invite_share&utm_source=revendedor',
+    affiliateLink: 'https://ton.com.br/catalogo/?referrer=9AFABF91-00C4-4EE9-8AAE-86C99E4D084B&userAnticipation=0&utm_medium=invite_share&utm_source=revendedor',
+    is_active: true,
+    isActive: true,
+    display_order: 1,
+    displayOrder: 1,
+    clicks_count: 0,
+    clicksCount: 0,
+    created_at: '2026-01-01T00:00:00.000Z',
+    updated_at: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'tool-asaas-oficial',
+    name: 'Conta PJ & Cobranças Pix/Boleto Asaas',
+    category: 'Pagamentos & Maquininha',
+    description: 'Envie links de pagamento, boletos e Pix automático pelo WhatsApp com régua de cobrança integrada para seus clientes.',
+    benefit: 'Sem Mensalidade',
+    cta_text: 'Abrir Conta Gratuita',
+    ctaText: 'Abrir Conta Gratuita',
+    logo_url: 'https://www.asaas.com/favicon.ico',
+    logoUrl: 'https://www.asaas.com/favicon.ico',
+    affiliate_link: 'https://www.asaas.com/r/240aa974-f024-4664-8694-f41ddff777d8',
+    affiliateLink: 'https://www.asaas.com/r/240aa974-f024-4664-8694-f41ddff777d8',
+    is_active: true,
+    isActive: true,
+    display_order: 2,
+    displayOrder: 2,
+    clicks_count: 0,
+    clicksCount: 0,
+    created_at: '2026-01-01T00:00:00.000Z',
+    updated_at: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'tool-nuvemshop-oficial',
+    name: 'Sua Loja Virtual & Catálogo Online (Nuvemshop)',
+    category: 'Loja Virtual',
+    description: 'Transforme visitantes do seu site em compradores online com carrinho, cálculo de frete e checkout completo integrado.',
+    benefit: 'Benefício WebBILLY',
+    cta_text: 'Criar Minha Loja Online',
+    ctaText: 'Criar Minha Loja Online',
+    logo_url: 'https://assets.nuvemshop.com.br/assets/images/logo-nuvemshop.svg',
+    logoUrl: 'https://assets.nuvemshop.com.br/assets/images/logo-nuvemshop.svg',
+    affiliate_link: 'https://www.nuvemshop.com.br/partners/webbilly',
+    affiliateLink: 'https://www.nuvemshop.com.br/partners/webbilly',
+    is_active: true,
+    isActive: true,
+    display_order: 3,
+    displayOrder: 3,
+    clicks_count: 0,
+    clicksCount: 0,
+    created_at: '2026-01-01T00:00:00.000Z',
+    updated_at: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'tool-bling-oficial',
+    name: 'Sistema de Gestão & Emissor de Nota Fiscal (Bling ERP)',
+    category: 'Gestão & Nota Fiscal',
+    description: 'Controle seu estoque, caixa (PDV), vendas e emita notas fiscais (NF-e / NFC-e) em segundos com condição especial de parceiro.',
+    benefit: 'Cupom: GUINKNASS',
+    cta_text: 'Ativar Benefício Bling',
+    ctaText: 'Ativar Benefício Bling',
+    logo_url: 'https://www.bling.com.br/favicon.ico',
+    logoUrl: 'https://www.bling.com.br/favicon.ico',
+    affiliate_link: 'https://www.bling.com.br/planos-e-precos/GUINKNASS',
+    affiliateLink: 'https://www.bling.com.br/planos-e-precos/GUINKNASS',
+    is_active: true,
+    isActive: true,
+    display_order: 4,
+    displayOrder: 4,
+    clicks_count: 0,
+    clicksCount: 0,
+    created_at: '2026-01-01T00:00:00.000Z',
+    updated_at: '2026-01-01T00:00:00.000Z'
+  }
+];
 
 export function getDefaultSubscriptions(): SubscriptionRecord[] {
   return [];
@@ -659,64 +748,7 @@ function getDefaultDatabase(): DatabaseSchema {
     subscriptions: getDefaultSubscriptions(),
     clientAccounts: [],
     siteEditRequests: [],
-    adminAffiliateTools: [
-      {
-        id: 'tool-nuvemshop',
-        name: 'Nuvemshop',
-        category: 'E-commerce & Vendas',
-        description: 'Crie sua loja virtual profissional integrada com meios de pagamento e frete automáticos.',
-        benefit: '25% de desconto no 1º mês de assinatura',
-        logo_url: 'https://assets.nuvemshop.com.br/assets/images/logo-nuvemshop.svg',
-        affiliate_link: 'https://www.nuvemshop.com.br',
-        is_active: true,
-        display_order: 1,
-        clicks_count: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      {
-        id: 'tool-ton',
-        name: 'Ton (Stone)',
-        category: 'Maquininhas & Pix',
-        description: 'As menores taxas do mercado para receber no débito, crédito e Pix sem aluguel de maquininha.',
-        benefit: 'Até 10% de desconto na compra da sua maquininha',
-        logo_url: 'https://ton.stone.com.br/favicon.ico',
-        affiliate_link: 'https://ton.stone.com.br',
-        is_active: true,
-        display_order: 2,
-        clicks_count: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      {
-        id: 'tool-botconversa',
-        name: 'BotConversa',
-        category: 'Automação WhatsApp',
-        description: 'Automatize suas vendas e atendimento no WhatsApp 24 horas por dia com inteligência e gatilhos.',
-        benefit: 'Teste grátis de 7 dias com modelos prontos',
-        logo_url: 'https://botconversa.com.br/wp-content/uploads/2021/04/cropped-favicon-32x32.png',
-        affiliate_link: 'https://botconversa.com.br',
-        is_active: true,
-        display_order: 3,
-        clicks_count: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      {
-        id: 'tool-bling',
-        name: 'Bling!',
-        category: 'Gestão & ERP',
-        description: 'Sistema completo de emissão de notas fiscais, controle financeiro e estoque para sua empresa.',
-        benefit: '3 meses de teste grátis com suporte dedicado',
-        logo_url: 'https://www.bling.com.br/favicon.ico',
-        affiliate_link: 'https://www.bling.com.br',
-        is_active: true,
-        display_order: 4,
-        clicks_count: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-    ]
+    adminAffiliateTools: [...DEFAULT_ADMIN_AFFILIATE_TOOLS]
   };
 }
 

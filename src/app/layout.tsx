@@ -78,6 +78,9 @@ export const metadata: Metadata = {
       "max-image-preview": "large",
       "max-snippet": -1
     }
+  },
+  other: {
+    "impact-site-verification": "81056bb1-11d9-45a4-93a9-68cbf2c8598f"
   }
 };
 
@@ -188,6 +191,8 @@ export default function RootLayout({
       className={`${robotoSlab.variable} ${openSans.variable} h-full antialiased scroll-smooth`}
     >
       <head>
+        <meta name="impact-site-verification" {...({ value: "81056bb1-11d9-45a4-93a9-68cbf2c8598f" } as any)} />
+        <meta name="impact-site-verification" content="81056bb1-11d9-45a4-93a9-68cbf2c8598f" />
         <script
           dangerouslySetInnerHTML={{
             __html: `

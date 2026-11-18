@@ -84,6 +84,8 @@ interface AffiliateTool {
   category: string;
   description: string;
   benefit?: string;
+  cta_text?: string;
+  ctaText?: string;
   logo_url?: string;
   affiliate_link: string;
   is_active: boolean;
@@ -1214,7 +1216,7 @@ export default function ClienteDashboardPage() {
                       className="w-full py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm text-white flex items-center justify-center gap-2 shadow-xs transition-all hover:opacity-95"
                       style={{ backgroundColor: 'var(--color-primary)' }}
                     >
-                      <span>Acessar com Benefício Exclusivo</span>
+                      <span>{tool.cta_text || tool.ctaText || 'Acessar com Benefício Exclusivo'}</span>
                       <ExternalLink className="w-4 h-4" />
                     </button>
                   </div>

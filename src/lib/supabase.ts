@@ -8,7 +8,8 @@ import {
   SiteChangeRequestRecord,
   ClientAccountRecord,
   SiteEditRequestRecord,
-  AdminAffiliateToolRecord
+  AdminAffiliateToolRecord,
+  DEFAULT_ADMIN_AFFILIATE_TOOLS
 } from './db';
 import { extractInstagramHandleFromUrl } from './instagram-extractor';
 
@@ -1846,6 +1847,8 @@ export function mapRowToAdminAffiliateTool(row: any): AdminAffiliateToolRecord {
     category: row.category || 'Produtividade',
     description: row.description || '',
     benefit: row.benefit || null,
+    cta_text: row.cta_text || row.ctaText || null,
+    ctaText: row.cta_text || row.ctaText || null,
     logo_url: row.logo_url || row.logoUrl || null,
     logoUrl: row.logo_url || row.logoUrl || null,
     affiliate_link: row.affiliate_link || row.affiliateLink || '#',
@@ -1875,14 +1878,18 @@ export async function listAdminAffiliateTools(onlyActive: boolean = false): Prom
     console.warn('[Supabase] Falha ao listar admin_affiliate_tools:', err);
   }
 
-  // Fallback db.json
+  // Fallback db.json ou ferramentas padrão oficiais
   try {
     const db = readDb();
-    let tools = db.adminAffiliateTools || [];
+    let tools = (db.adminAffiliateTools && db.adminAffiliateTools.length > 0)
+      ? db.adminAffiliateTools
+      : DEFAULT_ADMIN_AFFILIATE_TOOLS;
     if (onlyActive) tools = tools.filter(t => t.is_active !== false);
     return tools.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
   } catch (_) {
-    return [];
+    let tools = DEFAULT_ADMIN_AFFILIATE_TOOLS;
+    if (onlyActive) tools = tools.filter(t => t.is_active !== false);
+    return tools;
   }
 }
 
@@ -1896,6 +1903,8 @@ export async function upsertAdminAffiliateTool(tool: Partial<AdminAffiliateToolR
     category: tool.category || 'Negócios',
     description: tool.description || '',
     benefit: tool.benefit || null,
+    cta_text: tool.cta_text || tool.ctaText || null,
+    ctaText: tool.cta_text || tool.ctaText || null,
     logo_url: tool.logo_url || tool.logoUrl || null,
     logoUrl: tool.logo_url || tool.logoUrl || null,
     affiliate_link: tool.affiliate_link || tool.affiliateLink || 'https://webbilly.com.br',
@@ -1918,6 +1927,7 @@ export async function upsertAdminAffiliateTool(tool: Partial<AdminAffiliateToolR
       category: record.category,
       description: record.description,
       benefit: record.benefit,
+      cta_text: record.cta_text,
       logo_url: record.logo_url,
       affiliate_link: record.affiliate_link,
       is_active: record.is_active,
