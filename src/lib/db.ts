@@ -518,7 +518,7 @@ export interface SiteDailyStatRecord {
 
 export const DEFAULT_ADMIN_AFFILIATE_TOOLS: AdminAffiliateToolRecord[] = [
   {
-    id: 'tool-ton-oficial',
+    id: 'a0000001-0000-4000-a000-000000000001',
     name: 'Maquininha Ton com Taxa Reduzida',
     category: 'Pagamentos & Maquininha',
     description: 'Aceite cartão de crédito, débito e Pix no balcão ou delivery com as menores taxas do mercado e recebimento rápido.',
@@ -539,7 +539,7 @@ export const DEFAULT_ADMIN_AFFILIATE_TOOLS: AdminAffiliateToolRecord[] = [
     updated_at: '2026-01-01T00:00:00.000Z'
   },
   {
-    id: 'tool-asaas-oficial',
+    id: 'a0000002-0000-4000-a000-000000000002',
     name: 'Conta PJ & Cobranças Pix/Boleto Asaas',
     category: 'Pagamentos & Maquininha',
     description: 'Envie links de pagamento, boletos e Pix automático pelo WhatsApp com régua de cobrança integrada para seus clientes.',
@@ -560,7 +560,7 @@ export const DEFAULT_ADMIN_AFFILIATE_TOOLS: AdminAffiliateToolRecord[] = [
     updated_at: '2026-01-01T00:00:00.000Z'
   },
   {
-    id: 'tool-nuvemshop-oficial',
+    id: 'a0000003-0000-4000-a000-000000000003',
     name: 'Sua Loja Virtual & Catálogo Online (Nuvemshop)',
     category: 'Loja Virtual',
     description: 'Transforme visitantes do seu site em compradores online com carrinho, cálculo de frete e checkout completo integrado.',
@@ -581,7 +581,7 @@ export const DEFAULT_ADMIN_AFFILIATE_TOOLS: AdminAffiliateToolRecord[] = [
     updated_at: '2026-01-01T00:00:00.000Z'
   },
   {
-    id: 'tool-bling-oficial',
+    id: 'a0000004-0000-4000-a000-000000000004',
     name: 'Sistema de Gestão & Emissor de Nota Fiscal (Bling ERP)',
     category: 'Gestão & Nota Fiscal',
     description: 'Controle seu estoque, caixa (PDV), vendas e emita notas fiscais (NF-e / NFC-e) em segundos com condição especial de parceiro.',

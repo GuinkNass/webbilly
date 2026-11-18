@@ -98,7 +98,7 @@ INSERT INTO public.admin_affiliate_tools (
   updated_at
 ) VALUES 
 (
-  'tool-ton-oficial',
+  'a0000001-0000-4000-a000-000000000001',
   'Maquininha Ton com Taxa Reduzida',
   'Pagamentos & Maquininha',
   'Aceite cartão de crédito, débito e Pix no balcão ou delivery com as menores taxas do mercado e recebimento rápido.',
@@ -113,7 +113,7 @@ INSERT INTO public.admin_affiliate_tools (
   NOW()
 ),
 (
-  'tool-asaas-oficial',
+  'a0000002-0000-4000-a000-000000000002',
   'Conta PJ & Cobranças Pix/Boleto Asaas',
   'Pagamentos & Maquininha',
   'Envie links de pagamento, boletos e Pix automático pelo WhatsApp com régua de cobrança integrada para seus clientes.',
@@ -128,7 +128,7 @@ INSERT INTO public.admin_affiliate_tools (
   NOW()
 ),
 (
-  'tool-nuvemshop-oficial',
+  'a0000003-0000-4000-a000-000000000003',
   'Sua Loja Virtual & Catálogo Online (Nuvemshop)',
   'Loja Virtual',
   'Transforme visitantes do seu site em compradores online com carrinho, cálculo de frete e checkout completo integrado.',
@@ -143,7 +143,7 @@ INSERT INTO public.admin_affiliate_tools (
   NOW()
 ),
 (
-  'tool-bling-oficial',
+  'a0000004-0000-4000-a000-000000000004',
   'Sistema de Gestão & Emissor de Nota Fiscal (Bling ERP)',
   'Gestão & Nota Fiscal',
   'Controle seu estoque, caixa (PDV), vendas e emita notas fiscais (NF-e / NFC-e) em segundos com condição especial de parceiro.',
