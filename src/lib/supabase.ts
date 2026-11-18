@@ -1,5 +1,15 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { readDb, writeDb, SubscriptionRecord, Operator, AffiliateCommissionRecord, SiteChangeRequestRecord } from './db';
+import {
+  readDb,
+  writeDb,
+  SubscriptionRecord,
+  Operator,
+  AffiliateCommissionRecord,
+  SiteChangeRequestRecord,
+  ClientAccountRecord,
+  SiteEditRequestRecord,
+  AdminAffiliateToolRecord
+} from './db';
 import { extractInstagramHandleFromUrl } from './instagram-extractor';
 
 // Supabase URL & Service Role Key
@@ -1151,3 +1161,827 @@ export async function fetchProspectedLeadsFromSupabase(params?: {
     return [];
   }
 }
+
+// ==============================================================================
+// 1. CLIENT ACCOUNTS (Portal do Cliente Final)
+// ==============================================================================
+
+export function mapRowToClientAccount(row: any): ClientAccountRecord {
+  return {
+    id: row.id,
+    site_id: row.site_id || row.siteId,
+    site_slug: row.site_slug || row.siteSlug || '',
+    siteSlug: row.site_slug || row.siteSlug || '',
+    lead_id: row.lead_id || row.leadId || null,
+    leadId: row.lead_id || row.leadId || null,
+    operator_id: row.operator_id || row.operatorId || null,
+    operatorId: row.operator_id || row.operatorId || null,
+    business_name: row.business_name || row.businessName || 'Meu Negócio',
+    businessName: row.business_name || row.businessName || 'Meu Negócio',
+    domain_login: row.domain_login || row.domainLogin || '',
+    domainLogin: row.domain_login || row.domainLogin || '',
+    email: row.email || null,
+    phone: row.phone || null,
+    password_hash: row.password_hash || row.passwordHash || '',
+    passwordHash: row.password_hash || row.passwordHash || '',
+    initial_password_plain: row.initial_password_plain || row.initialPasswordPlain || null,
+    initialPasswordPlain: row.initial_password_plain || row.initialPasswordPlain || null,
+    plan_type: row.plan_type || row.planType || 'monthly_29_90',
+    planType: row.plan_type || row.planType || 'monthly_29_90',
+    status: row.status || 'active',
+    monthly_edits_limit: Number(row.monthly_edits_limit ?? 3),
+    monthly_edits_used: Number(row.monthly_edits_used ?? 0),
+    extra_edit_credits: Number(row.extra_edit_credits ?? 0),
+    edits_reset_at: row.edits_reset_at || row.editsResetAt || new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(),
+    asaas_customer_id: row.asaas_customer_id || row.asaasCustomerId || null,
+    asaasCustomerId: row.asaas_customer_id || row.asaasCustomerId || null,
+    asaas_subscription_id: row.asaas_subscription_id || row.asaasSubscriptionId || null,
+    asaasSubscriptionId: row.asaas_subscription_id || row.asaasSubscriptionId || null,
+    created_at: row.created_at || row.createdAt || new Date().toISOString(),
+    createdAt: row.created_at || row.createdAt || new Date().toISOString(),
+    updated_at: row.updated_at || row.updatedAt || new Date().toISOString(),
+    updatedAt: row.updated_at || row.updatedAt || new Date().toISOString()
+  };
+}
+
+/**
+ * Reseta o contador de alterações mensais se já completou 30 dias desde o último ciclo
+ */
+export async function checkAndResetClientEdits(account: ClientAccountRecord): Promise<ClientAccountRecord> {
+  if (account.plan_type !== 'monthly_29_90') {
+    return account;
+  }
+  const now = new Date();
+  const resetAt = account.edits_reset_at ? new Date(account.edits_reset_at) : new Date(0);
+  if (now >= resetAt) {
+    const nextReset = new Date(now.getTime() + 30 * 24 * 3600 * 1000).toISOString();
+    const updated = {
+      ...account,
+      monthly_edits_used: 0,
+      edits_reset_at: nextReset,
+      updated_at: now.toISOString()
+    };
+    try {
+      const supabase = getSupabaseAdmin();
+      await supabase
+        .from('client_accounts')
+        .update({
+          monthly_edits_used: 0,
+          edits_reset_at: nextReset,
+          updated_at: now.toISOString()
+        })
+        .eq('id', account.id);
+    } catch (_) {}
+
+    try {
+      const db = readDb();
+      if (db.clientAccounts) {
+        const idx = db.clientAccounts.findIndex(c => c.id === account.id);
+        if (idx >= 0) {
+          db.clientAccounts[idx] = updated;
+          writeDb(db);
+        }
+      }
+    } catch (_) {}
+
+    return updated;
+  }
+  return account;
+}
+
+export async function findClientAccountByDomain(domainOrSlug: string): Promise<ClientAccountRecord | null> {
+  const clean = domainOrSlug.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+  const slugOnly = clean.replace(/\.webbilly\.com\.br$/, '').replace(/\.com\.br$/, '');
+
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from('client_accounts')
+      .select('*')
+      .or(`domain_login.eq.${clean},domain_login.eq.${slugOnly},site_slug.eq.${slugOnly},domain_login.ilike.%${slugOnly}%`)
+      .limit(1);
+
+    if (!error && data && data.length > 0) {
+      const acc = mapRowToClientAccount(data[0]);
+      return await checkAndResetClientEdits(acc);
+    }
+  } catch (err) {
+    console.warn('[Supabase] Falha ao consultar client_accounts por domínio:', err);
+  }
+
+  // Fallback db.json
+  try {
+    const db = readDb();
+    const local = (db.clientAccounts || []).find(
+      c =>
+        c.domain_login?.toLowerCase() === clean ||
+        c.domain_login?.toLowerCase() === slugOnly ||
+        c.site_slug?.toLowerCase() === slugOnly ||
+        c.domain_login?.toLowerCase().includes(slugOnly)
+    );
+    if (local) {
+      return await checkAndResetClientEdits(local);
+    }
+  } catch (_) {}
+
+  return null;
+}
+
+export async function findClientAccountById(id: string): Promise<ClientAccountRecord | null> {
+  if (!id) return null;
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from('client_accounts')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (!error && data) {
+      const acc = mapRowToClientAccount(data);
+      return await checkAndResetClientEdits(acc);
+    }
+  } catch (err) {
+    console.warn('[Supabase] Falha ao consultar client_accounts por id:', err);
+  }
+
+  try {
+    const db = readDb();
+    const local = (db.clientAccounts || []).find(c => c.id === id);
+    if (local) return await checkAndResetClientEdits(local);
+  } catch (_) {}
+
+  return null;
+}
+
+export async function findClientAccountBySlug(slug: string): Promise<ClientAccountRecord | null> {
+  if (!slug) return null;
+  const clean = slug.trim().toLowerCase();
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from('client_accounts')
+      .select('*')
+      .eq('site_slug', clean)
+      .maybeSingle();
+
+    if (!error && data) {
+      const acc = mapRowToClientAccount(data);
+      return await checkAndResetClientEdits(acc);
+    }
+  } catch (err) {
+    console.warn('[Supabase] Falha ao consultar client_accounts por slug:', err);
+  }
+
+  try {
+    const db = readDb();
+    const local = (db.clientAccounts || []).find(c => c.site_slug?.toLowerCase() === clean);
+    if (local) return await checkAndResetClientEdits(local);
+  } catch (_) {}
+
+  return null;
+}
+
+export async function listClientAccounts(): Promise<ClientAccountRecord[]> {
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data, error } = await supabase
+      .from('client_accounts')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (!error && data && data.length > 0) {
+      return data.map(mapRowToClientAccount);
+    }
+  } catch (err) {
+    console.warn('[Supabase] Falha ao listar client_accounts:', err);
+  }
+
+  try {
+    const db = readDb();
+    return db.clientAccounts || [];
+  } catch (_) {
+    return [];
+  }
+}
+
+export async function createOrUpdateClientAccount(record: Partial<ClientAccountRecord>): Promise<ClientAccountRecord> {
+  const nowIso = new Date().toISOString();
+  const id = record.id || crypto.randomUUID();
+  const siteSlug = (record.site_slug || record.siteSlug || '').toLowerCase().trim();
+  const domainLogin = (record.domain_login || record.domainLogin || `${siteSlug}.webbilly.com.br`).toLowerCase().trim();
+
+  const fullRecord: ClientAccountRecord = {
+    id,
+    site_id: record.site_id,
+    site_slug: siteSlug,
+    siteSlug: siteSlug,
+    lead_id: record.lead_id || record.leadId || null,
+    leadId: record.lead_id || record.leadId || null,
+    operator_id: record.operator_id || record.operatorId || null,
+    operatorId: record.operator_id || record.operatorId || null,
+    business_name: record.business_name || record.businessName || 'Empresa Oficial',
+    businessName: record.business_name || record.businessName || 'Empresa Oficial',
+    domain_login: domainLogin,
+    domainLogin: domainLogin,
+    email: record.email || null,
+    phone: record.phone || null,
+    password_hash: record.password_hash || record.passwordHash || '',
+    passwordHash: record.password_hash || record.passwordHash || '',
+    initial_password_plain: record.initial_password_plain || record.initialPasswordPlain || null,
+    initialPasswordPlain: record.initial_password_plain || record.initialPasswordPlain || null,
+    plan_type: record.plan_type || record.planType || 'monthly_29_90',
+    planType: record.plan_type || record.planType || 'monthly_29_90',
+    status: record.status || 'active',
+    monthly_edits_limit: record.monthly_edits_limit ?? (record.plan_type === 'custom_domain_490' ? 0 : 3),
+    monthly_edits_used: record.monthly_edits_used ?? 0,
+    extra_edit_credits: record.extra_edit_credits ?? 0,
+    edits_reset_at: record.edits_reset_at || record.editsResetAt || new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString(),
+    asaas_customer_id: record.asaas_customer_id || record.asaasCustomerId || null,
+    asaasCustomerId: record.asaas_customer_id || record.asaasCustomerId || null,
+    asaas_subscription_id: record.asaas_subscription_id || record.asaasSubscriptionId || null,
+    asaasSubscriptionId: record.asaas_subscription_id || record.asaasSubscriptionId || null,
+    created_at: record.created_at || record.createdAt || nowIso,
+    createdAt: record.created_at || record.createdAt || nowIso,
+    updated_at: nowIso,
+    updatedAt: nowIso
+  };
+
+  try {
+    const supabase = getSupabaseAdmin();
+    const payload = {
+      id: fullRecord.id,
+      site_id: fullRecord.site_id,
+      site_slug: fullRecord.site_slug,
+      lead_id: fullRecord.lead_id,
+      operator_id: fullRecord.operator_id,
+      business_name: fullRecord.business_name,
+      domain_login: fullRecord.domain_login,
+      email: fullRecord.email,
+      phone: fullRecord.phone,
+      password_hash: fullRecord.password_hash,
+      initial_password_plain: fullRecord.initial_password_plain,
+      plan_type: fullRecord.plan_type,
+      status: fullRecord.status,
+      monthly_edits_limit: fullRecord.monthly_edits_limit,
+      monthly_edits_used: fullRecord.monthly_edits_used,
+      extra_edit_credits: fullRecord.extra_edit_credits,
+      edits_reset_at: fullRecord.edits_reset_at,
+      asaas_customer_id: fullRecord.asaas_customer_id,
+      asaas_subscription_id: fullRecord.asaas_subscription_id,
+      updated_at: fullRecord.updated_at
+    };
+
+    await supabase.from('client_accounts').upsert(payload, { onConflict: 'domain_login' });
+  } catch (err) {
+    console.warn('[Supabase] Falha ao upsert client_accounts:', err);
+  }
+
+  try {
+    const db = readDb();
+    if (!db.clientAccounts) db.clientAccounts = [];
+    const idx = db.clientAccounts.findIndex(c => c.id === fullRecord.id || c.domain_login === fullRecord.domain_login);
+    if (idx >= 0) {
+      db.clientAccounts[idx] = fullRecord;
+    } else {
+      db.clientAccounts.unshift(fullRecord);
+    }
+    writeDb(db);
+  } catch (_) {}
+
+  return fullRecord;
+}
+
+export async function updateClientAccountPassword(id: string, newHash: string): Promise<boolean> {
+  const nowIso = new Date().toISOString();
+  try {
+    const supabase = getSupabaseAdmin();
+    const { error } = await supabase
+      .from('client_accounts')
+      .update({ password_hash: newHash, updated_at: nowIso })
+      .eq('id', id);
+    if (!error) {
+      const db = readDb();
+      if (db.clientAccounts) {
+        const item = db.clientAccounts.find(c => c.id === id);
+        if (item) {
+          item.password_hash = newHash;
+          item.updated_at = nowIso;
+          writeDb(db);
+        }
+      }
+      return true;
+    }
+  } catch (_) {}
+
+  try {
+    const db = readDb();
+    if (db.clientAccounts) {
+      const item = db.clientAccounts.find(c => c.id === id);
+      if (item) {
+        item.password_hash = newHash;
+        item.updated_at = nowIso;
+        writeDb(db);
+        return true;
+      }
+    }
+  } catch (_) {}
+
+  return false;
+}
+
+export async function toggleClientAccountStatus(id: string, status: 'active' | 'blocked'): Promise<boolean> {
+  const nowIso = new Date().toISOString();
+  try {
+    const supabase = getSupabaseAdmin();
+    await supabase
+      .from('client_accounts')
+      .update({ status, updated_at: nowIso })
+      .eq('id', id);
+  } catch (_) {}
+
+  try {
+    const db = readDb();
+    if (db.clientAccounts) {
+      const item = db.clientAccounts.find(c => c.id === id);
+      if (item) {
+        item.status = status;
+        item.updated_at = nowIso;
+        writeDb(db);
+      }
+    }
+  } catch (_) {}
+
+  return true;
+}
+
+export async function incrementClientAccountExtraCredits(slugOrId: string, amount: number = 1): Promise<boolean> {
+  const clean = slugOrId.toLowerCase().trim();
+  const acc = await findClientAccountByDomain(clean) || await findClientAccountById(clean) || await findClientAccountBySlug(clean);
+  if (!acc) return false;
+
+  const newCredits = (acc.extra_edit_credits || 0) + amount;
+  const nowIso = new Date().toISOString();
+
+  try {
+    const supabase = getSupabaseAdmin();
+    await supabase
+      .from('client_accounts')
+      .update({ extra_edit_credits: newCredits, updated_at: nowIso })
+      .eq('id', acc.id);
+  } catch (_) {}
+
+  try {
+    const db = readDb();
+    if (db.clientAccounts) {
+      const item = db.clientAccounts.find(c => c.id === acc.id);
+      if (item) {
+        item.extra_edit_credits = newCredits;
+        item.updated_at = nowIso;
+        writeDb(db);
+      }
+    }
+  } catch (_) {}
+
+  return true;
+}
+
+export async function consumeClientAccountEdit(clientAccountId: string): Promise<
+  | { success: true; type: 'monthly' | 'extra'; remainingMonthly: number; remainingExtra: number }
+  | { success: false; message: string }
+> {
+  let acc = await findClientAccountById(clientAccountId);
+  if (!acc) {
+    return { success: false, message: 'Conta do cliente não encontrada.' };
+  }
+
+  // Verifica se precisa resetar ciclo mensal
+  acc = await checkAndResetClientEdits(acc);
+
+  if (acc.status === 'blocked') {
+    return { success: false, message: 'Conta suspensa ou bloqueada. Entre em contato com o suporte.' };
+  }
+
+  const nowIso = new Date().toISOString();
+
+  // 1. Tenta consumir cota mensal gratuita
+  if (acc.plan_type === 'monthly_29_90' && acc.monthly_edits_used < acc.monthly_edits_limit) {
+    const newUsed = acc.monthly_edits_used + 1;
+    acc.monthly_edits_used = newUsed;
+    acc.updated_at = nowIso;
+
+    try {
+      const supabase = getSupabaseAdmin();
+      await supabase
+        .from('client_accounts')
+        .update({ monthly_edits_used: newUsed, updated_at: nowIso })
+        .eq('id', acc.id);
+    } catch (_) {}
+
+    try {
+      const db = readDb();
+      if (db.clientAccounts) {
+        const item = db.clientAccounts.find(c => c.id === acc.id);
+        if (item) {
+          item.monthly_edits_used = newUsed;
+          item.updated_at = nowIso;
+          writeDb(db);
+        }
+      }
+    } catch (_) {}
+
+    return {
+      success: true,
+      type: 'monthly',
+      remainingMonthly: acc.monthly_edits_limit - newUsed,
+      remainingExtra: acc.extra_edit_credits
+    };
+  }
+
+  // 2. Tenta consumir créditos extras avulsos
+  if (acc.extra_edit_credits > 0) {
+    const newExtra = acc.extra_edit_credits - 1;
+    acc.extra_edit_credits = newExtra;
+    acc.updated_at = nowIso;
+
+    try {
+      const supabase = getSupabaseAdmin();
+      await supabase
+        .from('client_accounts')
+        .update({ extra_edit_credits: newExtra, updated_at: nowIso })
+        .eq('id', acc.id);
+    } catch (_) {}
+
+    try {
+      const db = readDb();
+      if (db.clientAccounts) {
+        const item = db.clientAccounts.find(c => c.id === acc.id);
+        if (item) {
+          item.extra_edit_credits = newExtra;
+          item.updated_at = nowIso;
+          writeDb(db);
+        }
+      }
+    } catch (_) {}
+
+    return {
+      success: true,
+      type: 'extra',
+      remainingMonthly: Math.max(0, acc.monthly_edits_limit - acc.monthly_edits_used),
+      remainingExtra: newExtra
+    };
+  }
+
+  return {
+    success: false,
+    message: 'Limite mensal de alterações atingido (3/3). Compre uma alteração extra avulsa por R$ 19,90 para prosseguir.'
+  };
+}
+
+/**
+ * Hard delete completo do cliente no Supabase e db.json (usado no cancelamento definitivo)
+ */
+export async function hardDeleteClientAccountComplete(slugOrId: string): Promise<{ success: boolean; error?: string }> {
+  const clean = slugOrId.toLowerCase().trim();
+  try {
+    const supabase = getSupabaseAdmin();
+    // 1. Deleta solicitações de alteração
+    await supabase.from('site_edit_requests').delete().or(`site_slug.eq.${clean},client_account_id.eq.${clean}`);
+
+    // 2. Deleta a conta do cliente
+    await supabase.from('client_accounts').delete().or(`site_slug.eq.${clean},id.eq.${clean},domain_login.eq.${clean}`);
+
+    // 3. Atualiza assinatura para cancelled
+    await cancelDefinitiveInSupabase(clean);
+  } catch (err: any) {
+    console.warn('[Supabase] Falha no hard delete de client_accounts:', err);
+  }
+
+  // Local db.json cleanup
+  try {
+    const db = readDb();
+    if (db.clientAccounts) {
+      db.clientAccounts = db.clientAccounts.filter(
+        c => c.id !== clean && c.site_slug?.toLowerCase() !== clean && c.domain_login?.toLowerCase() !== clean
+      );
+    }
+    if (db.siteEditRequests) {
+      db.siteEditRequests = db.siteEditRequests.filter(
+        r => r.site_slug?.toLowerCase() !== clean && r.client_account_id !== clean
+      );
+    }
+    writeDb(db);
+  } catch (_) {}
+
+  return { success: true };
+}
+
+// ==============================================================================
+// 2. SITE EDIT REQUESTS (Fila de Alterações Sincronizada)
+// ==============================================================================
+
+export function mapRowToSiteEditRequest(row: any): SiteEditRequestRecord {
+  return {
+    id: row.id,
+    client_account_id: row.client_account_id || row.clientAccountId || '',
+    clientAccountId: row.client_account_id || row.clientAccountId || '',
+    site_slug: row.site_slug || row.siteSlug || '',
+    siteSlug: row.site_slug || row.siteSlug || '',
+    operator_id: row.operator_id || row.operatorId || null,
+    operatorId: row.operator_id || row.operatorId || null,
+    title: row.title || 'Solicitação de Alteração',
+    description: row.description || '',
+    photos: Array.isArray(row.photos) ? row.photos : [],
+    status: row.status || 'enviada',
+    operator_notes: row.operator_notes || row.operatorNotes || null,
+    operatorNotes: row.operator_notes || row.operatorNotes || null,
+    is_extra_credit: Boolean(row.is_extra_credit ?? false),
+    created_at: row.created_at || row.createdAt || new Date().toISOString(),
+    updated_at: row.updated_at || row.updatedAt || new Date().toISOString(),
+    completed_at: row.completed_at || row.completedAt || null
+  };
+}
+
+export async function listSiteEditRequests(filter?: {
+  clientAccountId?: string;
+  operatorId?: string;
+  siteSlug?: string;
+  status?: string;
+}): Promise<SiteEditRequestRecord[]> {
+  try {
+    const supabase = getSupabaseAdmin();
+    let query = supabase.from('site_edit_requests').select('*');
+
+    if (filter?.clientAccountId) query = query.eq('client_account_id', filter.clientAccountId);
+    if (filter?.operatorId) query = query.eq('operator_id', filter.operatorId);
+    if (filter?.siteSlug) query = query.eq('site_slug', filter.siteSlug.toLowerCase().trim());
+    if (filter?.status) query = query.eq('status', filter.status);
+
+    const { data, error } = await query.order('created_at', { ascending: false });
+    if (!error && data && data.length > 0) {
+      return data.map(mapRowToSiteEditRequest);
+    }
+  } catch (err) {
+    console.warn('[Supabase] Falha ao listar site_edit_requests:', err);
+  }
+
+  // Fallback db.json
+  try {
+    const db = readDb();
+    let items = db.siteEditRequests || [];
+    if (filter?.clientAccountId) items = items.filter(i => i.client_account_id === filter.clientAccountId);
+    if (filter?.operatorId) items = items.filter(i => i.operator_id === filter.operatorId);
+    if (filter?.siteSlug) items = items.filter(i => i.site_slug?.toLowerCase() === filter.siteSlug?.toLowerCase().trim());
+    if (filter?.status) items = items.filter(i => i.status === filter.status);
+    return items;
+  } catch (_) {
+    return [];
+  }
+}
+
+export async function createSiteEditRequest(data: Partial<SiteEditRequestRecord>): Promise<SiteEditRequestRecord> {
+  const nowIso = new Date().toISOString();
+  const id = data.id || crypto.randomUUID();
+
+  const record: SiteEditRequestRecord = {
+    id,
+    client_account_id: data.client_account_id || data.clientAccountId || '',
+    clientAccountId: data.client_account_id || data.clientAccountId || '',
+    site_slug: (data.site_slug || data.siteSlug || '').toLowerCase().trim(),
+    siteSlug: (data.site_slug || data.siteSlug || '').toLowerCase().trim(),
+    operator_id: data.operator_id || data.operatorId || null,
+    operatorId: data.operator_id || data.operatorId || null,
+    title: data.title || 'Solicitação de Alteração',
+    description: data.description || '',
+    photos: Array.isArray(data.photos) ? data.photos : [],
+    status: data.status || 'enviada',
+    operator_notes: data.operator_notes || data.operatorNotes || null,
+    operatorNotes: data.operator_notes || data.operatorNotes || null,
+    is_extra_credit: Boolean(data.is_extra_credit ?? false),
+    created_at: nowIso,
+    updated_at: nowIso,
+    completed_at: null
+  };
+
+  try {
+    const supabase = getSupabaseAdmin();
+    await supabase.from('site_edit_requests').insert({
+      id: record.id,
+      client_account_id: record.client_account_id,
+      site_slug: record.site_slug,
+      operator_id: record.operator_id,
+      title: record.title,
+      description: record.description,
+      photos: record.photos,
+      status: record.status,
+      operator_notes: record.operator_notes,
+      is_extra_credit: record.is_extra_credit,
+      created_at: record.created_at,
+      updated_at: record.updated_at
+    });
+  } catch (err) {
+    console.warn('[Supabase] Falha ao criar site_edit_requests:', err);
+  }
+
+  try {
+    const db = readDb();
+    if (!db.siteEditRequests) db.siteEditRequests = [];
+    db.siteEditRequests.unshift(record);
+    writeDb(db);
+  } catch (_) {}
+
+  return record;
+}
+
+export async function updateSiteEditRequestStatus(
+  id: string,
+  status: 'enviada' | 'em_andamento' | 'publicada',
+  operatorNotes?: string
+): Promise<boolean> {
+  const nowIso = new Date().toISOString();
+  const updatePayload: Record<string, any> = {
+    status,
+    updated_at: nowIso
+  };
+  if (operatorNotes !== undefined) {
+    updatePayload.operator_notes = operatorNotes;
+  }
+  if (status === 'publicada') {
+    updatePayload.completed_at = nowIso;
+  }
+
+  try {
+    const supabase = getSupabaseAdmin();
+    await supabase.from('site_edit_requests').update(updatePayload).eq('id', id);
+  } catch (_) {}
+
+  try {
+    const db = readDb();
+    if (db.siteEditRequests) {
+      const item = db.siteEditRequests.find(r => r.id === id);
+      if (item) {
+        item.status = status;
+        item.updated_at = nowIso;
+        if (operatorNotes !== undefined) {
+          item.operator_notes = operatorNotes;
+          item.operatorNotes = operatorNotes;
+        }
+        if (status === 'publicada') item.completed_at = nowIso;
+        writeDb(db);
+      }
+    }
+  } catch (_) {}
+
+  return true;
+}
+
+// ==============================================================================
+// 3. ADMIN AFFILIATE TOOLS (Vitrine de Ferramentas B2B Billy Afiliados)
+// ==============================================================================
+
+export function mapRowToAdminAffiliateTool(row: any): AdminAffiliateToolRecord {
+  return {
+    id: row.id,
+    name: row.name || 'Ferramenta Parceira',
+    category: row.category || 'Produtividade',
+    description: row.description || '',
+    benefit: row.benefit || null,
+    logo_url: row.logo_url || row.logoUrl || null,
+    logoUrl: row.logo_url || row.logoUrl || null,
+    affiliate_link: row.affiliate_link || row.affiliateLink || '#',
+    affiliateLink: row.affiliate_link || row.affiliateLink || '#',
+    is_active: Boolean(row.is_active ?? true),
+    isActive: Boolean(row.is_active ?? true),
+    display_order: Number(row.display_order ?? 0),
+    displayOrder: Number(row.display_order ?? 0),
+    clicks_count: Number(row.clicks_count ?? 0),
+    clicksCount: Number(row.clicks_count ?? 0),
+    created_at: row.created_at || new Date().toISOString(),
+    updated_at: row.updated_at || new Date().toISOString()
+  };
+}
+
+export async function listAdminAffiliateTools(onlyActive: boolean = false): Promise<AdminAffiliateToolRecord[]> {
+  try {
+    const supabase = getSupabaseAdmin();
+    let q = supabase.from('admin_affiliate_tools').select('*');
+    if (onlyActive) q = q.eq('is_active', true);
+    const { data, error } = await q.order('display_order', { ascending: true });
+
+    if (!error && data && data.length > 0) {
+      return data.map(mapRowToAdminAffiliateTool);
+    }
+  } catch (err) {
+    console.warn('[Supabase] Falha ao listar admin_affiliate_tools:', err);
+  }
+
+  // Fallback db.json
+  try {
+    const db = readDb();
+    let tools = db.adminAffiliateTools || [];
+    if (onlyActive) tools = tools.filter(t => t.is_active !== false);
+    return tools.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+  } catch (_) {
+    return [];
+  }
+}
+
+export async function upsertAdminAffiliateTool(tool: Partial<AdminAffiliateToolRecord>): Promise<AdminAffiliateToolRecord> {
+  const nowIso = new Date().toISOString();
+  const id = tool.id || crypto.randomUUID();
+
+  const record: AdminAffiliateToolRecord = {
+    id,
+    name: tool.name || 'Nova Ferramenta',
+    category: tool.category || 'Negócios',
+    description: tool.description || '',
+    benefit: tool.benefit || null,
+    logo_url: tool.logo_url || tool.logoUrl || null,
+    logoUrl: tool.logo_url || tool.logoUrl || null,
+    affiliate_link: tool.affiliate_link || tool.affiliateLink || 'https://webbilly.com.br',
+    affiliateLink: tool.affiliate_link || tool.affiliateLink || 'https://webbilly.com.br',
+    is_active: tool.is_active ?? true,
+    isActive: tool.is_active ?? true,
+    display_order: Number(tool.display_order ?? 0),
+    displayOrder: Number(tool.display_order ?? 0),
+    clicks_count: Number(tool.clicks_count ?? 0),
+    clicksCount: Number(tool.clicks_count ?? 0),
+    created_at: tool.created_at || nowIso,
+    updated_at: nowIso
+  };
+
+  try {
+    const supabase = getSupabaseAdmin();
+    await supabase.from('admin_affiliate_tools').upsert({
+      id: record.id,
+      name: record.name,
+      category: record.category,
+      description: record.description,
+      benefit: record.benefit,
+      logo_url: record.logo_url,
+      affiliate_link: record.affiliate_link,
+      is_active: record.is_active,
+      display_order: record.display_order,
+      clicks_count: record.clicks_count,
+      updated_at: record.updated_at
+    });
+  } catch (err) {
+    console.warn('[Supabase] Falha no upsert de admin_affiliate_tools:', err);
+  }
+
+  try {
+    const db = readDb();
+    if (!db.adminAffiliateTools) db.adminAffiliateTools = [];
+    const idx = db.adminAffiliateTools.findIndex(t => t.id === record.id);
+    if (idx >= 0) {
+      db.adminAffiliateTools[idx] = record;
+    } else {
+      db.adminAffiliateTools.push(record);
+    }
+    writeDb(db);
+  } catch (_) {}
+
+  return record;
+}
+
+export async function deleteAdminAffiliateTool(id: string): Promise<boolean> {
+  try {
+    const supabase = getSupabaseAdmin();
+    await supabase.from('admin_affiliate_tools').delete().eq('id', id);
+  } catch (_) {}
+
+  try {
+    const db = readDb();
+    if (db.adminAffiliateTools) {
+      db.adminAffiliateTools = db.adminAffiliateTools.filter(t => t.id !== id);
+      writeDb(db);
+    }
+  } catch (_) {}
+
+  return true;
+}
+
+export async function recordAffiliateToolClick(id: string): Promise<number> {
+  let newCount = 1;
+  try {
+    const supabase = getSupabaseAdmin();
+    const { data } = await supabase.from('admin_affiliate_tools').select('clicks_count').eq('id', id).maybeSingle();
+    newCount = (data?.clicks_count || 0) + 1;
+    await supabase.from('admin_affiliate_tools').update({ clicks_count: newCount }).eq('id', id);
+  } catch (_) {}
+
+  try {
+    const db = readDb();
+    if (db.adminAffiliateTools) {
+      const tool = db.adminAffiliateTools.find(t => t.id === id);
+      if (tool) {
+        tool.clicks_count = (tool.clicks_count || 0) + 1;
+        newCount = tool.clicks_count;
+        writeDb(db);
+      }
+    }
+  } catch (_) {}
+
+  return newCount;
+}
+

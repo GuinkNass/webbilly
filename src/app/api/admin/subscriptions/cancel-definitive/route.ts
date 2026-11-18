@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDb, writeDb } from '@/lib/db';
-import { cancelDefinitiveInSupabase, getSupabaseAdmin } from '@/lib/supabase';
+import { cancelDefinitiveInSupabase, getSupabaseAdmin, hardDeleteClientAccountComplete } from '@/lib/supabase';
 import { cancelAsaasSubscription, cancelAsaasPayment, cancelAllPendingCharges } from '@/services/asaas';
 import { setSlugSuspended } from '@/lib/site-storage';
 
@@ -112,9 +112,19 @@ export async function POST(req: NextRequest) {
       console.warn('[Cancel Definitive] Aviso ao remover na Vercel:', vercelErr);
     }
 
-    // 3. SUPABASE: Atualiza status para cancelled e site_status para deleted
+    // 3. SUPABASE: Remove storage e executa hard delete das contas do cliente e solicitações
     const targetIdentifier = targetSlug || cleanId;
-    await cancelDefinitiveInSupabase(targetIdentifier);
+    try {
+      const supabase = getSupabaseAdmin();
+      if (targetSlug) {
+        const { data: files } = await supabase.storage.from('sites').list(targetSlug);
+        if (files && files.length > 0) {
+          const filePaths = files.map(f => `${targetSlug}/${f.name}`);
+          await supabase.storage.from('sites').remove(filePaths);
+        }
+      }
+    } catch (_) {}
+    await hardDeleteClientAccountComplete(targetIdentifier);
 
     // Protocolo oficial de encerramento
     const protocol = (sub as any)?.cancellationProtocol || (sub as any)?.cancellation_protocol || `ENC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;

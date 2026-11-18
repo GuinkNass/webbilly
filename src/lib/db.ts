@@ -391,6 +391,83 @@ export interface OperatorAlertReadRecord {
   read_at: string;
 }
 
+export interface ClientAccountRecord {
+  id: string; // uuid
+  site_id?: string;
+  siteSlug?: string;
+  site_slug: string;
+  lead_id?: string | null;
+  leadId?: string | null;
+  operator_id?: string | null;
+  operatorId?: string | null;
+  business_name: string;
+  businessName?: string;
+  domain_login: string; // unique (e.g. 13pointtattoo.webbilly.com.br)
+  domainLogin?: string;
+  email?: string | null;
+  phone?: string | null;
+  password_hash: string;
+  passwordHash?: string;
+  initial_password_plain?: string | null;
+  initialPasswordPlain?: string | null;
+  plan_type: 'monthly_29_90' | 'custom_domain_490';
+  planType?: 'monthly_29_90' | 'custom_domain_490';
+  status: 'active' | 'blocked';
+  monthly_edits_limit: number;
+  monthly_edits_used: number;
+  extra_edit_credits: number;
+  edits_reset_at: string; // ISO date
+  editsResetAt?: string;
+  asaas_customer_id?: string | null;
+  asaasCustomerId?: string | null;
+  asaas_subscription_id?: string | null;
+  asaasSubscriptionId?: string | null;
+  created_at: string;
+  createdAt?: string;
+  updated_at: string;
+  updatedAt?: string;
+}
+
+export interface SiteEditRequestRecord {
+  id: string; // uuid
+  client_account_id: string;
+  clientAccountId?: string;
+  site_slug: string;
+  siteSlug?: string;
+  operator_id?: string | null;
+  operatorId?: string | null;
+  title: string;
+  description: string;
+  photos: string[];
+  status: 'enviada' | 'em_andamento' | 'publicada';
+  operator_notes?: string | null;
+  operatorNotes?: string | null;
+  is_extra_credit: boolean;
+  created_at: string;
+  updated_at: string;
+  completed_at?: string | null;
+}
+
+export interface AdminAffiliateToolRecord {
+  id: string; // uuid
+  name: string;
+  category: string;
+  description: string;
+  benefit?: string | null;
+  logo_url?: string | null;
+  logoUrl?: string | null;
+  affiliate_link: string;
+  affiliateLink?: string;
+  is_active: boolean;
+  isActive?: boolean;
+  display_order: number;
+  displayOrder?: number;
+  clicks_count: number;
+  clicksCount?: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface DatabaseSchema {
   candidates: Candidate[];
   operators: Operator[];
@@ -408,6 +485,9 @@ export interface DatabaseSchema {
   siteChangeRequests?: SiteChangeRequestRecord[];
   systemAlerts?: SystemAlertRecord[];
   operatorAlertReads?: OperatorAlertReadRecord[];
+  clientAccounts?: ClientAccountRecord[];
+  siteEditRequests?: SiteEditRequestRecord[];
+  adminAffiliateTools?: AdminAffiliateToolRecord[];
 }
 
 export function getDefaultSubscriptions(): SubscriptionRecord[] {
@@ -552,7 +632,67 @@ function getDefaultDatabase(): DatabaseSchema {
         status: 'active'
       }
     ],
-    subscriptions: getDefaultSubscriptions()
+    subscriptions: getDefaultSubscriptions(),
+    clientAccounts: [],
+    siteEditRequests: [],
+    adminAffiliateTools: [
+      {
+        id: 'tool-nuvemshop',
+        name: 'Nuvemshop',
+        category: 'E-commerce & Vendas',
+        description: 'Crie sua loja virtual profissional integrada com meios de pagamento e frete automáticos.',
+        benefit: '25% de desconto no 1º mês de assinatura',
+        logo_url: 'https://assets.nuvemshop.com.br/assets/images/logo-nuvemshop.svg',
+        affiliate_link: 'https://www.nuvemshop.com.br',
+        is_active: true,
+        display_order: 1,
+        clicks_count: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'tool-ton',
+        name: 'Ton (Stone)',
+        category: 'Maquininhas & Pix',
+        description: 'As menores taxas do mercado para receber no débito, crédito e Pix sem aluguel de maquininha.',
+        benefit: 'Até 10% de desconto na compra da sua maquininha',
+        logo_url: 'https://ton.stone.com.br/favicon.ico',
+        affiliate_link: 'https://ton.stone.com.br',
+        is_active: true,
+        display_order: 2,
+        clicks_count: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'tool-botconversa',
+        name: 'BotConversa',
+        category: 'Automação WhatsApp',
+        description: 'Automatize suas vendas e atendimento no WhatsApp 24 horas por dia com inteligência e gatilhos.',
+        benefit: 'Teste grátis de 7 dias com modelos prontos',
+        logo_url: 'https://botconversa.com.br/wp-content/uploads/2021/04/cropped-favicon-32x32.png',
+        affiliate_link: 'https://botconversa.com.br',
+        is_active: true,
+        display_order: 3,
+        clicks_count: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      {
+        id: 'tool-bling',
+        name: 'Bling!',
+        category: 'Gestão & ERP',
+        description: 'Sistema completo de emissão de notas fiscais, controle financeiro e estoque para sua empresa.',
+        benefit: '3 meses de teste grátis com suporte dedicado',
+        logo_url: 'https://www.bling.com.br/favicon.ico',
+        affiliate_link: 'https://www.bling.com.br',
+        is_active: true,
+        display_order: 4,
+        clicks_count: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    ]
   };
 }
 

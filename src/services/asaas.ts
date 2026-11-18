@@ -531,3 +531,93 @@ export async function getAsaasCustomer(customerId: string): Promise<any | null> 
     return null;
   }
 }
+
+/**
+ * Obtém QR Code Pix e linha digitável Pix Copia e Cola de uma cobrança (GET /v3/payments/{id}/pixQrCode)
+ */
+export async function getPaymentPixQrCode(paymentId: string): Promise<{
+  encodedImage?: string;
+  payload?: string;
+  expirationDate?: string;
+} | null> {
+  if (!paymentId) return null;
+  try {
+    const res = await fetch(`${getApiUrl()}/payments/${encodeURIComponent(paymentId.trim())}/pixQrCode`, {
+      method: 'GET',
+      headers: getHeaders(),
+      cache: 'no-store'
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    console.warn('[Asaas getPaymentPixQrCode] Falha:', err);
+    return null;
+  }
+}
+
+/**
+ * Cria cobrança Pix avulsa para alteração extra (R$ 19,90) com QR Code instantâneo
+ */
+export async function createExtraEditPayment(params: {
+  customerId: string;
+  siteSlug: string;
+  operatorId?: string;
+  clientAccountId?: string;
+  value?: number;
+}): Promise<{
+  paymentId: string;
+  invoiceUrl: string;
+  pixPayload?: string;
+  pixQrCodeImage?: string;
+  dueDate: string;
+}> {
+  const value = params.value ?? 19.90;
+  const dueDateObj = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+  const dueDate = dueDateObj.toISOString().split('T')[0];
+
+  const externalReference = `extra_edit_${params.clientAccountId || 'client'}_${params.siteSlug}_${Date.now()}`;
+  const description = `Alteração Extra no Site - ${params.siteSlug}.webbilly.com.br`;
+
+  const payload = {
+    customer: params.customerId,
+    billingType: 'PIX',
+    value,
+    dueDate,
+    description,
+    externalReference,
+    postalService: false
+  };
+
+  const res = await fetch(`${getApiUrl()}/payments`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(payload)
+  });
+
+  const data = await res.json();
+  if (!res.ok || !data.id) {
+    const errorMsg = data?.errors?.[0]?.description || data?.message || 'Erro ao gerar cobrança de alteração extra.';
+    throw new Error(errorMsg);
+  }
+
+  const invoiceUrl = data.invoiceUrl || data.bankSlipUrl || `https://www.asaas.com/i/${data.id}`;
+
+  // Busca QR code Pix imediatamente
+  let pixPayload: string | undefined;
+  let pixQrCodeImage: string | undefined;
+  try {
+    const pixData = await getPaymentPixQrCode(data.id);
+    if (pixData) {
+      pixPayload = pixData.payload;
+      pixQrCodeImage = pixData.encodedImage;
+    }
+  } catch (_) {}
+
+  return {
+    paymentId: data.id,
+    invoiceUrl,
+    pixPayload,
+    pixQrCodeImage,
+    dueDate
+  };
+}

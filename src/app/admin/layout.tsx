@@ -132,6 +132,16 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       badgeColor: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40',
       tooltipTitle: 'Financeiro & APIs',
       tooltipDesc: 'Controle receitas totais, repasses de comissão, assinaturas Asaas e saldo líquido.'
+    },
+    {
+      href: '/admin/parceiros',
+      label: 'Parceiros & Afiliados B2B',
+      icon: Sparkles,
+      iconSrc: '/icons/nav/studio.png',
+      badge: 'B2B',
+      badgeColor: 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400 border border-purple-200 dark:border-purple-800/40 font-bold',
+      tooltipTitle: 'Parceiros & Vitrine de Afiliados',
+      tooltipDesc: 'Gerencie as ferramentas recomendadas aos clientes finais com links de afiliado e contador de cliques.'
     }
   ];
 

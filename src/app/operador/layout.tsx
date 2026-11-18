@@ -32,7 +32,8 @@ import {
   GraduationCap,
   BadgeDollarSign,
   Trophy,
-  Users
+  Users,
+  Layers
 } from 'lucide-react';
 
 function OperatorShell({ children }: { children: React.ReactNode }) {
@@ -102,6 +103,15 @@ function OperatorShell({ children }: { children: React.ReactNode }) {
       icon: Globe,
       badge: stats?.activeSubscriptionsCount || (data?.subscriptions || []).length || 0,
       badgeColor: 'bg-slate-100 text-slate-700 dark:bg-white/10 dark:text-slate-300'
+    },
+    {
+      href: '/operador/solicitacoes',
+      label: 'Fila de Alterações',
+      tooltipTitle: 'Fila de Alterações dos Clientes',
+      tooltipDesc: 'Acompanhe as solicitações de alteração enviadas pelos clientes, altere status e publique atualizações.',
+      icon: Layers,
+      badge: 'Portal',
+      badgeColor: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800/40'
     },
     {
       href: '/operador/treinamento',

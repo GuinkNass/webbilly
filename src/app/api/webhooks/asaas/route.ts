@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
 import { readDb, writeDb, Sale, AffiliateCommissionRecord } from '@/lib/db';
-import { getSupabaseAdmin, upsertAffiliateCommissionInSupabase } from '@/lib/supabase';
+import {
+  getSupabaseAdmin,
+  upsertAffiliateCommissionInSupabase,
+  findClientAccountBySlug,
+  createOrUpdateClientAccount,
+  incrementClientAccountExtraCredits
+} from '@/lib/supabase';
 import { setSlugSuspended } from '@/lib/site-storage';
 import { cancelAsaasSubscription, cancelAsaasPayment, cancelAllPendingCharges } from '@/services/asaas';
 
@@ -141,6 +148,15 @@ export async function POST(req: NextRequest) {
     switch (event) {
       case 'PAYMENT_RECEIVED':
       case 'PAYMENT_CONFIRMED': {
+        // Se for pagamento de alteração extra avulsa (R$ 19,90)
+        if (externalRef.startsWith('extra_edit_')) {
+          console.log(`[Asaas Webhook] Cobrança de alteração extra confirmada para ${effectiveSlug}: ${payment.id}`);
+          if (effectiveSlug) {
+            await incrementClientAccountExtraCredits(effectiveSlug, 1);
+          }
+          break;
+        }
+
         // Ativa o site no sistema e libera subdomínio no ar
         if (sub) {
           sub.status = 'active';
@@ -322,6 +338,48 @@ export async function POST(req: NextRequest) {
             }
           }
         }
+
+        // Provisionamento automático de credenciais do Portal do Cliente (/cliente)
+        if (effectiveSlug) {
+          try {
+            const existingClient = await findClientAccountBySlug(effectiveSlug);
+            if (!existingClient) {
+              const random4 = Math.floor(1000 + Math.random() * 9000);
+              const initialPasswordPlain = `Billy${random4}`;
+              const passwordHash = bcrypt.hashSync(initialPasswordPlain, 10);
+              const domainLogin = sub?.custom_domain
+                ? sub.custom_domain.toLowerCase().trim()
+                : `${effectiveSlug}.webbilly.com.br`;
+
+              const val = Number(payment.value) || 29.90;
+              const isCustomDomain = val >= 450 || !!sub?.custom_domain;
+
+              await createOrUpdateClientAccount({
+                site_slug: effectiveSlug,
+                site_id: sub?.id,
+                operator_id: operator?.id || sub?.operatorId || null,
+                lead_id: sub?.leadToken || null,
+                business_name: sub?.clientName || `Comércio ${effectiveSlug}`,
+                domain_login: domainLogin,
+                email: sub?.clientEmail || null,
+                phone: sub?.clientPhone || null,
+                password_hash: passwordHash,
+                initial_password_plain: initialPasswordPlain,
+                plan_type: isCustomDomain ? 'custom_domain_490' : 'monthly_29_90',
+                status: 'active',
+                monthly_edits_limit: isCustomDomain ? 0 : 3,
+                monthly_edits_used: 0,
+                extra_edit_credits: 0,
+                asaas_customer_id: asaasCustId || null,
+                asaas_subscription_id: asaasSubId || null
+              });
+              console.log(`[Asaas Webhook] Credenciais do cliente auto-provisionadas para ${domainLogin} (Senha: ${initialPasswordPlain})`);
+            }
+          } catch (clientProvErr) {
+            console.warn('[Asaas Webhook] Aviso ao auto-provisionar credenciais do cliente:', clientProvErr);
+          }
+        }
+
         break;
       }
 
