@@ -385,6 +385,18 @@ export default function ClienteDashboardPage() {
       return;
     }
 
+    const isTestAccount =
+      account?.domainLogin?.includes('13-point-tattoo-e-piercing') ||
+      account?.siteSlug === '13-point-tattoo-e-piercing';
+
+    if (isTestAccount) {
+      setCancellingAccount(false);
+      setShowCancelModal(false);
+      setConfirmCancelText('');
+      alert('Simulação concluída: em uma conta real de cliente, a assinatura Asaas, o subdomínio na Vercel e todos os dados no Supabase seriam excluídos agora.');
+      return;
+    }
+
     setCancellingAccount(true);
     try {
       const res = await fetch('/api/cliente/cancelar-conta', { method: 'POST' });
@@ -633,8 +645,13 @@ export default function ClienteDashboardPage() {
                     <span className="p-2 rounded-xl" style={{ backgroundColor: 'var(--color-primary-soft)', color: 'var(--color-primary)' }}>
                       <BarChart3 className="w-5 h-5" />
                     </span>
-                    <h3 className="text-base sm:text-lg font-bold tracking-tight" style={{ color: 'var(--text-main)' }}>
-                      Desempenho & Acessos do Seu Site
+                    <h3 className="text-base sm:text-lg font-bold tracking-tight flex flex-wrap items-center gap-2" style={{ color: 'var(--text-main)' }}>
+                      <span>Desempenho & Acessos do Seu Site</span>
+                      {analytics?.isDemo && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/25">
+                          Modo Demonstração / Dados de Exemplo
+                        </span>
+                      )}
                     </h3>
                   </div>
                   <p className="text-xs sm:text-sm" style={{ color: 'var(--text-muted)' }}>

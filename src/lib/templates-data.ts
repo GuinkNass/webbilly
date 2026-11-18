@@ -10,6 +10,7 @@ export interface TemplateInfo {
   demoPath: string;
   subdomain: string;
   aliases: string[];
+  coverImage?: string;
 }
 
 export const OFFICIAL_TEMPLATES: TemplateInfo[] = [
@@ -17,14 +18,15 @@ export const OFFICIAL_TEMPLATES: TemplateInfo[] = [
     slug: 'barbearia',
     name: 'BarberOn Moderno',
     niche: 'barbearia',
-    categoryLabel: 'Barbearias',
-    title: 'Barbearias & Estética Masculina',
+    categoryLabel: 'Barbearias & Tattoo',
+    title: 'Barbearias & Estúdio de Tatuagem',
     desc: 'Agendamentos no WhatsApp, fotos dos cortes, tabela de serviços e visual escuro premium de alta conversão.',
     tag: 'Mais Popular',
     folder: 'barbearia',
     demoPath: '/templates/barbearia/index.html',
     subdomain: 'barbearia.webbilly.com.br',
-    aliases: ['barbearia-demo', 'barberon', 'barberon-prime', 'barber', 'corte']
+    aliases: ['barbearia-demo', 'barberon', 'barberon-prime', 'barber', 'corte'],
+    coverImage: '/templates-thumbs/barbearia-barberon-moderno.jpg'
   },
   {
     slug: 'gastronomia',
@@ -37,7 +39,8 @@ export const OFFICIAL_TEMPLATES: TemplateInfo[] = [
     folder: 'gastronomia',
     demoPath: '/templates/gastronomia/index.html',
     subdomain: 'gastronomia.webbilly.com.br',
-    aliases: ['burger-demo', 'gastronomia-demo', 'oldstory', 'burger', 'hamburgueria', 'restaurante']
+    aliases: ['burger-demo', 'gastronomia-demo', 'oldstory', 'burger', 'hamburgueria', 'restaurante'],
+    coverImage: '/templates-thumbs/bar-oldstory-whiskey.jpg'
   },
   {
     slug: 'estetica',
@@ -50,7 +53,8 @@ export const OFFICIAL_TEMPLATES: TemplateInfo[] = [
     folder: 'estetica',
     demoPath: '/templates/estetica/index.html',
     subdomain: 'estetica.webbilly.com.br',
-    aliases: ['estetica-demo', 'pureglow', 'pureglow-spa', 'spa', 'saude', 'clinica']
+    aliases: ['estetica-demo', 'pureglow', 'pureglow-spa', 'spa', 'saude', 'clinica'],
+    coverImage: '/templates-thumbs/dermato-clean-skincare.jpg'
   },
   {
     slug: 'petshop',
@@ -63,7 +67,8 @@ export const OFFICIAL_TEMPLATES: TemplateInfo[] = [
     folder: 'petshop',
     demoPath: '/templates/petshop/index.html',
     subdomain: 'petshop.webbilly.com.br',
-    aliases: ['petshop-demo', 'petly', 'petly-care', 'veterinaria', 'vet']
+    aliases: ['petshop-demo', 'petly', 'petly-care', 'veterinaria', 'vet'],
+    coverImage: '/templates-thumbs/petshop-petly-veterinaria.jpg'
   },
   {
     slug: 'consultoria',
@@ -76,20 +81,22 @@ export const OFFICIAL_TEMPLATES: TemplateInfo[] = [
     folder: 'consultoria',
     demoPath: '/templates/consultoria/index.html',
     subdomain: 'consultoria.webbilly.com.br',
-    aliases: ['consultoria-demo', 'officepro', 'fo-consultoria', 'advocacia', 'servicos', 'consultoria-financeira']
+    aliases: ['consultoria-demo', 'officepro', 'fo-consultoria', 'advocacia', 'servicos', 'consultoria-financeira'],
+    coverImage: '/templates-thumbs/consultoria-financeira-fo.jpg'
   },
   {
     slug: 'autoescola',
     name: 'DrivePro Centro de Condutores',
     niche: 'automotivo',
-    categoryLabel: 'Autoescolas & Automotivo',
+    categoryLabel: 'Autoescolas & Oficinas',
     title: 'Autoescolas, Oficinas & Centros Automotivos',
     desc: 'Tabela de categorias de habilitação (A/B/D), cursos especializados, localização no mapa e matrícula via WhatsApp.',
     tag: 'Completo',
     folder: 'autoescola',
     demoPath: '/templates/autoescola/index.html',
     subdomain: 'autoescola.webbilly.com.br',
-    aliases: ['autoescola-demo', 'drivepro', 'centro-automotivo', 'oficina', 'mecanica']
+    aliases: ['autoescola-demo', 'drivepro', 'centro-automotivo', 'oficina', 'mecanica'],
+    coverImage: '/templates-thumbs/autoescola-drivepro.jpg'
   }
 ];
 

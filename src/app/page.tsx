@@ -226,6 +226,14 @@ export default function WebbillyHomePage() {
             </a>
             <span className="text-zinc-700">|</span>
             <Link
+              href="/cliente/login"
+              className="text-emerald-400 hover:text-emerald-300 font-bold transition flex items-center gap-1.5"
+            >
+              <Users className="w-3.5 h-3.5 text-emerald-400" />
+              Área do Cliente
+            </Link>
+            <span className="text-zinc-700">|</span>
+            <Link
               href="/operador"
               className="text-zinc-400 hover:text-white transition flex items-center gap-1"
             >
@@ -279,7 +287,15 @@ export default function WebbillyHomePage() {
           </nav>
 
           {/* CTA Header */}
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+            <Link
+              href="/cliente/login"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 sm:py-2.5 rounded-xl text-xs font-bold text-white bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 hover:border-emerald-500/50 transition-all shadow-xs"
+            >
+              <Users className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Área do Cliente</span>
+            </Link>
+
             <a
               href="#demonstracao"
               className="eco-btn-primary text-xs py-2.5 px-5 hidden md:inline-flex"
@@ -313,6 +329,14 @@ export default function WebbillyHomePage() {
             <a href="#modelos" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-zinc-300 hover:text-white">Modelos</a>
             <a href="#trabalhe-aqui" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-emerald-400 font-bold">Trabalhe Aqui</a>
             <a href="#contato" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-zinc-300 hover:text-white">SAC & Atendimento</a>
+            <Link
+              href="/cliente/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 text-emerald-400 font-bold flex items-center gap-2 border-t border-zinc-800/80 pt-2.5 mt-2"
+            >
+              <Users className="w-4 h-4 text-emerald-400" />
+              <span>Área do Cliente (Login)</span>
+            </Link>
             <div className="pt-2">
               <a
                 href="#demonstracao"
@@ -1013,20 +1037,33 @@ export default function WebbillyHomePage() {
                 className="rounded-2xl bg-[#121722] border border-white/[0.08] overflow-hidden hover:border-[#7abf18] transition-all hover:-translate-y-1 group flex flex-col justify-between"
               >
                 <div>
-                  {/* Preview Visual ao Vivo em Iframe Escalado */}
-                  <div className="h-48 bg-[#080a0f] relative overflow-hidden border-b border-white/[0.08]">
-                    <iframe
-                      src={t.demoPath}
-                      title={`Preview ${t.name}`}
-                      className="w-[1200px] h-[800px] border-0 scale-[0.25] sm:scale-[0.27] origin-top-left pointer-events-none select-none bg-white opacity-90 group-hover:opacity-100 transition-opacity"
+                  {/* Capa HD Temática Real com Fallback */}
+                  <div className="h-48 bg-slate-900 relative overflow-hidden border-b border-white/[0.08] group/thumb">
+                    <img
+                      src={t.coverImage || `/templates-thumbs/${t.slug}.jpg`}
+                      alt={t.title}
+                      className="w-full h-full object-cover object-top transition-transform duration-500 group-hover/thumb:scale-105"
                       loading="lazy"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        target.onerror = null;
+                        const fallbackUrls: Record<string, string> = {
+                          barbearia: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=800&q=80',
+                          gastronomia: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+                          estetica: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=800&q=80',
+                          petshop: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=800&q=80',
+                          consultoria: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80',
+                          autoescola: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=800&q=80'
+                        };
+                        target.src = fallbackUrls[t.niche] || fallbackUrls.barbearia;
+                      }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#121722] via-transparent to-black/30 pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#121722] via-[#121722]/30 to-black/20 pointer-events-none" />
                     <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
                       <span className="text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-md bg-[#7abf18] text-white shadow-md">
                         {t.tag}
                       </span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-black/60 text-zinc-300 backdrop-blur-sm border border-white/10">
+                      <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-md bg-black/75 text-emerald-300 backdrop-blur-md border border-white/10 shadow-sm">
                         R$ 29,90/mês
                       </span>
                     </div>
@@ -1352,6 +1389,12 @@ export default function WebbillyHomePage() {
               <li><a href="#servicos" className="hover:text-[#7abf18] transition">O que Está Incluso</a></li>
               <li><a href="#modelos" className="hover:text-[#7abf18] transition">Modelos de Sites</a></li>
               <li><a href="#demonstracao" className="hover:text-[#7abf18] transition">Pedir Demonstração</a></li>
+              <li>
+                <Link href="/cliente/login" className="hover:text-[#7abf18] transition text-emerald-400 font-semibold flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-emerald-400" />
+                  Portal do Cliente (Gerenciar Meu Site)
+                </Link>
+              </li>
               <li><a href="#trabalhe-aqui" className="hover:text-[#7abf18] transition text-emerald-400 font-semibold">Trabalhe Aqui (Seja Operador)</a></li>
               <li><a href="#contato" className="hover:text-[#7abf18] transition text-zinc-300">SAC & Atendimento Direto</a></li>
             </ul>
@@ -1363,6 +1406,12 @@ export default function WebbillyHomePage() {
               Acessos Oficiais
             </h4>
             <ul className="space-y-2 text-xs">
+              <li>
+                <Link href="/cliente/login" className="hover:text-emerald-400 transition text-emerald-400 font-semibold flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-emerald-400" />
+                  Portal do Cliente (Gerenciar Meu Site)
+                </Link>
+              </li>
               <li>
                 <Link href="/operador" className="hover:text-[#7abf18] transition flex items-center gap-1.5">
                   <Lock className="w-3 h-3 text-[#7abf18]" />

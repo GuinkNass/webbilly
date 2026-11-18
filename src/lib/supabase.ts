@@ -9,7 +9,9 @@ import {
   ClientAccountRecord,
   SiteEditRequestRecord,
   AdminAffiliateToolRecord,
-  DEFAULT_ADMIN_AFFILIATE_TOOLS
+  DEFAULT_ADMIN_AFFILIATE_TOOLS,
+  DEFAULT_TEST_CLIENT_ACCOUNT,
+  DEFAULT_TEST_EDIT_REQUEST
 } from './db';
 import { extractInstagramHandleFromUrl } from './instagram-extractor';
 
@@ -1254,6 +1256,16 @@ export async function findClientAccountByDomain(domainOrSlug: string): Promise<C
   const clean = domainOrSlug.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
   const slugOnly = clean.replace(/\.webbilly\.com\.br$/, '').replace(/\.com\.br$/, '');
 
+  // Conta de teste oficial Billy (13-point-tattoo-e-piercing)
+  if (
+    clean === '13-point-tattoo-e-piercing.webbilly.com.br' ||
+    clean === '13-point-tattoo-e-piercing' ||
+    clean === 'teste@webbilly.com.br' ||
+    slugOnly === '13-point-tattoo-e-piercing'
+  ) {
+    return DEFAULT_TEST_CLIENT_ACCOUNT;
+  }
+
   try {
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
@@ -1278,7 +1290,8 @@ export async function findClientAccountByDomain(domainOrSlug: string): Promise<C
         c.domain_login?.toLowerCase() === clean ||
         c.domain_login?.toLowerCase() === slugOnly ||
         c.site_slug?.toLowerCase() === slugOnly ||
-        c.domain_login?.toLowerCase().includes(slugOnly)
+        c.domain_login?.toLowerCase().includes(slugOnly) ||
+        (clean === 'teste@webbilly.com.br' && c.id === DEFAULT_TEST_CLIENT_ACCOUNT.id)
     );
     if (local) {
       return await checkAndResetClientEdits(local);
@@ -1290,6 +1303,10 @@ export async function findClientAccountByDomain(domainOrSlug: string): Promise<C
 
 export async function findClientAccountById(id: string): Promise<ClientAccountRecord | null> {
   if (!id) return null;
+  if (id === DEFAULT_TEST_CLIENT_ACCOUNT.id || id === 'c1300000-0000-4000-a000-000000000013') {
+    return DEFAULT_TEST_CLIENT_ACCOUNT;
+  }
+
   try {
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
@@ -1318,6 +1335,10 @@ export async function findClientAccountById(id: string): Promise<ClientAccountRe
 export async function findClientAccountBySlug(slug: string): Promise<ClientAccountRecord | null> {
   if (!slug) return null;
   const clean = slug.trim().toLowerCase();
+  if (clean === '13-point-tattoo-e-piercing') {
+    return DEFAULT_TEST_CLIENT_ACCOUNT;
+  }
+
   try {
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
@@ -1734,8 +1755,24 @@ export async function listSiteEditRequests(filter?: {
     if (filter?.operatorId) items = items.filter(i => i.operator_id === filter.operatorId);
     if (filter?.siteSlug) items = items.filter(i => i.site_slug?.toLowerCase() === filter.siteSlug?.toLowerCase().trim());
     if (filter?.status) items = items.filter(i => i.status === filter.status);
+
+    if (items.length === 0) {
+      const isTestMatch =
+        filter?.clientAccountId === DEFAULT_TEST_CLIENT_ACCOUNT.id ||
+        filter?.siteSlug?.toLowerCase().trim() === '13-point-tattoo-e-piercing';
+      if (isTestMatch) {
+        return [DEFAULT_TEST_EDIT_REQUEST];
+      }
+    }
+
     return items;
   } catch (_) {
+    if (
+      filter?.clientAccountId === DEFAULT_TEST_CLIENT_ACCOUNT.id ||
+      filter?.siteSlug?.toLowerCase().trim() === '13-point-tattoo-e-piercing'
+    ) {
+      return [DEFAULT_TEST_EDIT_REQUEST];
+    }
     return [];
   }
 }

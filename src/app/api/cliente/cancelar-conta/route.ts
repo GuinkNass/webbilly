@@ -24,6 +24,16 @@ export async function POST(req: NextRequest) {
     }
 
     const targetSlug = account.site_slug.toLowerCase().trim();
+
+    // Trava de segurança para a conta oficial de teste: não exclui Vercel/Asaas/Supabase
+    if (targetSlug === '13-point-tattoo-e-piercing' || targetSlug.includes('13-point-tattoo')) {
+      return NextResponse.json({
+        success: true,
+        simulation: true,
+        message: 'Simulação concluída: em uma conta real de cliente, a assinatura Asaas, o subdomínio na Vercel e todos os dados no Supabase seriam excluídos agora.'
+      });
+    }
+
     const asaasSubId = account.asaas_subscription_id;
     const asaasCustId = account.asaas_customer_id;
 
