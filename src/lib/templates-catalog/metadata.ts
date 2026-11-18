@@ -76,7 +76,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Fotos de cicatrização e trabalhos reais",
       "Atendimento rápido"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/tattoo-portfolio-themestarz.jpg",
     "recommendedKeywords": [
       "urban tattoo",
       "tatuagem moderna",
@@ -99,7 +99,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Área de entrega e delivery via WhatsApp",
       "Depoimentos de clientes"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/pizzaria-clean-royate.jpg",
     "recommendedKeywords": [
       "pizzaria",
       "pizza artesanal",
@@ -193,7 +193,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Avaliações de críticos e clientes VIP",
       "Agendamento de jantares"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/restaurante-cafe-heritaste.jpg",
     "recommendedKeywords": [
       "alta gastronomia",
       "chef de cozinha",
@@ -263,7 +263,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Ambiente preparado para reuniões e trabalho",
       "Faça seu pedido no balcão"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/restaurante-elegante-elegencia.jpg",
     "recommendedKeywords": [
       "cafeteria moderna",
       "coworking cafe",
@@ -286,7 +286,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Corpo clínico e pós-graduações",
       "Agendamento de avaliação facial"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/estetica-completo-spa.jpg",
     "recommendedKeywords": [
       "clinica de estetica",
       "harmonizacao facial",
@@ -405,7 +405,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Maca aquecida e óleos essenciais",
       "Agende seu horário relaxante"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/estetica-elegante-minimalista.jpg",
     "recommendedKeywords": [
       "massoterapia",
       "massagista",
@@ -429,7 +429,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Tratamentos de retenção de líquido",
       "Planos de 5 e 10 sessões"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/massagista-clean-beauta.jpg",
     "recommendedKeywords": [
       "drenagem pos operatorio",
       "massagem modeladora",
@@ -499,7 +499,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Planos para iniciantes e intermediários",
       "Atendimento em domicílio ou estúdio"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/academia-crossfit-fitmax.jpg",
     "recommendedKeywords": [
       "personal saude",
       "treino terceira idade",
@@ -523,7 +523,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Resultados expressivos em 90 dias",
       "Depoimentos de alunos campeões"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/personal-moderno-energetico.jpg",
     "recommendedKeywords": [
       "preparador fisico",
       "treino performance",
@@ -571,7 +571,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Quimono e graduação oficial de faixas",
       "Conheça o dojo presencialmente"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/luta-moderno-sword.jpg",
     "recommendedKeywords": [
       "dojo",
       "jiu jitsu feminino",
@@ -595,7 +595,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Práticas matinais e ao pôr do sol",
       "Conheça nossos planos mensais"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/yoga-completo-yogana.jpg",
     "recommendedKeywords": [
       "yoga",
       "hatha yoga",
@@ -620,7 +620,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Aulas de flexibilidade e postura",
       "Agende sua aula experimental"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1518611012118-696072aa579a?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/yoga-fitness-exclusivo.jpg",
     "recommendedKeywords": [
       "pilates solo",
       "yoga funcional",
@@ -666,7 +666,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Comunidade acolhedora e inclusiva",
       "Comece sua jornada hoje"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1545205597-3d9d02c29597?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/yoga-agendamento-yogazone.jpg",
     "recommendedKeywords": [
       "yoga clean",
       "yoga iniciantes",
@@ -714,7 +714,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Acompanhamento e gerenciamento de obras",
       "Solicite um estudo preliminar"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/loja-suplementos-purefit.jpg",
     "recommendedKeywords": [
       "arquitetura",
       "arquiteto alto padrao",
@@ -760,7 +760,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Detalhamento de marcenaria e acabamentos",
       "Fale com o arquiteto chefe"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/arquitetura-portfolio-moderno.jpg",
     "recommendedKeywords": [
       "escritorio arquitetura",
       "aprovacao prefeitura",
@@ -782,7 +782,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Decoração de salas, quartos e cozinhas",
       "Consultoria express de interiores"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/design-interiores-fauxis.jpg",
     "recommendedKeywords": [
       "design de interiores",
       "decoradora",
@@ -852,7 +852,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Preços justos e transparentes sem pegadinhas",
       "Fale agora com o mecânico"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1486006920555-c77dce18193b?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/mecanica-completo-audeck.jpg",
     "recommendedKeywords": [
       "auto center",
       "bateria de carro",
@@ -898,7 +898,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Odontopediatria dedicada para crianças",
       "Agende sua consulta odontológica"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/dentista-criativo-dentia.jpg",
     "recommendedKeywords": [
       "implante dentario",
       "ortodontia",
@@ -921,7 +921,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Atendimento para convênios e particular",
       "Localização central e acessível"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/dentista-medicina-medicore.jpg",
     "recommendedKeywords": [
       "clinica medica",
       "consultorio medico",
@@ -944,7 +944,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Consultas veterinárias e vacinas importadas",
       "Agende o banho do seu pet pelo WhatsApp"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/petshop-completo-petz.jpg",
     "recommendedKeywords": [
       "pet shop",
       "banho e tosa",
@@ -969,7 +969,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Montagem e desmontagem de móveis planejados",
       "Orçamento sem compromisso no WhatsApp"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/marido-aluguel-portfolio.jpg",
     "recommendedKeywords": [
       "marido de aluguel",
       "pequenos reparos",
@@ -993,7 +993,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Preço combinado previamente sem surpresas",
       "Chame pelo WhatsApp agora mesmo"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/marido-aluguel-simples-reroof.jpg",
     "recommendedKeywords": [
       "reparos domesticos",
       "instalacao tv",
@@ -1016,7 +1016,7 @@ export const DRIVE_TEMPLATES_METADATA: DesktopTemplateMetadata[] = [
       "Material de primeira linha e acabamento refinado",
       "Solicite visita técnica"
     ],
-    "previewImg": "https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&auto=format&fit=crop&q=80",
+    "previewImg": "/templates-thumbs/servicos-gerais-limpo-erepair.jpg",
     "recommendedKeywords": [
       "reforma residencial",
       "pintor",

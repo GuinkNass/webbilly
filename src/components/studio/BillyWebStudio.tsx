@@ -1917,8 +1917,8 @@ export default function BillyWebStudio({
               })}
             </div>
 
-            {/* Grid dos Templates Oficiais */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-h-[520px] overflow-y-auto pr-2 scrollbar-thin">
+            {/* Grid dos Templates Oficiais (Layout Compacto de Alta Densidade) */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 max-h-[500px] overflow-y-auto pr-1.5 scrollbar-thin">
               {BILLY_DESKTOP_TEMPLATES.filter((tpl) => {
                 if (templateCategoryFilter === 'todos') return true;
                 const matchCat = (tpl.category || '').toLowerCase();
@@ -1972,40 +1972,40 @@ export default function BillyWebStudio({
                       setSelectedTemplateId(tpl.id);
                       setSiteForm((prev) => ({ ...prev, accentColor: tpl.accentColor, primaryColor: tpl.accentColor }));
                     }}
-                    className={`relative rounded-2xl border p-4 cursor-pointer transition-all duration-200 flex flex-col justify-between group overflow-hidden ${
+                    className={`relative rounded-xl border p-2.5 cursor-pointer transition-all duration-200 flex flex-col justify-between group overflow-hidden ${
                       isSelected
                         ? 'bg-[#0f1420] border-[#84cc16] ring-2 ring-[#84cc16]/40 shadow-xl'
                         : 'bg-black/40 border-white/[0.06] hover:border-white/[0.2] hover:bg-black/60'
                     }`}
                   >
-                    {/* Imagem de Capa do Template */}
-                    <div className="relative aspect-video rounded-xl overflow-hidden mb-3 bg-zinc-900 border border-white/[0.06]">
+                    {/* Imagem de Capa do Template Compacta (h-24) */}
+                    <div className="relative h-24 rounded-lg overflow-hidden mb-2 bg-zinc-900 border border-white/[0.06]">
                       <img src={tpl.previewImg} alt={tpl.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
-                      <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-black/70 backdrop-blur-md text-white border border-white/[0.1]">
+                      <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider bg-black/75 backdrop-blur-md text-white border border-white/[0.1] max-w-[85%] truncate">
                         {tpl.badge}
                       </div>
                       {isSelected && (
-                        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#84cc16] text-black flex items-center justify-center font-bold shadow-lg">
-                          <Check className="w-3.5 h-3.5" />
+                        <div className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[#84cc16] text-black flex items-center justify-center font-bold shadow-lg">
+                          <Check className="w-3 h-3" />
                         </div>
                       )}
                     </div>
 
-                    <div className="space-y-1">
-                      <span className="text-[10px] font-mono text-zinc-500 uppercase block truncate">{tpl.category}</span>
-                      <h4 className="font-extrabold text-sm text-white group-hover:text-[#a3e635] transition leading-tight truncate">
+                    <div className="space-y-0.5">
+                      <span className="text-[9px] font-mono text-zinc-500 uppercase block truncate">{tpl.category}</span>
+                      <h4 className="font-bold text-xs text-white group-hover:text-[#a3e635] transition leading-tight truncate" title={tpl.name}>
                         {tpl.name}
                       </h4>
-                      <p className="text-[11px] text-zinc-400 line-clamp-2 leading-relaxed">
+                      <p className="text-[10px] text-zinc-400 line-clamp-1 leading-snug">
                         {tpl.description}
                       </p>
                     </div>
 
-                    <div className="pt-3 mt-3 border-t border-white/[0.06] flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-zinc-500">Accent:</span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: tpl.accentColor }} />
-                        <span className="text-[10px] font-mono text-zinc-400">{tpl.accentColor}</span>
+                    <div className="pt-2 mt-2 border-t border-white/[0.06] flex items-center justify-between text-[9px]">
+                      <span className="font-mono text-zinc-500">Accent:</span>
+                      <div className="flex items-center gap-1">
+                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: tpl.accentColor }} />
+                        <span className="font-mono text-zinc-400 text-[9px]">{tpl.accentColor}</span>
                       </div>
                     </div>
                   </div>

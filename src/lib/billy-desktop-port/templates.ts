@@ -28,7 +28,7 @@ const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Galeria de estilo e cortes masculinos',
       'Botão de agendamento rápido no WhatsApp'
     ],
-    previewImg: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&auto=format&fit=crop&q=80',
+    previewImg: '/templates-thumbs/barbearia-crop-vintage.jpg',
     recommendedKeywords: ['barbearia', 'barbeiro', 'barba', 'corte masculino', 'navalha', 'bigode']
   },
   {
@@ -45,7 +45,7 @@ const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Galeria de fotos reais de transformações',
       'Depoimentos e avaliações de clientes do Google'
     ],
-    previewImg: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&auto=format&fit=crop&q=80',
+    previewImg: '/templates-thumbs/barbearia-barberon-moderno.jpg',
     recommendedKeywords: ['barber', 'degrade', 'fade', 'pigmentacao', 'estilo masculino', 'cerveja artesanal']
   },
   {
@@ -62,7 +62,7 @@ const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Galeria de transformações e fotos do espaço',
       'Botão flutuante para agendamento no WhatsApp'
     ],
-    previewImg: 'https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=800&auto=format&fit=crop&q=80',
+    previewImg: '/templates-thumbs/barbearia-hair-salon.jpg',
     recommendedKeywords: ['salao', 'cabelereiro', 'escova', 'mechas', 'colorimetria', 'unissex']
   },
   {
@@ -79,7 +79,7 @@ const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Depoimentos com fotos de antes e depois',
       'Agendamento de avaliação personalizada'
     ],
-    previewImg: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&auto=format&fit=crop&q=80',
+    previewImg: '/templates-thumbs/estetica-pureglow-spa.jpg',
     recommendedKeywords: ['estetica', 'spa', 'botox', 'harmonizacao', 'massagem', 'limpeza de pele', 'dermatologia']
   },
   {
@@ -96,7 +96,7 @@ const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Equipe clínica profissional e infraestrutura',
       'Botão direto de agendamento de consulta'
     ],
-    previewImg: 'https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?w=800&auto=format&fit=crop&q=80',
+    previewImg: '/templates-thumbs/odontologia-dentia-clinica.jpg',
     recommendedKeywords: ['dentista', 'odonto', 'implante', 'ortodontia', 'aparelho', 'clareamento', 'lente de contato']
   },
   {
@@ -113,7 +113,7 @@ const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Informações de convênios e horários de atendimento',
       'Agendamento direto pelo WhatsApp oficial'
     ],
-    previewImg: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=800&auto=format&fit=crop&q=80',
+    previewImg: '/templates-thumbs/medico-medicalguide-clinica.jpg',
     recommendedKeywords: ['medico', 'clinica', 'cardiologista', 'pediatra', 'ginecologista', 'oftalmologista', 'consulta']
   },
   {
@@ -130,7 +130,7 @@ const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Galeria gastronômica e fotos de ambiente',
       'Reservas e pedidos no WhatsApp'
     ],
-    previewImg: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&auto=format&fit=crop&q=80',
+    previewImg: '/templates-thumbs/restaurante-foores-gourmet.jpg',
     recommendedKeywords: ['restaurante', 'gastronomia', 'chef', 'jantar', 'almoço', 'rodizio', 'churrascaria']
   },
   {
@@ -147,7 +147,7 @@ const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Horários de atendimento e reservas',
       'Seção de localização com mapa integrado'
     ],
-    previewImg: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800&auto=format&fit=crop&q=80',
+    previewImg: '/templates-thumbs/restaurante-sumi-culinaria.jpg',
     recommendedKeywords: ['sushi', 'japones', 'temaki', 'sashimi', 'rodizio oriental', 'peixe cru', 'comida japonesa']
   },
   {
@@ -164,7 +164,7 @@ const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Galeria de ambiente e carta de vinhos',
       'Localização no mapa e pedidos via WhatsApp'
     ],
-    previewImg: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&auto=format&fit=crop&q=80',
+    previewImg: '/templates-thumbs/restaurante-elroyale-cafe.jpg',
     recommendedKeywords: ['bistro', 'gourmet', 'alta gastronomia', 'massa', 'vinhos', 'frances']
   },
   {
@@ -181,7 +181,7 @@ const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Mapa integrado e botões de contato',
       'Reservas de mesa e lista VIP'
     ],
-    previewImg: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=800&auto=format&fit=crop&q=80',
+    previewImg: '/templates-thumbs/bar-oldstory-whiskey.jpg',
     recommendedKeywords: ['hamburgueria', 'burger', 'bar', 'chopp', 'cervejaria', 'petiscaria', 'pub']
   },
   {
@@ -198,7 +198,7 @@ const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Galeria do salão e fotos de chopeiras',
       'Agendamento de mesas e eventos'
     ],
-    previewImg: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=800&auto=format&fit=crop&q=80',
+    previewImg: '/templates-thumbs/pub-tavern-irish.jpg',
     recommendedKeywords: ['pub', 'choperia', 'cerveja artesanal', 'musica ao vivo', 'rock', 'happy hour']
   },
   {
@@ -215,7 +215,7 @@ const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Horários de funcionamento e localização',
       'Pedidos rápidos para retirada e entrega'
     ],
-    previewImg: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&auto=format&fit=crop&q=80',
+    previewImg: '/templates-thumbs/bistro-granny-cafe.jpg',
     recommendedKeywords: ['confeitaria', 'doceria', 'bolo', 'torta', 'cafe', 'padaria', 'brunch']
   },
   {
@@ -232,7 +232,7 @@ const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Galeria de fotos de produtos frescos',
       'Integração de pedidos pelo WhatsApp'
     ],
-    previewImg: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&auto=format&fit=crop&q=80',
+    previewImg: '/templates-thumbs/cafezone-coffee-shop.jpg',
     recommendedKeywords: ['cafeteria', 'espresso', 'cappuccino', 'graos especiais', 'cafe da manha']
   },
   {
@@ -249,7 +249,7 @@ const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Galeria de clientes de quatro patas',
       'Botão de emergência 24h no WhatsApp'
     ],
-    previewImg: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800&auto=format&fit=crop&q=80',
+    previewImg: '/templates-thumbs/petshop-petly-veterinaria.jpg',
     recommendedKeywords: ['pet shop', 'veterinaria', 'banho e tosa', 'cao', 'gato', 'filhote', 'racao']
   },
   {
@@ -266,7 +266,7 @@ const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Estatísticas de aprovação e diferenciais',
       'Botão de matrícula rápida direto no WhatsApp'
     ],
-    previewImg: 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?w=800&auto=format&fit=crop&q=80',
+    previewImg: '/templates-thumbs/autoescola-drivepro.jpg',
     recommendedKeywords: ['autoescola', 'cfc', 'cnh', 'carteira de motorista', 'habilitacao', 'instrutor']
   },
   {
@@ -283,7 +283,7 @@ const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Pedido de orçamento com envio de medidas pelo WhatsApp',
       'Garantia de fabricação e normas técnicas'
     ],
-    previewImg: 'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?w=800&auto=format&fit=crop&q=80',
+    previewImg: '/templates-thumbs/serralheria-welbim-soldagem.jpg',
     recommendedKeywords: ['serralheria', 'solda', 'portao', 'grade', 'estrutura metalica', 'corrimão', 'calhas']
   },
   {
@@ -300,7 +300,7 @@ const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Formulário para diagnóstico empresarial',
       'Agendamento de reunião estratégica'
     ],
-    previewImg: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&auto=format&fit=crop&q=80',
+    previewImg: '/templates-thumbs/consultoria-financeira-fo.jpg',
     recommendedKeywords: [
       'contabilidade',
       'advogado',
@@ -335,7 +335,7 @@ const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Grid de produtos/serviços com botões de pedido direto',
       'Seção de depoimentos e prova social 5 estrelas'
     ],
-    previewImg: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&auto=format&fit=crop&q=80',
+    previewImg: '/templates-thumbs/commercial-vibrant.jpg',
     recommendedKeywords: ['comercio', 'loja', 'roupa', 'calcados', 'vendas', 'produtos', 'distribuidora', 'geral', 'mercado', 'servico']
   },
   {
@@ -352,7 +352,7 @@ const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Grid de galeria com zoom suave e lightbox nativo',
       'Seção de serviços com cards em glassmorphism'
     ],
-    previewImg: 'https://images.unsplash.com/photo-1598256989800-fe5f95da9787?w=800&auto=format&fit=crop&q=80',
+    previewImg: '/templates-thumbs/portfolio-dark.jpg',
     recommendedKeywords: ['tattoo', 'tatuagem', 'piercing', 'fotografia', 'designer', 'arte', 'fotografo']
   },
   {
@@ -369,7 +369,7 @@ const BASE_DESKTOP_TEMPLATES: DesktopTemplate[] = [
       'Mosaico assimétrico para fotos de projetos',
       'Chamada para ação sutil e elegante'
     ],
-    previewImg: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&auto=format&fit=crop&q=80',
+    previewImg: '/templates-thumbs/studio-minimal.jpg',
     recommendedKeywords: ['arquitetura', 'design de interiores', 'marcenaria', 'moveis planejados', 'decoracao']
   }
 ];
