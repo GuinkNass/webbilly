@@ -488,6 +488,7 @@ export interface DatabaseSchema {
   clientAccounts?: ClientAccountRecord[];
   siteEditRequests?: SiteEditRequestRecord[];
   adminAffiliateTools?: AdminAffiliateToolRecord[];
+  siteDailyStats?: SiteDailyStatRecord[];
   platformPricing?: {
     id: string;
     monthly_plan_price: number;
@@ -497,6 +498,20 @@ export interface DatabaseSchema {
     affiliate_bonus_percent: number;
     updated_at?: string;
   };
+}
+
+export interface SiteDailyStatRecord {
+  id: string;
+  domain: string;
+  site_id?: string | null;
+  stat_date: string; // YYYY-MM-DD
+  page_views: number;
+  unique_visitors: number;
+  whatsapp_clicks: number;
+  mobile_views: number;
+  desktop_views: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export function getDefaultSubscriptions(): SubscriptionRecord[] {

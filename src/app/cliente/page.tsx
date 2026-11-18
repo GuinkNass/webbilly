@@ -28,7 +28,13 @@ import {
   Layers,
   FileText,
   Calendar,
-  DollarSign
+  DollarSign,
+  Eye,
+  Users,
+  MessageCircle,
+  Smartphone,
+  TrendingUp,
+  BarChart3
 } from 'lucide-react';
 
 interface ClientAccount {
@@ -116,6 +122,25 @@ export default function ClienteDashboardPage() {
 
   const formattedExtraPrice = `R$ ${extraEditPrice.toFixed(2).replace('.', ',')}`;
   const formattedMonthlyPrice = `R$ ${monthlyPlanPrice.toFixed(2).replace('.', ',')}`;
+
+  // Analytics & Cliques WhatsApp
+  const [analytics, setAnalytics] = useState<any | null>(null);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+  const [hoveredDay, setHoveredDay] = useState<any | null>(null);
+
+  const fetchAnalytics = async () => {
+    setLoadingAnalytics(true);
+    try {
+      const res = await fetch('/api/cliente/analytics');
+      if (res.ok) {
+        const d = await res.json();
+        setAnalytics(d.analytics || null);
+      }
+    } catch (_) {}
+    finally {
+      setLoadingAnalytics(false);
+    }
+  };
 
   // Affiliate Tools
   const [tools, setTools] = useState<AffiliateTool[]>([]);
@@ -221,6 +246,7 @@ export default function ClienteDashboardPage() {
 
   useEffect(() => {
     fetchProfile();
+    fetchAnalytics();
     fetch('/api/pricing')
       .then(res => res.json())
       .then(d => {
@@ -234,6 +260,7 @@ export default function ClienteDashboardPage() {
 
   useEffect(() => {
     if (account) {
+      if (activeTab === 'status') fetchAnalytics();
       if (activeTab === 'alteracoes') fetchEdits();
       if (activeTab === 'financeiro') fetchBilling();
       if (activeTab === 'ferramentas') fetchTools();
@@ -591,6 +618,222 @@ export default function ClienteDashboardPage() {
                 <div className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
                   Ciclo de 30 dias para recarregar 3 alterações
                 </div>
+              </div>
+            </div>
+
+            {/* ========================================================================= */}
+            {/* SEÇÃO ANALYTICS: DESEMPENHO & ACESSOS DO SEU SITE */}
+            {/* ========================================================================= */}
+            <div className="p-6 rounded-2xl border shadow-xs space-y-6" style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-strong)' }}>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="p-2 rounded-xl" style={{ backgroundColor: 'var(--color-primary-soft)', color: 'var(--color-primary)' }}>
+                      <BarChart3 className="w-5 h-5" />
+                    </span>
+                    <h3 className="text-base sm:text-lg font-bold tracking-tight" style={{ color: 'var(--text-main)' }}>
+                      Desempenho & Acessos do Seu Site
+                    </h3>
+                  </div>
+                  <p className="text-xs sm:text-sm" style={{ color: 'var(--text-muted)' }}>
+                    Métricas consolidadas de visitas reais e conversões para o seu WhatsApp oficial nos últimos 30 dias.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={fetchAnalytics}
+                  disabled={loadingAnalytics}
+                  className="self-start sm:self-auto inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all hover:opacity-80 cursor-pointer disabled:opacity-50"
+                  style={{ borderColor: 'var(--border-strong)', color: 'var(--text-main)', backgroundColor: 'var(--bg-app)' }}
+                  title="Atualizar métricas de acesso"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loadingAnalytics ? 'animate-spin' : ''}`} />
+                  <span>{loadingAnalytics ? 'Atualizando...' : 'Atualizar'}</span>
+                </button>
+              </div>
+
+              {/* 4 Cards de Métricas Principais */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                {/* Card 1: Visitas Hoje */}
+                <div className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border-subtle)' }}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Visitas Hoje</span>
+                    <div className="p-1.5 rounded-lg bg-sky-500/10 text-sky-500">
+                      <Eye className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="mt-2 text-2xl sm:text-3xl font-black font-mono" style={{ color: 'var(--text-main)' }}>
+                    {analytics?.todayViews || 0}
+                  </div>
+                  <div className="mt-1 text-[11px] font-semibold text-sky-600 dark:text-sky-400">
+                    {analytics?.todayUniques || 0} visitante(s) único(s)
+                  </div>
+                </div>
+
+                {/* Card 2: Visitas 30 Dias */}
+                <div className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border-subtle)' }}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Visitas (30 dias)</span>
+                    <div className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-500">
+                      <Users className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="mt-2 text-2xl sm:text-3xl font-black font-mono" style={{ color: 'var(--text-main)' }}>
+                    {analytics?.totalViews30d || 0}
+                  </div>
+                  <div className="mt-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
+                    {analytics?.totalUniques30d || 0} pessoas diferentes
+                  </div>
+                </div>
+
+                {/* Card 3: Cliques WhatsApp */}
+                <div className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border-subtle)' }}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Cliques WhatsApp (30d)</span>
+                    <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500">
+                      <MessageCircle className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="mt-2 text-2xl sm:text-3xl font-black font-mono text-emerald-500">
+                    {analytics?.totalWhatsapp30d || 0}
+                  </div>
+                  <div className="mt-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                    {analytics?.todayWhatsapp ? `+${analytics.todayWhatsapp} hoje` : 'Conversões diretas'}
+                  </div>
+                </div>
+
+                {/* Card 4: % Mobile */}
+                <div className="p-4 rounded-xl border" style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border-subtle)' }}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>% Acessos Celular</span>
+                    <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500">
+                      <Smartphone className="w-4 h-4" />
+                    </div>
+                  </div>
+                  <div className="mt-2 text-2xl sm:text-3xl font-black font-mono text-amber-500">
+                    {analytics?.mobilePercent ?? 0}%
+                  </div>
+                  <div className="mt-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 truncate">
+                    {analytics?.mobileViews30d || 0} celular • {analytics?.desktopViews30d || 0} PC
+                  </div>
+                </div>
+              </div>
+
+              {/* Gráfico de Barras dos Últimos 14 Dias */}
+              <div className="p-5 rounded-xl border space-y-4" style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border-subtle)' }}>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+                    <span className="text-xs font-bold" style={{ color: 'var(--text-main)' }}>
+                      Evolução Diária de Visitas e Conversões no WhatsApp (Últimos 14 dias)
+                    </span>
+                  </div>
+
+                  {/* Legenda */}
+                  <div className="flex items-center gap-4 text-[11px]">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-3 h-3 rounded-sm bg-sky-500"></span>
+                      <span style={{ color: 'var(--text-secondary)' }}>Visitas</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-3 h-3 rounded-sm bg-emerald-500"></span>
+                      <span style={{ color: 'var(--text-secondary)' }}>Cliques WhatsApp</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Área do Gráfico */}
+                {(() => {
+                  const days = analytics?.dailyStats || [];
+                  const maxVal = Math.max(
+                    ...days.map((d: any) => Math.max(d.views || 0, d.whatsapp || 0)),
+                    5
+                  );
+
+                  return (
+                    <div className="space-y-2 pt-4">
+                      <div className="h-44 sm:h-52 w-full flex items-end justify-between gap-1 sm:gap-2 px-1 relative">
+                        {/* Linhas de grade de fundo */}
+                        <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20">
+                          <div className="border-b border-dashed" style={{ borderColor: 'var(--text-muted)' }} />
+                          <div className="border-b border-dashed" style={{ borderColor: 'var(--text-muted)' }} />
+                          <div className="border-b border-dashed" style={{ borderColor: 'var(--text-muted)' }} />
+                        </div>
+
+                        {days.map((day: any) => {
+                          const viewsHeight = day.views > 0 ? Math.max((day.views / maxVal) * 100, 8) : 3;
+                          const waHeight = day.whatsapp > 0 ? Math.max((day.whatsapp / maxVal) * 100, 8) : 3;
+                          const isHovered = hoveredDay?.date === day.date;
+
+                          return (
+                            <div
+                              key={day.date}
+                              onMouseEnter={() => setHoveredDay(day)}
+                              onMouseLeave={() => setHoveredDay(null)}
+                              className="flex-1 h-full flex flex-col justify-end items-center relative group cursor-pointer"
+                            >
+                              {/* Tooltip flutuante no hover */}
+                              {isHovered && (
+                                <div
+                                  className="absolute bottom-full mb-2 z-30 px-3 py-2 rounded-xl text-[11px] shadow-xl border whitespace-nowrap animate-in fade-in zoom-in-95 pointer-events-none"
+                                  style={{
+                                    backgroundColor: 'var(--bg-surface)',
+                                    borderColor: 'var(--border-strong)',
+                                    color: 'var(--text-main)'
+                                  }}
+                                >
+                                  <div className="font-bold border-b pb-1 mb-1 font-mono text-[10px]" style={{ borderColor: 'var(--border-subtle)' }}>
+                                    {day.date} ({day.label})
+                                  </div>
+                                  <div className="text-sky-500 font-semibold flex items-center justify-between gap-3">
+                                    <span>Visitas:</span>
+                                    <strong>{day.views} ({day.uniques} únicos)</strong>
+                                  </div>
+                                  <div className="text-emerald-500 font-semibold flex items-center justify-between gap-3">
+                                    <span>Cliques WhatsApp:</span>
+                                    <strong>{day.whatsapp}</strong>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Coluna com as 2 barras emparelhadas */}
+                              <div className="w-full max-w-[28px] h-full flex items-end justify-center gap-0.5 sm:gap-1">
+                                {/* Barra Visitas */}
+                                <div
+                                  style={{ height: `${viewsHeight}%` }}
+                                  className={`w-1/2 rounded-t-sm transition-all duration-200 ${
+                                    day.views > 0
+                                      ? 'bg-sky-500 group-hover:bg-sky-400'
+                                      : 'bg-slate-300 dark:bg-slate-800'
+                                  }`}
+                                />
+                                {/* Barra WhatsApp */}
+                                <div
+                                  style={{ height: `${waHeight}%` }}
+                                  className={`w-1/2 rounded-t-sm transition-all duration-200 ${
+                                    day.whatsapp > 0
+                                      ? 'bg-emerald-500 group-hover:bg-emerald-400'
+                                      : 'bg-slate-300 dark:bg-slate-800'
+                                  }`}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Labels dos Dias (Eixo X) */}
+                      <div className="flex justify-between gap-1 sm:gap-2 px-1 text-[10px] sm:text-[11px] font-mono text-center" style={{ color: 'var(--text-muted)' }}>
+                        {days.map((day: any) => (
+                          <div key={day.date} className="flex-1 truncate">
+                            {day.label}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 

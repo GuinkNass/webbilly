@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAdmin } from '@/contexts/AdminContext';
 import DashboardCharts from '@/components/DashboardCharts';
@@ -16,7 +16,13 @@ import {
   Sparkles,
   Server,
   Layers,
-  ArrowUpRight
+  ArrowUpRight,
+  Eye,
+  MessageCircle,
+  BarChart3,
+  Smartphone,
+  RefreshCw,
+  Trophy
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
@@ -51,6 +57,28 @@ export default function AdminDashboardPage() {
   const totalLicenses = (data?.licenses || []).length;
   const activeLicenses = (data?.licenses || []).filter((l: any) => l.status === 'ATIVO').length;
   const pendingCandidates = (data?.candidates || []).filter((c: any) => c.status === 'PENDENTE').length;
+
+  // Ranking de Audiência dos Sites
+  const [ranking, setRanking] = useState<any[]>([]);
+  const [loadingRanking, setLoadingRanking] = useState(false);
+
+  const fetchRanking = async () => {
+    setLoadingRanking(true);
+    try {
+      const res = await fetch('/api/admin/analytics/ranking');
+      if (res.ok) {
+        const json = await res.json();
+        setRanking(json.ranking || []);
+      }
+    } catch (_) {}
+    finally {
+      setLoadingRanking(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRanking();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -123,6 +151,145 @@ export default function AdminDashboardPage() {
         subscriptions={data?.subscriptions}
         metrics={data?.stats}
       />
+
+      {/* =========================================================================
+          RANKING DE AUDIÊNCIA • SITES MAIS ACESSADOS (ÚLTIMOS 30 DIAS)
+         ========================================================================= */}
+      <div className="p-6 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-white/[0.06]">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                <Trophy className="w-4 h-4" />
+              </span>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
+                Ranking de Audiência • Sites Mais Acessados (Últimos 30 dias)
+              </h3>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Top 10 sites ordenados por visualizações de página e conversões registradas no botão do WhatsApp.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={fetchRanking}
+            disabled={loadingRanking}
+            className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-white bg-slate-50 dark:bg-white/[0.04] transition cursor-pointer disabled:opacity-50"
+            title="Atualizar ranking de audiência"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loadingRanking ? 'animate-spin' : ''}`} />
+            <span>{loadingRanking ? 'Atualizando...' : 'Atualizar'}</span>
+          </button>
+        </div>
+
+        {loadingRanking && ranking.length === 0 ? (
+          <div className="p-8 text-center text-xs text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2">
+            <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+            <span>Calculando audiência e cliques nos sites...</span>
+          </div>
+        ) : ranking.length === 0 ? (
+          <div className="p-8 text-center rounded-xl bg-slate-50 dark:bg-[#14161f] border border-dashed border-slate-200 dark:border-white/[0.08] space-y-2">
+            <BarChart3 className="w-8 h-8 text-slate-400 dark:text-slate-600 mx-auto" />
+            <div className="text-sm font-bold text-slate-700 dark:text-slate-300">Nenhum acesso registrado nos últimos 30 dias</div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+              Assim que os clientes começarem a acessar os sites e clicar no botão do WhatsApp, o ranking de audiência será computado automaticamente aqui.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 dark:border-white/[0.06] text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono">
+                  <th className="py-3 px-3 w-16 text-center">Pos</th>
+                  <th className="py-3 px-4">Comércio & Domínio Oficial</th>
+                  <th className="py-3 px-4">Consultor Responsável</th>
+                  <th className="py-3 px-4 text-right">Visitas Totais</th>
+                  <th className="py-3 px-4 text-right">Visitantes Únicos</th>
+                  <th className="py-3 px-4 text-right">Cliques WhatsApp</th>
+                  <th className="py-3 px-4 text-center">% Celular</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04]">
+                {ranking.map((item: any) => {
+                  const medalsMap: Record<number, { text: string; bg: string }> = {
+                    1: { text: '🥇 1º', bg: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
+                    2: { text: '🥈 2º', bg: 'bg-slate-300/20 text-slate-200 border-slate-400/40' },
+                    3: { text: '🥉 3º', bg: 'bg-orange-500/20 text-orange-300 border-orange-500/40' }
+                  };
+                  const medal = medalsMap[item.rank] || { text: `#${item.rank}`, bg: 'bg-slate-800/40 text-slate-400 border-white/5' };
+
+                  return (
+                    <tr key={item.domain} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition">
+                      <td className="py-3.5 px-3 text-center">
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border font-mono ${medal.bg}`}>
+                          {medal.text}
+                        </span>
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <div className="space-y-0.5">
+                          <span className="font-bold text-slate-900 dark:text-white text-xs block">
+                            {item.clientName}
+                          </span>
+                          <a
+                            href={item.siteUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sky-400 hover:text-sky-300 font-mono text-[11px] inline-flex items-center gap-1 hover:underline"
+                          >
+                            <span>{item.domain}</span>
+                            <ExternalLink className="w-3 h-3 shrink-0" />
+                          </a>
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <div className="space-y-0.5">
+                          <span className="font-semibold text-slate-700 dark:text-slate-300 text-xs block">
+                            {item.operatorName}
+                          </span>
+                          <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400">
+                            {item.operatorId}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-4 text-right font-mono font-bold text-slate-900 dark:text-white">
+                        <span className="inline-flex items-center gap-1">
+                          <Eye className="w-3.5 h-3.5 text-sky-400" />
+                          {item.pageViews.toLocaleString('pt-BR')}
+                        </span>
+                      </td>
+
+                      <td className="py-3.5 px-4 text-right font-mono text-indigo-400 font-semibold">
+                        <span className="inline-flex items-center gap-1">
+                          <Users className="w-3.5 h-3.5" />
+                          {item.uniqueVisitors.toLocaleString('pt-BR')}
+                        </span>
+                      </td>
+
+                      <td className="py-3.5 px-4 text-right font-mono font-bold text-emerald-400">
+                        <span className="inline-flex items-center gap-1">
+                          <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
+                          {item.whatsappClicks.toLocaleString('pt-BR')}
+                        </span>
+                      </td>
+
+                      <td className="py-3.5 px-4 text-center">
+                        <div className="inline-flex items-center gap-1.5 font-mono text-[11px] text-slate-300">
+                          <Smartphone className="w-3 h-3 text-amber-400" />
+                          <span>{item.mobilePercent}%</span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {/* =========================================================================
           ATALHOS RÁPIDOS DE SUPERVISÃO OPERACIONAL

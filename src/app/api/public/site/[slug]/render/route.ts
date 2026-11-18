@@ -4,6 +4,7 @@ import fs from 'fs';
 import { readDb } from '@/lib/db';
 import { sanitizeSlug, getSiteFromCloudStorage, renderPreparationHtml } from '@/lib/site-storage';
 import { getSupabaseAdmin } from '@/lib/supabase';
+import { injectAnalyticsTracker } from '@/lib/analytics';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,7 +36,7 @@ export async function GET(
 
     // Se o site foi publicado e tem o HTML exato gerado no Studio
     if (cloudSite && cloudSite.isPublished && cloudSite.html) {
-      return new NextResponse(cloudSite.html, {
+      return new NextResponse(injectAnalyticsTracker(cloudSite.html), {
         status: 200,
         headers: {
           'Content-Type': 'text/html; charset=utf-8',
@@ -65,7 +66,7 @@ export async function GET(
             });
           }
           if (subRow.html_content || subRow.html) {
-            return new NextResponse(subRow.html_content || subRow.html, {
+            return new NextResponse(injectAnalyticsTracker(subRow.html_content || subRow.html), {
               status: 200,
               headers: {
                 'Content-Type': 'text/html; charset=utf-8',
@@ -84,7 +85,7 @@ export async function GET(
       const diskPath = path.join(process.cwd(), 'public', 'generated-sites', cleanSlug, 'index.html');
       if (fs.existsSync(diskPath)) {
         const html = fs.readFileSync(diskPath, 'utf-8');
-        return new NextResponse(html, {
+        return new NextResponse(injectAnalyticsTracker(html), {
           status: 200,
           headers: {
             'Content-Type': 'text/html; charset=utf-8',
@@ -98,7 +99,7 @@ export async function GET(
     try {
       const db = readDb();
       if (db.generatedSites && db.generatedSites[cleanSlug]) {
-        return new NextResponse(db.generatedSites[cleanSlug], {
+        return new NextResponse(injectAnalyticsTracker(db.generatedSites[cleanSlug]), {
           status: 200,
           headers: {
             'Content-Type': 'text/html; charset=utf-8',

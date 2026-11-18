@@ -4,6 +4,7 @@ import { getBillyRealTemplateHtml } from '../billy-real-templates';
 import { formatHeaderName } from '../desktop-templates';
 import { safeParseGeminiJson } from '../gemini-json';
 import { compileTemplateWithCheerio, StructuredSiteJson, SiteCompilerOptions } from '../dom-template-compiler';
+import { injectAnalyticsTracker } from '@/lib/analytics';
 
 export interface ServiceItem {
   name: string;
@@ -603,6 +604,9 @@ export function adaptDesktopTemplateLocally(
       result = `${result}\n${floatingWhatsAppHtml}`;
     }
   }
+
+  // Injeção do analisador nativo de acessos e cliques no WhatsApp
+  result = injectAnalyticsTracker(result);
 
   // Limpeza e blindagem final contra imagens quebradas
   result = result.replace(/<img(?![^>]*\bonerror=)([^>]*?)>/gi, '<img$1 onerror="this.style.display=\'none\'">');
