@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getClientUserFromRequest } from '@/lib/client-auth';
 import { findClientAccountById, createOrUpdateClientAccount } from '@/lib/supabase';
 import { findOrCreateCustomer, createExtraEditPayment } from '@/services/asaas';
+import { getPlatformPricing } from '@/lib/pricing';
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,6 +15,9 @@ export async function POST(req: NextRequest) {
     if (!account) {
       return NextResponse.json({ error: 'Conta não encontrada.' }, { status: 404 });
     }
+
+    const pricing = await getPlatformPricing();
+    const editPrice = pricing.extra_edit_price;
 
     let customerId = account.asaas_customer_id;
     if (!customerId) {
@@ -32,7 +36,7 @@ export async function POST(req: NextRequest) {
       siteSlug: account.site_slug,
       operatorId: account.operator_id || undefined,
       clientAccountId: account.id,
-      value: 19.90
+      value: editPrice
     });
 
     return NextResponse.json({
@@ -42,7 +46,7 @@ export async function POST(req: NextRequest) {
       pixPayload: charge.pixPayload,
       pixQrCodeImage: charge.pixQrCodeImage,
       dueDate: charge.dueDate,
-      value: 19.90
+      value: editPrice
     });
   } catch (err: any) {
     console.error('[Cliente Comprar Alteração] Erro:', err);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
 import { readDb } from '@/lib/db';
 import { sanitizeDomain } from '@/lib/site-storage';
+import { getPlatformPricing } from '@/lib/pricing';
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,11 +14,13 @@ export async function POST(req: NextRequest) {
     const { domain: rawDomain, type } = await req.json();
     const domain = sanitizeDomain(rawDomain);
 
+    const pricing = await getPlatformPricing();
     const isRenewal = type === 'annual_renewal';
-    const amount = isRenewal ? 70.0 : 29.9;
+    const isMonthly = type === 'monthly_subscription';
+    const amount = isRenewal ? 70.0 : (isMonthly ? pricing.monthly_plan_price : pricing.extra_edit_price);
     const title = isRenewal
       ? `Renovação Anual Domínio e Manutenção (${domain})`
-      : `Atualização Avulsa Sob Demanda (${domain})`;
+      : (isMonthly ? `Mensalidade Presença Digital (${domain})` : `Atualização Avulsa Sob Demanda (${domain})`);
 
     const db = readDb();
     const sub = (db.subscriptions || []).find(

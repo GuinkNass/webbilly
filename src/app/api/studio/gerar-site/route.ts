@@ -5,6 +5,7 @@ import { readDb, writeDb } from '@/lib/db';
 import { sanitizeSlug, saveSiteToCloudStorage, persistSiteImages } from '@/lib/site-storage';
 import { getSupabaseAdmin, upsertSubscriptionInSupabase } from '@/lib/supabase';
 import { buildSiteHtml } from '@/lib/billy-desktop-port/generator';
+import { getPlatformPricing, formatBRL } from '@/lib/pricing';
 
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
@@ -163,6 +164,11 @@ export async function POST(req: NextRequest) {
         updatedAt: new Date().toISOString()
       };
 
+      // Preços dinâmicos da plataforma
+      const pricing = await getPlatformPricing();
+      const monthlyPrice = pricing.monthly_plan_price;
+      const formattedMonthly = formatBRL(monthlyPrice);
+
       if (!Array.isArray(db.subscriptions)) {
         db.subscriptions = [];
       }
@@ -176,7 +182,7 @@ export async function POST(req: NextRequest) {
         clientEmail: `${cleanSlug}@webbilly.com.br`,
         operatorToken: operatorId,
         operatorName: operatorName,
-        monthlyPrice: 29.9,
+        monthlyPrice: monthlyPrice,
         status: 'draft' as const,
         site_status: 'draft',
         deployedUrl: `/api/public/site/${cleanSlug}/render`,
@@ -206,6 +212,10 @@ export async function POST(req: NextRequest) {
       status: 'draft'
     });
 
+    const pricing = await getPlatformPricing();
+    const monthlyPrice = pricing.monthly_plan_price;
+    const formattedMonthly = formatBRL(monthlyPrice);
+
     const subRecord = {
       id: `sub_${cleanSlug}`,
       siteSlug: cleanSlug,
@@ -215,7 +225,7 @@ export async function POST(req: NextRequest) {
       operatorId: operatorId,
       operatorToken: operatorId,
       operatorName: operatorName,
-      monthlyPrice: 29.9,
+      monthlyPrice: monthlyPrice,
       status: 'draft' as const,
       site_status: 'draft',
       deployedUrl: `/api/public/site/${cleanSlug}/render`,
@@ -243,7 +253,7 @@ ${siteUrl}
 
 Hoje a maioria das pessoas pesquisa antes no Google ao procurar por ${niche} em ${city}. Ter esse endereço no ar passa muito mais autoridade imediata e ajuda a fechar agendamentos pelo WhatsApp.
 
-Como a página já está montada, preparamos uma condição especial de lançamento por apenas R$ 29,90/mês, sem taxa de criação e sem fidelidade:
+Como a página já está montada, preparamos uma condição especial de lançamento por apenas ${formattedMonthly}/mês, sem taxa de criação e sem fidelidade:
 
 ${proposalUrl}
 

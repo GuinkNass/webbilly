@@ -111,6 +111,11 @@ export default function ClienteDashboardPage() {
   const [showBuyExtraModal, setShowBuyExtraModal] = useState(false);
   const [buyingExtra, setBuyingExtra] = useState(false);
   const [buyExtraPixData, setBuyExtraPixData] = useState<{ payload?: string; qrCode?: string; invoiceUrl?: string } | null>(null);
+  const [extraEditPrice, setExtraEditPrice] = useState<number>(39.90);
+  const [monthlyPlanPrice, setMonthlyPlanPrice] = useState<number>(29.90);
+
+  const formattedExtraPrice = `R$ ${extraEditPrice.toFixed(2).replace('.', ',')}`;
+  const formattedMonthlyPrice = `R$ ${monthlyPlanPrice.toFixed(2).replace('.', ',')}`;
 
   // Affiliate Tools
   const [tools, setTools] = useState<AffiliateTool[]>([]);
@@ -216,6 +221,15 @@ export default function ClienteDashboardPage() {
 
   useEffect(() => {
     fetchProfile();
+    fetch('/api/pricing')
+      .then(res => res.json())
+      .then(d => {
+        if (d?.pricing) {
+          if (d.pricing.extra_edit_price) setExtraEditPrice(Number(d.pricing.extra_edit_price));
+          if (d.pricing.monthly_plan_price) setMonthlyPlanPrice(Number(d.pricing.monthly_plan_price));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -542,7 +556,7 @@ export default function ClienteDashboardPage() {
                 <div className="mt-2 text-base font-bold" style={{ color: 'var(--text-main)' }}>
                   {account.planType === 'custom_domain_490'
                     ? 'Site Completo + Domínio Próprio'
-                    : 'Mensalidade R$ 29,90 / mês'}
+                    : `Mensalidade ${formattedMonthlyPrice} / mês`}
                 </div>
                 <div className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
                   {account.planType === 'custom_domain_490'
@@ -624,7 +638,7 @@ export default function ClienteDashboardPage() {
                 <p className="text-xs sm:text-sm max-w-xl" style={{ color: 'var(--text-muted)' }}>
                   {account.planType === 'monthly_29_90'
                     ? `Seu plano inclui 3 alterações gratuitas por mês. Você utilizou ${account.monthlyEditsUsed} de 3 neste ciclo. Sua cota renova em ${resetDateFormatted}.`
-                    : `No plano Domínio Próprio, utilize seus créditos avulsos ou adquira alterações adicionais por R$ 19,90 via Pix.`}
+                    : `No plano Domínio Próprio, utilize seus créditos avulsos ou adquira alterações adicionais por ${formattedExtraPrice} via Pix.`}
                 </p>
                 {account.extraEditCredits > 0 && (
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20">
@@ -653,7 +667,7 @@ export default function ClienteDashboardPage() {
                   style={{ borderColor: 'var(--border-strong)', color: 'var(--text-main)', backgroundColor: 'var(--bg-app)' }}
                 >
                   <ShoppingCart className="w-4 h-4 text-emerald-500" />
-                  <span>Comprar Alteração Extra (R$ 19,90)</span>
+                  <span>Comprar Alteração Extra ({formattedExtraPrice})</span>
                 </button>
               </div>
             </div>
@@ -1189,13 +1203,13 @@ export default function ClienteDashboardPage() {
             {!buyExtraPixData ? (
               <div className="space-y-4">
                 <div className="p-4 rounded-xl border text-xs leading-relaxed" style={{ backgroundColor: 'var(--bg-app)', borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}>
-                  Sua cota mensal de alterações gratuitas foi utilizada. Você pode adquirir 1 crédito de alteração avulsa por apenas <strong>R$ 19,90 via Pix</strong>.
+                  Sua cota mensal de alterações gratuitas foi utilizada. Você pode adquirir 1 crédito de alteração avulsa por apenas <strong>{formattedExtraPrice} via Pix</strong>.
                   O crédito é liberado automaticamente após a confirmação do pagamento.
                 </div>
 
                 <div className="flex items-center justify-between p-3 rounded-xl border font-bold text-sm" style={{ backgroundColor: 'var(--color-primary-soft)', borderColor: 'rgba(20,120,240,0.3)', color: 'var(--color-primary)' }}>
                   <span>Valor da Alteração Avulsa:</span>
-                  <span>R$ 19,90</span>
+                  <span>{formattedExtraPrice}</span>
                 </div>
 
                 <button
@@ -1210,7 +1224,7 @@ export default function ClienteDashboardPage() {
                   ) : (
                     <>
                       <QrCode className="w-4 h-4" />
-                      <span>Gerar Pix de R$ 19,90</span>
+                      <span>Gerar Pix de {formattedExtraPrice}</span>
                     </>
                   )}
                 </button>

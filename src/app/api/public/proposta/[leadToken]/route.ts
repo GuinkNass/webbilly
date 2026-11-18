@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readDb } from '@/lib/db';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { getSiteFromCloudStorage, formatSlugToTitle } from '@/lib/site-storage';
+import { getPlatformPricing } from '@/lib/pricing';
 
 function extractSlugFromLeadToken(token: string): string {
   if (!token) return '';
@@ -108,10 +109,12 @@ export async function GET(
       { domain: `${suggestedDomain}oficial.com.br`, available: true, price: 'R$ 40,00/ano' }
     ];
 
+    const pricing = await getPlatformPricing();
     const pixKey = db.adminSettings?.pixGatewayKey || 'pix@billysuite.com.br';
     const pixName = 'BILLY SUITE';
     const pixCity = 'SAO PAULO';
-    const amount = 490;
+    const amount = pricing.custom_domain_price;
+    const monthlyPrice = pricing.monthly_plan_price;
     const txid = `PROPOSTA${cleanToken.slice(0, 16).toUpperCase()}`;
 
     // Payload básico Copia e Cola Pix
@@ -134,6 +137,11 @@ export async function GET(
       leadToken: cleanToken,
       slug: resolvedSlug,
       isDeclined,
+      pricing: {
+        monthlyPlanPrice: monthlyPrice,
+        customDomainPrice: amount,
+        extraEditPrice: pricing.extra_edit_price
+      },
       lead: {
         title,
         category,
@@ -145,7 +153,7 @@ export async function GET(
       domains,
       subscription: {
         status: sub?.status || supaSub?.status || 'pending',
-        monthlyPrice: sub?.monthlyPrice || supaSub?.monthly_price || 29.90,
+        monthlyPrice: monthlyPrice,
         checkoutUrl: asaasCheckoutUrl
       },
       pix: {

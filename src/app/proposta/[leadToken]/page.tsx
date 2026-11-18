@@ -46,6 +46,11 @@ export default function ProposalPage() {
   const [declining, setDeclining] = useState(false);
   const [isDeclined, setIsDeclined] = useState(false);
 
+  // Preços dinâmicos da plataforma
+  const monthlyPriceFormatted = data?.pricing?.formattedMonthly || 'R$ 29,90';
+  const customDomainPriceFormatted = data?.pricing?.formattedDomain || (data?.pix?.amount ? `R$ ${Number(data.pix.amount).toFixed(2).replace('.', ',')}` : 'R$ 490,00');
+  const extraEditPriceFormatted = data?.pricing?.formattedExtraEdit || 'R$ 39,90';
+
   function maskCpfCnpj(v: string): string {
     const digits = v.replace(/\D/g, '');
     if (digits.length <= 11) {
@@ -338,7 +343,7 @@ export default function ProposalPage() {
           </div>
         </div>
 
-        {/* Seletor de Planos: Opção 1 (R$ 29,90/mês) vs Opção 2 (R$ 490,00 Domínio Próprio) */}
+        {/* Seletor de Planos: Opção 1 (Recorrente Subdomínio) vs Opção 2 (Domínio Próprio) */}
         <div className="bg-[#0b101c] border border-white/[0.08] rounded-2xl p-6 shadow-xl space-y-4">
           <div>
             <span className="font-mono text-[10px] uppercase tracking-wider text-sky-400 font-bold block mb-1">
@@ -346,12 +351,12 @@ export default function ProposalPage() {
             </span>
             <h2 className="text-lg font-bold text-white">Escolha o seu plano de ativação</h2>
             <p className="text-xs text-slate-300">
-              Você pode optar pela assinatura mensal de R$ 29,90 no subdomínio oficial ou pelo pacote completo com domínio próprio por 1 ano:
+              Você pode optar pela assinatura mensal de {monthlyPriceFormatted} no subdomínio oficial ou pelo pacote completo com domínio próprio por 1 ano:
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Card Opção 1: R$ 29,90/mês */}
+            {/* Card Opção 1: Mensal Recorrente */}
             <div
               onClick={() => setSelectedPlan('mensal')}
               className={`p-4 rounded-2xl border cursor-pointer transition relative ${
@@ -373,7 +378,7 @@ export default function ProposalPage() {
                 />
               </div>
               <div className="text-xl font-extrabold text-white font-mono">
-                R$ 29,90<span className="text-xs font-normal text-slate-400">/mês</span>
+                {monthlyPriceFormatted}<span className="text-xs font-normal text-slate-400">/mês</span>
               </div>
               <span className="text-xs font-bold text-slate-200 block mt-1">
                 Presença Digital Oficial (Subdomínio)
@@ -383,7 +388,7 @@ export default function ProposalPage() {
               </p>
             </div>
 
-            {/* Card Opção 2: R$ 490,00 Domínio Próprio */}
+            {/* Card Opção 2: Domínio Próprio */}
             <div
               onClick={() => setSelectedPlan('proprio')}
               className={`p-4 rounded-2xl border cursor-pointer transition relative ${
@@ -405,13 +410,13 @@ export default function ProposalPage() {
                 />
               </div>
               <div className="text-xl font-extrabold text-white font-mono">
-                R$ 490,00<span className="text-xs font-normal text-slate-400"> pagamento único</span>
+                {customDomainPriceFormatted}<span className="text-xs font-normal text-slate-400"> pagamento único</span>
               </div>
               <span className="text-xs font-bold text-slate-200 block mt-1">
                 Site Completo + Domínio .com.br por 1 Ano
               </span>
               <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
-                Domínio próprio exclusivo incluso por 1 ano. Sem mensalidade obrigatória (renovação anual de R$ 70,00/ano e alterações avulsas por R$ 29,90 sob demanda).
+                Domínio próprio exclusivo incluso por 1 ano. Sem mensalidade obrigatória (renovação anual de R$ 70,00/ano e alterações avulsas por {extraEditPriceFormatted} sob demanda).
               </p>
             </div>
           </div>
@@ -492,7 +497,7 @@ export default function ProposalPage() {
 
         {/* Bloco de Pagamento Conforme Plano Selecionado */}
         {selectedPlan === 'mensal' ? (
-          /* Checkout Opção 1: R$ 29,90/mês (Asaas Seguro) */
+          /* Checkout Opção 1: Mensal Recorrente (Asaas Seguro) */
           <div
             className={`bg-[#0b101c] border border-sky-500/30 rounded-2xl p-6 sm:p-8 shadow-xl space-y-6 transition-all ${
               !termsAccepted ? 'opacity-50 grayscale select-none pointer-events-none' : ''
@@ -504,7 +509,7 @@ export default function ProposalPage() {
                   Assinatura Recorrente Mensal • Subdomínio Oficial
                 </span>
                 <div className="text-3xl font-black text-white font-mono">
-                  R$ 29,90<span className="text-sm font-normal text-slate-400">/mês</span>
+                  {monthlyPriceFormatted}<span className="text-sm font-normal text-slate-400">/mês</span>
                 </div>
                 <span className="text-xs text-slate-400">
                   Sem taxa de adesão • Você só começa a pagar com o site pronto • Cancele quando quiser
@@ -609,7 +614,7 @@ export default function ProposalPage() {
                   ) : (
                     <>
                       <CreditCard className="w-4 h-4" />
-                      <span>Confirmar & Ir para Pagamento Seguro (R$ 29,90)</span>
+                      <span>Confirmar & Ir para Pagamento Seguro ({monthlyPriceFormatted})</span>
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
@@ -623,7 +628,7 @@ export default function ProposalPage() {
             </div>
           </div>
         ) : (
-          /* Checkout Opção 2: R$ 490,00 Pix Direto */
+          /* Checkout Opção 2: Domínio Próprio Pix Direto */
           <div
             className={`bg-[#0b101c] border border-emerald-500/30 rounded-2xl p-6 sm:p-8 shadow-xl space-y-6 transition-all ${
               !termsAccepted ? 'opacity-50 grayscale select-none pointer-events-none' : ''
@@ -635,7 +640,7 @@ export default function ProposalPage() {
                   Pacote Completo • Domínio Próprio + Site por 1 Ano
                 </span>
                 <div className="text-3xl font-black text-white font-mono">
-                  R$ 490,00
+                  {customDomainPriceFormatted}
                 </div>
                 <span className="text-xs text-slate-400">
                   1 ano de domínio próprio incluso • Renovação anual de R$ 70,00/ano • Sem mensalidade

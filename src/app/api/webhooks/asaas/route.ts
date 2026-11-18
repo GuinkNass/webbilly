@@ -10,6 +10,7 @@ import {
 } from '@/lib/supabase';
 import { setSlugSuspended } from '@/lib/site-storage';
 import { cancelAsaasSubscription, cancelAsaasPayment, cancelAllPendingCharges } from '@/services/asaas';
+import { getPlatformPricing } from '@/lib/pricing';
 
 const fallbackWebhookToken = Buffer.from(
   'd2hzZWNfS19KS1p0MTZ4SWUyN0ZRSWgzczlObU1FTVk5TEtNTmN0RGdhUGpWb0FUSQ==',
@@ -176,21 +177,26 @@ export async function POST(req: NextRequest) {
           setSlugSuspended(effectiveSlug, false);
         }
 
-        // Se for a primeira cobrança avulsa paga (R$ 29,90) e ainda não tem assinatura recorrente criada, agenda a recorrência (+30 dias)
-        const paymentValue = Number(payment.value) || 29.90;
+        // Preços dinâmicos da plataforma (Admin / Modo Teste)
+        const pricing = await getPlatformPricing();
+
+        // Se for a primeira cobrança avulsa paga e ainda não tem assinatura recorrente criada, agenda a recorrência (+30 dias)
+        const paymentValue = Number(payment.value) || pricing.monthly_plan_price;
         const isFirstInstallment =
           externalRef.includes('first_installment') ||
           !sub?.asaasSubscriptionId ||
           sub.asaasSubscriptionId.startsWith('pay_');
 
-        if (paymentValue < 100 && asaasCustId && isFirstInstallment) {
+        const isDomainPlan = externalRef.includes('proprio') || paymentValue >= (pricing.custom_domain_price * 0.85);
+
+        if (!isDomainPlan && asaasCustId && isFirstInstallment) {
           try {
             const { createSubscription } = await import('@/services/asaas');
             const recurringSub = await createSubscription({
               customerId: asaasCustId,
               siteSlug: effectiveSlug,
               operatorSerial: operatorSerial || sub?.operatorToken,
-              value: 29.90,
+              value: pricing.monthly_plan_price,
               nextDueDateDays: 30,
               description: `Mensalidade Presença Digital Oficial - ${effectiveSlug}.webbilly.com.br`
             });
@@ -199,14 +205,14 @@ export async function POST(req: NextRequest) {
                 sub.asaasSubscriptionId = recurringSub.subscriptionId;
                 (sub as any).asaas_subscription_id = recurringSub.subscriptionId;
               }
-              console.log(`[Asaas Webhook] Assinatura recorrente mensal criada com sucesso para ${effectiveSlug}: ${recurringSub.subscriptionId} (Vencimento em +30 dias)`);
+              console.log(`[Asaas Webhook] Assinatura recorrente mensal criada com sucesso para ${effectiveSlug}: ${recurringSub.subscriptionId} (Vencimento em +30 dias, valor: R$ ${pricing.monthly_plan_price})`);
             }
           } catch (recErr) {
             console.warn('[Asaas Webhook] Aviso ao criar assinatura recorrente no Asaas:', recErr);
           }
         }
 
-        // Localiza operador vinculado para registrar comissão (50% na 1ª mensalidade = R$ 14,95)
+        // Localiza operador vinculado para registrar comissão
         const opSerial = operatorSerial || sub?.operatorToken;
         const operator = opSerial
           ? db.operators.find(o => (o.serialToken || '').trim().toUpperCase() === opSerial.trim().toUpperCase())
@@ -216,13 +222,14 @@ export async function POST(req: NextRequest) {
         const alreadyCredited = db.sales.some(s => s.id === saleId);
 
         if (!alreadyCredited && operator) {
-          const val = Number(payment.value) || 29.90;
-          let comm = 14.95; // 50% de R$ 29,90 para o operador
+          const val = Number(payment.value) || pricing.monthly_plan_price;
+          const opRate = (pricing.operator_commission_percent || 50.0) / 100;
+          let comm = Number((val * opRate).toFixed(2));
           let niche = 'Assinatura Recorrente Mensal';
 
-          if (val >= 450) {
-            // Pacote Completo Domínio Próprio Opção 2 (R$ 490,00): 30% = R$ 147,00
-            comm = 147.00;
+          if (val >= (pricing.custom_domain_price * 0.85)) {
+            // Pacote Completo Domínio Próprio (Opção 2)
+            comm = Number((val * 0.30).toFixed(2)); // 30% na venda direta de domínio próprio
             niche = 'Site Completo + Domínio Próprio (Opção 2)';
             if (sub) {
               sub.domain_status = 'active';
@@ -233,8 +240,8 @@ export async function POST(req: NextRequest) {
             // Renovação Anual de Domínio Próprio (R$ 70,00)
             comm = 21.00;
             niche = 'Renovação Anual Domínio Próprio';
-          } else if (val >= 25 && val <= 35) {
-            comm = 14.95; // 50% de comissão oficial do operador
+          } else {
+            comm = Number((val * opRate).toFixed(2));
             niche = 'Assinatura Recorrente Mensal';
           }
 
@@ -255,8 +262,8 @@ export async function POST(req: NextRequest) {
           };
           db.sales.unshift(newSale);
 
-          // BILLY AFILIADOS: 5% (R$ 24,50) para o padrinho sobre venda de Domínio Próprio (R$ 490,00)
-          if (val >= 450) {
+          // BILLY AFILIADOS: bônus percentual para o padrinho sobre venda de Domínio Próprio
+          if (val >= (pricing.custom_domain_price * 0.85)) {
             let sponsorId = operator.referred_by_operator_id;
             if (!sponsorId) {
               try {
@@ -310,6 +317,9 @@ export async function POST(req: NextRequest) {
                 if (!alreadyHasAffComm) {
                   const saleDate = new Date();
                   const monthRef = `${saleDate.getFullYear()}-${String(saleDate.getMonth() + 1).padStart(2, '0')}`;
+                  const affRate = (pricing.affiliate_bonus_percent || 5.0) / 100;
+                  const affAmount = Number((val * affRate).toFixed(2));
+
                   const affComm: AffiliateCommissionRecord = {
                     id: `AFF-COMM-${payment.id || Date.now().toString(36)}`,
                     affiliate_operator_id: sponsor.id,
@@ -317,8 +327,8 @@ export async function POST(req: NextRequest) {
                     invited_operator_name: operator.name,
                     lead_or_sale_id: leadOrSaleKey,
                     sale_amount: val,
-                    commission_rate: 0.05,
-                    commission_amount: 24.50, // 5% de R$ 490,00
+                    commission_rate: affRate,
+                    commission_amount: affAmount,
                     month_ref: monthRef,
                     payout_status: 'available',
                     created_at: nowIso
@@ -332,7 +342,7 @@ export async function POST(req: NextRequest) {
                     console.warn('[Asaas Webhook] Erro ao gravar comissão no Supabase:', supaAffErr);
                   }
 
-                  console.log(`[Asaas Webhook] Comissão de afiliado gerada: R$ 24,50 para ${sponsor.name} (venda de ${operator.name})`);
+                  console.log(`[Asaas Webhook] Comissão de afiliado gerada: R$ ${affAmount.toFixed(2)} (${pricing.affiliate_bonus_percent}%) para ${sponsor.name} (venda de ${operator.name})`);
                 }
               }
             }
@@ -351,8 +361,8 @@ export async function POST(req: NextRequest) {
                 ? sub.custom_domain.toLowerCase().trim()
                 : `${effectiveSlug}.webbilly.com.br`;
 
-              const val = Number(payment.value) || 29.90;
-              const isCustomDomain = val >= 450 || !!sub?.custom_domain;
+              const val = Number(payment.value) || pricing.monthly_plan_price;
+              const isCustomDomain = val >= (pricing.custom_domain_price * 0.85) || !!sub?.custom_domain;
 
               await createOrUpdateClientAccount({
                 site_slug: effectiveSlug,

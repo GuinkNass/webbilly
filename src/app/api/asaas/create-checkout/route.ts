@@ -3,6 +3,7 @@ import { readDb, writeDb, SubscriptionRecord } from '@/lib/db';
 import { findOrCreateCustomer, createIndividualPayment } from '@/services/asaas';
 import { getSupabaseAdmin, upsertSubscriptionInSupabase } from '@/lib/supabase';
 import { getSiteFromCloudStorage, formatSlugToTitle, setSlugSuspended } from '@/lib/site-storage';
+import { getPlatformPricing } from '@/lib/pricing';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -187,8 +188,9 @@ async function handleCreateCheckout(req: NextRequest, body: any) {
   }
 
   // 2. Cria cobrança única/avulsa inicial no Asaas (JAMAIS cria assinatura recorrente aqui)
+  const pricing = await getPlatformPricing();
   const isProprio = plan === 'proprio';
-  const chargeValue = isProprio ? 490.0 : 29.9;
+  const chargeValue = isProprio ? pricing.custom_domain_price : pricing.monthly_plan_price;
   const description = isProprio
     ? `Site Completo + Domínio Próprio (${selectedDomain}) - Webbilly`
     : `1ª Mensalidade - Presença Digital ${cleanSlug}.webbilly.com.br`;
@@ -233,6 +235,7 @@ async function handleCreateCheckout(req: NextRequest, body: any) {
     (sub as any).asaas_payment_id = paymentId;
     sub.asaasSubscriptionId = null;
     (sub as any).asaas_subscription_id = null;
+    sub.monthlyPrice = isProprio ? 0 : pricing.monthly_plan_price;
     sub.updatedAt = nowIso;
     targetSub = sub;
   } else {
@@ -247,8 +250,10 @@ async function handleCreateCheckout(req: NextRequest, body: any) {
       operatorId,
       operatorName,
       operatorToken: operator?.serialToken || operatorSerial,
-      monthlyPrice: chargeValue,
-      commissionMonthly: isProprio ? 147.0 : 10.0,
+      monthlyPrice: isProprio ? 0 : pricing.monthly_plan_price,
+      commissionMonthly: isProprio
+        ? Number((pricing.custom_domain_price * 0.3).toFixed(2))
+        : Number((pricing.monthly_plan_price * (pricing.operator_commission_percent / 100)).toFixed(2)),
       status: 'awaiting_first_payment',
       deployedUrl: `https://${cleanSlug}.webbilly.com.br`,
       asaasCustomerId,

@@ -488,6 +488,15 @@ export interface DatabaseSchema {
   clientAccounts?: ClientAccountRecord[];
   siteEditRequests?: SiteEditRequestRecord[];
   adminAffiliateTools?: AdminAffiliateToolRecord[];
+  platformPricing?: {
+    id: string;
+    monthly_plan_price: number;
+    custom_domain_price: number;
+    extra_edit_price: number;
+    operator_commission_percent: number;
+    affiliate_bonus_percent: number;
+    updated_at?: string;
+  };
 }
 
 export function getDefaultSubscriptions(): SubscriptionRecord[] {

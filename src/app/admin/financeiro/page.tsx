@@ -34,7 +34,69 @@ import {
 export default function AdminFinancialPage() {
   const { data, loading, error, loadData, setActionSuccess } = useAdmin();
 
-  const [activeTabSub, setActiveTabSub] = useState<'financial' | 'asaas' | 'affiliates' | 'apis'>('financial');
+  const [activeTabSub, setActiveTabSub] = useState<'financial' | 'pricing' | 'asaas' | 'affiliates' | 'apis'>('financial');
+
+  // Estados de Tabela de Preços Dinâmica & Modo Teste
+  const [platformPricing, setPlatformPricing] = useState({
+    monthly_plan_price: 29.90,
+    custom_domain_price: 490.00,
+    extra_edit_price: 39.90,
+    operator_commission_percent: 50.00,
+    affiliate_bonus_percent: 5.00
+  });
+  const [loadingPricing, setLoadingPricing] = useState(false);
+  const [savingPricing, setSavingPricing] = useState(false);
+  const [pricingFeedback, setPricingFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const loadPlatformPricing = async () => {
+    setLoadingPricing(true);
+    try {
+      const res = await fetch('/api/admin/pricing');
+      const json = await res.json();
+      if (res.ok && json.pricing) {
+        setPlatformPricing({
+          monthly_plan_price: Number(json.pricing.monthly_plan_price) || 29.90,
+          custom_domain_price: Number(json.pricing.custom_domain_price) || 490.00,
+          extra_edit_price: Number(json.pricing.extra_edit_price) || 39.90,
+          operator_commission_percent: Number(json.pricing.operator_commission_percent) || 50.00,
+          affiliate_bonus_percent: Number(json.pricing.affiliate_bonus_percent) || 5.00
+        });
+      }
+    } catch (_) {}
+    finally {
+      setLoadingPricing(false);
+    }
+  };
+
+  const handleSavePricing = async (customPayload?: any) => {
+    setSavingPricing(true);
+    setPricingFeedback(null);
+    try {
+      const payload = customPayload || platformPricing;
+      const res = await fetch('/api/admin/pricing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Erro ao atualizar tabela de preços');
+      if (json.pricing) {
+        setPlatformPricing({
+          monthly_plan_price: Number(json.pricing.monthly_plan_price) || 29.90,
+          custom_domain_price: Number(json.pricing.custom_domain_price) || 490.00,
+          extra_edit_price: Number(json.pricing.extra_edit_price) || 39.90,
+          operator_commission_percent: Number(json.pricing.operator_commission_percent) || 50.00,
+          affiliate_bonus_percent: Number(json.pricing.affiliate_bonus_percent) || 5.00
+        });
+      }
+      setPricingFeedback({ type: 'success', text: json.message || 'Tabela de preços salva com sucesso!' });
+      setActionSuccess(json.message || 'Tabela de preços atualizada com sucesso!');
+    } catch (err: any) {
+      setPricingFeedback({ type: 'error', text: err.message || 'Falha ao salvar preços' });
+    } finally {
+      setSavingPricing(false);
+    }
+  };
 
   // Configurações de API
   const [apiSettings, setApiSettings] = useState<any>(data?.settings || {
@@ -105,6 +167,7 @@ export default function AdminFinancialPage() {
 
   useEffect(() => {
     loadAsaasData();
+    loadPlatformPricing();
   }, []);
 
   const handleCancelCharge = async (payment: any) => {
@@ -253,6 +316,25 @@ export default function AdminFinancialPage() {
           </button>
           <button
             onClick={() => {
+              setActiveTabSub('pricing');
+              loadPlatformPricing();
+            }}
+            className={`px-3.5 py-2 rounded-lg font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+              activeTabSub === 'pricing'
+                ? 'bg-amber-600 text-white shadow-md'
+                : 'text-slate-500 dark:text-slate-400 hover:text-white'
+            }`}
+          >
+            <DollarSign className="w-3.5 h-3.5" />
+            Tabela de Preços & Teste
+            {platformPricing.monthly_plan_price === 5 && platformPricing.custom_domain_price === 5 && (
+              <span className="px-1.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-mono ml-1 font-bold">
+                TESTE
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => {
               setActiveTabSub('asaas');
               if (!asaasData) loadAsaasData();
             }}
@@ -383,6 +465,360 @@ export default function AdminFinancialPage() {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ABA: TABELA DE PREÇOS & MODO TESTE ASAAS */}
+      {activeTabSub === 'pricing' && (
+        <div className="space-y-6">
+          {/* Header e Descrição */}
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] shadow-xl space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <span className="text-[10px] font-mono uppercase tracking-wider text-amber-500 font-bold block mb-1">
+                  Gestão Central de Cobranças • Asaas & Checkout
+                </span>
+                <h3 className="text-lg font-bold text-white">Tabela Oficial de Preços & Modo de Teste</h3>
+                <p className="text-xs text-slate-400 mt-1 max-w-2xl">
+                  Altere em tempo real todos os valores cobrados nas propostas, checkouts e alterações avulsas. Os valores são persistidos no Supabase e sincronizados instantaneamente nos webhooks do Asaas.
+                </p>
+              </div>
+
+              {/* Ações Rápidas */}
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  disabled={savingPricing}
+                  onClick={() => handleSavePricing({ action: 'apply_test' })}
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Aplicar Modo Teste (R$ 5,00)</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={savingPricing}
+                  onClick={() => handleSavePricing({ action: 'restore_official' })}
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/10 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-slate-300" />
+                  <span>Restaurar Oficiais (R$ 29,90)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Feedback Message */}
+            {pricingFeedback && (
+              <div
+                className={`p-3.5 rounded-xl border text-xs flex items-center gap-2 ${
+                  pricingFeedback.type === 'success'
+                    ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300'
+                    : 'bg-rose-950/40 border-rose-800 text-rose-300'
+                }`}
+              >
+                {pricingFeedback.type === 'success' ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                )}
+                <span>{pricingFeedback.text}</span>
+              </div>
+            )}
+
+            {/* Status Atual do Modo */}
+            {platformPricing.monthly_plan_price === 5 && platformPricing.custom_domain_price === 5 ? (
+              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="block font-bold text-amber-200 text-sm mb-0.5">
+                    MODO DE TESTE ATIVO (R$ 5,00)
+                  </strong>
+                  <span>
+                    Todas as novas propostas comerciais e checkouts emitirão cobranças no valor mínimo de <strong>R$ 5,00</strong> permitido pelo gateway Asaas para testes reais via Pix e Cartão. Clique em <em>"Restaurar Oficiais"</em> para retornar aos valores comerciais de produção antes de divulgar aos clientes.
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300 flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+                <div>
+                  <strong className="block font-bold text-emerald-200 text-sm mb-0.5">
+                    PREÇOS OFICIAIS DE PRODUÇÃO ATIVOS
+                  </strong>
+                  <span>
+                    A plataforma está operando normalmente com os preços oficiais de mercado. As cobranças recorrentes e compras avulsas seguem a tabela abaixo.
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Grid de Configurações de Preços e Comissões */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Card 1: Mensalidade Subdomínio */}
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] shadow-lg space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase text-sky-400 font-bold">
+                  Plano Recorrente
+                </span>
+                <Globe className="w-4 h-4 text-sky-400" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-white block mb-1">
+                  Mensalidade Subdomínio Oficial (R$)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-xs text-slate-500 font-mono">R$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="5.00"
+                    value={platformPricing.monthly_plan_price}
+                    onChange={(e) =>
+                      setPlatformPricing({
+                        ...platformPricing,
+                        monthly_plan_price: parseFloat(e.target.value) || 0
+                      })
+                    }
+                    className="w-full bg-[#14161f] border border-white/10 rounded-xl pl-9 pr-3 py-2 text-sm text-white font-mono font-bold focus:outline-none focus:border-sky-500"
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Cobrança recorrente mensal via Asaas (Pix ou Cartão). Valor padrão: <strong>R$ 29,90/mês</strong>.
+              </p>
+            </div>
+
+            {/* Card 2: Domínio Próprio Completo */}
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] shadow-lg space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase text-emerald-400 font-bold">
+                  Pacote Completo 1 Ano
+                </span>
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-white block mb-1">
+                  Site + Domínio Próprio .com.br (R$)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-xs text-slate-500 font-mono">R$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="5.00"
+                    value={platformPricing.custom_domain_price}
+                    onChange={(e) =>
+                      setPlatformPricing({
+                        ...platformPricing,
+                        custom_domain_price: parseFloat(e.target.value) || 0
+                      })
+                    }
+                    className="w-full bg-[#14161f] border border-white/10 rounded-xl pl-9 pr-3 py-2 text-sm text-white font-mono font-bold focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Pagamento único à vista via Pix com registro no Registro.br e hospedagem por 1 ano. Valor padrão: <strong>R$ 490,00</strong>.
+              </p>
+            </div>
+
+            {/* Card 3: Alteração Extra Avulsa */}
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] shadow-lg space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase text-purple-400 font-bold">
+                  Portal do Cliente
+                </span>
+                <Layers className="w-4 h-4 text-purple-400" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-white block mb-1">
+                  Alteração Extra Avulsa (R$)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-xs text-slate-500 font-mono">R$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="5.00"
+                    value={platformPricing.extra_edit_price}
+                    onChange={(e) =>
+                      setPlatformPricing({
+                        ...platformPricing,
+                        extra_edit_price: parseFloat(e.target.value) || 0
+                      })
+                    }
+                    className="w-full bg-[#14161f] border border-white/10 rounded-xl pl-9 pr-3 py-2 text-sm text-white font-mono font-bold focus:outline-none focus:border-purple-500"
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Cobrança Pix no portal do cliente para solicitações que excedem a cota mensal. Valor padrão: <strong>R$ 39,90</strong>.
+              </p>
+            </div>
+          </div>
+
+          {/* Grid de Comissões e Repasses */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] shadow-lg space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase text-emerald-400 font-bold">
+                  Comissão Operador
+                </span>
+                <Users className="w-4 h-4 text-emerald-400" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-white block mb-1">
+                  Repasse do Operador Responsável (%)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="100"
+                    value={platformPricing.operator_commission_percent}
+                    onChange={(e) =>
+                      setPlatformPricing({
+                        ...platformPricing,
+                        operator_commission_percent: parseFloat(e.target.value) || 0
+                      })
+                    }
+                    className="w-full bg-[#14161f] border border-white/10 rounded-xl pr-9 pl-3 py-2 text-sm text-white font-mono font-bold focus:outline-none focus:border-emerald-500"
+                  />
+                  <span className="absolute right-3 top-2.5 text-xs text-slate-500 font-mono">%</span>
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Percentual repassado ao operador criador do site em cada mensalidade e plano contratado (Padrão: <strong>50,00%</strong>).
+              </p>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#1c1d27] border border-slate-200 dark:border-white/[0.08] shadow-lg space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase text-blue-400 font-bold">
+                  Bônus de Indicação
+                </span>
+                <Sparkles className="w-4 h-4 text-blue-400" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-white block mb-1">
+                  Comissão Billy Afiliados (%)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="100"
+                    value={platformPricing.affiliate_bonus_percent}
+                    onChange={(e) =>
+                      setPlatformPricing({
+                        ...platformPricing,
+                        affiliate_bonus_percent: parseFloat(e.target.value) || 0
+                      })
+                    }
+                    className="w-full bg-[#14161f] border border-white/10 rounded-xl pr-9 pl-3 py-2 text-sm text-white font-mono font-bold focus:outline-none focus:border-blue-500"
+                  />
+                  <span className="absolute right-3 top-2.5 text-xs text-slate-500 font-mono">%</span>
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Percentual creditado ao afiliado pelo link de indicação oficial em cada pagamento recebido (Padrão: <strong>5,00%</strong>).
+              </p>
+            </div>
+          </div>
+
+          {/* Simulador de Repasses e Botão de Salvar */}
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#14161f] border border-slate-200 dark:border-white/[0.08] shadow-xl space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Receipt className="w-4 h-4 text-emerald-400" />
+                  Simulação em Tempo Real da Distribuição de Receitas
+                </h4>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Previsão exata de repasses por pagamento recebido de acordo com a tabela atual:
+                </p>
+              </div>
+
+              <button
+                type="button"
+                disabled={savingPricing}
+                onClick={() => handleSavePricing()}
+                className="py-2.5 px-6 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/40 cursor-pointer disabled:opacity-50"
+              >
+                {savingPricing ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Salvando Preços...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Salvar Tabela de Preços</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-white/[0.06]">
+              {/* Simulação Mensalidade */}
+              <div className="p-4 rounded-xl bg-[#1c1d27] border border-white/[0.06] space-y-2">
+                <span className="text-xs font-bold text-sky-300 block">
+                  Mensalidade: R$ {platformPricing.monthly_plan_price.toFixed(2).replace('.', ',')}
+                </span>
+                <div className="space-y-1 text-xs text-slate-300 font-mono">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Operador ({platformPricing.operator_commission_percent}%):</span>
+                    <strong className="text-emerald-400">
+                      R$ {((platformPricing.monthly_plan_price * platformPricing.operator_commission_percent) / 100).toFixed(2).replace('.', ',')}
+                    </strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Afiliado ({platformPricing.affiliate_bonus_percent}%):</span>
+                    <strong className="text-blue-400">
+                      R$ {((platformPricing.monthly_plan_price * platformPricing.affiliate_bonus_percent) / 100).toFixed(2).replace('.', ',')}
+                    </strong>
+                  </div>
+                  <div className="flex justify-between pt-1 border-t border-white/5">
+                    <span className="text-slate-400">Margem Webbilly:</span>
+                    <strong className="text-white">
+                      R$ {(platformPricing.monthly_plan_price * (1 - (platformPricing.operator_commission_percent + platformPricing.affiliate_bonus_percent) / 100)).toFixed(2).replace('.', ',')}
+                    </strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Simulação Domínio Próprio */}
+              <div className="p-4 rounded-xl bg-[#1c1d27] border border-white/[0.06] space-y-2">
+                <span className="text-xs font-bold text-emerald-300 block">
+                  Domínio Próprio: R$ {platformPricing.custom_domain_price.toFixed(2).replace('.', ',')}
+                </span>
+                <div className="space-y-1 text-xs text-slate-300 font-mono">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Operador ({platformPricing.operator_commission_percent}%):</span>
+                    <strong className="text-emerald-400">
+                      R$ {((platformPricing.custom_domain_price * platformPricing.operator_commission_percent) / 100).toFixed(2).replace('.', ',')}
+                    </strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Afiliado ({platformPricing.affiliate_bonus_percent}%):</span>
+                    <strong className="text-blue-400">
+                      R$ {((platformPricing.custom_domain_price * platformPricing.affiliate_bonus_percent) / 100).toFixed(2).replace('.', ',')}
+                    </strong>
+                  </div>
+                  <div className="flex justify-between pt-1 border-t border-white/5">
+                    <span className="text-slate-400">Margem Webbilly:</span>
+                    <strong className="text-white">
+                      R$ {(platformPricing.custom_domain_price * (1 - (platformPricing.operator_commission_percent + platformPricing.affiliate_bonus_percent) / 100)).toFixed(2).replace('.', ',')}
+                    </strong>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
