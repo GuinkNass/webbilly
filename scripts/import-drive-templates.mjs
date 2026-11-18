@@ -719,19 +719,33 @@ function findMainHtmlKey(zip) {
     return lk.endsWith('.html') && 
       !lk.includes('documentation') && 
       !lk.includes('/doc/') && 
-      !lk.includes('/documantation/') &&
+      !lk.includes('documantation') &&
       !lk.includes('/fonts/') && 
+      !lk.includes('fonts/') &&
+      !lk.includes('/font/') && 
+      !lk.includes('font/') &&
+      !lk.includes('et-line-font') &&
+      !lk.includes('elegant_font') &&
+      !lk.includes('icofont') &&
+      !lk.includes('themify-icons') &&
+      !lk.includes('pe-icon') &&
+      !lk.includes('font-awesome') &&
       !lk.includes('/vendor/syntaxhighlighter') &&
       !lk.includes('demo.html') &&
+      !lk.includes('/demo/') &&
+      !lk.includes('demo/') &&
       !lk.includes('404');
   });
 
   if (htmlFiles.length === 0) {
     // Tenta fallback com qualquer html não-doc
-    const anyHtml = fileKeys.filter(k => k.endsWith('.html') && !k.toLowerCase().includes('documentation'));
+    const anyHtml = fileKeys.filter(k => k.endsWith('.html') && !k.toLowerCase().includes('documentation') && !k.toLowerCase().includes('font'));
     if (anyHtml.length > 0) return anyHtml[0];
     return null;
   }
+
+  // Ordena por profundidade de diretório (prefere pastas menos aninhadas)
+  htmlFiles.sort((a, b) => a.split('/').length - b.split('/').length);
 
   // Prioridade de seleção de landing page
   const indexKey = htmlFiles.find(k => /(^|\/)index\.html$/i.test(k));
@@ -827,8 +841,8 @@ async function bundleHtmlStylesAndFonts(rawHtml, htmlKey, zip, meta) {
 
   html = html.replace(/<head>/i, `<head>\n${essentialHeadLinks}`);
 
-  // Encontra todas as tags <link rel="stylesheet">
-  const linkRegex = /<link[^>]+rel=["']stylesheet["'][^>]*>/gi;
+  // Encontra todas as tags <link> de CSS (seja com rel="stylesheet" ou href terminando em .css)
+  const linkRegex = /<link[^>]+(?:rel=["']stylesheet["']|href=["'][^"']+\.css[^"']*["'])[^>]*>/gi;
   const links = [...html.matchAll(linkRegex)];
 
   let collectedCss = '';
@@ -838,7 +852,7 @@ async function bundleHtmlStylesAndFonts(rawHtml, htmlKey, zip, meta) {
     const hrefMatch = fullTag.match(/href=["']([^"']+)["']/i);
     if (!hrefMatch) continue;
 
-    const href = hrefMatch[1].trim();
+    let href = hrefMatch[1].trim().split('?')[0].split('#')[0];
 
     // Se for URL remota (Google Fonts, cdnjs, etc), mantém intacto
     if (/^(https?:)?\/\//i.test(href)) {
@@ -888,18 +902,9 @@ async function bundleHtmlStylesAndFonts(rawHtml, htmlKey, zip, meta) {
   .accent-border { border-color: var(--primary-color, ${meta.accentColor}) !important; }
   `;
 
-  // Insere os estilos compilados antes do fechamento de </head>
-  if (collectedCss.length > 0) {
-    // Trunca CSS excessivo para não sobrecarregar arquivo (> 350KB)
-    if (collectedCss.length > 350000) {
-      collectedCss = collectedCss.slice(0, 350000);
-    }
-    const styleTag = `\n<style type="text/css">\n${studioRootVariables}\n${collectedCss}\n</style>\n`;
-    html = html.replace(/<\/head>/i, `${styleTag}</head>`);
-  } else {
-    const styleTag = `\n<style type="text/css">\n${studioRootVariables}\n</style>\n`;
-    html = html.replace(/<\/head>/i, `${styleTag}</head>`);
-  }
+  // Insere 100% dos estilos originais compilados em <style id="template-original-css"> sem truncamento
+  const styleTag = `\n<style id="template-original-css" type="text/css">\n${studioRootVariables}\n${collectedCss}\n</style>\n`;
+  html = html.replace(/<\/head>/i, `${styleTag}</head>`);
 
   // Substitui scripts locais quebrados de bibliotecas conhecidas por CDNs oficiais estáveis
   html = html.replace(/<script[^>]+src=["'][^"']*jquery(?:\.min)?\.js["'][^>]*><\/script>/gi, '<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>');
@@ -1058,13 +1063,15 @@ function normalizeTemplateSlots(html, meta) {
   // Botão flutuante de WhatsApp oficial
   const floatingWhatsAppHtml = `
   <!-- BOTÃO FLUTUANTE DE WHATSAPP OFICIAL BILLY -->
-  <a href="{{WHATSAPP_LINK}}" target="_blank" rel="noopener noreferrer" class="fixed bottom-6 right-6 z-50 bg-[#25d366] hover:bg-[#20ba59] text-white p-3.5 sm:px-5 sm:py-3.5 rounded-full shadow-2xl flex items-center gap-2.5 transition-all duration-300 hover:scale-110 font-bold text-xs uppercase tracking-wider border-2 border-white/20">
-    <i class="fab fa-whatsapp text-2xl"></i>
-    <span class="hidden sm:inline">Falar no WhatsApp</span>
-  </a>
+  <div id="billy-floating-whatsapp" style="position: fixed; bottom: 24px; right: 24px; z-index: 999999;">
+    <a href="{{WHATSAPP_LINK}}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 20px; background: #25D366; color: #ffffff; border-radius: 9999px; box-shadow: 0 4px 25px rgba(0,0,0,0.5); text-decoration: none; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap !important; width: auto !important; max-width: none !important;" title="Fale conosco no WhatsApp">
+      <i class="fab fa-whatsapp" style="font-size: 22px;"></i>
+      <span style="display: inline !important; white-space: nowrap !important;">Falar no WhatsApp</span>
+    </a>
+  </div>
   `;
 
-  if (!res.includes('fab fa-whatsapp text-2xl')) {
+  if (!res.includes('billy-floating-whatsapp') && !res.includes('fab fa-whatsapp text-2xl')) {
     res = res.replace(/<\/body>/i, `${floatingWhatsAppHtml}\n</body>`);
   }
 
@@ -1179,7 +1186,7 @@ async function runImport() {
 
   const indexHtmlMap = Object.keys(catalogByCategory).map(catSlug => {
     const varName = catSlug.toUpperCase().replace(/-/g, '_') + '_TEMPLATES';
-    return `  ${varName}.forEach(t => { map[t.id] = t.html; });`;
+    return `    ${varName}.forEach(t => { _templateMap![t.id] = t.html; });`;
   }).join('\n');
 
   const indexContent = `// CATÁLOGO UNIFICADO DE TEMPLATES BILLY STUDIO
@@ -1189,10 +1196,28 @@ export const ALL_DRIVE_TEMPLATES = [
 ${indexExports}
 ];
 
-export function getDriveTemplateHtml(id: string): string | null {
-  const map: Record<string, string> = {};
+let _templateMap: Record<string, string> | null = null;
+
+function getMap(): Record<string, string> {
+  if (!_templateMap) {
+    _templateMap = {};
 ${indexHtmlMap}
-  return map[id] || null;
+  }
+  return _templateMap;
+}
+
+export function getDriveTemplateHtml(id: string): string | null {
+  if (!id) return null;
+  const clean = id.toLowerCase().trim();
+  const map = getMap();
+  if (map[clean]) return map[clean];
+
+  for (const [key, html] of Object.entries(map)) {
+    if (key.includes(clean) || clean.includes(key)) {
+      return html;
+    }
+  }
+  return null;
 }
 `;
 

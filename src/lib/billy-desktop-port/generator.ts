@@ -538,10 +538,38 @@ export function adaptDesktopTemplateLocally(
   // 2. Remove blocos físicos de preloader do DOM para evitar qualquer cobertura invisível
   result = result.replace(/<div[^>]*(?:id|class)=["'][^"']*(?:loading-screen|preloader|loader-wrapper|loader-wrap|de-loader|cube-loader|page-loader)[^"']*["'][^>]*>[\s\S]*?<\/div>/gi, '');
 
-  // 3. Injeção obrigatória do CSS blindado de visibilidade e cancelamento de preloaders
+  // 3. Injeção obrigatória do CSS blindado de visibilidade, contraste, backgrounds e botão WhatsApp
   const visibilityOverrideCss = `
 <style id="billy-visibility-overrides">
-  /* 1. Neutralização absoluta de Preloaders, Loaders e Splash screens */
+  /* 0. BLINDAGEM DE BACKGROUND IMAGE (Sem repetição em mosaico, preenchimento total e centralizado) */
+  [style*="background-image"], [style*="background:"],
+  header, .hero, .banner, .slider, .intro-section,
+  [class*="hero"], [class*="banner"], [class*="slider"], [class*="bg-cover"],
+  .ts-background-image, .jarallax, [data-bg-img], section:first-of-type {
+    background-repeat: no-repeat !important;
+    background-size: cover !important;
+    background-position: center center !important;
+  }
+
+  /* 1. CONTRASTE E VISIBILIDADE BLINDADA (Nunca texto preto em fundo preto) */
+  body {
+    color: #f4f4f5 !important;
+    background-color: #090d14 !important;
+  }
+  h1, h2, h3, h4, h5, h6, .font-heading, .hero__title {
+    color: #ffffff !important;
+  }
+  p, li, .lead, .subtitle, .description {
+    color: #f4f4f5 !important;
+  }
+  .accent-bg, .btn-primary, [class*="badge-"] {
+    color: #09090b !important;
+  }
+  .accent-bg h1, .accent-bg h2, .accent-bg h3, .accent-bg p, .accent-bg span {
+    color: #09090b !important;
+  }
+
+  /* 2. Neutralização absoluta de Preloaders, Loaders e Splash screens */
   #preloader, .preloader, .preloader-cover, .preloader-wrap, .loader-wrap, .loader-wrapper,
   #loader-wrapper, #loader, .loader, #de-loader, .loading-screen, #loading, #loading-area,
   #loading-center, #loading-center-absolute, .images-preloader, #handle-preloader,
@@ -556,7 +584,7 @@ export function adaptDesktopTemplateLocally(
     width: 0 !important;
   }
 
-  /* 2. Forçar visibilidade e renderização imediata de elementos animados */
+  /* 3. Forçar visibilidade e renderização imediata de elementos animados */
   [data-aos], .wow, .reveal, .animated, .hero__title, .hero__link,
   body.has-loading-screen .navbar, body.has-loading-screen .hero__link,
   body.has-loading-screen h1 .hero__title {
@@ -568,13 +596,39 @@ export function adaptDesktopTemplateLocally(
     color: inherit !important;
   }
 
-  /* 3. Garantir que html e body não fiquem com overflow travado */
+  body.has-loading-screen, body.loading, body.is-loading, body.preload {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  /* 4. Garantir que html e body não fiquem com overflow travado */
   html, body {
     overflow: auto !important;
     overflow-x: hidden !important;
     opacity: 1 !important;
     visibility: visible !important;
     height: auto !important;
+  }
+
+  /* 5. BOTÃO FLUTUANTE DE WHATSAPP (Sem corte de texto, largura automática e padding nobre) */
+  #billy-floating-whatsapp, #billy-floating-whatsapp a, a[href*="wa.me"], a[href*="whatsapp"].fixed, a.fixed[href*="whatsapp"] {
+    white-space: nowrap !important;
+    max-width: none !important;
+    width: auto !important;
+    overflow: visible !important;
+  }
+  #billy-floating-whatsapp a {
+    padding: 12px 20px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    line-height: 1 !important;
+    border-radius: 9999px !important;
+  }
+  #billy-floating-whatsapp span, a[href*="whatsapp"] span {
+    display: inline !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
   }
 </style>
 `;
@@ -589,10 +643,11 @@ export function adaptDesktopTemplateLocally(
   const floatingWhatsAppHtml = `
 <!-- BOTÃO FLUTUANTE DE WHATSAPP OFICIAL BILLY -->
 <div id="billy-floating-whatsapp" style="position: fixed; bottom: 24px; right: 24px; z-index: 999999;">
-  <a href="${whatsappLink}" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: center; width: 62px; height: 62px; background: #25D366; color: #ffffff; border-radius: 50%; box-shadow: 0 4px 25px rgba(0,0,0,0.5); text-decoration: none; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="Fale conosco no WhatsApp">
-    <svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor">
+  <a href="${whatsappLink}" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 20px; background: #25D366; color: #ffffff; border-radius: 9999px; box-shadow: 0 4px 25px rgba(0,0,0,0.5); text-decoration: none; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap !important; width: auto !important; max-width: none !important; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Fale conosco no WhatsApp">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink: 0;">
       <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
     </svg>
+    <span style="display: inline !important; white-space: nowrap !important;">Falar no WhatsApp</span>
   </a>
 </div>
 `;
