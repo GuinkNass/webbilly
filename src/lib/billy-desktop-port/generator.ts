@@ -5,6 +5,7 @@ import { formatHeaderName } from '../desktop-templates';
 import { safeParseGeminiJson } from '../gemini-json';
 import { compileTemplateWithCheerio, StructuredSiteJson, SiteCompilerOptions } from '../dom-template-compiler';
 import { injectAnalyticsTracker } from '@/lib/analytics';
+import { renderNativeSite, StructuredSiteData } from '../native-site-renderer';
 
 export interface ServiceItem {
   name: string;
@@ -757,66 +758,52 @@ export async function buildSiteHtml(
     }
   }
 
-  // 2. Injeta 100% da Copy + Cores + Fotos no Template Oficial Desktop
-  const adaptedHtml = adaptDesktopTemplateLocally(
-    baseTemplateHtml,
-    input,
-    finalCopy,
-    heroImg,
-    gallery,
-    cleanPhone,
-    whatsappLink
-  );
-
-  // 3. Parser Cirúrgico DOM via Cheerio:
-  // - Substituição de URLs relativas e placeholders nas imagens e CSS
-  // - Contraste blindado no Hero (#121212 + overlay escuro)
-  // - Logo tipográfico nativo e sem cortes
-  // - Tradução dos menus de navegação
-  // - Filtro Anti-Lorem Ipsum e substituição de datas antigas (02.03.2018 -> 2026)
-  // - Neutralização de preloaders e exibição imediata
-  const structuredData: StructuredSiteJson = {
-    brandName: input.businessName,
-    tagline: finalCopy.headline || input.tagline || 'Excelência & Alto Padrão',
+  // 2. Renderização Nativa com Motor Tailwind CSS + Google Fonts 100% blindado
+  const nativeData: StructuredSiteData = {
     heroTitle: finalCopy.headline || input.tagline || input.businessName,
     heroSubtitle: finalCopy.subheadline || input.description || '',
-    ctaPrimary: finalCopy.primary_cta || 'Falar no WhatsApp',
+    ctaText: finalCopy.primary_cta || 'Falar no WhatsApp',
     aboutTitle: finalCopy.sobre_titulo || 'Sobre Nós',
-    aboutText: finalCopy.sobre_texto || '',
+    aboutParagraphs: [
+      finalCopy.sobre_texto || `A ${input.businessName} consolidou-se como referência indiscutível em ${input.city}, aliando dedicação incansável e atenção aos detalhes.`,
+      input.differentiators || `Trabalhamos exclusivamente com métodos certificados e profissionais apaixonados pelo que fazem, assegurando a você segurança, pontualidade e satisfação total.`
+    ],
     services: (finalCopy.servicos && finalCopy.servicos.length > 0)
-      ? finalCopy.servicos.map(s => ({ name: s.name, description: s.description || '', price: s.price }))
+      ? finalCopy.servicos.map(s => ({ title: s.name, description: s.description || '', priceTag: s.price }))
       : [],
     testimonials: (finalCopy.depoimentos && finalCopy.depoimentos.length > 0)
-      ? finalCopy.depoimentos.map(d => ({ author: d.author, role: 'Cliente Google', text: d.text }))
+      ? finalCopy.depoimentos.map(d => ({ name: d.author, text: d.text, rating: d.rating }))
       : [],
-    address: input.address || `${input.city} - Atendimento de excelência`,
-    hours: input.hours || 'Segunda a Sábado das 08h às 19h',
-    phoneDisplay: cleanPhone,
-    instagram: input.instagram,
-    whatsappLink
+    businessHours: input.hours || 'Segunda a Sábado das 08h às 19h',
+    seoDescription: `${input.businessName} em ${input.city}`
   };
 
-  const compilerOptions: SiteCompilerOptions = {
+  const finalHtml = renderNativeSite({
     businessName: input.businessName,
+    shortName: input.shortName,
+    headerName: input.headerName,
     niche: input.niche,
     city: input.city,
+    subdomain: input.subdomain,
     phone: cleanPhone,
     whatsapp: cleanPhone,
     instagram: input.instagram,
     address: input.address,
     hours: input.hours,
-    tagline: finalCopy.headline,
-    description: finalCopy.subheadline,
-    heroPhoto: heroImg,
-    galleryPhotos: gallery,
-    subdomain: input.subdomain,
+    templateId: input.templateId,
+    theme: input.theme,
+    paletteId: input.paletteId,
     primaryColor: input.primaryColor,
     accentColor: input.accentColor,
     backgroundColor: input.backgroundColor,
-    surfaceColor: input.surfaceColor
-  };
-
-  const finalHtml = compileTemplateWithCheerio(adaptedHtml, structuredData, compilerOptions);
+    surfaceColor: input.surfaceColor,
+    textColor: input.textColor,
+    fontPair: input.fontPair,
+    logoUrl: input.logoUrl,
+    heroPhoto: heroImg,
+    galleryPhotos: gallery,
+    data: nativeData
+  });
 
   return { html: finalHtml, usedAi, modelUsed };
 }
