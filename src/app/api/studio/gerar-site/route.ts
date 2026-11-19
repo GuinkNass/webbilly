@@ -10,6 +10,7 @@ import { BusinessSiteData, SiteService, SiteTestimonial } from '@/types/site-tem
 import { getTemplateBySlug, SiteTemplateEntry } from '@/components/site-templates/registry';
 import { renderReactSite } from '@/lib/react-site-renderer';
 
+export const runtime = 'nodejs';
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
@@ -529,10 +530,10 @@ export async function POST(req: NextRequest) {
       }
     };
 
-    // 5. Renderização Server-Side Estática (react-dom/server + Tailwind + Google Fonts)
+    // 5. Renderização Server-Side Estática (renderToReadableStream + Tailwind + Google Fonts)
     let generatedHtml: string;
     try {
-      generatedHtml = renderReactSite({
+      generatedHtml = await renderReactSite({
         data: businessSiteData,
         templateSlug: templateId
       });

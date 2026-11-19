@@ -1,10 +1,11 @@
 /**
  * Motor de Renderização Server-Side de Templates React (Webbilly)
- * Utiliza renderToStaticMarkup do react-dom/server com componentes tipados e Tailwind CSS.
+ * Utiliza renderToReadableStream ('react-dom/server.browser') — API moderna suportada
+ * nativamente pelo React 19 e Next.js 16 App Router sem bloqueios de legado.
  */
 
 import React from 'react';
-import { renderToStaticMarkup } from 'react-dom/server.edge';
+import { renderToReadableStream } from 'react-dom/server.browser';
 import { BusinessSiteData, TemplateBlueprint } from '@/types/site-template-data';
 import { getTemplateBySlug, SiteTemplateEntry } from '@/components/site-templates/registry';
 import { injectAnalyticsTracker } from '@/lib/analytics';
@@ -24,12 +25,26 @@ function escapeHtml(text?: string): string {
     .replace(/'/g, '&#39;');
 }
 
-export function renderReactSite({ data, templateSlug }: RenderReactSiteOptions): string {
+/**
+ * Renderiza um elemento React para string HTML usando a Web Streams API moderna do React 19
+ */
+export async function renderReactComponentToHtml(element: React.ReactElement): Promise<string> {
+  const stream = await renderToReadableStream(element);
+  if (stream && 'allReady' in stream) {
+    await stream.allReady;
+  }
+  return await new Response(stream).text();
+}
+
+/**
+ * Renderiza o site completo em HTML5 + Tailwind CSS CDN + Google Fonts + Analytics
+ */
+export async function renderReactSite({ data, templateSlug }: RenderReactSiteOptions): Promise<string> {
   const templateEntry: SiteTemplateEntry = getTemplateBySlug(templateSlug);
   const { blueprint, component: Component } = templateEntry;
 
-  // 1. Renderização Server-Side Estática ultrarrápida do Componente React
-  const componentMarkup = renderToStaticMarkup(React.createElement(Component, { data }));
+  // 1. Renderização Server-Side moderna do Componente React
+  const componentMarkup = await renderReactComponentToHtml(React.createElement(Component, { data }));
 
   const headingFont = blueprint?.typography?.headingFont || 'Montserrat';
   const bodyFont = blueprint?.typography?.bodyFont || 'Inter';
