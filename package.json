@@ -7,7 +7,8 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "next lint",
-    "templates:import-github": "node scripts/import-github-templates.ts"
+    "templates:import-github": "node scripts/import-github-templates.ts",
+    "templates:to-react": "npx tsx scripts/convert-envato-to-react.ts"
   },
   "dependencies": {
     "@dicebear/collection": "^9.4.2",

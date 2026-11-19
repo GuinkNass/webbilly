@@ -5,15 +5,29 @@ import { readDb, writeDb } from '@/lib/db';
 import { sanitizeSlug, saveSiteToCloudStorage, persistSiteImages } from '@/lib/site-storage';
 import { getSupabaseAdmin, upsertSubscriptionInSupabase } from '@/lib/supabase';
 import { getPlatformPricing, formatBRL } from '@/lib/pricing';
-import { renderNativeSite, StructuredSiteData, StructuredService, StructuredTestimonial } from '@/lib/native-site-renderer';
 import { safeParseGeminiJson } from '@/lib/gemini-json';
+import { BusinessSiteData, SiteService, SiteTestimonial } from '@/types/site-template-data';
+import { getTemplateBySlug, SiteTemplateEntry } from '@/components/site-templates/registry';
+import { renderReactSite } from '@/lib/react-site-renderer';
 
 export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
 
+interface StructuredSiteCopy {
+  heroTitle: string;
+  heroSubtitle: string;
+  ctaLabel: string;
+  aboutTitle: string;
+  aboutParagraphs: string[];
+  aboutHighlights?: string[];
+  services: Array<{ title: string; description: string; priceTag?: string }>;
+  testimonials: Array<{ author: string; rating: number; text: string }>;
+  seoDescription?: string;
+}
+
 /**
  * Inteligência Local Determinística por Nicho (Fallback em 0ms)
- * Retorna rigorosamente o schema do Gemini sem risco de falha
+ * Respeita rigorosamente a trava anti-invenção (preços apenas se reais, depoimentos apenas se reais)
  */
 function generateNicheStructuredFallback(params: {
   businessName: string;
@@ -26,58 +40,60 @@ function generateNicheStructuredFallback(params: {
   services?: any[];
   reviews?: any[];
   testimonials?: any[];
-}): StructuredSiteData {
+}): StructuredSiteCopy {
   const { businessName, niche, city, tagline, description, differentiators, hours } = params;
   const n = (niche || '').toLowerCase();
   const b = (businessName || '').toLowerCase();
 
-  // Se o operador enviou serviços ou depoimentos manuais, prioriza-os
-  const customServices: StructuredService[] = Array.isArray(params.services) && params.services.length > 0
+  // Se o operador enviou serviços reais, prioriza-os mantendo apenas preços reais
+  const customServices = Array.isArray(params.services) && params.services.length > 0
     ? params.services.map((s: any) => ({
         title: s.name || s.title || 'Serviço Especializado',
         description: s.description || 'Execução com alto padrão de qualidade e materiais certificados.',
-        priceTag: s.price || s.priceTag || 'Sob Consulta'
+        priceTag: s.price || s.priceTag || undefined
       }))
     : [];
 
-  const customTestimonials: StructuredTestimonial[] = (
+  // Se o operador/Google Places enviou avaliações reais, prioriza-as; se não, lista vazia
+  const customTestimonials: Array<{ author: string; rating: number; text: string }> = (
     (Array.isArray(params.reviews) && params.reviews.length > 0)
       ? params.reviews
       : (Array.isArray(params.testimonials) && params.testimonials.length > 0)
       ? params.testimonials
       : []
   ).map((t: any) => ({
-    name: t.author || t.name || 'Cliente Verificado',
-    text: t.text || 'Excelente atendimento! Profissionais super dedicados e atenciosos.',
+    author: t.author || t.name || 'Cliente Verificado',
+    text: t.text || '',
     rating: typeof t.rating === 'number' ? t.rating : 5
-  }));
+  })).filter((t: any) => t.text.trim().length > 0);
 
   // 1. Tattoo / Piercing
   if (/tattoo|tatuag|piercing|ink/i.test(n) || /tattoo|tatuag|piercing|ink/i.test(b)) {
     return {
       heroTitle: tagline || `Arte Autoral, Biossegurança e Estilo Único em ${city}`,
       heroSubtitle: description || `No ${businessName}, transformamos ideias em arte viva na pele com máxima precisão, tintas importadas certificadas e piercings em titânio grau implante.`,
-      ctaText: 'Orçar Projeto no WhatsApp',
+      ctaLabel: 'Orçar Projeto no WhatsApp',
       aboutTitle: 'Arte na Pele com Biossegurança e Identidade',
       aboutParagraphs: [
         `O ${businessName} foi concebido para ser um ambiente acolhedor, moderno e estritamente seguro em ${city}. Nossos artistas dominam técnicas autorais que vão do fine line delicado ao realismo detalhado.`,
         differentiators || `Seguimos rigorosamente todas as normas sanitárias da ANVISA, utilizando exclusivamente materiais 100% descartáveis e esterilização de padrão hospitalar para garantir sua tranquilidade e uma cicatrização perfeita.`
       ],
+      aboutHighlights: [
+        'Materiais 100% descartáveis e estéreis',
+        'Joias em titânio grau implante antialérgico',
+        'Atendimento com hora marcada e foco total',
+        'Espaço certificado pelas normas da ANVISA'
+      ],
       services: customServices.length >= 6 ? customServices.slice(0, 6) : [
         ...customServices,
-        { title: 'Tatuagem Autoral Exclusiva', description: 'Criação sob medida do seu desenho adaptado à sua anatomia corporal.', priceTag: 'Sob Consulta' },
-        { title: 'Flash Tattoo / Fine Line', description: 'Traços finos, precisos e delicados com cicatrização suave.', priceTag: 'A partir de R$ 150,00' },
-        { title: 'Aplicação de Piercing em Titânio', description: 'Perfuração com agulha americana e joalheria em titânio grau implante antialérgico.', priceTag: 'R$ 80,00' },
-        { title: 'Reforma & Cobertura (Cover-up)', description: 'Restauração e camuflagem de tatuagens antigas com máxima precisão estética.', priceTag: 'Sob Consulta' },
-        { title: 'Realismo & Sombreado', description: 'Projetos de grande porte com contraste profundo e riqueza de texturas.', priceTag: 'Sob Consulta' },
-        { title: 'Consultoria e Troca de Joias', description: 'Avaliação da cicatrização e atualização para peças exclusivas de alta joalheria.', priceTag: 'R$ 40,00' }
+        { title: 'Tatuagem Autoral Exclusiva', description: 'Criação sob medida do seu desenho adaptado à sua anatomia corporal.' },
+        { title: 'Flash Tattoo & Fine Line', description: 'Traços finos, precisos e delicados com cicatrização suave.' },
+        { title: 'Aplicação de Piercing em Titânio', description: 'Perfuração com agulha americana e joalheria em titânio grau implante antialérgico.' },
+        { title: 'Reforma & Cobertura (Cover-up)', description: 'Restauração e camuflagem de tatuagens antigas com máxima precisão estética.' },
+        { title: 'Realismo & Sombreado', description: 'Projetos de grande porte com contraste profundo e riqueza de texturas.' },
+        { title: 'Consultoria e Troca de Joias', description: 'Avaliação da cicatrização e atualização para peças exclusivas de alta joalheria.' }
       ].slice(0, 6),
-      testimonials: customTestimonials.length >= 3 ? customTestimonials.slice(0, 3) : [
-        { name: 'Camila Rocha', text: 'Traço finíssimo e cicatrização impecável! O estúdio é extremamente limpo e os artistas são muito cuidadosos.', rating: 5 },
-        { name: 'Diego Navarro', text: 'Fechei meu antebraço e ficou surreal. O atendimento desde o primeiro contato no WhatsApp foi nota 10.', rating: 5 },
-        { name: 'Beatriz Vasconcelos', text: 'Coloquei dois piercings de titânio, não doeu nada e a cicatrização foi perfeita. Recomendo de olhos fechados!', rating: 5 }
-      ],
-      businessHours: hours || 'Terça a Sábado das 10h às 20h',
+      testimonials: customTestimonials,
       seoDescription: `${businessName} em ${city} - Estúdio de tatuagem autoral, fine line e aplicação de piercing em titânio com biossegurança ANVISA.`
     };
   }
@@ -86,28 +102,29 @@ function generateNicheStructuredFallback(params: {
   if (/barbe|barba|corte|fade|navalha/i.test(n) || /barbe|barba|corte/i.test(b)) {
     return {
       heroTitle: tagline || `Estilo, Precisão e Navalha Afiada em ${city}`,
-      heroSubtitle: description || `Na ${businessName}, você encontra mestres barbeiros, corte clássico e moderno, barboterapia relaxante e ambiente exclusivo com cerveja gelada.`,
-      ctaText: 'Agendar Horário no WhatsApp',
+      heroSubtitle: description || `Na ${businessName}, você encontra mestres barbeiros, corte clássico e moderno, barboterapia relaxante e ambiente exclusivo.`,
+      ctaLabel: 'Agendar Horário no WhatsApp',
       aboutTitle: 'Tradição & Excelência em Cada Corte',
       aboutParagraphs: [
         `A ${businessName} nasceu para resgatar a verdadeira essência da barbearia clássica aliada às técnicas mais inovadoras do mercado masculino em ${city}.`,
         differentiators || `Nosso espaço foi cuidadosamente planejado para ser seu refúgio de estilo, conforto e descontração, oferecendo toalha quente, navalha afiada e produtos de linha premium.`
       ],
+      aboutHighlights: [
+        'Profissionais especializados em degradê e barba',
+        'Barboterapia completa com toalha quente',
+        'Ambiente climatizado e confortável',
+        'Agendamento rápido e pontualidade'
+      ],
       services: customServices.length >= 6 ? customServices.slice(0, 6) : [
         ...customServices,
-        { title: 'Corte Degradê / Fade Master', description: 'Acabamento milimétrico na tesoura e máquina com finalização premium.', priceTag: 'R$ 55,00' },
-        { title: 'Barboterapia com Toalha Quente', description: 'Esfoliação facial, hidratação profunda de fios e lâmina afiada.', priceTag: 'R$ 45,00' },
-        { title: 'Combo Cabelo + Barba Completo', description: 'Nosso pacote mais pedido para um visual alinhado da cabeça aos pés.', priceTag: 'R$ 90,00' },
-        { title: 'Pigmentação & Camuflagem de Fios', description: 'Disfarce natural de falhas e cabelos brancos com produtos especiais.', priceTag: 'R$ 40,00' },
-        { title: 'Selagem Térmica Masculina', description: 'Alinhamento capilar com redução de volume e brilho natural.', priceTag: 'R$ 80,00' },
-        { title: 'Penteado & Finalização VIP', description: 'Lavagem com massagem capilar e estilização para ocasiões especiais.', priceTag: 'R$ 35,00' }
+        { title: 'Corte Degradê / Fade Master', description: 'Acabamento milimétrico na tesoura e máquina com finalização premium.' },
+        { title: 'Barboterapia com Toalha Quente', description: 'Esfoliação facial, hidratação profunda de fios e lâmina afiada.' },
+        { title: 'Combo Cabelo + Barba Completo', description: 'Nosso pacote mais pedido para um visual alinhado da cabeça aos pés.' },
+        { title: 'Pigmentação & Camuflagem', description: 'Disfarce natural de falhas e fios brancos com produtos de alta fixação.' },
+        { title: 'Selagem Térmica Masculina', description: 'Alinhamento capilar com redução de volume e brilho natural.' },
+        { title: 'Penteado & Finalização VIP', description: 'Lavagem especial com massagem capilar e estilização para ocasiões especiais.' }
       ].slice(0, 6),
-      testimonials: customTestimonials.length >= 3 ? customTestimonials.slice(0, 3) : [
-        { name: 'Rodrigo Silveira', text: 'Melhor barbearia da região! Atendimento impecável, corte perfeito e cerveja sempre gelada.', rating: 5 },
-        { name: 'Lucas Martins', text: 'Pontualidade britânica e profissionais muito detalhistas. Não corto cabelo em outro lugar!', rating: 5 },
-        { name: 'Felipe Alencar', text: 'A barboterapia é sensacional, saí completamente renovado. O ambiente é agradável demais.', rating: 5 }
-      ],
-      businessHours: hours || 'Segunda a Sábado das 09h às 20h',
+      testimonials: customTestimonials,
       seoDescription: `${businessName} em ${city} - Barbearia completa com corte fade, barba na navalha, barboterapia e atendimento VIP com hora marcada.`
     };
   }
@@ -117,27 +134,28 @@ function generateNicheStructuredFallback(params: {
     return {
       heroTitle: tagline || `Sabor Incomparável & Tradição Gastronômica em ${city}`,
       heroSubtitle: description || `Ingredientes selecionados, preparo artesanal e uma experiência gastronômica memorável para saborear no local ou receber quentinho no delivery.`,
-      ctaText: 'Fazer Pedido no WhatsApp',
+      ctaLabel: 'Fazer Pedido no WhatsApp',
       aboutTitle: 'Nossa Paixão pela Autêntica Culinária',
       aboutParagraphs: [
         `Na ${businessName}, cada receita carrega dedicação e paixão. Priorizamos produtores locais e ingredientes frescos para levar sabor marcante e aconchego ao seu paladar.`,
         differentiators || `Seja em nosso salão acolhedor ou através da nossa entrega rápida e bem embalada, garantimos a você uma refeição preparada na hora com padrão de alta gastronomia.`
       ],
+      aboutHighlights: [
+        'Ingredientes frescos e de alta procedência',
+        'Receitas autorais e preparo artesanal',
+        'Embalagens térmicas seguras para delivery',
+        'Cardápio variado com opções para toda a família'
+      ],
       services: customServices.length >= 6 ? customServices.slice(0, 6) : [
         ...customServices,
-        { title: 'Prato Assinatura do Chef', description: 'Receita exclusiva com os melhores ingredientes da estação e tempero autoral.', priceTag: 'R$ 68,00' },
-        { title: 'Combo Degustação Especial', description: 'Porção generosa para compartilhar acompanhada de entradas selecionadas.', priceTag: 'R$ 115,00' },
-        { title: 'Especialidade da Casa', description: 'O clássico mais pedido pelos clientes com sabor inconfundível.', priceTag: 'R$ 54,00' },
-        { title: 'Opção Vegetariana / Artesanal', description: 'Ingredientes frescos e combinações leves pensadas com carinho.', priceTag: 'R$ 48,00' },
-        { title: 'Sobremesa Artesanal', description: 'Finalização doce perfeita preparada diariamente com textura equilibrada.', priceTag: 'R$ 26,00' },
-        { title: 'Bebidas Selecionadas & Drinks', description: 'Sucos naturais, refrigerantes e carta de bebidas especiais.', priceTag: 'A partir de R$ 12,00' }
+        { title: 'Prato Assinatura da Casa', description: 'Receita exclusiva com os melhores ingredientes da estação e tempero autoral.' },
+        { title: 'Combo Degustação Especial', description: 'Porção generosa para compartilhar acompanhada de entradas selecionadas.' },
+        { title: 'Especialidade Tradicional', description: 'O clássico mais pedido pelos clientes com sabor inconfundível.' },
+        { title: 'Opção Artesanal Leve', description: 'Ingredientes frescos e combinações pensadas com equilíbrio e sabor.' },
+        { title: 'Sobremesa Artesanal', description: 'Finalização doce perfeita preparada diariamente com textura equilibrada.' },
+        { title: 'Bebidas e Drinks Especiais', description: 'Sucos naturais, refrigerantes e opções exclusivas para harmonizar.' }
       ].slice(0, 6),
-      testimonials: customTestimonials.length >= 3 ? customTestimonials.slice(0, 3) : [
-        { name: 'Camila Fernandes', text: 'Comida maravilhosa, tempero no ponto certo e entrega super rápida. Nota 10!', rating: 5 },
-        { name: 'Marcelo Castro', text: 'Ambiente aconchegante e comida deliciosa. O atendimento pelo WhatsApp foi super atencioso.', rating: 5 },
-        { name: 'Juliana Prado', text: 'Pratos bem servidos e ingredientes de primeira qualidade. Virou o favorito da família toda!', rating: 5 }
-      ],
-      businessHours: hours || 'Terça a Domingo das 18h às 23h30',
+      testimonials: customTestimonials,
       seoDescription: `${businessName} em ${city} - Cardápio artesanal, delivery rápido e os melhores pratos preparados com ingredientes selecionados.`
     };
   }
@@ -147,27 +165,28 @@ function generateNicheStructuredFallback(params: {
     return {
       heroTitle: tagline || `Saúde, Tecnologia e Cuidado Humanizado em ${city}`,
       heroSubtitle: description || `Tratamentos modernos com profissionais especialistas, estrutura de ponta e foco no seu bem-estar, autoestima e qualidade de vida.`,
-      ctaText: 'Agendar Consulta no WhatsApp',
+      ctaLabel: 'Agendar Consulta no WhatsApp',
       aboutTitle: 'Compromisso com a Sua Saúde e Bem-Estar',
       aboutParagraphs: [
         `A ${businessName} reúne profissionais especializados e dedicados a um atendimento ético, acolhedor e individualizado em ${city}.`,
         differentiators || `Nossa clínica conta com infraestrutura moderna, equipamentos avançados e biossegurança rigorosa para proporcionar tratamentos confortáveis e resultados de alta precisão.`
       ],
+      aboutHighlights: [
+        'Equipe multidisciplinar especializada',
+        'Equipamentos modernos e alta precisão',
+        'Atendimento humanizado e sem dor',
+        'Biossegurança rigorosa em todos os procedimentos'
+      ],
       services: customServices.length >= 6 ? customServices.slice(0, 6) : [
         ...customServices,
-        { title: 'Avaliação Clínica Completa', description: 'Diagnóstico detalhado com planejamento sob medida para o seu caso.', priceTag: 'Sob Consulta' },
-        { title: 'Procedimento Estético Avançado', description: 'Tecnologia moderna para rejuvenescimento com naturalidade e harmonia.', priceTag: 'Sob Consulta' },
-        { title: 'Tratamento Preventivo & Check-up', description: 'Acompanhamento periódico para manter sua saúde sempre protegida.', priceTag: 'Sob Consulta' },
-        { title: 'Atendimento Rápido para Desconfortos', description: 'Acolhimento imediato para alívio seguro e resolução eficaz.', priceTag: 'Sob Consulta' },
-        { title: 'Procedimento Restaurador de Ponta', description: 'Materiais de última geração com alta durabilidade e acabamento estético.', priceTag: 'Sob Consulta' },
-        { title: 'Manutenção e Acompanhamento VIP', description: 'Suporte continuado para preservar os resultados alcançados.', priceTag: 'Incluso' }
+        { title: 'Avaliação Clínica Completa', description: 'Diagnóstico detalhado com planejamento sob medida para o seu caso.' },
+        { title: 'Procedimento Estético Avançado', description: 'Tecnologia moderna para rejuvenescimento com naturalidade e harmonia.' },
+        { title: 'Tratamento Preventivo & Check-up', description: 'Acompanhamento periódico para manter sua saúde sempre protegida.' },
+        { title: 'Atendimento Rápido para Urgências', description: 'Acolhimento imediato para alívio seguro e resolução eficaz.' },
+        { title: 'Procedimento Restaurador de Ponta', description: 'Materiais de última geração com alta durabilidade e acabamento estético.' },
+        { title: 'Manutenção e Acompanhamento', description: 'Suporte continuado para preservar os resultados alcançados.' }
       ].slice(0, 6),
-      testimonials: customTestimonials.length >= 3 ? customTestimonials.slice(0, 3) : [
-        { name: 'Patrícia Souza', text: 'Equipe maravilhosa! Explicaram cada detalhe com muita paciência e o resultado foi impecável.', rating: 5 },
-        { name: 'Eduardo Ribeiro', text: 'Clínica moderna e muito limpa. Atendimento pontual e sem dor. Recomendo muito!', rating: 5 },
-        { name: 'Renata Lima', text: 'Perdi o receio de ir a consultas graças ao carinho e acolhimento dessa equipe excelente.', rating: 5 }
-      ],
-      businessHours: hours || 'Segunda a Sexta das 08h às 19h | Sábado das 08h às 13h',
+      testimonials: customTestimonials,
       seoDescription: `${businessName} em ${city} - Atendimento especializado, estrutura moderna e tratamentos com tecnologia de ponta.`
     };
   }
@@ -176,33 +195,34 @@ function generateNicheStructuredFallback(params: {
   return {
     heroTitle: tagline || `Excelência, Tradição e Confiança em ${city}`,
     heroSubtitle: description || `Na ${businessName}, unimos compromisso com resultados e atendimento personalizado para entregar as melhores soluções para você e sua família.`,
-    ctaText: 'Falar no WhatsApp',
+    ctaLabel: 'Falar no WhatsApp',
     aboutTitle: 'Compromisso com o Mais Alto Padrão de Qualidade',
     aboutParagraphs: [
       `Com atuação de destaque em ${city}, a ${businessName} se consolidou pela seriedade, pontualidade rigorosa e transparência em cada projeto executado.`,
       differentiators || `Contamos com equipe altamente qualificada e processos certificados para superar suas expectativas, oferecendo soluções ágeis e atendimento dedicado antes, durante e após a contratação.`
     ],
+    aboutHighlights: [
+      'Profissionais experientes e certificados',
+      'Orçamento transparente e sem surpresas',
+      'Pontualidade rigorosa em todas as entregas',
+      'Garantia de qualidade e suporte dedicado'
+    ],
     services: customServices.length >= 6 ? customServices.slice(0, 6) : [
       ...customServices,
-      { title: `Serviço Especializado de ${niche}`, description: 'Atendimento de alto nível com métodos certificados e garantia de satisfação.', priceTag: 'Sob Consulta' },
-      { title: 'Solução Completa Personalizada', description: 'Planejamento sob medida para atender perfeitamente sua necessidade específica.', priceTag: 'Sob Consulta' },
-      { title: 'Atendimento Ágil / Express', description: 'Prioridade e rapidez para resolver sua demanda com máxima precisão.', priceTag: 'Sob Consulta' },
-      { title: 'Consultoria e Avaliação Técnica', description: 'Diagnóstico transparente com orçamento detalhado sem surpresas.', priceTag: 'Incluso' },
-      { title: 'Manutenção Preventiva & Suporte', description: 'Acompanhamento preventivo para garantir a máxima durabilidade do serviço.', priceTag: 'Sob Consulta' },
-      { title: 'Garantia e Suporte Pós-Venda', description: 'Segurança total para você com suporte continuado sempre que precisar.', priceTag: 'Incluso' }
+      { title: `Serviço Especializado de ${niche}`, description: 'Atendimento de alto nível com métodos certificados e garantia de satisfação.' },
+      { title: 'Solução Completa Personalizada', description: 'Planejamento sob medida para atender perfeitamente sua necessidade específica.' },
+      { title: 'Atendimento Ágil / Express', description: 'Prioridade e rapidez para resolver sua demanda com máxima precisão.' },
+      { title: 'Consultoria e Avaliação Técnica', description: 'Diagnóstico transparente com detalhamento minucioso do serviço.' },
+      { title: 'Manutenção Preventiva & Suporte', description: 'Acompanhamento preventivo para garantir a máxima durabilidade do serviço.' },
+      { title: 'Garantia e Suporte Pós-Venda', description: 'Segurança total para você com suporte continuado sempre que precisar.' }
     ].slice(0, 6),
-    testimonials: customTestimonials.length >= 3 ? customTestimonials.slice(0, 3) : [
-      { name: 'Marcos Vinicius', text: 'Profissionais excelentes! Cumpriram exatamente o prazo combinado com qualidade nota 10.', rating: 5 },
-      { name: 'Aline Barbosa', text: 'Preço justo e atendimento super transparente pelo WhatsApp. Voltarei a fazer negócio com certeza.', rating: 5 },
-      { name: 'Thiago Mendes', text: 'Superaram todas as expectativas. Atendimento impecável do início ao fim!', rating: 5 }
-    ],
-    businessHours: hours || 'Segunda a Sábado das 08h às 18h',
+    testimonials: customTestimonials,
     seoDescription: `${businessName} em ${city} - Soluções em ${niche} com alto padrão, pontualidade e orçamento rápido pelo WhatsApp.`
   };
 }
 
 /**
- * Chamada Cirúrgica ao Gemini para Geração de Copy Estruturada
+ * Chamada Cirúrgica ao Gemini para Geração de Copy com Trava Anti-Invenção
  */
 async function callGeminiForStructuredSiteData(params: {
   businessName: string;
@@ -216,10 +236,11 @@ async function callGeminiForStructuredSiteData(params: {
   services?: any[];
   reviews?: any[];
   uploadedText?: string;
+  templateEntry: SiteTemplateEntry;
   apiKey: string;
   model?: string;
-}): Promise<StructuredSiteData | null> {
-  const { apiKey } = params;
+}): Promise<StructuredSiteCopy | null> {
+  const { apiKey, templateEntry } = params;
   const cleanKey = apiKey.trim().replace(/^["']|["']$/g, '');
   if (!cleanKey) return null;
 
@@ -230,51 +251,55 @@ async function callGeminiForStructuredSiteData(params: {
     'gemini-1.5-flash'
   ].filter(Boolean);
 
-  const prompt = `Você é o redator publicitário de maior conversão do Brasil para comércio local.
-Gere um JSON rigorosamente estruturado para o site oficial do negócio abaixo:
+  const prompt = `Você é um redator publicitário de alta conversão para comércio local brasileiro.
+Gere a copy estruturada do site oficial para o comércio abaixo, estritamente alinhada aos dados reais fornecidos.
 
-DADOS DO CLIENTE:
+DADOS REAIS DO COMÉRCIO:
 - Nome da Empresa: "${params.businessName}"
-- Nicho / Especialidade: "${params.niche}"
-- Cidade/Estado: "${params.city}"
-- Diferenciais / Slogan: "${params.differentiators || params.tagline || ''}"
-- Horário: "${params.hours || ''}"
-- Endereço: "${params.address || ''}"
-- Serviços cadastrados: ${JSON.stringify(params.services || [])}
-- Avaliações reais: ${JSON.stringify(params.reviews || [])}
-${params.uploadedText ? `- Extração de Cardápio/Texto OCR:\n"""${params.uploadedText.slice(0, 800)}"""` : ''}
+- Nicho / Ramo de Atuação: "${params.niche}"
+- Cidade/Região: "${params.city}"
+- Slogan / Diferenciais Reais: "${params.differentiators || params.tagline || ''}"
+- Horário Real de Atendimento: "${params.hours || ''}"
+- Endereço Real: "${params.address || ''}"
+- Serviços Cadastrados (Dados Reais): ${JSON.stringify(params.services || [])}
+- Avaliações Reais de Clientes (Google Places): ${JSON.stringify(params.reviews || [])}
+${params.uploadedText ? `- Extração de Cardápio / OCR:\n"""${params.uploadedText.slice(0, 800)}"""` : ''}
 
-REGRAS OBRIGATÓRIAS:
-1. Adapte 100% dos textos para o nicho exato de "${params.niche}". NUNCA misture nichos.
-2. aboutParagraphs DEVE conter exatamente 2 parágrafos persuasivos (entre 40 e 60 palavras cada).
-3. services DEVE conter exatamente 6 itens com title, description e priceTag (ex: "R$ 60,00" ou "Sob Consulta").
-4. testimonials DEVE conter exatamente 3 itens com name e text.
-5. Retorne EXCLUSIVAMENTE o JSON estruturado:
+ESTILO VISUAL DO TEMPLATE:
+- Nome do Template: "${templateEntry.name}" (${templateEntry.category})
+- Modo Visual: "${templateEntry.blueprint.styleMode}"
+- Tipografia: ${templateEntry.blueprint.typography.headingFont} (títulos) + ${templateEntry.blueprint.typography.bodyFont} (corpo)
 
+⚠️ REGRAS ANTI-INVENÇÃO RIGOROSAS (VIOLAÇÃO PROIBIDA):
+1. NUNCA INVENTE PREÇOS: Se os serviços cadastrados não incluírem preços reais ou se não constarem no OCR, omita o campo priceTag (NÃO crie "R$ XX,00" inventados!).
+2. NUNCA INVENTE DEPOIMENTOS: Use exclusivamente as avaliações reais de clientes fornecidas acima. Se o array de avaliações reais estiver vazio, retorne testimonials como array vazio []! O componente React oculta automaticamente a seção de depoimentos quando vazia.
+3. NUNCA INVENTE ANOS DE FUNDAÇÃO, PRÊMIOS OU CERTIFICAÇÕES FICTÍCIAS: Destaque apenas a dedicação, qualidade técnica, atendimento acolhedor e padrões reais da categoria.
+4. NUNCA INVENTE ENDEREÇOS: Use apenas a cidade informada ("${params.city}") e o endereço real se fornecido.
+5. Adapte a copy 100% para o nicho de "${params.niche}" com linguagem brasileira natural, profissional e de alta conversão.
+
+Retorne EXCLUSIVAMENTE o JSON estruturado:
 {
   "heroTitle": "Título de alto impacto com máx 9 palavras",
-  "heroSubtitle": "Subtítulo persuasivo destacando autoridade e benefício em até 26 palavras",
-  "ctaText": "Texto de ação direta (ex: Agendar Horário no WhatsApp)",
-  "aboutTitle": "Título atraente para a seção Sobre",
+  "heroSubtitle": "Subtítulo persuasivo com autoridade e benefício em até 25 palavras",
+  "ctaLabel": "Texto do botão de ação (ex: Agendar Horário no WhatsApp, Fazer Pedido no WhatsApp)",
+  "aboutTitle": "Título para a seção Sobre Nós",
   "aboutParagraphs": [
-    "Primeiro parágrafo detalhando trajetória e excelência local...",
-    "Segundo parágrafo detalhando métodos, biossegurança/qualidade e acolhimento..."
+    "Primeiro parágrafo de 40 a 60 palavras...",
+    "Segundo parágrafo de 40 a 60 palavras..."
+  ],
+  "aboutHighlights": [
+    "Destaque real 1",
+    "Destaque real 2",
+    "Destaque real 3",
+    "Destaque real 4"
   ],
   "services": [
-    { "title": "Serviço 1", "description": "Breve explicação do serviço 1", "priceTag": "R$ XX,00 ou Sob Consulta" },
-    { "title": "Serviço 2", "description": "Breve explicação do serviço 2", "priceTag": "R$ XX,00 ou Sob Consulta" },
-    { "title": "Serviço 3", "description": "Breve explicação do serviço 3", "priceTag": "R$ XX,00 ou Sob Consulta" },
-    { "title": "Serviço 4", "description": "Breve explicação do serviço 4", "priceTag": "R$ XX,00 ou Sob Consulta" },
-    { "title": "Serviço 5", "description": "Breve explicação do serviço 5", "priceTag": "R$ XX,00 ou Sob Consulta" },
-    { "title": "Serviço 6", "description": "Breve explicação do serviço 6", "priceTag": "R$ XX,00 ou Sob Consulta" }
+    { "title": "Nome do Serviço", "description": "Descrição clara e objetiva do serviço", "priceTag": "Preço real se houver (opcional)" }
   ],
   "testimonials": [
-    { "name": "Nome do Cliente 1", "text": "Depoimento realista e elogioso..." },
-    { "name": "Nome do Cliente 2", "text": "Depoimento realista e elogioso..." },
-    { "name": "Nome do Cliente 3", "text": "Depoimento realista e elogioso..." }
+    { "author": "Nome do autor da avaliação real", "rating": 5, "text": "Texto da avaliação real" }
   ],
-  "businessHours": "${params.hours || 'Segunda a Sábado das 08h às 19h'}",
-  "seoDescription": "Meta descrição atrativa de 140 a 160 caracteres para buscas no Google"
+  "seoDescription": "Meta descrição de 140 a 160 caracteres para buscas no Google"
 }`;
 
   for (const model of models) {
@@ -299,7 +324,7 @@ REGRAS OBRIGATÓRIAS:
       const data = await res.json();
       const rawJson = data?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (rawJson) {
-        const parsed = safeParseGeminiJson<StructuredSiteData | null>(rawJson, null);
+        const parsed = safeParseGeminiJson<StructuredSiteCopy | null>(rawJson, null);
         if (parsed && parsed.heroTitle && Array.isArray(parsed.services)) {
           return parsed;
         }
@@ -370,8 +395,12 @@ export async function POST(req: NextRequest) {
 
     const rawPhone = (whatsapp || phone || '11999999999').replace(/\D/g, '');
     const cleanPhone = rawPhone.length <= 11 && !rawPhone.startsWith('55') ? `55${rawPhone}` : rawPhone;
+    const phoneDisplay = phone || (whatsapp ? whatsapp.replace(/(\d{2})(\d{4,5})(\d{4})/, '($1) $2-$3') : '(11) 99999-9999');
 
-    // 1. Persiste fotos temporárias externas do Google/Instagram no Supabase Storage permanente
+    // 1. Obtém o template React tipado correspondente
+    const templateEntry = getTemplateBySlug(templateId);
+
+    // 2. Persiste fotos temporárias externas do Google/Instagram no Supabase Storage permanente
     let finalHeroPhoto = heroPhoto;
     let finalGalleryPhotos = Array.isArray(galleryPhotos) ? galleryPhotos : [];
     try {
@@ -382,16 +411,20 @@ export async function POST(req: NextRequest) {
       console.warn('[Studio Gerar Site] Falha ao persistir imagens no Supabase Storage:', persistErr);
     }
 
-    // 2. Geração do JSON Estruturado (Gemini em ~2 a 4s com Fallback Local em 0ms)
+    // 3. Geração da Copy Estruturada (Gemini em ~2 a 4s com Fallback Local em 0ms)
     const apiKey = (process.env.GEMINI_API_KEY || '').trim();
-    let siteData: StructuredSiteData | null = null;
+    let siteCopy: StructuredSiteCopy | null = null;
     let usedAi = false;
     let modelUsed: string | undefined;
+
+    const realReviewsInput = (Array.isArray(reviews) && reviews.length > 0)
+      ? reviews
+      : (Array.isArray(testimonials) && testimonials.length > 0 ? testimonials : []);
 
     if (apiKey) {
       try {
         const preferredModel = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
-        siteData = await callGeminiForStructuredSiteData({
+        siteCopy = await callGeminiForStructuredSiteData({
           businessName,
           niche,
           city,
@@ -401,12 +434,13 @@ export async function POST(req: NextRequest) {
           hours,
           address,
           services,
-          reviews: reviews.length > 0 ? reviews : testimonials,
+          reviews: realReviewsInput,
           uploadedText,
+          templateEntry,
           apiKey,
           model: preferredModel
         });
-        if (siteData) {
+        if (siteCopy) {
           usedAi = true;
           modelUsed = preferredModel;
         }
@@ -415,8 +449,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (!siteData) {
-      siteData = generateNicheStructuredFallback({
+    if (!siteCopy) {
+      siteCopy = generateNicheStructuredFallback({
         businessName,
         niche,
         city,
@@ -430,44 +464,87 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 3. Renderização Nativa Tailwind CSS + Google Fonts (10ms determinístico, zero zip/cheerio)
+    // 4. Monta o contrato estrito BusinessSiteData com dados reais e blindagem total
+    const galleryItems = finalGalleryPhotos.map((url: string, idx: number) => ({
+      url,
+      alt: `${businessName} - Trabalho ${idx + 1}`
+    }));
+
+    // Depoimentos reais ou array vazio [] (componente esconde automaticamente se vazio)
+    const finalTestimonials: SiteTestimonial[] = (siteCopy.testimonials || []).map((t: any) => ({
+      author: t.author || t.name || 'Cliente Verificado',
+      rating: typeof t.rating === 'number' ? Math.min(5, Math.max(1, t.rating)) : 5,
+      text: t.text || ''
+    })).filter((t: any) => t.text.trim().length > 0);
+
+    const businessSiteData: BusinessSiteData = {
+      brandName: businessName,
+      niche,
+      palette: {
+        primary: primaryColor || accentColor || templateEntry.blueprint.defaultPalette.primary,
+        secondary: templateEntry.blueprint.defaultPalette.secondary,
+        background: backgroundColor || templateEntry.blueprint.defaultPalette.background,
+        surface: surfaceColor || templateEntry.blueprint.defaultPalette.surface,
+        text: textColor || templateEntry.blueprint.defaultPalette.text
+      },
+      hero: {
+        title: siteCopy.heroTitle,
+        subtitle: siteCopy.heroSubtitle,
+        ctaLabel: siteCopy.ctaLabel || 'Falar no WhatsApp',
+        backgroundImage: finalHeroPhoto || templateEntry.blueprint.thumbnail
+      },
+      about: {
+        title: siteCopy.aboutTitle,
+        paragraphs: siteCopy.aboutParagraphs,
+        image: finalGalleryPhotos[0] || finalHeroPhoto || templateEntry.blueprint.thumbnail,
+        highlights: siteCopy.aboutHighlights && siteCopy.aboutHighlights.length > 0
+          ? siteCopy.aboutHighlights
+          : [
+              'Atendimento ágil pelo WhatsApp',
+              'Padrão de qualidade certificado',
+              'Localização de fácil acesso',
+              'Compromisso com sua satisfação'
+            ]
+      },
+      services: (siteCopy.services || []).map((s: any) => ({
+        title: s.title,
+        description: s.description,
+        priceTag: s.priceTag && !s.priceTag.toLowerCase().includes('inventad') && s.priceTag !== 'Sob Consulta'
+          ? s.priceTag
+          : undefined
+      })),
+      gallery: galleryItems,
+      testimonials: finalTestimonials,
+      contact: {
+        whatsappUrl: `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Olá! Vim pelo site oficial da ${businessName} e gostaria de informações.`)}`,
+        phoneDisplay: phoneDisplay,
+        address: address ? `${address}, ${city}` : (city ? `${city}` : undefined),
+        mapsUrl: address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${address}, ${city}`)}` : undefined,
+        mapsEmbedUrl: address ? `https://maps.google.com/maps?q=${encodeURIComponent(`${address}, ${city}`)}&t=&z=15&ie=UTF8&iwloc=&output=embed` : undefined,
+        hours: hours ? [hours] : ['Segunda a Sábado das 08h às 19h']
+      },
+      seo: {
+        title: `${businessName} | ${niche} em ${city}`,
+        description: siteCopy.seoDescription || `${businessName} em ${city} - Conheça nossos serviços de ${niche} com atendimento de excelência e orçamento rápido pelo WhatsApp.`
+      }
+    };
+
+    // 5. Renderização Server-Side Estática (react-dom/server + Tailwind + Google Fonts)
     let generatedHtml: string;
     try {
-      generatedHtml = renderNativeSite({
-        businessName,
-        shortName,
-        headerName,
-        niche,
-        city,
-        subdomain: cleanSlug,
-        phone: rawPhone,
-        whatsapp: cleanPhone,
-        instagram,
-        address,
-        hours,
-        templateId,
-        theme,
-        paletteId,
-        primaryColor,
-        accentColor,
-        backgroundColor,
-        surfaceColor,
-        textColor,
-        fontPair,
-        logoUrl,
-        heroPhoto: finalHeroPhoto,
-        galleryPhotos: finalGalleryPhotos,
-        data: siteData
+      generatedHtml = renderReactSite({
+        data: businessSiteData,
+        templateSlug: templateId
       });
     } catch (renderErr: any) {
-      console.error('[Studio Gerar Site] Erro no renderNativeSite:', renderErr);
+      console.error('[Studio Gerar Site] Erro no renderReactSite:', renderErr);
       return NextResponse.json(
         { success: false, error: `Falha na renderização do site: ${renderErr?.message || 'Erro desconhecido'}` },
         { status: 500 }
       );
     }
 
-    // 4. Grava no disco local apenas se não estiver em ambiente Vercel Serverless
+    // 6. Grava no disco local apenas se não estiver em ambiente Vercel Serverless
     try {
       if (!process.env.VERCEL) {
         const siteDir = path.join(process.cwd(), 'public', 'generated-sites', cleanSlug);
@@ -480,7 +557,7 @@ export async function POST(req: NextRequest) {
       console.warn('[Studio Gerar Site] Aviso gravação em disco:', fsErr);
     }
 
-    // 5. Salva no banco local db.json
+    // 7. Salva no banco local db.json
     const leadToken = `lead_${cleanSlug}_${Date.now().toString(36)}`;
     try {
       const db = readDb();
@@ -536,7 +613,7 @@ export async function POST(req: NextRequest) {
       console.warn('[Studio Gerar Site] Aviso db.json:', dbErr);
     }
 
-    // 6. Salva no Supabase Storage e na tabela subscriptions como RASCUNHO
+    // 8. Salva no Supabase Storage e na tabela subscriptions como RASCUNHO
     await saveSiteToCloudStorage(cleanSlug, generatedHtml, {
       businessName,
       niche,
@@ -574,7 +651,7 @@ export async function POST(req: NextRequest) {
       console.warn('[Studio Gerar Site] Erro ao sincronizar com Supabase:', supaErr);
     }
 
-    // 7. Mensagem de Fechamento de Venda no WhatsApp
+    // 9. Mensagem de Fechamento de Venda no WhatsApp
     const siteUrl = `https://${cleanSlug}.webbilly.com.br`;
     const proposalUrl = `https://webbilly.com.br/proposta/${leadToken}`;
 
