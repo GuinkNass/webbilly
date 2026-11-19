@@ -86,8 +86,8 @@ export default function RankingView({ mode }: RankingViewProps) {
   if (loading && !leaderboard.length) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[55vh] gap-3">
-        <div className="w-12 h-12 border-4 border-[#45f882] border-t-transparent rounded-full animate-spin glow-neon-green" />
-        <span className="text-zinc-300 text-xs font-mono uppercase tracking-widest font-barlow">
+        <div className="w-10 h-10 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        <span className="text-zinc-400 text-xs font-mono uppercase tracking-widest font-barlow">
           Sincronizando Liga dos Campeões Webbilly...
         </span>
       </div>
@@ -122,8 +122,8 @@ export default function RankingView({ mode }: RankingViewProps) {
 
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#45f882]/10 border border-[#45f882]/30 text-[#45f882] text-xs font-black tracking-wider uppercase font-barlow">
-              <Sparkles className="w-3.5 h-3.5 text-[#45f882] animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#10b981]/10 border border-[#10b981]/30 text-[#10b981] text-xs font-black tracking-wider uppercase font-barlow">
+              <Sparkles className="w-3.5 h-3.5 text-[#10b981] animate-pulse" />
               <span>Temporada Oficial 2026 • Liga dos Campeões Webbilly</span>
             </div>
 
@@ -134,7 +134,7 @@ export default function RankingView({ mode }: RankingViewProps) {
                   VISÃO MASTER
                 </span>
               ) : (
-                <span className="text-xs font-bold font-mono px-2.5 py-1 rounded bg-[#45f882]/20 text-[#45f882] border border-[#45f882]/40">
+                <span className="text-xs font-bold font-mono px-2.5 py-1 rounded bg-[#10b981]/20 text-[#10b981] border border-[#10b981]/40">
                   AO VIVO
                 </span>
               )}
@@ -150,17 +150,17 @@ export default function RankingView({ mode }: RankingViewProps) {
               <button
                 onClick={() => fetchRanking(true)}
                 disabled={refreshing}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border border-white/10 text-xs font-bold transition disabled:opacity-50 shadow-md hover:border-[#45f882]/40 cursor-pointer"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border border-white/10 text-xs font-bold transition disabled:opacity-50 shadow-md hover:border-[#10b981]/40 cursor-pointer"
               >
-                <RefreshCw className={`w-3.5 h-3.5 text-[#45f882] ${refreshing ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-3.5 h-3.5 text-[#10b981] ${refreshing ? 'animate-spin' : ''}`} />
                 <span>{refreshing ? 'Atualizando...' : 'Atualizar'}</span>
               </button>
             </ActionTooltip>
 
             {mode === 'operator' && (
-              <div className="px-5 py-2.5 rounded-xl bg-black/60 border border-[#45f882]/30 text-right backdrop-blur-sm">
+              <div className="px-5 py-2.5 rounded-xl bg-black/60 border border-[#10b981]/30 text-right backdrop-blur-sm">
                 <div className="text-[10px] uppercase font-bold text-zinc-400 font-barlow tracking-wider">Sua Posição</div>
-                <div className="text-xl font-black text-[#45f882] font-mono leading-none mt-0.5">
+                <div className="text-xl font-black text-[#10b981] font-mono leading-none mt-0.5">
                   #{currentUserProgress?.rank || (leaderboard.findIndex((r) => r.isCurrentUser) + 1 || 1)}{' '}
                   <span className="text-xs text-zinc-400 font-normal font-sans">de {leaderboard.length}</span>
                 </div>
@@ -173,30 +173,30 @@ export default function RankingView({ mode }: RankingViewProps) {
       {/* 2. BANNER DE BÔNUS (+20%) / RESUMO ADMIN */}
       {mode === 'operator' ? (
         hasBonus ? (
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0d2218] via-[#1a2e1d] to-[#0d2218] border-2 border-[#45f882]/60 p-6 shadow-2xl glow-neon-green">
+          <div className="relative overflow-hidden rounded-2xl bg-[#11141C] border border-emerald-500/30 p-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 relative z-10">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-[#45f882]/20 border border-[#45f882]/50 flex items-center justify-center text-3xl shrink-0 shadow-lg shadow-[#45f882]/20">
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-2xl shrink-0">
                   🎉
                 </div>
                 <div>
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#45f882]/20 text-[#45f882] font-black text-[10px] uppercase tracking-wider mb-1 font-barlow">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-bold text-[10px] uppercase tracking-wider mb-1 font-barlow">
                     <Sparkles className="w-3 h-3" />
                     Bônus de Promoção Destravado!
                   </div>
-                  <h3 className="text-base sm:text-xl font-black text-white font-barlow uppercase tracking-tight">
+                  <h3 className="text-base sm:text-lg font-bold text-zinc-100 font-barlow uppercase tracking-tight">
                     Parabéns! Você subiu de medalha e garantiu +20% DE BÔNUS!
                   </h3>
-                  <p className="text-xs text-zinc-300 mt-1 max-w-xl">
-                    Você atingiu a <strong className="text-amber-300 font-bold">{medal.name}</strong> neste ciclo! O bônus adicional de{' '}
-                    <strong className="text-[#45f882] font-mono text-sm">+R$ {bonusAmount.toFixed(2).replace('.', ',')}</strong> foi automaticamente incorporado ao seu repasse Pix mensal.
+                  <p className="text-xs text-zinc-400 mt-1 max-w-xl">
+                    Você atingiu a <strong className="text-amber-400 font-bold">{medal.name}</strong> neste ciclo! O bônus adicional de{' '}
+                    <strong className="text-emerald-400 font-mono text-sm">+R$ {bonusAmount.toFixed(2).replace('.', ',')}</strong> foi automaticamente incorporado ao seu repasse Pix mensal.
                   </p>
                 </div>
               </div>
 
-              <div className="px-5 py-3 rounded-xl bg-black/60 border border-[#45f882]/50 text-center shrink-0 backdrop-blur-sm">
-                <div className="text-[10px] uppercase font-bold text-[#45f882] font-barlow tracking-wider">+20% Bônus Pix</div>
-                <div className="text-xl font-black text-white font-mono mt-0.5">
+              <div className="px-5 py-3 rounded-xl bg-[#090B10] border border-emerald-500/20 text-center shrink-0">
+                <div className="text-[10px] uppercase font-bold text-emerald-400 font-barlow tracking-wider">+20% Bônus Pix</div>
+                <div className="text-xl font-black text-zinc-100 font-mono mt-0.5">
                   +R$ {bonusAmount.toFixed(2).replace('.', ',')}
                 </div>
               </div>
@@ -208,7 +208,7 @@ export default function RankingView({ mode }: RankingViewProps) {
               <Flame className="w-4 h-4 text-amber-400" />
             </div>
             <div>
-              <strong className="text-white font-barlow uppercase tracking-wide">Regra do Bônus de +20%:</strong> Suba de medalha neste mês (ex: Iniciante ➔ Bronze, Bronze ➔ Prata, Prata ➔ Ouro, Ouro ➔ Rubi) e ganhe automaticamente um <span className="text-[#45f882] font-bold">bônus extra de +20%</span> sobre todos os seus repasses e ganhos do mês!
+              <strong className="text-white font-barlow uppercase tracking-wide">Regra do Bônus de +20%:</strong> Suba de medalha neste mês (ex: Iniciante ➔ Bronze, Bronze ➔ Prata, Prata ➔ Ouro, Ouro ➔ Rubi) e ganhe automaticamente um <span className="text-[#10b981] font-bold">bônus extra de +20%</span> sobre todos os seus repasses e ganhos do mês!
             </div>
           </div>
         )
@@ -218,7 +218,7 @@ export default function RankingView({ mode }: RankingViewProps) {
           <div className="p-5 rounded-2xl bg-[#0f141d] border border-white/10">
             <div className="flex items-center justify-between text-zinc-400 text-xs font-barlow uppercase tracking-wider mb-2">
               <span>Operadores Ativos</span>
-              <Users className="w-4 h-4 text-[#45f882]" />
+              <Users className="w-4 h-4 text-[#10b981]" />
             </div>
             <div className="text-2xl font-black text-white font-mono">{leaderboard.length}</div>
             <div className="text-[11px] text-zinc-400 mt-1">Participando da Liga dos Campeões</div>
@@ -245,12 +245,12 @@ export default function RankingView({ mode }: RankingViewProps) {
           <div className="p-5 rounded-2xl bg-[#0f141d] border border-white/10">
             <div className="flex items-center justify-between text-zinc-400 text-xs font-barlow uppercase tracking-wider mb-2">
               <span>Bônus Destravados</span>
-              <Sparkles className="w-4 h-4 text-[#45f882]" />
+              <Sparkles className="w-4 h-4 text-[#10b981]" />
             </div>
             <div className="text-2xl font-black text-white font-mono">
               R$ {totalBonusAwarded.toFixed(2).replace('.', ',')}
             </div>
-            <div className="text-[11px] text-[#45f882] mt-1 font-semibold">
+            <div className="text-[11px] text-[#10b981] mt-1 font-semibold">
               {leaderboard.filter((c) => c.hasMedalUpgradeBonus).length} operadores bonificados (+20%)
             </div>
           </div>
@@ -286,7 +286,7 @@ export default function RankingView({ mode }: RankingViewProps) {
 
             <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between text-xs">
               <span className="text-zinc-400">Ganhos Base Mês:</span>
-              <span className="font-mono font-bold text-[#45f882] text-sm">
+              <span className="font-mono font-bold text-[#10b981] text-sm">
                 R$ {(currentUserProgress?.monthlyBaseEarnings || 0).toFixed(2).replace('.', ',')}
               </span>
             </div>
@@ -328,7 +328,7 @@ export default function RankingView({ mode }: RankingViewProps) {
                 <span className="text-[11px] uppercase font-black tracking-wider text-zinc-400 font-barlow">
                   Próxima Conquista
                 </span>
-                <Target className="w-5 h-5 text-[#45f882]" />
+                <Target className="w-5 h-5 text-[#10b981]" />
               </div>
 
               {nextMedal ? (
@@ -348,12 +348,12 @@ export default function RankingView({ mode }: RankingViewProps) {
                     </div>
                     <div className="w-full h-2 rounded-full bg-zinc-800 overflow-hidden">
                       <div
-                        className="h-full bg-[#45f882] transition-all duration-500 rounded-full glow-neon-green"
+                        className="h-full bg-emerald-500 transition-all duration-500 rounded-full"
                         style={{ width: `${currentUserProgress?.recurringProgressPercent || 0}%` }}
                       />
                     </div>
                     {(currentUserProgress?.recurringNeededForNext ?? 0) > 0 && (
-                      <div className="text-[10px] text-[#45f882] font-semibold">
+                      <div className="text-[10px] text-emerald-400 font-semibold">
                         Faltam apenas {currentUserProgress?.recurringNeededForNext} assinante{currentUserProgress?.recurringNeededForNext > 1 ? 's' : ''} ativo{currentUserProgress?.recurringNeededForNext > 1 ? 's' : ''}
                       </div>
                     )}
@@ -369,7 +369,7 @@ export default function RankingView({ mode }: RankingViewProps) {
                     </div>
                     <div className="w-full h-2 rounded-full bg-zinc-800 overflow-hidden">
                       <div
-                        className="h-full bg-amber-400 transition-all duration-500 rounded-full glow-gold"
+                        className="h-full bg-amber-400 transition-all duration-500 rounded-full"
                         style={{ width: `${currentUserProgress?.domainProgressPercent || 0}%` }}
                       />
                     </div>
@@ -462,7 +462,7 @@ export default function RankingView({ mode }: RankingViewProps) {
                   <div className="text-sm font-black text-white flex items-center justify-center gap-1.5 font-barlow">
                     <span>{mode === 'admin' ? top2.fullName : top2.displayName}</span>
                     {top2.isCurrentUser && (
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#45f882]/20 text-[#45f882] border border-[#45f882]/40 uppercase">
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#10b981]/20 text-[#10b981] border border-[#10b981]/40 uppercase">
                         Você
                       </span>
                     )}
@@ -507,7 +507,7 @@ export default function RankingView({ mode }: RankingViewProps) {
                   <div className="text-base font-black text-amber-300 flex items-center justify-center gap-2 font-barlow">
                     <span>{mode === 'admin' ? top1.fullName : top1.displayName}</span>
                     {top1.isCurrentUser && (
-                      <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-[#45f882]/20 text-[#45f882] border border-[#45f882]/40 uppercase">
+                      <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-[#10b981]/20 text-[#10b981] border border-[#10b981]/40 uppercase">
                         Você
                       </span>
                     )}
@@ -551,7 +551,7 @@ export default function RankingView({ mode }: RankingViewProps) {
                   <div className="text-sm font-black text-white flex items-center justify-center gap-1.5 font-barlow">
                     <span>{mode === 'admin' ? top3.fullName : top3.displayName}</span>
                     {top3.isCurrentUser && (
-                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#45f882]/20 text-[#45f882] border border-[#45f882]/40 uppercase">
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#10b981]/20 text-[#10b981] border border-[#10b981]/40 uppercase">
                         Você
                       </span>
                     )}
@@ -604,7 +604,7 @@ export default function RankingView({ mode }: RankingViewProps) {
             <div className="space-y-1.5 text-xs text-zinc-300">
               <div>• <strong>10+</strong> Assinantes Ativos</div>
               <div>• <strong>1+</strong> Domínio no Mês</div>
-              <div className="pt-2 text-[11px] text-[#45f882] font-bold">+20% Bônus de Promoção</div>
+              <div className="pt-2 text-[11px] text-[#10b981] font-bold">+20% Bônus de Promoção</div>
             </div>
           </div>
 
@@ -622,7 +622,7 @@ export default function RankingView({ mode }: RankingViewProps) {
             <div className="space-y-1.5 text-xs text-zinc-300">
               <div>• <strong>35+</strong> Assinantes Ativos</div>
               <div>• <strong>5+</strong> Domínios no Mês</div>
-              <div className="pt-2 text-[11px] text-[#45f882] font-bold">+20% Bônus de Promoção</div>
+              <div className="pt-2 text-[11px] text-[#10b981] font-bold">+20% Bônus de Promoção</div>
             </div>
           </div>
 
@@ -640,7 +640,7 @@ export default function RankingView({ mode }: RankingViewProps) {
             <div className="space-y-1.5 text-xs text-zinc-300">
               <div>• <strong>50+</strong> Assinantes Ativos</div>
               <div>• <strong>15+</strong> Domínios no Mês</div>
-              <div className="pt-2 text-[11px] text-[#45f882] font-bold">+20% Bônus de Promoção</div>
+              <div className="pt-2 text-[11px] text-[#10b981] font-bold">+20% Bônus de Promoção</div>
             </div>
           </div>
 
@@ -658,7 +658,7 @@ export default function RankingView({ mode }: RankingViewProps) {
             <div className="space-y-1.5 text-xs text-zinc-300">
               <div>• <strong>100+</strong> Assinantes Ativos</div>
               <div>• <strong>25+</strong> Domínios no Mês</div>
-              <div className="pt-2 text-[11px] text-[#45f882] font-bold">+20% Bônus de Promoção</div>
+              <div className="pt-2 text-[11px] text-[#10b981] font-bold">+20% Bônus de Promoção</div>
             </div>
           </div>
         </div>
@@ -713,7 +713,7 @@ export default function RankingView({ mode }: RankingViewProps) {
                     key={row.operatorId}
                     className={`transition ${
                       isMe
-                        ? 'bg-[#45f882]/10 border-l-4 border-l-[#45f882] font-semibold'
+                        ? 'bg-[#10b981]/10 border-l-4 border-l-[#10b981] font-semibold'
                         : 'hover:bg-white/[0.03]'
                     }`}
                   >
@@ -753,11 +753,11 @@ export default function RankingView({ mode }: RankingViewProps) {
                         />
                         <div>
                           <div className="flex items-center gap-1.5">
-                            <span className={`font-bold font-barlow text-sm ${isMe ? 'text-[#45f882]' : 'text-white'}`}>
+                            <span className={`font-bold font-barlow text-sm ${isMe ? 'text-[#10b981]' : 'text-white'}`}>
                               {mode === 'admin' ? row.fullName : row.displayName}
                             </span>
                             {isMe && (
-                              <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-[#45f882]/20 text-[#45f882] border border-[#45f882]/40 uppercase tracking-wider font-mono">
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-[#10b981]/20 text-[#10b981] border border-[#10b981]/40 uppercase tracking-wider font-mono">
                                 Você
                               </span>
                             )}
@@ -813,7 +813,7 @@ export default function RankingView({ mode }: RankingViewProps) {
                     {/* STATUS DO BÔNUS */}
                     <td className="py-3.5 px-4 text-right">
                       {row.hasMedalUpgradeBonus ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#45f882]/20 text-[#45f882] border border-[#45f882]/40 font-mono">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#10b981]/20 text-[#10b981] border border-[#10b981]/40 font-mono">
                           <Sparkles className="w-2.5 h-2.5" />
                           +20% Bônus
                         </span>

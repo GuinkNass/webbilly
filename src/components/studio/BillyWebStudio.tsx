@@ -1059,7 +1059,7 @@ export default function BillyWebStudio({
     }, 1500);
 
     const stepTimer2 = setTimeout(() => {
-      setGenerationStep('3/3 Compilando template oficial do Billy Desktop e estilos...');
+      setGenerationStep('3/3 Compilando template oficial do Billy Studio Web e estilos...');
       setGenerationProgress(90);
     }, 3500);
 
@@ -1240,50 +1240,34 @@ export default function BillyWebStudio({
 
   return (
     <div className="space-y-6 select-none font-sans">
-      {/* Banner de Vídeo em Loop do Webbilly Studio */}
-      <div className="w-full h-36 md:h-44 rounded-2xl overflow-hidden relative border border-slate-200 dark:border-white/10 mb-5 shadow-2xl bg-slate-900">
-        <video
-          src="/videos/webbilly-app-header.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          className="w-full h-full object-cover object-center"
-        />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#090d0b]/60 via-transparent to-[#090d0b]/30" />
-      </div>
-
       {/* =========================================================================
-          CABEÇALHO NEON DO BILLY STUDIO WEB
+          CABEÇALHO COMPACTO DO BILLY STUDIO WEB (ZERO BANNER GIGANTE, ZERO NEON)
          ========================================================================= */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-[#0c1017] via-[#101522] to-[#07090e] border border-slate-200 dark:border-white/[0.08] shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#1478f0]/10 rounded-full blur-[100px] pointer-events-none" />
-
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-[#1478f0]/15 text-[#38bdf8] border border-[#1478f0]/40 shadow-sm">
+      <div className="p-5 sm:p-6 rounded-2xl bg-[#11141C] border border-white/[0.06]">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Billy Studio Web • 100% no Navegador</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
+            <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 tracking-tight flex items-center gap-2">
               <span>Estúdio de Prospecção & Criação de Sites IA</span>
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-2xl leading-relaxed">
-              Encontre comércios sem site no Google, configure templates oficiais com o Wizard modular do Desktop,
-              gere a landing page com IA e publique no subdomínio oficial <code className="text-[#1478f0] font-mono">*.webbilly.com.br</code>.
+            <p className="text-xs text-zinc-400 max-w-2xl leading-relaxed">
+              Encontre comércios sem site no Google Maps, configure templates oficiais com o Billy Studio Web,
+              gere o site com IA nativa e publique no subdomínio oficial <code className="text-emerald-400 font-mono">*.webbilly.com.br</code>.
             </p>
           </div>
 
-          {/* Seletor de Abas com fluxo de 3 passos no celular (< 768px) */}
-          <div className="flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-2xl bg-slate-100 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] shrink-0 self-stretch lg:self-auto overflow-x-auto max-w-full scrollbar-none">
+          {/* Barra de Progresso em 3 Passos */}
+          <div className="flex items-center gap-1 sm:gap-1.5 p-1 rounded-xl bg-[#090B10] border border-white/[0.06] shrink-0 self-stretch lg:self-auto overflow-x-auto max-w-full scrollbar-none">
             <button
               type="button"
               onClick={() => setActiveTab('prospectar')}
-              className={`flex-1 sm:flex-none px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap min-h-[44px] ${
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap min-h-[40px] ${
                 activeTab === 'prospectar'
-                  ? 'bg-[#1478f0] text-black shadow-lg shadow-[#1478f0]/30'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04]'
+                  ? 'bg-emerald-500 text-zinc-950 font-bold'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
               }`}
             >
               <Search className="w-3.5 h-3.5" />
@@ -1293,42 +1277,40 @@ export default function BillyWebStudio({
             <button
               type="button"
               onClick={() => setActiveTab('estudio')}
-              className={`flex-1 sm:flex-none px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap min-h-[44px] ${
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap min-h-[40px] ${
                 activeTab === 'estudio'
-                  ? 'bg-[#1478f0] text-black shadow-lg shadow-[#1478f0]/30'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04]'
+                  ? 'bg-emerald-500 text-zinc-950 font-bold'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
               }`}
             >
               <Sliders className="w-3.5 h-3.5" />
-              <span className="sm:hidden">2. Template & Fotos</span>
-              <span className="hidden sm:inline">2. Template & Fotos</span>
+              <span>2. Template & Fotos</span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveTab('preview')}
-              className={`flex-1 sm:flex-none px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap min-h-[44px] ${
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap min-h-[40px] ${
                 activeTab === 'preview'
-                  ? 'bg-[#1478f0] text-black shadow-lg shadow-[#1478f0]/30'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04]'
+                  ? 'bg-emerald-500 text-zinc-950 font-bold'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
               }`}
             >
               <Eye className="w-3.5 h-3.5" />
-              <span className="sm:hidden">3. Preview & Enviar</span>
-              <span className="hidden sm:inline">3. Preview & Enviar</span>
+              <span>3. Preview & Enviar</span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveTab('projetos')}
-              className={`px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap min-h-[44px] ${
+              className={`px-3 sm:px-4 py-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap min-h-[40px] ${
                 activeTab === 'projetos'
-                  ? 'bg-[#1478f0] text-black shadow-lg shadow-[#1478f0]/30'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.04]'
+                  ? 'bg-emerald-500 text-zinc-950 font-bold'
+                  : 'text-zinc-400 hover:text-white hover:bg-white/[0.04]'
               }`}
               title="Histórico de Sites"
             >
-              <Globe className="w-3.5 h-3.5" />
+              <Database className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Histórico ({projects.length})</span>
             </button>
           </div>
@@ -1841,7 +1823,7 @@ export default function BillyWebStudio({
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <Palette className="w-5 h-5 text-[#1478f0]" />
-                  <span>1. Escolher Template Visual Oficial do Billy Desktop</span>
+                  <span>1. Escolher Template Visual Oficial do Billy Studio Web</span>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Selecione entre os 20 layouts de alta conversão do Billy Suite ou deixe a IA escolher o modelo perfeito.
@@ -2012,10 +1994,10 @@ export default function BillyWebStudio({
                       key={cat.id}
                       type="button"
                       onClick={() => setTemplateCategoryFilter(cat.id)}
-                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-xl text-[11px] font-medium transition cursor-pointer ${
                         isCatActive
-                          ? 'bg-[#1478f0] text-black shadow-md shadow-[#1478f0]/20'
-                          : 'bg-slate-50 dark:bg-slate-50 dark:bg-black/20 text-slate-500 dark:text-slate-400 hover:text-white border border-slate-200 dark:border-white/[0.06]'
+                          ? 'bg-emerald-500 text-zinc-950 font-bold'
+                          : 'bg-zinc-900 text-zinc-300 border border-white/10 hover:border-white/20 hover:text-white'
                       }`}
                     >
                       {cat.label}
@@ -2562,7 +2544,7 @@ export default function BillyWebStudio({
                   <span>3. Seções Modulares do Site (Toggles Liga/Desliga)</span>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  Ative ou desative seções de acordo com a necessidade do cliente (idêntico ao app desktop).
+                  Ative ou desative seções de acordo com a necessidade do cliente.
                 </p>
               </div>
 
@@ -3096,7 +3078,7 @@ export default function BillyWebStudio({
                                 galleryPhotos: prev.galleryPhotos.includes(target) ? prev.galleryPhotos : [...prev.galleryPhotos, target]
                               }));
                             }}
-                            className="px-2 py-0.5 rounded text-[8px] font-bold bg-[#1478f0] text-black cursor-pointer"
+                            className="px-2 py-0.5 rounded text-[8px] font-bold bg-emerald-500 text-zinc-950 cursor-pointer"
                           >
                             Hero ★
                           </button>
@@ -3106,7 +3088,7 @@ export default function BillyWebStudio({
                               e.stopPropagation();
                               handleTogglePhoto(target);
                             }}
-                            className="px-2 py-0.5 rounded text-[8px] font-bold bg-white text-black cursor-pointer"
+                            className="px-2 py-0.5 rounded text-[8px] font-bold bg-zinc-800 text-zinc-200 hover:bg-zinc-700 cursor-pointer"
                           >
                             {isGallery ? 'Remover' : '+ Galeria'}
                           </button>
